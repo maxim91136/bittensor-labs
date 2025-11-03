@@ -1,2 +1,2 @@
-# bittensor-hub
+# bittensor-labs
 Bittensor Dashboard
