@@ -15,31 +15,26 @@
     <link rel="stylesheet" href="style.css">
     
     <!-- Defer non-critical scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <header>
         <h1><span aria-hidden="true">🧠</span> Bittensor Hub</h1>
         <p>Live Open-Source Dashboard: Subnets, Validators & TAO Pulse</p>
         <button id="refreshBtn" aria-label="Refresh data">
-            Zap Now <span class="cooldown">(5-Min. Cool-Down)</span>
+            🔄 Refresh Data <span class="cooldown">(5m cache)</span>
         </button>
     </header>
 
     <main>
         <section id="price" aria-label="TAO Price Information">
             <h2>TAO Price (USD)</h2>
-            <p id="taoPrice" aria-live="polite">$--</p>
+            <p id="taoPrice" aria-live="polite">Loading...</p>
         </section>
 
-        <section id="subnets" aria-label="Top Subnets Chart">
-            <h2>Top Subnets</h2>
-            <canvas id="subnetsChart" width="400" height="200" role="img"></canvas>
-        </section>
-
-        <section id="validators" aria-label="Top Validators Chart">
-            <h2>Top Validators</h2>
-            <canvas id="validatorsChart" width="400" height="200" role="img"></canvas>
+        <section id="validators" aria-label="Network Statistics">
+            <h2>Network Overview</h2>
+            <canvas id="validatorsChart" width="400" height="300"></canvas>
         </section>
     </main>
 
