@@ -1,68 +1,8 @@
+// filepath: style.css
 body { font-family: -apple-system, sans-serif; background: #0a0a0a; color: #fff; margin: 0; padding: 20px; line-height: 1.6; }
-     header { text-align: center; border-bottom: 1px solid #333; padding: 20px 0; }
-     h1 { margin: 0; color: #ff6b35; }
-     button { background: #ff6b35; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
-     section { margin: 20px 0; padding: 15px; background: #1a1a1a; border-radius: 8px; }
-     canvas { max-width: 100%; height: 250px; }
-     footer { text-align: center; margin-top: 40px; font-size: 0.9em; opacity: 0.7; }
-     ```
-   - **script.js** (New File): 
-     ```javascript
-     const CACHE_KEY = 'bittensorData';
-     const CACHE_DURATION = 5 * 60 * 1000; // 5 Min.
-
-     async function getCachedOrFetch(key, fetchFn) {
-         const cached = localStorage.getItem(key);
-         if (cached) {
-             const { data, timestamp } = JSON.parse(cached);
-             if (Date.now() - timestamp < CACHE_DURATION) return data;
-         }
-         const data = await fetchFn();
-         localStorage.setItem(key, JSON.stringify({ data, timestamp: Date.now() }));
-         return data;
-     }
-
-     async function fetchTaoPrice() {
-         const res = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bittensor&vs_currencies=usd');
-         const json = await res.json();
-         return json.bittensor.usd;
-     }
-
-     async function fetchValidators() {
-         const res = await fetch('https://entrypoint-finney.opentensor.ai:443', {
-             method: 'POST',
-             headers: { 'Content-Type': 'application/json' },
-             body: JSON.stringify({
-                 id: 1, jsonrpc: '2.0', method: 'subtensor.get_top_validators',
-                 params: { netuid: 1, topk: 10 }
-             })
-         });
-         const json = await res.json();
-         return json.result || { hotkeys: [], stakes: [] };
-     }
-
-     async function loadDashboard() {
-         try {
-             const price = await getCachedOrFetch('taoPrice', fetchTaoPrice);
-             document.getElementById('taoPrice').textContent = `$${price.toFixed(2)}`;
-
-             const validators = await getCachedOrFetch('validators', fetchValidators);
-             const ctxV = document.getElementById('validatorsChart').getContext('2d');
-             new Chart(ctxV, {
-                 type: 'bar', data: {
-                     labels: validators.hotkeys.slice(0,5).map(h => h.slice(0,8) + '...'),
-                     datasets: [{ label: 'Stake', data: validators.stakes.slice(0,5), backgroundColor: '#ff6b35' }]
-                 },
-                 options: { scales: { y: { beginAtZero: true } } }
-             });
-         } catch (err) {
-             console.error('Fehler:', err);
-         }
-     }
-
-     document.getElementById('refreshBtn').addEventListener('click', () => {
-         localStorage.removeItem('taoPrice'); localStorage.removeItem('validators');
-         loadDashboard();
-     });
-
-     loadDashboard();
+header { text-align: center; border-bottom: 1px solid #333; padding: 20px 0; }
+h1 { margin: 0; color: #ff6b35; }
+button { background: #ff6b35; color: white; border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; }
+section { margin: 20px 0; padding: 15px; background: #1a1a1a; border-radius: 8px; }
+canvas { max-width: 100%; height: 250px; }
+footer { text-align: center; margin-top: 40px; font-size: 0.9em; opacity: 0.7; }
