@@ -1,2 +1,2 @@
 # bittensor-hub
-Open-Source Bittensor Dashboard: Live Subnet-Zaps &amp; Charts.
+Open-Source Bittensor Dashboard: Live Subnet-Zaps and Charts
