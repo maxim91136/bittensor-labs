@@ -131,5 +131,41 @@ async function updateNetworkStats() {
   }
 }
 
-document.addEventListener('DOMContentLoaded', init);
+// ---- Network stats ----
+const $ = (id) => document.getElementById(id);
+const fmt = (n) => new Intl.NumberFormat('de-DE').format(Number(n || 0));
+
+async function loadNetwork() {
+  try {
+    const res = await fetch('/api/network', { cache: 'no-store' });
+    const data = await res.json();
+
+    const neurons = data.activeNeurons ?? data.totalNeurons ?? 0;
+    const validators = data.activeValidators ?? data.validators ?? 0;
+    const subnets = data.subnets ?? 0;
+    const block = data.blockHeight ?? 0;
+    const emission = (data.emission || '0');
+
+    // Header pill
+    const tn = $('totalNeurons');
+    if (tn) {
+      tn.textContent = fmt(neurons);
+      tn.classList.remove('skeleton-text');
+    }
+
+    // Cards
+    $('blockHeight') && ($('blockHeight').textContent = fmt(block));
+    $('validators') && ($('validators').textContent = fmt(validators));
+    $('subnets') && ($('subnets').textContent = fmt(subnets));
+    $('emission') && ($('emission').textContent = `${emission} τ/day`);
+
+    // optional: Seite als "geladen" markieren
+    document.querySelectorAll('.dashboard-card.loading').forEach(el => el.classList.remove('loading'));
+  } catch (err) {
+    console.error('Failed to load /api/network', err);
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadNetwork);
+
 setInterval(init, 60000);
