@@ -6,7 +6,7 @@ export async function onRequest(context) {
   };
   if (context.request.method === 'OPTIONS') return new Response(null, { headers: cors });
 
-  const METRICS_URL = context.env.METRICS_URL || 'https://dein-service.onrender.com/metrics';
+  const METRICS_URL = context.env.METRICS_URL || 'https://bittensor-labs-python-bites.onrender.com/metrics';
   const RPC_ENDPOINT = 'https://entrypoint-finney.opentensor.ai';
 
   async function rpcCall(method, params = []) {
@@ -23,7 +23,7 @@ export async function onRequest(context) {
   try {
     const r = await fetch(METRICS_URL, { 
       headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(5000)
+      signal: AbortSignal.timeout(15000) // 15s für Kaltstart
     });
     
     if (!r.ok) throw new Error(`metrics ${r.status}`);
