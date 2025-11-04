@@ -32,45 +32,51 @@ export async function onRequest(context) {
   }
 
   try {
+    // Hole nur Block Height - das funktioniert zuverlässig
     const header = await rpcCall('chain_getHeader');
     const blockHeight = header?.number ? parseInt(header.number, 16) : null;
 
-    // Teste verschiedene Methoden und zeige die Struktur
-    const [subnetsV2, dynamicInfo, allMetagraphs] = await Promise.allSettled([
-      rpcCall('subnetInfo_getSubnetsInfo_v2', []),
-      rpcCall('subnetInfo_getAllDynamicInfo', []),
-      rpcCall('subnetInfo_getAllMetagraphs', [])
-    ]);
+    // Für echte Subnet-Daten: Iteriere durch bekannte Subnet-IDs (0-255)
+    // und hole einzelne Subnet-Infos
+    const subnetChecks = await Promise.allSettled(
+      Array.from({ length: 256 }, (_, i) => 
+        rpcCall('subnetInfo_getSubnetInfo', [i])
+          .then(data => data ? i : null)
+          .catch(() => null)
+      )
+    );
+
+    // Filtere existierende Subnets
+    const activeSubnetIds = subnetChecks
+      .filter(r => r.status === 'fulfilled' && r.value !== null)
+      .map(r => r.value);
+
+    const totalSubnets = activeSubnetIds.length;
+
+    // Hole Neuron-Counts für aktive Subnets
+    const neuronCounts = await Promise.allSettled(
+      activeSubnetIds.slice(0, 50).map(id => // Nur erste 50 für Performance
+        rpcCall('neuronInfo_getNeuronsLite', [id])
+          .then(neurons => neurons?.length || 0)
+          .catch(() => 0)
+      )
+    );
+
+    const totalNeurons = neuronCounts
+      .filter(r => r.status === 'fulfilled')
+      .reduce((sum, r) => sum + (r.value || 0), 0);
 
     return new Response(JSON.stringify({
       blockHeight,
-      validators: 500,
-      subnets: 128,
-      emission: '7,200',
-      totalNeurons: 0,
+      validators: 500, // Placeholder - schwer zu berechnen
+      subnets: totalSubnets,
+      emission: '7,200', // Placeholder
+      totalNeurons: totalNeurons,
       _live: true,
       _debug: {
-        subnetsV2: {
-          status: subnetsV2.status,
-          isArray: Array.isArray(subnetsV2.value),
-          length: subnetsV2.value?.length,
-          firstItem: subnetsV2.value?.[0],
-          sample: subnetsV2.value?.slice(0, 3)
-        },
-        dynamicInfo: {
-          status: dynamicInfo.status,
-          isArray: Array.isArray(dynamicInfo.value),
-          length: dynamicInfo.value?.length,
-          firstItem: dynamicInfo.value?.[0],
-          firstItemKeys: dynamicInfo.value?.[0] ? Object.keys(dynamicInfo.value[0]) : null
-        },
-        allMetagraphs: {
-          status: allMetagraphs.status,
-          isArray: Array.isArray(allMetagraphs.value),
-          length: allMetagraphs.value?.length,
-          firstItem: allMetagraphs.value?.[0],
-          firstItemType: typeof allMetagraphs.value?.[0]
-        }
+        activeSubnets: activeSubnetIds.length,
+        checkedNeurons: activeSubnetIds.slice(0, 50).length,
+        sampleSubnetIds: activeSubnetIds.slice(0, 10)
       }
     }), {
       status: 200,
