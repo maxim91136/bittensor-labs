@@ -32,33 +32,41 @@ export async function onRequest(context) {
   }
 
   try {
-    // Nutze die neuronInfo API - die ist besser dokumentiert
-    const [header, neurons] = await Promise.all([
-      rpcCall('chain_getHeader'),
-      // Hole Neurons für die ersten 50 Subnets
-      ...Array.from({ length: 50 }, (_, i) => 
-        rpcCall('neuronInfo_getNeuronsLite', [i]).catch(() => null)
-      )
-    ]).then(results => [results[0], results.slice(1)]);
+    // Hole Header und Subnet-Hyperparameter (die haben max_n = Validator-Anzahl)
+    const header = await rpcCall('chain_getHeader');
+    
+    // Hole Hyperparameter für die ersten 50 Subnets
+    const subnetHyperparamsPromises = Array.from({ length: 50 }, (_, i) => 
+      rpcCall('subnetInfo_getSubnetHyperparams', [i]).catch(() => null)
+    );
+
+    // Hole auch die Neuron-Zahlen für Gesamtanzahl
+    const neuronsPromises = Array.from({ length: 50 }, (_, i) => 
+      rpcCall('neuronInfo_getNeuronsLite', [i]).catch(() => null)
+    );
+
+    const [subnetHyperparams, neurons] = await Promise.all([
+      Promise.all(subnetHyperparamsPromises),
+      Promise.all(neuronsPromises)
+    ]);
 
     const blockHeight = header?.number ? parseInt(header.number, 16) : null;
 
-    // Zähle aktive Subnets und Neurons
-    const activeSubnets = neurons.filter(n => n !== null && n.length > 0);
-    const totalNeurons = activeSubnets.reduce((sum, subnet) => sum + subnet.length, 0);
+    // Filtere aktive Subnets und summiere max_n (Validators)
+    const activeSubnets = subnetHyperparams.filter(h => h !== null && h.max_n);
+    const totalValidators = activeSubnets.reduce((sum, subnet) => sum + (subnet.max_n || 0), 0);
+
+    // Zähle alle Neurons
+    const activeNeuronSubnets = neurons.filter(n => n !== null && n.length > 0);
+    const totalNeurons = activeNeuronSubnets.reduce((sum, subnet) => sum + subnet.length, 0);
 
     return new Response(JSON.stringify({
       blockHeight,
-      validators: totalNeurons || 500,
+      validators: totalValidators || 500,
       subnets: activeSubnets.length || 32,
       emission: '7,200',
+      totalNeurons: totalNeurons || 0,
       _live: true,
-      _debug: {
-        checkedSubnets: 50,
-        activeSubnets: activeSubnets.length,
-        totalNeurons,
-        sampleSubnetSize: activeSubnets[0]?.length || 0
-      }
     }), {
       status: 200,
       headers: { ...cors, 'Content-Type': 'application/json' }
@@ -72,6 +80,7 @@ export async function onRequest(context) {
       validators: 500,
       subnets: 32,
       emission: '7,200',
+      totalNeurons: 0,
       _fallback: true,
       _error: e.message
     }), {

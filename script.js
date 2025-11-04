@@ -104,5 +104,32 @@ async function init() {
   console.log('✅ Ready');
 }
 
+// Update Network Stats
+async function updateNetworkStats() {
+  try {
+    const res = await fetch('/api/network');
+    const data = await res.json();
+
+    if (data.blockHeight) {
+      document.getElementById('blockHeight').textContent = data.blockHeight.toLocaleString();
+    }
+    if (data.validators) {
+      document.getElementById('validators').textContent = data.validators.toLocaleString();
+    }
+    if (data.subnets) {
+      document.getElementById('subnets').textContent = data.subnets.toLocaleString();
+    }
+    if (data.emission) {
+      document.getElementById('emission').textContent = data.emission + ' τ/day';
+    }
+    if (data.totalNeurons) {
+      document.getElementById('totalNeurons').textContent = data.totalNeurons.toLocaleString() + ' Neurons';
+    }
+
+  } catch {
+    console.error('Failed to update network stats');
+  }
+}
+
 document.addEventListener('DOMContentLoaded', init);
 setInterval(init, 60000);

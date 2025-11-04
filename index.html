@@ -47,7 +47,6 @@
           Bittensor-Labs
         </h1>
         <span class="meta">
-          <!-- Entfernt: <span class="tao-logo">…</span> -->
           <span class="status-dot" aria-hidden="true"></span>
           <span class="tagline">the incentive layer</span>
         </span>
@@ -55,6 +54,18 @@
     </div>
 
     <div class="header-actions">
+      <div class="price-pill" aria-live="polite" title="Total Active Neurons">
+        <span class="price-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" role="img" focusable="false">
+            <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+            <path d="M12 9v4"/>
+            <circle cx="12" cy="17" r="1"/>
+            <path d="M7 13h10"/>
+          </svg>
+        </span>
+        <span id="totalNeurons" class="skeleton-text">Loading...</span>
+      </div>
+      
       <div class="price-pill" aria-live="polite" title="TAO Price (USD)">
         <span class="price-icon" aria-hidden="true">
           <svg viewBox="0 0 48 48" width="13" height="13" role="img" focusable="false">
