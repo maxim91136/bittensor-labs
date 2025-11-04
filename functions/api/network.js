@@ -35,20 +35,39 @@ export async function onRequest(context) {
     const header = await rpcCall('chain_getHeader');
     const blockHeight = header?.number ? parseInt(header.number, 16) : null;
 
-    // Erweitere den Bereich auf 0-512 (oder sogar 1024)
-    const MAX_SUBNET_ID = 1024;
+    // Prüfe bis 4096 (2^12) - großzügiger Bereich
+    const MAX_SUBNET_ID = 4096;
     
-    const subnetChecks = await Promise.allSettled(
-      Array.from({ length: MAX_SUBNET_ID }, (_, i) => 
-        rpcCall('subnetInfo_getSubnetInfo', [i])
-          .then(data => data ? i : null)
-          .catch(() => null)
-      )
-    );
-
-    const activeSubnetIds = subnetChecks
-      .filter(r => r.status === 'fulfilled' && r.value !== null)
-      .map(r => r.value);
+    // Batch die Requests in Gruppen von 100 für bessere Performance
+    const batchSize = 100;
+    const batches = Math.ceil(MAX_SUBNET_ID / batchSize);
+    
+    let activeSubnetIds = [];
+    
+    for (let b = 0; b < batches; b++) {
+      const start = b * batchSize;
+      const end = Math.min(start + batchSize, MAX_SUBNET_ID);
+      
+      const batchChecks = await Promise.allSettled(
+        Array.from({ length: end - start }, (_, i) => {
+          const id = start + i;
+          return rpcCall('subnetInfo_getSubnetInfo', [id])
+            .then(data => data ? id : null)
+            .catch(() => null);
+        })
+      );
+      
+      const batchResults = batchChecks
+        .filter(r => r.status === 'fulfilled' && r.value !== null)
+        .map(r => r.value);
+      
+      activeSubnetIds.push(...batchResults);
+      
+      // Früher Abbruch wenn 100+ IDs ohne Treffer
+      if (batchResults.length === 0 && activeSubnetIds.length > 0 && b > 2) {
+        break;
+      }
+    }
 
     const totalSubnets = activeSubnetIds.length;
 
@@ -85,8 +104,8 @@ export async function onRequest(context) {
       _debug: {
         checkedRange: `0-${MAX_SUBNET_ID}`,
         activeSubnets: activeSubnetIds.length,
-        highestSubnetId: Math.max(...activeSubnetIds),
-        sampleSubnetIds: activeSubnetIds.slice(0, 20)
+        highestSubnetId: activeSubnetIds.length > 0 ? Math.max(...activeSubnetIds) : 0,
+        allSubnetIds: activeSubnetIds.sort((a, b) => a - b)
       }
     }), {
       status: 200,
