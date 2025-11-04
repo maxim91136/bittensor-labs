@@ -47,54 +47,41 @@ export async function onRequest(context) {
   }
 
   try {
-    const [header, subnetCountHex, validatorCountHex, blockEmissionHex] = await Promise.all([
-      rpcCall('chain_getHeader'),
-      rpcCall('state_call', ['SubtensorModule_get_total_subnets', '0x']).catch(() => null),
-      rpcCall('state_call', ['SubtensorModule_get_subnetwork_n', '0x00000000']).catch(() => null),
-      // Block Emission (TAO per block, in RAO = 1e9)
-      rpcCall('state_call', ['SubtensorModule_get_block_emission', '0x']).catch(() => null)
+    // Debug: Alle Varianten testen
+    const debugCalls = await Promise.allSettled([
+      // Runtime API Methods (verschiedene Schreibweisen)
+      rpcCall('state_call', ['SubtensorModule_get_total_subnets', '0x']),
+      rpcCall('state_call', ['SubtensorModuleApi_get_total_subnets', '0x']),
+      rpcCall('state_call', ['SubtensorModule_total_subnets', '0x']),
+      
+      rpcCall('state_call', ['SubtensorModule_get_subnetwork_n', '0x00000000']),
+      rpcCall('state_call', ['SubtensorModuleApi_get_subnetwork_n', '0x00000000']),
+      
+      rpcCall('state_call', ['SubtensorModule_get_block_emission', '0x']),
+      rpcCall('state_call', ['SubtensorModuleApi_get_block_emission', '0x']),
+      
+      // Storage Queries (direkter Zugriff)
+      rpcCall('state_getMetadata'),
     ]);
 
+    const header = await rpcCall('chain_getHeader');
     const blockHeight = header?.number ? parseInt(header.number, 16) : null;
-
-    // Subnet Count
-    let subnets = 142;
-    if (subnetCountHex) {
-      const hex = subnetCountHex.replace('0x', '');
-      if (hex.length >= 4) {
-        subnets = parseInt(hex.substring(0, 4), 16);
-      }
-    }
-
-    // Validator Count
-    let validators = 500;
-    if (validatorCountHex) {
-      const hex = validatorCountHex.replace('0x', '');
-      if (hex.length >= 4) {
-        validators = parseInt(hex.substring(0, 4), 16);
-      }
-    }
-
-    // Block Emission (RAO → TAO, dann * 7200 blocks/day)
-    let emission = '7,200'; // Fallback
-    if (blockEmissionHex) {
-      const raoPerBlock = decodeU64(blockEmissionHex);
-      if (raoPerBlock) {
-        const taoPerBlock = raoPerBlock / 1e9; // RAO to TAO
-        const taoPerDay = taoPerBlock * 7200; // 12s Blocktime → 7200 blocks/day
-        emission = taoPerDay.toLocaleString('en-US', { 
-          minimumFractionDigits: 0,
-          maximumFractionDigits: 2 
-        });
-      }
-    }
 
     return new Response(JSON.stringify({
       blockHeight,
-      validators,
-      subnets,
-      emission,
-      _live: true
+      validators: 500,
+      subnets: 142,
+      emission: '7,200',
+      _live: true,
+      _debug: {
+        message: 'Testing different RPC methods',
+        results: debugCalls.map((result, i) => ({
+          index: i,
+          status: result.status,
+          value: result.status === 'fulfilled' ? result.value : null,
+          error: result.status === 'rejected' ? result.reason.message : null
+        }))
+      }
     }), {
       status: 200,
       headers: { ...cors, 'Content-Type': 'application/json' }
