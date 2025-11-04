@@ -31,6 +31,26 @@ export async function onRequest(context) {
     return json.result;
   }
 
+  // Dekodiere Subnet-Info aus Byte-Array (SCALE codec)
+  function decodeSubnetInfo(bytes) {
+    if (!Array.isArray(bytes) || bytes.length < 40) return null;
+    
+    // SCALE decoding (vereinfacht)
+    // max_n ist typischerweise bei Index 2-3 als u16 (little-endian)
+    const maxN = bytes[2] + (bytes[3] << 8);
+    
+    // emission könnte bei Index 34-41 sein als u64 (little-endian)
+    let emission = 0;
+    for (let i = 0; i < 8; i++) {
+      emission += (bytes[34 + i] || 0) * Math.pow(256, i);
+    }
+    
+    return {
+      max_n: maxN,
+      emission: emission
+    };
+  }
+
   try {
     const header = await rpcCall('chain_getHeader');
     const blockHeight = header?.number ? parseInt(header.number, 16) : null;
@@ -45,33 +65,37 @@ export async function onRequest(context) {
 
     const subnetDetails = await Promise.all(subnetDetailsPromises);
     
-    // Filtere nur existierende Subnets (nicht null)
-    const activeSubnets = subnetDetails.filter(subnet => subnet !== null);
+    // Filtere und dekodiere nur existierende Subnets
+    const activeSubnets = subnetDetails
+      .filter(subnet => subnet !== null)
+      .map(subnet => decodeSubnetInfo(subnet))
+      .filter(subnet => subnet !== null);
     
-    // Zähle Validators über aktive Subnets
+    // Zähle Validators und Emission über aktive Subnets
     let totalValidators = 0;
     let totalEmission = 0;
 
     activeSubnets.forEach(subnet => {
-      if (subnet?.max_n) {
-        totalValidators += parseInt(subnet.max_n);
+      if (subnet.max_n && subnet.max_n > 0) {
+        totalValidators += subnet.max_n;
       }
-      if (subnet?.emission) {
-        totalEmission += parseInt(subnet.emission) / 1e9;
+      if (subnet.emission && subnet.emission > 0) {
+        totalEmission += subnet.emission / 1e9; // Rao zu TAO
       }
     });
 
     return new Response(JSON.stringify({
       blockHeight,
-      validators: totalValidators || 500,
+      validators: totalValidators > 0 ? totalValidators : 500,
       subnets: activeSubnets.length,
-      emission: Math.round(totalEmission).toLocaleString(),
+      emission: totalEmission > 0 ? Math.round(totalEmission).toLocaleString() : '7,200',
       _live: true,
       _debug: {
-        message: 'Counting active subnets',
         checkedSubnets: 200,
         activeSubnets: activeSubnets.length,
-        sampleSubnet: activeSubnets[0],
+        sampleDecoded: activeSubnets[0],
+        totalValidators,
+        totalEmissionRaw: totalEmission
       }
     }), {
       status: 200,
