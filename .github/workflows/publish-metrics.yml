@@ -19,6 +19,47 @@ jobs:
         env:
           NETWORK: finney
         run: python .github/scripts/fetch_metrics.py
+      - name: Build history array (last 24h)
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          HURL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/history"
+          curl -sS -H "Authorization: Bearer ${CF_API_TOKEN}" "$HURL" -o prev.json || echo "[]" > prev.json
+          python - <<'PY'
+import json, time, sys
+try:
+  m = json.load(open("metrics.json"))
+except Exception:
+  sys.exit("no metrics.json")
+try:
+  hist = json.load(open("prev.json"))
+  if not isinstance(hist, list): hist = []
+except Exception:
+  hist = []
+point = {
+  "t": m.get("updatedAtEpoch") or int(time.time()),
+  "block": m.get("blockHeight"),
+  "validators": m.get("validators"),
+  "subnets": m.get("subnets"),
+  "neurons": m.get("totalNeurons"),
+}
+hist.append(point)
+hist = hist[-144:]  # ~24h bei */10
+open("history.json","w").write(json.dumps(hist))
+PY
+      - name: Push history to Cloudflare KV
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          curl -fsS -X PUT \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data-binary @history.json \
+            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/history"
       - name: Push to Cloudflare KV (debug)
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}

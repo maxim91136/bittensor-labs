@@ -42,6 +42,19 @@ async function loadPrice() {
   }
 }
 
+// History
+async function loadHistory() {
+  try {
+    const res = await fetch('/api/history', { cache: 'no-store' });
+    const hist = await res.json();
+    // Debug sichtbar machen
+    console.log('history points:', Array.isArray(hist) ? hist.length : 0);
+    window.__bittensorHistory = hist;
+  } catch (e) {
+    console.warn('History load failed', e);
+  }
+}
+
 // Init + Interval
 document.addEventListener('DOMContentLoaded', () => {
   loadNetwork();
@@ -50,4 +63,6 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(loadNetwork, 60_000);
   // Preis alle 5 Min, um Limits zu schonen
   setInterval(loadPrice, 300_000);
+  // History alle 10 Min
+  setInterval(loadHistory, 600_000);
 });
