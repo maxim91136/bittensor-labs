@@ -31,41 +31,19 @@ export async function onRequest(context) {
     return json.result;
   }
 
-  // Helper: SCALE-decode u64 (little-endian, 8 bytes)
-  function decodeU64(hex) {
-    if (!hex || hex === '0x') return null;
-    const cleaned = hex.replace('0x', '');
-    if (cleaned.length < 16) return null;
-    
-    // Little-endian: bytes rückwärts lesen
-    let result = 0n;
-    for (let i = 0; i < 16; i += 2) {
-      const byte = BigInt(parseInt(cleaned.substr(i, 2), 16));
-      result += byte << BigInt((i / 2) * 8);
-    }
-    return Number(result);
-  }
-
   try {
-    // Debug: Alle Varianten testen
-    const debugCalls = await Promise.allSettled([
-      // Runtime API Methods (verschiedene Schreibweisen)
-      rpcCall('state_call', ['SubtensorModule_get_total_subnets', '0x']),
-      rpcCall('state_call', ['SubtensorModuleApi_get_total_subnets', '0x']),
-      rpcCall('state_call', ['SubtensorModule_total_subnets', '0x']),
-      
-      rpcCall('state_call', ['SubtensorModule_get_subnetwork_n', '0x00000000']),
-      rpcCall('state_call', ['SubtensorModuleApi_get_subnetwork_n', '0x00000000']),
-      
-      rpcCall('state_call', ['SubtensorModule_get_block_emission', '0x']),
-      rpcCall('state_call', ['SubtensorModuleApi_get_block_emission', '0x']),
-      
-      // Storage Queries (direkter Zugriff)
-      rpcCall('state_getMetadata'),
-    ]);
-
     const header = await rpcCall('chain_getHeader');
     const blockHeight = header?.number ? parseInt(header.number, 16) : null;
+
+    // Metadaten abrufen und analysieren
+    const metadata = await rpcCall('state_getMetadata');
+    
+    // Versuche verschiedene Storage-Abfragen für SubtensorModule
+    const storageQueries = await Promise.allSettled([
+      // Storage-Abfragen direkt über state_getStorage
+      rpcCall('state_getStorage', ['0x' + '5f27b51b5ec208ee9cb25b55d87282435f27b51b5ec208ee9cb25b55d872824301']), // TotalSubnets
+      rpcCall('state_getStorage', ['0x' + '5f27b51b5ec208ee9cb25b55d87282435f27b51b5ec208ee9cb25b55d872824302']), // TotalNetworks
+    ]);
 
     return new Response(JSON.stringify({
       blockHeight,
@@ -74,8 +52,9 @@ export async function onRequest(context) {
       emission: '7,200',
       _live: true,
       _debug: {
-        message: 'Testing different RPC methods',
-        results: debugCalls.map((result, i) => ({
+        message: 'Metadata received, testing storage queries',
+        metadataLength: metadata?.length || 0,
+        storageResults: storageQueries.map((result, i) => ({
           index: i,
           status: result.status,
           value: result.status === 'fulfilled' ? result.value : null,
