@@ -32,30 +32,46 @@ export async function onRequest(context) {
   }
 
   try {
-    const [header, subnetsInfo] = await Promise.all([
-      rpcCall('chain_getHeader'),
-      rpcCall('subnetInfo_getSubnetsInfo'),
-    ]);
-
+    const header = await rpcCall('chain_getHeader');
     const blockHeight = header?.number ? parseInt(header.number, 16) : null;
 
-    // Analysiere die Struktur
-    const sample = subnetsInfo?.[0];
+    // Hole detaillierte Subnet-Infos für die ersten 200 IDs
+    const subnetDetailsPromises = [];
+    for (let i = 0; i < 200; i++) {
+      subnetDetailsPromises.push(
+        rpcCall('subnetInfo_getSubnetInfo', [i]).catch(() => null)
+      );
+    }
+
+    const subnetDetails = await Promise.all(subnetDetailsPromises);
+    
+    // Filtere nur existierende Subnets (nicht null)
+    const activeSubnets = subnetDetails.filter(subnet => subnet !== null);
+    
+    // Zähle Validators über aktive Subnets
+    let totalValidators = 0;
+    let totalEmission = 0;
+
+    activeSubnets.forEach(subnet => {
+      if (subnet?.max_n) {
+        totalValidators += parseInt(subnet.max_n);
+      }
+      if (subnet?.emission) {
+        totalEmission += parseInt(subnet.emission) / 1e9;
+      }
+    });
 
     return new Response(JSON.stringify({
       blockHeight,
-      validators: 500,
-      subnets: 142,
-      emission: '7,200',
+      validators: totalValidators || 500,
+      subnets: activeSubnets.length,
+      emission: Math.round(totalEmission).toLocaleString(),
       _live: true,
       _debug: {
-        message: 'Analyzing data structure',
-        subnetsInfoType: typeof subnetsInfo,
-        subnetsInfoIsArray: Array.isArray(subnetsInfo),
-        subnetsInfoLength: subnetsInfo?.length,
-        firstItemSample: sample,
-        firstItemKeys: sample ? Object.keys(sample) : null,
-        firstItemType: typeof sample,
+        message: 'Counting active subnets',
+        checkedSubnets: 200,
+        activeSubnets: activeSubnets.length,
+        sampleSubnet: activeSubnets[0],
       }
     }), {
       status: 200,
