@@ -4,9 +4,11 @@ export async function onRequest(context) {
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': '*',
   };
-  if (context.request.method === 'OPTIONS') return new Response(null, { headers: cors });
+  if (context.request.method === 'OPTIONS') {
+    return new Response(null, { headers: cors });
+  }
 
-  const METRICS_URL = context.env?.METRICS_URL || 'https://bittensor-labs-python-bites.onrender.com/metrics';
+  const KV = context.env?.METRICS_KV; // KV-Binding: bittensor-labs-metrics
   const RPC_ENDPOINT = 'https://entrypoint-finney.opentensor.ai';
 
   async function rpcCall(method, params = []) {
@@ -21,51 +23,32 @@ export async function onRequest(context) {
   }
 
   try {
-    // 1) Warm-up: ping Root (weckt Render-Free-Instanz schneller)
-    const rootUrl = METRICS_URL.replace(/\/metrics$/, '/');
-    try {
-      await fetch(rootUrl, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(5000) });
-    } catch {}
+    // 1) Metriken aus KV (Key: "metrics")
+    let m = KV ? await KV.get('metrics', { type: 'json' }) : null;
 
-    // 2) Hauptabruf mit längerem Timeout (bis zu 60s)
-    const r = await fetch(METRICS_URL, {
-      headers: { Accept: 'application/json' },
-      signal: AbortSignal.timeout(60000) // 60s für Kaltstart
-    });
-    if (!r.ok) throw new Error(`metrics ${r.status}`);
-    const m = await r.json();
-
-    // Optional: Blockhöhe live nachziehen
+    // 2) Blockhöhe live auffrischen (optional)
     try {
       const header = await rpcCall('chain_getHeader');
       const live = header?.number ? parseInt(header.number, 16) : null;
-      if (live && (!m.blockHeight || live > m.blockHeight)) m.blockHeight = live;
+      if (live && m && (!m.blockHeight || live > m.blockHeight)) m.blockHeight = live;
+      if (!m) m = { blockHeight: live };
     } catch {}
+
+    if (!m) {
+      m = { blockHeight: null, validators: 0, subnets: 0, emission: '7,200', totalNeurons: 0, _fallback: true };
+    }
 
     return new Response(JSON.stringify({
       blockHeight: m.blockHeight ?? null,
       validators: m.validators ?? 0,
       subnets: m.subnets ?? 0,
-      emission: m.emission ?? 7200,
+      emission: m.emission ?? '7,200',
       totalNeurons: m.totalNeurons ?? 0,
-      _live: true,
-      _source: m._source || 'bittensor-sdk'
+      _source: m._source || 'kv-cache'
     }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
-
-  } catch (e) {
-    // Fallback: nur Blockhöhe
-    try {
-      const header = await rpcCall('chain_getHeader');
-      const blockHeight = header?.number ? parseInt(header.number, 16) : null;
-      return new Response(JSON.stringify({
-        blockHeight, validators: 0, subnets: 0, emission: 7200, totalNeurons: 0,
-        _fallback: true, _error: e.message
-      }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
-    } catch {
-      return new Response(JSON.stringify({
-        blockHeight: null, validators: 0, subnets: 0, emission: 7200, totalNeurons: 0,
-        _fallback: true
-      }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
-    }
+  } catch {
+    return new Response(JSON.stringify({
+      blockHeight: null, validators: 0, subnets: 0, emission: '7,200', totalNeurons: 0, _fallback: true
+    }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
   }
 }
