@@ -1,171 +1,53 @@
 // API Endpoints
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 
-// Network Stats
-async function fetchNetworkStats() {
-  try {
-    const res = await fetch('/api/network');
-    const data = await res.json();
-    return data;
-  } catch {
-    return { blockHeight: null, validators: 500, subnets: 142, emission: '7,200' };
-  }
-}
-
-// TAO Price
-async function fetchTaoPrice() {
-  try {
-    const res = await fetch(`${COINGECKO_API}/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true`);
-    const data = await res.json();
-    return {
-      price: data.bittensor?.usd || null,
-      change: data.bittensor?.usd_24h_change || 0
-    };
-  } catch {
-    return { price: null, change: 0 };
-  }
-}
-
-// UI Update
-function updateUI(stats, price) {
-  const el = (id, text) => {
-    const e = document.getElementById(id);
-    if (e) e.textContent = text;
-  };
-
-  el('blockHeight', stats.blockHeight ? stats.blockHeight.toLocaleString('de-DE') : 'N/A');
-  el('validators', stats.validators ? stats.validators.toLocaleString('de-DE') : 'N/A');
-  el('subnets', stats.subnets ? stats.subnets.toLocaleString('de-DE') : 'N/A');
-  el('emission', `${stats.emission} τ/day`);
-  el('taoPrice', price.price ? `$${price.price.toFixed(2)}` : 'N/A');
-}
-
-// Charts (Mock)
-function initCharts() {
-  if (typeof Chart === 'undefined') return;
-
-  const opts = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: { legend: { display: false } },
-    scales: {
-      x: { grid: { color: 'rgba(42,53,68,0.3)' }, ticks: { color: '#94a3b8' } },
-      y: { grid: { color: 'rgba(42,53,68,0.3)' }, ticks: { color: '#94a3b8' } }
-    }
-  };
-
-  const hours = Array.from({ length: 24 }, (_, i) => `${i}:00`);
-
-  const vCtx = document.getElementById('validatorsChart');
-  if (vCtx) {
-    new Chart(vCtx, {
-      type: 'line',
-      data: {
-        labels: hours,
-        datasets: [{
-          data: Array.from({ length: 24 }, () => Math.floor(Math.random() * 50) + 480),
-          borderColor: '#22c55e',
-          backgroundColor: 'rgba(34,197,94,0.1)',
-          borderWidth: 2,
-          tension: 0.4,
-          fill: true
-        }]
-      },
-      options: opts
-    });
-  }
-
-  const pCtx = document.getElementById('priceChart');
-  if (pCtx) {
-    new Chart(pCtx, {
-      type: 'line',
-      data: {
-        labels: hours,
-        datasets: [{
-          data: Array.from({ length: 24 }, () => Math.random() * 30 + 460),
-          borderColor: '#fb923c',
-          backgroundColor: 'rgba(251,146,60,0.1)',
-          borderWidth: 2,
-          tension: 0.4,
-          fill: true
-        }]
-      },
-      options: opts
-    });
-  }
-}
-
-// Init
-async function init() {
-  console.log('🚀 Loading...');
-  const [stats, price] = await Promise.all([fetchNetworkStats(), fetchTaoPrice()]);
-  updateUI(stats, price);
-  if (typeof Chart !== 'undefined') initCharts();
-  console.log('✅ Ready');
-}
-
-// Update Network Stats
-async function updateNetworkStats() {
-  try {
-    const res = await fetch('/api/network');
-    const data = await res.json();
-
-    if (data.blockHeight) {
-      document.getElementById('blockHeight').textContent = data.blockHeight.toLocaleString();
-    }
-    if (data.validators) {
-      document.getElementById('validators').textContent = data.validators.toLocaleString();
-    }
-    if (data.subnets) {
-      document.getElementById('subnets').textContent = data.subnets.toLocaleString();
-    }
-    if (data.emission) {
-      document.getElementById('emission').textContent = data.emission + ' τ/day';
-    }
-    if (data.totalNeurons) {
-      document.getElementById('totalNeurons').textContent = data.totalNeurons.toLocaleString() + ' Neurons';
-    }
-
-  } catch {
-    console.error('Failed to update network stats');
-  }
-}
-
-// ---- Network stats ----
 const $ = (id) => document.getElementById(id);
 const fmt = (n) => new Intl.NumberFormat('de-DE').format(Number(n || 0));
 
+let lastPrice = null;
+
+// Network
 async function loadNetwork() {
   try {
     const res = await fetch('/api/network', { cache: 'no-store' });
-    const data = await res.json();
+    const d = await res.json();
 
-    const neurons = data.activeNeurons ?? data.totalNeurons ?? 0;
-    const validators = data.activeValidators ?? data.validators ?? 0;
-    const subnets = data.subnets ?? 0;
-    const block = data.blockHeight ?? 0;
-    const emission = (data.emission || '0');
+    $('blockHeight') && ($('blockHeight').textContent = fmt(d.blockHeight ?? 0));
+    $('validators') && ($('validators').textContent = fmt(d.activeValidators ?? d.validators ?? 0));
+    $('subnets') && ($('subnets').textContent = fmt(d.subnets ?? 0));
+    $('emission') && ($('emission').textContent = `${d.emission ?? '0'} τ/day`);
 
-    // Header pill
     const tn = $('totalNeurons');
     if (tn) {
-      tn.textContent = fmt(neurons);
+      tn.textContent = fmt(d.activeNeurons ?? d.totalNeurons ?? 0);
       tn.classList.remove('skeleton-text');
     }
-
-    // Cards
-    $('blockHeight') && ($('blockHeight').textContent = fmt(block));
-    $('validators') && ($('validators').textContent = fmt(validators));
-    $('subnets') && ($('subnets').textContent = fmt(subnets));
-    $('emission') && ($('emission').textContent = `${emission} τ/day`);
-
-    // optional: Seite als "geladen" markieren
-    document.querySelectorAll('.dashboard-card.loading').forEach(el => el.classList.remove('loading'));
-  } catch (err) {
-    console.error('Failed to load /api/network', err);
+  } catch (e) {
+    console.error('Network load failed', e);
   }
 }
 
-document.addEventListener('DOMContentLoaded', loadNetwork);
+// Price (weniger häufig wegen Rate Limits)
+async function loadPrice() {
+  try {
+    const res = await fetch(`${COINGECKO_API}/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true`, { cache: 'no-store' });
+    const data = await res.json();
+    const p = data?.bittensor?.usd ?? null;
+    if (p != null) lastPrice = p;
+  } catch (e) {
+    // ignore; wir behalten lastPrice
+  } finally {
+    const el = $('taoPrice');
+    if (el) el.textContent = lastPrice != null ? `$${Number(lastPrice).toFixed(2)}` : 'N/A';
+  }
+}
 
-setInterval(init, 60000);
+// Init + Interval
+document.addEventListener('DOMContentLoaded', () => {
+  loadNetwork();
+  loadPrice();
+  // alle 60s nur Network updaten
+  setInterval(loadNetwork, 60_000);
+  // Preis alle 5 Min, um Limits zu schonen
+  setInterval(loadPrice, 300_000);
+});
