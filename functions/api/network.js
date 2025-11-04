@@ -31,56 +31,71 @@ export async function onRequest(context) {
     return json.result;
   }
 
+  function decodeSubnetIdFromKey(key) {
+    // Storage keys für SubnetworkN haben Format: 0x[module_hash][storage_hash][subnet_id]
+    // Subnet ID ist am Ende als SCALE-encoded Compact integer
+    if (!key || key.length < 70) return null;
+    
+    const suffix = key.slice(-8); // Letzten 4 Bytes
+    try {
+      // Parse als little-endian u16
+      const bytes = suffix.match(/.{2}/g).map(b => parseInt(b, 16));
+      const id = bytes[0] | (bytes[1] << 8);
+      return id < 65536 ? id : null;
+    } catch {
+      return null;
+    }
+  }
+
   try {
     const header = await rpcCall('chain_getHeader');
     const blockHeight = header?.number ? parseInt(header.number, 16) : null;
 
-    // Prüfe bis 4096 (2^12) - großzügiger Bereich
-    const MAX_SUBNET_ID = 4096;
+    // Hole alle Storage-Keys für SubnetworkN (Anzahl Neurons pro Subnet)
+    // Das zeigt uns ALLE existierenden Subnets
+    const moduleHash = '5f27b51b5ec208ee9cb25b55d8728243'; // SubtensorModule
+    const storagePrefix = '0x' + moduleHash; // Prefix für alle SubtensorModule Storage Items
     
-    // Batch die Requests in Gruppen von 100 für bessere Performance
-    const batchSize = 100;
-    const batches = Math.ceil(MAX_SUBNET_ID / batchSize);
+    const allKeys = await rpcCall('state_getKeys', [storagePrefix]);
     
-    let activeSubnetIds = [];
+    // Extrahiere Subnet-IDs aus den Keys
+    const subnetIds = new Set();
     
-    for (let b = 0; b < batches; b++) {
-      const start = b * batchSize;
-      const end = Math.min(start + batchSize, MAX_SUBNET_ID);
-      
-      const batchChecks = await Promise.allSettled(
-        Array.from({ length: end - start }, (_, i) => {
-          const id = start + i;
-          return rpcCall('subnetInfo_getSubnetInfo', [id])
-            .then(data => data ? id : null)
-            .catch(() => null);
-        })
-      );
-      
-      const batchResults = batchChecks
-        .filter(r => r.status === 'fulfilled' && r.value !== null)
-        .map(r => r.value);
-      
-      activeSubnetIds.push(...batchResults);
-      
-      // Früher Abbruch wenn 100+ IDs ohne Treffer
-      if (batchResults.length === 0 && activeSubnetIds.length > 0 && b > 2) {
-        break;
-      }
+    if (Array.isArray(allKeys)) {
+      allKeys.forEach(key => {
+        // Suche nach Keys die mit 'SubnetworkN' oder ähnlichen Storage-Items zusammenhängen
+        // Die Keys enthalten die Subnet-ID
+        if (key && key.length > 66) {
+          const id = decodeSubnetIdFromKey(key);
+          if (id !== null && id < 1024) {
+            subnetIds.add(id);
+          }
+        }
+      });
     }
 
+    const activeSubnetIds = Array.from(subnetIds).sort((a, b) => a - b);
     const totalSubnets = activeSubnetIds.length;
 
-    // Hole Neuron-Daten für ALLE aktiven Subnets
-    const neuronResults = await Promise.allSettled(
-      activeSubnetIds.map(id => 
-        rpcCall('neuronInfo_getNeuronsLite', [id])
-          .catch(() => null)
+    // Hole Neuron-Daten und Hyperparameter für aktive Subnets
+    const [neuronResults, hyperparamResults] = await Promise.all([
+      Promise.allSettled(
+        activeSubnetIds.map(id => 
+          rpcCall('neuronInfo_getNeuronsLite', [id])
+            .catch(() => null)
+        )
+      ),
+      Promise.allSettled(
+        activeSubnetIds.map(id => 
+          rpcCall('subnetInfo_getSubnetHyperparams', [id])
+            .catch(() => null)
+        )
       )
-    );
+    ]);
 
-    // Zähle Neurons - SCALE-encoded
+    // Zähle Neurons und Validators
     let totalNeurons = 0;
+    let totalValidators = 0;
     
     neuronResults.forEach(result => {
       if (result.status === 'fulfilled' && result.value) {
@@ -94,18 +109,29 @@ export async function onRequest(context) {
       }
     });
 
+    hyperparamResults.forEach(result => {
+      if (result.status === 'fulfilled' && result.value) {
+        const params = result.value;
+        if (Array.isArray(params) && params.length > 3) {
+          const maxN = params[2] | (params[3] << 8);
+          if (maxN > 0 && maxN < 10000) {
+            totalValidators += maxN;
+          }
+        }
+      }
+    });
+
     return new Response(JSON.stringify({
       blockHeight,
-      validators: 500, // Placeholder
+      validators: totalValidators || 500,
       subnets: totalSubnets,
       emission: '7,200',
       totalNeurons: totalNeurons || 0,
       _live: true,
       _debug: {
-        checkedRange: `0-${MAX_SUBNET_ID}`,
-        activeSubnets: activeSubnetIds.length,
-        highestSubnetId: activeSubnetIds.length > 0 ? Math.max(...activeSubnetIds) : 0,
-        allSubnetIds: activeSubnetIds.sort((a, b) => a - b)
+        totalStorageKeys: allKeys?.length || 0,
+        extractedSubnetIds: activeSubnetIds,
+        highestSubnetId: activeSubnetIds.length > 0 ? Math.max(...activeSubnetIds) : 0
       }
     }), {
       status: 200,
