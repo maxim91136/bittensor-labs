@@ -4,12 +4,6 @@ import bittensor as bt
 
 NETWORK = os.getenv("NETWORK", "finney")
 
-def is_validator(n: dict) -> bool:
-    for k in ("validator_permit", "is_validator", "validator"):
-        v = n.get(k)
-        if isinstance(v, (bool, int)): return bool(v)
-    return False
-
 def gather() -> Dict[str, Any]:
     st = bt.subtensor(network=NETWORK)
     try:
@@ -26,27 +20,17 @@ def gather() -> Dict[str, Any]:
     total_neurons = 0
 
     for uid in netuids:
-        lite = None
-        try:
-            try: lite = st.get_neurons_lite(uid)
-            except Exception: lite = st.neurons_lite(uid)
-        except Exception:
-            lite = None
-
-        if lite is not None:
-            total_neurons += len(lite)
-            total_validators += sum(1 for n in lite if isinstance(n, dict) and is_validator(n))
-            del lite; gc.collect(); continue
-
         try:
             mg = st.metagraph(uid)
-            total_neurons += int(getattr(mg, "n", 0)) or 0
-            vp = getattr(mg, "validator_permit", None) or getattr(mg, "validator_permits", None)
+            total_neurons += int(getattr(mg, "n", 0))
+            
+            # Validator-Zählung: validator_permit Array
+            vp = getattr(mg, "validator_permit", None)
             if vp is not None:
-                arr = vp.tolist() if hasattr(vp, "tolist") else vp
-                total_validators += sum(1 for v in arr if bool(v))
-        except Exception:
-            pass
+                arr = vp.tolist() if hasattr(vp, "tolist") else list(vp)
+                total_validators += sum(1 for x in arr if x)
+        except Exception as e:
+            print(f"Subnet {uid} error: {e}")
         finally:
             try: del mg
             except: pass
