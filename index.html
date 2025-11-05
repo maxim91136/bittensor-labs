@@ -164,19 +164,10 @@
   </div>
 
   <div class="dashboard-grid">
-    <section class="dashboard-card" aria-labelledby="network-heading">
-      <div class="card-header">
-        <h2 id="network-heading">Network Validators</h2>
-        <span class="card-badge">Info</span>
-      </div>
-      <div class="chart-container">
-        <!-- Chart hidden: show a compact note instead -->
-        <div class="chart-placeholder">
-          Active Validators are shown as a tile above. Historical chart is disabled for now.
-        </div>
-      </div>
-    </section>
+    <!-- REMOVE the whole Network Validators card -->
+    <!-- REMOVE the duplicate price section below (dashboard-row charts) -->
 
+    <!-- Keep only ONE price chart card -->
     <section class="dashboard-card loading" aria-labelledby="price-heading">
       <div class="card-header">
         <h2 id="price-heading">TAO Price History</h2>
@@ -190,28 +181,13 @@
         <canvas id="priceChart" aria-label="Price History Chart"></canvas>
         <div class="chart-skeleton"></div>
       </div>
-      <!-- Note below the chart -->
       <div id="priceRangeNote" class="chart-note" aria-live="polite"></div>
     </section>
   </div>
 
-  <section class="dashboard-row charts">
-    <!-- TAO Price History ONLY -->
-    <div class="dashboard-card">
-      <header class="card-header">
-        <h3>TAO Price History</h3>
-        <div class="time-toggle">
-          <button class="time-btn active" data-range="7">7D</button>
-          <button class="time-btn" data-range="30">30D</button>
-          <button class="time-btn" data-range="365">1Y</button>
-        </div>
-      </header>
-      <div class="card-body">
-        <canvas id="priceChart"></canvas>
-        <small id="priceRangeNote" class="muted"></small>
-      </div>
-    </div>
-  </section>
+  <!-- DELETE this entire duplicate section:
+  <section class="dashboard-row charts"> ... second TAO Price History ... </section>
+  -->
 </main>
 
 <footer class="site-footer">
