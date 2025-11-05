@@ -443,3 +443,36 @@ body {
   border-radius: 10px;
   font-weight: 600;
 }
+
+/* ---- Time Range Toggle ---- */
+.time-range-toggle {
+  display: flex;
+  gap: clamp(4px, 1vw, 6px);
+  background: rgba(255,255,255,0.03);
+  padding: 3px;
+  border-radius: 10px;
+}
+
+.time-btn {
+  padding: clamp(4px, 1vw, 6px) clamp(10px, 2vw, 14px);
+  font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+  font-weight: 600;
+  color: var(--text-muted);
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.time-btn:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.05);
+}
+
+.time-btn.active {
+  color: var(--accent);
+  background: var(--glow);
+}

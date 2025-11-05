@@ -178,7 +178,12 @@
     <section class="dashboard-card loading" aria-labelledby="price-heading">
       <div class="card-header">
         <h2 id="price-heading">TAO Price History</h2>
-        <span class="card-badge">24h</span>
+        <div class="time-range-toggle">
+          <button class="time-btn active" data-range="7">7D</button>
+          <button class="time-btn" data-range="30">30D</button>
+          <button class="time-btn" data-range="365">1Y</button>
+          <button class="time-btn" data-range="max">MAX</button>
+        </div>
       </div>
       <div class="chart-container">
         <canvas id="priceChart" aria-label="Price History Chart"></canvas>
