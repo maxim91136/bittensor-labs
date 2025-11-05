@@ -133,16 +133,15 @@ async function fetchPriceHistory(range = '7') {
   const cached = getCachedPrice?.(key);
   if (cached) return cached;
 
-  // Build endpoint: no interval for 7D (CoinGecko liefert automatisch hourly),
-  // daily für längere Zeiträume (weniger Punkte)
+  // Free-plan: cap MAX to 365d
+  const effective = key === 'max' ? '365' : key;
+
   const endpoint =
-    key === 'max'
-      ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=max&interval=daily`
-      : key === '365'
+    effective === '365'
       ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=365&interval=daily`
-      : key === '30'
+      : effective === '30'
       ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=30&interval=daily`
-      : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=7`; // <- no interval
+      : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=7`; // 7D → no interval (hourly auto)
 
   try {
     const res = await fetch(endpoint, { cache: 'no-store' });
@@ -152,7 +151,7 @@ async function fetchPriceHistory(range = '7') {
     }
     const data = await res.json();
     if (!data?.prices?.length) return null;
-    setCachedPrice?.(key, data.prices);
+    setCachedPrice?.(key, data.prices); // cache under requested key ('max' capped to 365)
     return data.prices;
   } catch (e) {
     console.error('❌ fetchPriceHistory failed:', e);
@@ -451,6 +450,13 @@ function setupTimeRangeToggle() {
   });
 }
 
+function setupMaxTooltip() {
+  const btnMax = document.querySelector('.time-btn[data-range="max"]');
+  if (btnMax) {
+    btnMax.title = 'Free CoinGecko API caps MAX to the last 365 days.';
+  }
+}
+
 // ===== Data Refresh =====
 async function refreshDashboard() {
   console.log('🔄 Refreshing dashboard data...');
@@ -476,6 +482,7 @@ async function refreshDashboard() {
 async function initDashboard() {
   console.log('🚀 Initializing Bittensor-Labs Dashboard...');
 
+  setupMaxTooltip();
   setupTimeRangeToggle();
 
   // Erst Network/History/Price (Spot) laden – robust gegen CoinGecko-Fehler
