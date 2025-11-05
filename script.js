@@ -1,15 +1,15 @@
 // ===== API Configuration =====
 const API_BASE = '/api';
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
-const REFRESH_INTERVAL = 60000; // 60 Sekunden (CoinGecko hat Rate Limits)
+const REFRESH_INTERVAL = 60000;
+const PRICE_CACHE_TTL = 300000; // 5 Minuten Cache
 
 // ===== State Management =====
 let validatorsChart = null;
 let priceChart = null;
 let lastPrice = null;
-let currentPriceRange = '7'; // Default: 7 days
-let priceRequestAbortController = null; // Für Request-Abbruch
-let priceRequestTimeout = null; // Debouncing
+let currentPriceRange = '7';
+let isLoadingPrice = false; // Einfacher Lock
 
 // ===== Utility Functions =====
 function formatNumber(num) {
@@ -43,6 +43,38 @@ function animatePriceChange(element, newPrice) {
   }, 600);
   
   lastPrice = newPrice;
+}
+
+// ===== LocalStorage Cache Helpers =====
+function getCachedPrice(range) {
+  try {
+    const cached = localStorage.getItem(`tao_price_${range}`);
+    if (!cached) return null;
+    
+    const { data, timestamp } = JSON.parse(cached);
+    const age = Date.now() - timestamp;
+    
+    if (age < PRICE_CACHE_TTL) {
+      console.log(`✅ Using cached data for ${range} (${Math.round(age/1000)}s old)`);
+      return data;
+    }
+    
+    localStorage.removeItem(`tao_price_${range}`);
+    return null;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedPrice(range, data) {
+  try {
+    localStorage.setItem(`tao_price_${range}`, JSON.stringify({
+      data,
+      timestamp: Date.now()
+    }));
+  } catch (error) {
+    console.warn('⚠️  Could not cache price data:', error);
+  }
 }
 
 // ===== API Fetchers =====
@@ -86,25 +118,19 @@ async function fetchTaoPrice() {
   }
 }
 
-async function fetchPriceHistory(days = '7') {
-  // Abort previous request if still running
-  if (priceRequestAbortController) {
-    priceRequestAbortController.abort();
-  }
-  
-  priceRequestAbortController = new AbortController();
+async function fetchPriceHistory(range = '7') {
+  // Check cache first
+  const cached = getCachedPrice(range);
+  if (cached) return cached;
   
   try {
-    const endpoint = days === 'max' 
+    const endpoint = range === 'max' 
       ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=max`
-      : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=${days}`;
+      : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=${range}`;
     
-    console.log(`🔄 Fetching price history: ${days} days...`);
+    console.log(`🔄 Fetching price history: ${range} days...`);
     
-    const response = await fetch(endpoint, { 
-      cache: 'no-store',
-      signal: priceRequestAbortController.signal
-    });
+    const response = await fetch(endpoint, { cache: 'no-store' });
     
     if (!response.ok) {
       throw new Error(`CoinGecko API error: ${response.status}`);
@@ -112,16 +138,14 @@ async function fetchPriceHistory(days = '7') {
     
     const data = await response.json();
     console.log(`✅ Received ${data.prices.length} price points`);
+    
+    // Cache the result
+    setCachedPrice(range, data.prices);
+    
     return data.prices;
   } catch (error) {
-    if (error.name === 'AbortError') {
-      console.log('⏭️  Request aborted (new request started)');
-      return null;
-    }
     console.error('❌ Error fetching price history:', error);
     return null;
-  } finally {
-    priceRequestAbortController = null;
   }
 }
 
@@ -369,59 +393,47 @@ function createPriceChart(priceHistory, range = '7') {
   canvas.closest('.dashboard-card')?.classList.remove('loading');
 }
 
-// ===== Time Range Toggle mit Debouncing =====
+// ===== Time Range Toggle (vereinfacht mit Lock) =====
 function setupTimeRangeToggle() {
   const buttons = document.querySelectorAll('.time-btn');
   
   buttons.forEach(btn => {
     btn.addEventListener('click', async () => {
-      // Prevent double-clicks
-      if (btn.disabled) return;
+      // Simple Lock: verhindert parallele Requests
+      if (isLoadingPrice) {
+        console.log('⏳ Already loading, please wait...');
+        return;
+      }
       
       // Update active state
-      buttons.forEach(b => {
-        b.classList.remove('active');
-        b.disabled = true; // Disable während Request läuft
-      });
+      buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      // Get range
       const range = btn.dataset.range;
       currentPriceRange = range;
       
-      // Show loading
       const card = document.querySelector('#priceChart')?.closest('.dashboard-card');
       if (card) {
         card.classList.add('loading');
       }
       
-      // Clear previous timeout
-      if (priceRequestTimeout) {
-        clearTimeout(priceRequestTimeout);
-      }
+      isLoadingPrice = true;
       
-      // Debounce: warte 300ms bevor Request
-      priceRequestTimeout = setTimeout(async () => {
-        try {
-          const priceHistory = await fetchPriceHistory(range);
-          if (priceHistory) {
-            createPriceChart(priceHistory, range);
-          } else {
-            console.warn('⚠️  No price history received');
-            if (card) {
-              card.classList.remove('loading');
-            }
-          }
-        } catch (error) {
-          console.error('❌ Error loading price chart:', error);
-          if (card) {
-            card.classList.remove('loading');
-          }
-        } finally {
-          // Re-enable buttons
-          buttons.forEach(b => b.disabled = false);
+      try {
+        const priceHistory = await fetchPriceHistory(range);
+        if (priceHistory) {
+          createPriceChart(priceHistory, range);
+        } else {
+          console.warn('⚠️  No price history received');
         }
-      }, 300);
+      } catch (error) {
+        console.error('❌ Error loading price chart:', error);
+      } finally {
+        if (card) {
+          card.classList.remove('loading');
+        }
+        isLoadingPrice = false;
+      }
     });
   });
 }
