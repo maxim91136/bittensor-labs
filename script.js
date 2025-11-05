@@ -53,27 +53,18 @@ function normalizeRange(raw) {
 }
 
 // ===== LocalStorage Cache Helpers =====
+// TTL auch für 365 (ehem. MAX)
 function getCachedPrice(range) {
   try {
     const cached = localStorage.getItem(`tao_price_${range}`);
     if (!cached) return null;
-    
     const { data, timestamp } = JSON.parse(cached);
     const age = Date.now() - timestamp;
-    
-    // Längerer Cache für MAX (1h statt 5min)
-    const ttl = range === 'max' ? PRICE_CACHE_TTL_MAX : PRICE_CACHE_TTL;
-    
-    if (age < ttl) {
-      console.log(`✅ Using cached data for ${range} (${Math.round(age/1000)}s old)`);
-      return data;
-    }
-    
+    const ttl = (range === '365') ? PRICE_CACHE_TTL_MAX : PRICE_CACHE_TTL;
+    if (age < ttl) return data;
     localStorage.removeItem(`tao_price_${range}`);
     return null;
-  } catch {
-    return null;
-  }
+  } catch { return null; }
 }
 
 function setCachedPrice(range, data) {
@@ -128,34 +119,37 @@ async function fetchTaoPrice() {
   }
 }
 
+// Preis-Historie: 7D (auto hourly), 30D/365 daily
 async function fetchPriceHistory(range = '7') {
-  const key = normalizeRange(range); // 'max' | '365' | '30' | '7'
+  const key = normalizeRange(range); // '7' | '30' | '365'
   const cached = getCachedPrice?.(key);
   if (cached) return cached;
 
-  // Free-plan: cap MAX to 365d
-  const effective = key === 'max' ? '365' : key;
-
   const endpoint =
-    effective === '365'
+    key === '365'
       ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=365&interval=daily`
-      : effective === '30'
+      : key === '30'
       ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=30&interval=daily`
-      : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=7`; // 7D → no interval (hourly auto)
+      : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=7`;
 
   try {
     const res = await fetch(endpoint, { cache: 'no-store' });
-    if (!res.ok) {
-      console.warn('⚠️ CoinGecko response:', res.status, res.statusText);
-      return null;
-    }
+    if (!res.ok) return null;
     const data = await res.json();
     if (!data?.prices?.length) return null;
-    setCachedPrice?.(key, data.prices); // cache under requested key ('max' capped to 365)
+    setCachedPrice?.(key, data.prices);
     return data.prices;
-  } catch (e) {
-    console.error('❌ fetchPriceHistory failed:', e);
-    return null;
+  } catch { return null; }
+}
+
+// Hinweis unter dem Chart setzen
+function setPriceRangeNote(range) {
+  const el = document.getElementById('priceRangeNote');
+  if (!el) return;
+  if (range === '365') {
+    el.textContent = 'Showing last 365 days (CoinGecko free tier limit).';
+  } else {
+    el.textContent = '';
   }
 }
 
@@ -403,6 +397,7 @@ function createPriceChart(priceHistory, range = '7') {
   });
   
   canvas.closest('.dashboard-card')?.classList.remove('loading');
+  setPriceRangeNote(range);
 }
 
 // ===== Time Range Toggle (vereinfacht mit Lock) =====
@@ -421,7 +416,7 @@ function setupTimeRangeToggle() {
       btn.classList.add('active');
       
       const raw = e.currentTarget?.dataset?.range;
-      const norm = normalizeRange(raw);
+      const norm = normalizeRange(raw); // '7' | '30' | '365'
       currentPriceRange = norm;
       
       const card = document.querySelector('#priceChart')?.closest('.dashboard-card');
@@ -435,6 +430,7 @@ function setupTimeRangeToggle() {
         const priceHistory = await fetchPriceHistory(currentPriceRange);
         if (priceHistory) {
           createPriceChart(priceHistory, currentPriceRange);
+          setPriceRangeNote(currentPriceRange);
         } else {
           console.warn('⚠️  No price history received');
         }
@@ -515,3 +511,8 @@ if (document.readyState === 'loading') {
 } else {
   initDashboard();
 }
+
+// Einmalige Migration: altes MAX-Caching entfernen
+(function migratePriceCacheKeys() {
+  try { localStorage.removeItem('tao_price_max'); } catch {}
+})();

@@ -402,6 +402,13 @@ body {
   display: none;
 }
 
+.chart-note {
+  margin-top: 6px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  text-align: right;
+}
+
 /* ---- Footer ---- */
 .site-footer {
   max-width: 1200px;
