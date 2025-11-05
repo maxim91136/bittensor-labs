@@ -74,6 +74,32 @@ def gather() -> Dict[str, Any]:
             del lite
             gc.collect()
 
+    # Gather subnet data for Top 10
+    subnet_data = []
+    for uid in netuids:
+        try:
+            meta = st.subnet(uid)  # oder st.get_subnet_info(uid), je nach SDK-Version
+            subnet_data.append({
+                "netuid": uid,
+                "name": getattr(meta, "name", f"Subnet {uid}"),
+                "emission": float(getattr(meta, "emission", 0))
+            })
+        except Exception:
+            pass
+
+    # Sort by emission, take Top 10
+    subnet_data.sort(key=lambda x: x["emission"], reverse=True)
+    top_subnets = subnet_data[:10]
+
+    # Write subnets.json
+    subnets_payload = {
+        "subnets": top_subnets,
+        "updatedAt": now.isoformat(),
+        "updatedAtEpoch": int(now.timestamp())
+    }
+    with open("subnets.json", "w") as f:
+        json.dump(subnets_payload, f)
+
     return {
         "blockHeight": block,
         "validators": total_validators,

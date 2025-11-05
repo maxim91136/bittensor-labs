@@ -77,3 +77,14 @@ jobs:
           echo "Response:"
           cat /tmp/body.json || true
           test "$HTTP" -ge 200 -a "$HTTP" -lt 300
+      - name: Push subnets to Cloudflare KV
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          curl -fsS -X PUT \
+            -H "Authorization: Bearer ${CF_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            --data-binary @subnets.json \
+            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/subnets"
