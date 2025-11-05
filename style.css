@@ -409,6 +409,18 @@ body {
   text-align: right;
 }
 
+.chart-placeholder {
+  width: 100%;
+  min-height: 140px;
+  display: grid;
+  place-items: center;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  border: 1px dashed rgba(255,255,255,0.08);
+}
+
 /* ---- Footer ---- */
 .site-footer {
   max-width: 1200px;

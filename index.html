@@ -164,14 +164,16 @@
   </div>
 
   <div class="dashboard-grid">
-    <section class="dashboard-card loading" aria-labelledby="network-heading">
+    <section class="dashboard-card" aria-labelledby="network-heading">
       <div class="card-header">
         <h2 id="network-heading">Network Validators</h2>
-        <span class="card-badge pulse">Live</span>
+        <span class="card-badge">Info</span>
       </div>
       <div class="chart-container">
-        <canvas id="validatorsChart" aria-label="Validators Chart"></canvas>
-        <div class="chart-skeleton"></div>
+        <!-- Chart hidden: show a compact note instead -->
+        <div class="chart-placeholder">
+          Active Validators are shown as a tile above. Historical chart is disabled for now.
+        </div>
       </div>
     </section>
 
@@ -190,16 +192,6 @@
       </div>
       <!-- Note below the chart -->
       <div id="priceRangeNote" class="chart-note" aria-live="polite"></div>
-    </section>
-
-    <section class="dashboard-card" id="validators-card" hidden aria-hidden="true">
-      <div class="card-header">
-        <h2 id="validators-heading">Network Validators (Hidden)</h2>
-      </div>
-      <div class="chart-container">
-        <canvas id="validatorsChartHidden" aria-label="Validators Chart (Hidden)"></canvas>
-        <div class="chart-skeleton"></div>
-      </div>
     </section>
   </div>
 </main>
