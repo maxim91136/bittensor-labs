@@ -2,15 +2,15 @@
 const API_BASE = '/api';
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 const REFRESH_INTERVAL = 60000;
-const PRICE_CACHE_TTL = 300000; // 5 Minuten Cache (Standard)
-const PRICE_CACHE_TTL_MAX = 3600000; // 1 Stunde für MAX (viele Datenpunkte)
+const PRICE_CACHE_TTL = 300000;
+const PRICE_CACHE_TTL_MAX = 3600000;
 
 // ===== State Management =====
 let validatorsChart = null;
 let priceChart = null;
 let lastPrice = null;
 let currentPriceRange = '7';
-let isLoadingPrice = false; // Einfacher Lock
+let isLoadingPrice = false;
 
 // ===== Utility Functions =====
 function formatNumber(num) {
@@ -19,35 +19,9 @@ function formatNumber(num) {
   return Number(num).toLocaleString('en-US');
 }
 
-// Neu: volle Zahl (für alle Tiles außer Max Supply)
 function formatFull(num) {
   if (num === null || num === undefined || isNaN(num)) return '—';
   return Math.round(Number(num)).toLocaleString('en-US');
-}
-
-// Update: robust emission selector
-function updateNetworkStats(data) {
-  if (!data) return;
-
-  const blockHeight = document.getElementById('blockHeight');
-  if (blockHeight) blockHeight.textContent = formatFull(data.blockHeight);
-
-  const validators = document.getElementById('validators');
-  if (validators) validators.textContent = formatFull(data.validators);
-
-  const subnets = document.getElementById('subnets');
-  if (subnets) subnets.textContent = formatFull(data.subnets);
-
-  const neurons = document.getElementById('totalNeurons');
-  if (neurons) neurons.textContent = formatFull(data.totalNeurons);
-
-  // Emission (support both #emission and #emissionRate)
-  const emissionEl =
-    document.getElementById('emission') ||
-    document.getElementById('emissionRate') ||
-    document.querySelector('[data-kpi="emission"] .stat-value');
-
-  if (emissionEl) emissionEl.textContent = `${formatFull(data.emission)} τ/day`;
 }
 
 function formatPrice(price) {
@@ -80,7 +54,6 @@ function normalizeRange(raw) {
 }
 
 // ===== LocalStorage Cache Helpers =====
-// TTL auch für 365 (ehem. MAX)
 function getCachedPrice(range) {
   try {
     const cached = localStorage.getItem(`tao_price_${range}`);
@@ -146,9 +119,8 @@ async function fetchTaoPrice() {
   }
 }
 
-// Preis-Historie: 7D (auto hourly), 30D/365 daily
 async function fetchPriceHistory(range = '7') {
-  const key = normalizeRange(range); // '7' | '30' | '365'
+  const key = normalizeRange(range);
   const cached = getCachedPrice?.(key);
   if (cached) return cached;
 
@@ -169,17 +141,6 @@ async function fetchPriceHistory(range = '7') {
   } catch { return null; }
 }
 
-// Hinweis unter dem Chart setzen
-function setPriceRangeNote(range) {
-  const el = document.getElementById('priceRangeNote');
-  if (!el) return;
-  if (range === '365') {
-    el.textContent = 'Showing last 365 days (CoinGecko free tier limit).';
-  } else {
-    el.textContent = '';
-  }
-}
-
 // ===== UI Updates =====
 function updateNetworkStats(data) {
   if (!data) return;
@@ -196,13 +157,14 @@ function updateNetworkStats(data) {
   const neurons = document.getElementById('totalNeurons');
   if (neurons) neurons.textContent = formatFull(data.totalNeurons);
 
-  // Emission (support both #emission and #emissionRate)
+  // Emission: robust fallback (API könnte emission oder emissionRate liefern)
+  const emissionValue = data.emission ?? data.emissionRate ?? 7200;
   const emissionEl =
     document.getElementById('emission') ||
     document.getElementById('emissionRate') ||
     document.querySelector('[data-kpi="emission"] .stat-value');
 
-  if (emissionEl) emissionEl.textContent = `${formatFull(data.emission)} τ/day`;
+  if (emissionEl) emissionEl.textContent = `${formatFull(emissionValue)} τ/day`;
 }
 
 function updateTaoPrice(priceData) {
@@ -214,6 +176,16 @@ function updateTaoPrice(priceData) {
   if (priceElement) {
     priceElement.textContent = formatPrice(priceData.price);
     animatePriceChange(pillElement, priceData.price);
+  }
+}
+
+function setPriceRangeNote(range) {
+  const el = document.getElementById('priceRangeNote');
+  if (!el) return;
+  if (range === '365') {
+    el.textContent = 'Showing last 365 days (CoinGecko free tier limit).';
+  } else {
+    el.textContent = '';
   }
 }
 
