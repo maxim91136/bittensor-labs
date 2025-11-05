@@ -458,8 +458,26 @@ async function refreshDashboard() {
   console.log('✅ Dashboard updated');
 }
 
+// ===== Reorder charts: price left, validators right (also first on mobile) =====
+function reorderCharts() {
+  const priceCard = document.getElementById('priceChart')?.closest('.dashboard-card');
+  const validatorsCard = document.getElementById('validatorsChart')?.closest('.dashboard-card');
+
+  if (!priceCard || !validatorsCard) return;
+  const row = priceCard.parentElement;
+  if (!row || row !== validatorsCard.parentElement) return;
+
+  // If priceCard is not already before validatorsCard, move it
+  if (priceCard.nextElementSibling !== validatorsCard) {
+    row.insertBefore(priceCard, validatorsCard);
+  }
+}
+
 // ===== Initialization =====
 async function initDashboard() {
+  // ensure correct order before rendering
+  reorderCharts();
+
   console.log('🚀 Initializing Bittensor-Labs Dashboard...');
 
   setupMaxTooltip();
