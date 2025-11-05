@@ -46,6 +46,12 @@ function animatePriceChange(element, newPrice) {
   lastPrice = newPrice;
 }
 
+function normalizeRange(raw) {
+  const r = String(raw ?? '').trim().toLowerCase();
+  if (r === '1y' || r === '1yr' || r === 'year') return '365';
+  return r;
+}
+
 // ===== LocalStorage Cache Helpers =====
 function getCachedPrice(range) {
   try {
@@ -123,46 +129,25 @@ async function fetchTaoPrice() {
 }
 
 async function fetchPriceHistory(range = '7') {
-  // Check cache first
-  const cached = getCachedPrice(range);
+  const key = normalizeRange(range); // 'max' | '365' | '30' | '7'
+  const cached = getCachedPrice?.(key);
   if (cached) return cached;
-  
-  try {
-    // FIX: CoinGecko will "max" als String, nicht als Parameter
-    const endpoint = range === 'max' 
-      ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=max`
-      : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=${range}`;
-    
-    console.log(`🔄 Fetching price history: ${range} ${range === 'max' ? '' : 'days'}...`);
-    
-    const response = await fetch(endpoint, { 
-      cache: 'no-store',
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
-    
-    if (!response.ok) {
-      throw new Error(`CoinGecko API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    // Validierung: Mindestens 1 Datenpunkt
-    if (!data.prices || data.prices.length === 0) {
-      throw new Error('No price data received');
-    }
-    
-    console.log(`✅ Received ${data.prices.length} price points`);
-    
-    // Cache the result
-    setCachedPrice(range, data.prices);
-    
-    return data.prices;
-  } catch (error) {
-    console.error('❌ Error fetching price history:', error);
-    return null;
-  }
+
+  // Weniger Punkte abfragen: daily für lange Zeiträume
+  const endpoint =
+    key === 'max'
+      ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=max&interval=daily`
+      : key === '365'
+      ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=365&interval=daily`
+      : key === '30'
+      ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=30&interval=daily`
+      : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=7&interval=hourly`;
+
+  const res = await fetch(endpoint, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`CoinGecko ${res.status}`);
+  const data = await res.json();
+  setCachedPrice?.(key, data.prices);
+  return data.prices;
 }
 
 // ===== UI Updates =====
@@ -354,6 +339,8 @@ function createPriceChart(priceHistory, range = '7') {
       maintainAspectRatio: false,
       plugins: {
         legend: { display: false },
+        // Decimation für große Datensätze
+        decimation: { enabled: true, algorithm: 'lttb', samples: 400 },
         tooltip: {
           mode: 'index',
           intersect: false,
@@ -412,9 +399,8 @@ function createPriceChart(priceHistory, range = '7') {
 // ===== Time Range Toggle (vereinfacht mit Lock) =====
 function setupTimeRangeToggle() {
   const buttons = document.querySelectorAll('.time-btn');
-  
   buttons.forEach(btn => {
-    btn.addEventListener('click', async () => {
+    btn.addEventListener('click', async (e) => {
       // Simple Lock: verhindert parallele Requests
       if (isLoadingPrice) {
         console.log('⏳ Already loading, please wait...');
@@ -425,8 +411,9 @@ function setupTimeRangeToggle() {
       buttons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       
-      const range = btn.dataset.range;
-      currentPriceRange = range;
+      const raw = e.currentTarget?.dataset?.range;
+      const norm = normalizeRange(raw);
+      currentPriceRange = norm;
       
       const card = document.querySelector('#priceChart')?.closest('.dashboard-card');
       if (card) {
@@ -436,9 +423,9 @@ function setupTimeRangeToggle() {
       isLoadingPrice = true;
       
       try {
-        const priceHistory = await fetchPriceHistory(range);
+        const priceHistory = await fetchPriceHistory(currentPriceRange);
         if (priceHistory) {
-          createPriceChart(priceHistory, range);
+          createPriceChart(priceHistory, currentPriceRange);
         } else {
           console.warn('⚠️  No price history received');
         }
