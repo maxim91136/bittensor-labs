@@ -2,7 +2,8 @@
 const API_BASE = '/api';
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 const REFRESH_INTERVAL = 60000;
-const PRICE_CACHE_TTL = 300000; // 5 Minuten Cache
+const PRICE_CACHE_TTL = 300000; // 5 Minuten Cache (Standard)
+const PRICE_CACHE_TTL_MAX = 3600000; // 1 Stunde für MAX (viele Datenpunkte)
 
 // ===== State Management =====
 let validatorsChart = null;
@@ -54,7 +55,10 @@ function getCachedPrice(range) {
     const { data, timestamp } = JSON.parse(cached);
     const age = Date.now() - timestamp;
     
-    if (age < PRICE_CACHE_TTL) {
+    // Längerer Cache für MAX (1h statt 5min)
+    const ttl = range === 'max' ? PRICE_CACHE_TTL_MAX : PRICE_CACHE_TTL;
+    
+    if (age < ttl) {
       console.log(`✅ Using cached data for ${range} (${Math.round(age/1000)}s old)`);
       return data;
     }
@@ -124,19 +128,31 @@ async function fetchPriceHistory(range = '7') {
   if (cached) return cached;
   
   try {
+    // FIX: CoinGecko will "max" als String, nicht als Parameter
     const endpoint = range === 'max' 
       ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=max`
       : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=${range}`;
     
-    console.log(`🔄 Fetching price history: ${range} days...`);
+    console.log(`🔄 Fetching price history: ${range} ${range === 'max' ? '' : 'days'}...`);
     
-    const response = await fetch(endpoint, { cache: 'no-store' });
+    const response = await fetch(endpoint, { 
+      cache: 'no-store',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
     
     if (!response.ok) {
       throw new Error(`CoinGecko API error: ${response.status}`);
     }
     
     const data = await response.json();
+    
+    // Validierung: Mindestens 1 Datenpunkt
+    if (!data.prices || data.prices.length === 0) {
+      throw new Error('No price data received');
+    }
+    
     console.log(`✅ Received ${data.prices.length} price points`);
     
     // Cache the result
