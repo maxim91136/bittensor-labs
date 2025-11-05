@@ -177,12 +177,26 @@ body {
   padding: 20px 16px;
 }
 
+/* Mobile: kleinere Paddings */
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 16px 12px;
+  }
+}
+
 /* ---- Stats Grid: Immer 2 Spalten (Desktop + Mobile) ---- */
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 12px;
   margin-bottom: 20px;
+}
+
+/* Mobile: kleinere Gaps */
+@media (max-width: 768px) {
+  .stats-grid {
+    gap: 8px;
+  }
 }
 
 /* Nur extrem kleine Screens (< 360px): 1 Spalte */
@@ -195,21 +209,27 @@ body {
 /* Mobile: kleinere Schrift in Kacheln */
 @media (max-width: 480px) {
   .stat-card {
-    padding: 12px;
-    gap: 10px;
+    padding: 10px;
+    gap: 8px;
   }
   
   .stat-icon {
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .stat-icon svg {
+    width: 16px;
+    height: 16px;
   }
   
   .stat-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
+    gap: 4px;
   }
   
   .stat-value {
-    font-size: 1.3rem;
+    font-size: 1.15rem;
   }
 }
 
@@ -271,6 +291,16 @@ body {
   border-radius: 50%;
   cursor: help;
   transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* Mobile: kleinere Info-Badges */
+@media (max-width: 480px) {
+  .info-badge {
+    width: 14px;
+    height: 14px;
+    font-size: 10px;
+  }
 }
 
 .info-badge:hover {
@@ -279,7 +309,7 @@ body {
   transform: scale(1.1);
 }
 
-/* Tooltip bei Hover */
+/* Tooltip bei Hover (Desktop) */
 .info-badge::after {
   content: attr(data-tooltip);
   position: absolute;
@@ -302,6 +332,23 @@ body {
 
 .info-badge:hover::after {
   opacity: 1;
+}
+
+/* Mobile: Tooltip bei Touch/Click (aktiviert via JS oder active state) */
+@media (max-width: 768px) {
+  .info-badge::after {
+    bottom: auto;
+    top: calc(100% + 4px);
+    font-size: 0.65rem;
+    padding: 6px 10px;
+    white-space: normal;
+    max-width: 200px;
+  }
+  
+  /* Touch: Tooltip erscheint bei :active */
+  .info-badge:active::after {
+    opacity: 1;
+  }
 }
 
 .stat-value {
