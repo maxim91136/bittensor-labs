@@ -10,7 +10,7 @@
   <title>Bittensor-Labs</title>
 
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='l' x1='0' x2='1' y1='0' y2='1'><stop offset='0%25' stop-color='%2322c55e'/><stop offset='100%25' stop-color='%2316a34a'/></linearGradient></defs><path d='M24 8v12L11.2 44.8c-2.2 4 0.8 8.2 5.4 8.2h30.8c4.6 0 7.6-4.2 5.4-8.2L40 20V8h-4v13.1L21.1 48.3a3 3 0 0 0 2.6 4.5h16.6a3 3 0 0 0 2.6-4.5L28 21.1V8h-4z' fill='none' stroke='%237b8794' stroke-width='1.8'/><path d='M14.8 44h34.4c2.4 0 4.3 1.9 4.3 4.3s-1.9 4.3-4.3 4.3H14.8c-2.4 0-4.3-1.9-4.3-4.3S12.4 44 14.8 44z' fill='url(%23l)'/><circle cx='24' cy='47' r='1.4' fill='%2316a34a'/><circle cx='31' cy='50' r='1.1' fill='%2316a34a'/><circle cx='37' cy='46' r='1.6' fill='%2316a34a'/></svg>" type="image/svg+xml" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%2322c55e'/><stop offset='100%25' stop-color='%2316a34a'/></linearGradient></defs><circle cx='12' cy='12' r='3' fill='url(%23g)'/><path d='M12 12L4 4M12 12L20 4M12 12L4 20M12 12L20 20' stroke='%2322c55e' stroke-width='1.5' opacity='0.4'/><circle cx='4' cy='4' r='2' fill='%23ff6b35'/><circle cx='20' cy='4' r='2' fill='%23ff6b35'/><circle cx='4' cy='20' r='2' fill='%23ff6b35'/><circle cx='20' cy='20' r='2' fill='%23ff6b35'/></svg>" type="image/svg+xml" />
 
   <link rel="preload" href="style.css" as="style" />
   <link rel="stylesheet" href="style.css" />
@@ -18,37 +18,28 @@
   <script src="script.js" defer></script>
 </head>
 <body>
-<!-- Header kompakt + korrekte Schreibweise -->
 <header class="site-header">
   <div class="header-content">
     <div class="logo-section">
       <div class="logo">
         <span class="brand-mark" aria-hidden="true">
-          <svg viewBox="0 0 64 64" width="22" height="22" role="img" focusable="false">
+          <svg viewBox="0 0 24 24" width="22" height="22" role="img" focusable="false">
             <defs>
-              <linearGradient id="lab-liquid" x1="0" x2="1" y1="0" y2="1">
+              <linearGradient id="node-glow" x1="0" y1="0" x2="1" y2="1">
                 <stop offset="0%" stop-color="#22c55e"/>
                 <stop offset="100%" stop-color="#16a34a"/>
               </linearGradient>
             </defs>
-            <!-- Linker Kolben -->
-            <path d="M18 8v10L8 36v12c0 2.2 1.8 4 4 4h8c2.2 0 4-1.8 4-4V36L14 18V8h4z"
-              fill="none" stroke="#7b8794" stroke-width="1.6" stroke-linejoin="round"/>
-            <path d="M10 40h12v8c0 1.1-0.9 2-2 2h-8c-1.1 0-2-0.9-2-2v-8z"
-              fill="url(#lab-liquid)" opacity=".9"/>
-            <circle cx="13" cy="44" r="1" fill="#16a34a"/>
-            <circle cx="17" cy="46" r="0.8" fill="#16a34a"/>
-            
-            <!-- Rechter Kolben -->
-            <path d="M46 8v10l10 18v12c0 2.2-1.8 4-4 4h-8c-2.2 0-4-1.8-4-4V36l10-18V8h-4z"
-              fill="none" stroke="#7b8794" stroke-width="1.6" stroke-linejoin="round"/>
-            <path d="M42 40h12v8c0 1.1-0.9 2-2 2h-8c-1.1 0-2-0.9-2-2v-8z"
-              fill="url(#lab-liquid)" opacity=".9"/>
-            <circle cx="45" cy="44" r="1" fill="#16a34a"/>
-            <circle cx="49" cy="46" r="0.8" fill="#16a34a"/>
-            
-            <!-- Verbindung (verschmelzend) -->
-            <path d="M22 36h20" stroke="#7b8794" stroke-width="1.2" opacity="0.5" stroke-dasharray="2,2"/>
+            <!-- Zentral-Knoten -->
+            <circle cx="12" cy="12" r="3" fill="url(#node-glow)" opacity="0.9"/>
+            <!-- Verbindungslinien -->
+            <path d="M12 12L4 4M12 12L20 4M12 12L4 20M12 12L20 20" 
+                  stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+            <!-- Äußere Knoten -->
+            <circle cx="4" cy="4" r="2" fill="#ff6b35" opacity="0.8"/>
+            <circle cx="20" cy="4" r="2" fill="#ff6b35" opacity="0.8"/>
+            <circle cx="4" cy="20" r="2" fill="#ff6b35" opacity="0.8"/>
+            <circle cx="20" cy="20" r="2" fill="#ff6b35" opacity="0.8"/>
           </svg>
         </span>
         <div class="logo-text">
@@ -59,7 +50,7 @@
     </div>
     
     <div class="header-actions">
-      <div class="price-pill" aria-live="polite">
+      <div class="price-pill" aria-live="polite" title="Total Active Neurons">
         <span class="price-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
@@ -71,7 +62,7 @@
         <span id="totalNeurons" class="skeleton-text">Loading...</span>
       </div>
       
-      <div class="price-pill" id="taoPricePill">
+      <div class="price-pill" id="taoPricePill" title="TAO Price (USD)">
         <span class="price-icon">τ</span>
         <span id="taoPrice">$376.25</span>
       </div>
@@ -79,106 +70,103 @@
   </div>
 </header>
 
-  <main class="dashboard">
-    <!-- Quick Stats -->
-    <!-- Stats Cards mit Info-Badges -->
-<div class="stats-grid">
-  <div class="stat-card">
-    <div class="stat-icon" aria-hidden="true">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-        <circle cx="12" cy="12" r="10"></circle>
-        <polyline points="12 6 12 12 16 14"></polyline>
-      </svg>
-    </div>
-    <div class="stat-content">
-      <div class="stat-label">
-        Block Height
-        <span class="info-badge" data-tooltip="Current blockchain height from Taostats">ⓘ</span>
+<main class="dashboard">
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
       </div>
-      <div class="stat-value" id="blockHeight">4.237.851</div>
+      <div class="stat-content">
+        <div class="stat-label">
+          Block Height
+          <span class="info-badge" data-tooltip="Current blockchain height">ⓘ</span>
+        </div>
+        <div class="stat-value" id="blockHeight">6.815.503</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">
+          Active Validators
+          <span class="info-badge" data-tooltip="Validators securing the network">ⓘ</span>
+        </div>
+        <div class="stat-value" id="validators">1.381</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <rect x="3" y="3" width="7" height="7"></rect>
+          <rect x="14" y="3" width="7" height="7"></rect>
+          <rect x="14" y="14" width="7" height="7"></rect>
+          <rect x="3" y="14" width="7" height="7"></rect>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">
+          Total Subnets
+          <span class="info-badge" data-tooltip="Active subnets in ecosystem">ⓘ</span>
+        </div>
+        <div class="stat-value" id="subnets">129</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+          <line x1="12" y1="1" x2="12" y2="23"></line>
+          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">
+          Emission Rate
+          <span class="info-badge" data-tooltip="Daily TAO emission (1 τ per block)">ⓘ</span>
+        </div>
+        <div class="stat-value" id="emission">7,200 τ/day</div>
+      </div>
     </div>
   </div>
 
-  <div class="stat-card">
-    <div class="stat-icon" aria-hidden="true">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-        <circle cx="9" cy="7" r="4"></circle>
-        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-      </svg>
-    </div>
-    <div class="stat-content">
-      <div class="stat-label">
-        Active Validators
-        <span class="info-badge" data-tooltip="Active validators securing the network">ⓘ</span>
+  <div class="dashboard-grid">
+    <section class="dashboard-card loading" aria-labelledby="network-heading">
+      <div class="card-header">
+        <h2 id="network-heading">Network Validators</h2>
+        <span class="card-badge pulse">Live</span>
       </div>
-      <div class="stat-value" id="validators">501</div>
-    </div>
-  </div>
-
-  <div class="stat-card">
-    <div class="stat-icon" aria-hidden="true">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-        <rect x="3" y="3" width="7" height="7"></rect>
-        <rect x="14" y="3" width="7" height="7"></rect>
-        <rect x="14" y="14" width="7" height="7"></rect>
-        <rect x="3" y="14" width="7" height="7"></rect>
-      </svg>
-    </div>
-    <div class="stat-content">
-      <div class="stat-label">
-        Total Subnets
-        <span class="info-badge" data-tooltip="Active subnets in the ecosystem">ⓘ</span>
+      <div class="chart-container">
+        <canvas id="validatorsChart" aria-label="Validators Chart"></canvas>
+        <div class="chart-skeleton"></div>
       </div>
-      <div class="stat-value" id="subnets">142</div>
-    </div>
-  </div>
+    </section>
 
-  <div class="stat-card">
-    <div class="stat-icon" aria-hidden="true">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-        <line x1="12" y1="1" x2="12" y2="23"></line>
-        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-      </svg>
-    </div>
-    <div class="stat-content">
-      <div class="stat-label">
-        Emission Rate
-        <span class="info-badge" data-tooltip="Daily TAO emission (1 τ per block)">ⓘ</span>
+    <section class="dashboard-card loading" aria-labelledby="price-heading">
+      <div class="card-header">
+        <h2 id="price-heading">TAO Price History</h2>
+        <span class="card-badge">24h</span>
       </div>
-      <div class="stat-value" id="emission">7,200 τ/day</div>
-    </div>
+      <div class="chart-container">
+        <canvas id="priceChart" aria-label="Price History Chart"></canvas>
+        <div class="chart-skeleton"></div>
+      </div>
+    </section>
   </div>
-</div>
+</main>
 
-    <!-- Charts -->
-    <div class="dashboard-grid">
-      <section class="dashboard-card loading" aria-labelledby="network-heading">
-        <div class="card-header">
-          <h2 id="network-heading">Network Validators</h2>
-          <span class="card-badge pulse">Live</span>
-        </div>
-        <div class="chart-container">
-          <canvas id="validatorsChart" aria-label="Validators Chart"></canvas>
-          <div class="chart-skeleton"></div>
-        </div>
-      </section>
-
-      <section class="dashboard-card loading" aria-labelledby="price-heading">
-        <div class="card-header">
-          <h2 id="price-heading">TAO Price History</h2>
-          <span class="card-badge">24h</span>
-        </div>
-        <div class="chart-container">
-          <canvas id="priceChart" aria-label="Price History Chart"></canvas>
-          <div class="chart-skeleton"></div>
-        </div>
-      </section>
-    </div>
-  </main>
-
-  <footer class="site-footer">
+<footer class="site-footer">
   <p>
     <span>Open Source</span>
     <span class="separator">·</span>
