@@ -88,3 +88,46 @@ jobs:
             -H "Content-Type: application/json" \
             --data-binary @subnets.json \
             "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/subnets"
+      - name: DEBUG subnets raw (SDK output)
+        env:
+          NETWORK: finney
+        run: |
+          python - <<'PY'
+          import os, json, bittensor as bt
+          net = os.getenv("NETWORK","finney")
+          st = bt.subtensor(net)
+          rows = []
+          try:
+              get_all = getattr(st, "get_all_subnets_info", None)
+              if callable(get_all):
+                  infos = get_all()
+                  def to_dict(x):
+                      # möglichst viele Felder sichtbar machen
+                      if hasattr(x, "__dict__"):
+                          d = {k: (float(v) if isinstance(v,(int,float)) else v) for k,v in x.__dict__.items() if not k.startswith("_")}
+                          return d
+                      return {"repr": repr(x)}
+                  rows = [to_dict(i) for i in infos]
+              else:
+                  # Fallback: netuids + get_subnet_info
+                  netuids = getattr(st, "get_all_subnet_netuids", lambda: [])()
+                  for uid in netuids[:20]:
+                      try:
+                          info = getattr(st, "get_subnet_info", lambda _u: None)(uid)
+                          if info and hasattr(info,"__dict__"):
+                              d = info.__dict__
+                          else:
+                              d = {"repr": repr(info)}
+                          rows.append({"netuid": int(uid), **d})
+                      except Exception as e:
+                          rows.append({"netuid": int(uid), "error": str(e)})
+          except Exception as e:
+              rows = [{"error": f"collection failed: {e}"}]
+          open("subnets-raw.json","w").write(json.dumps(rows[:50], indent=2, default=str))
+          print("Sample:", json.dumps(rows[:3], indent=2, default=str))
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: subnets-raw
+          path: subnets-raw.json
