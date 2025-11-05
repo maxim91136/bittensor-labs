@@ -430,10 +430,33 @@ body {
   color: var(--accent);
   text-decoration: none;
   transition: color 0.2s ease;
+  overflow-wrap: anywhere; /* lange URLs sauber umbrechen */
 }
 
 .site-footer a:hover {
   color: var(--accent-dim);
+}
+
+/* Footer data-sources: center + clean bullets */
+.site-footer .data-sources {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-sm) 0;
+  text-align: center;
+}
+
+.site-footer .data-sources li {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin: 4px 0;
+}
+
+.site-footer .data-sources li::before {
+  content: "•";
+  color: rgba(255,255,255,0.6);
+  margin-right: 8px;
 }
 
 .badge-demo {
