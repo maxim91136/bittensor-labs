@@ -33,9 +33,24 @@ async function loadPrice() {
     const res = await fetch(`${COINGECKO_API}/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true`, { cache: 'no-store' });
     const data = await res.json();
     const p = data?.bittensor?.usd ?? null;
-    if (p != null) lastPrice = p;
+
+    if (p != null) {
+      const el = $('taoPrice');
+      const pill = $('taoPricePill');
+
+      if (lastPrice != null && p !== lastPrice) {
+        // Blink grün (steigt) oder rot (fällt)
+        pill.classList.remove('blink-green', 'blink-red');
+        void pill.offsetWidth; // Reflow trigger
+        pill.classList.add(p > lastPrice ? 'blink-green' : 'blink-red');
+        setTimeout(() => pill.classList.remove('blink-green', 'blink-red'), 600);
+      }
+
+      lastPrice = p;
+      if (el) el.textContent = `$${Number(p).toFixed(2)}`;
+    }
   } catch (e) {
-    // ignore; wir behalten lastPrice
+    // ignore
   } finally {
     const el = $('taoPrice');
     if (el) el.textContent = lastPrice != null ? `$${Number(lastPrice).toFixed(2)}` : 'N/A';

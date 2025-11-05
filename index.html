@@ -21,38 +21,20 @@
 <!-- Header kompakt + korrekte Schreibweise -->
 <header class="site-header">
   <div class="header-content">
-    <div class="brand">
-      <div class="brand-row">
-        <h1 class="site-title">
-          <span class="brand-mark" aria-hidden="true">
-            <svg viewBox="0 0 64 64" width="22" height="22" role="img" focusable="false">
-              <defs>
-                <linearGradient id="lab-liquid" x1="0" x2="1" y1="0" y2="1">
-                  <stop offset="0%" stop-color="#22c55e"/>
-                  <stop offset="100%" stop-color="#16a34a"/>
-                </linearGradient>
-              </defs>
-              <!-- Kolben -->
-              <path d="M24 8v12L11.2 44.8c-2.2 4 0.8 8.2 5.4 8.2h30.8c4.6 0 7.6-4.2 5.4-8.2L40 20V8h-4v13.1L21.1 48.3a3 3 0 0 0 2.6 4.5h16.6a3 3 0 0 0 2.6-4.5L28 21.1V8h-4z"
-                fill="none" stroke="#7b8794" stroke-width="1.6" stroke-linejoin="round"/>
-              <!-- Flüssigkeit -->
-              <path d="M14.8 44h34.4c2.4 0 4.3 1.9 4.3 4.3s-1.9 4.3-4.3 4.3H14.8c-2.4 0-4.3-1.9-4.3-4.3S12.4 44 14.8 44z"
-                fill="url(#lab-liquid)" opacity=".9"/>
-              <!-- Bläschen -->
-              <circle cx="24" cy="47" r="1.2" fill="#16a34a"/>
-              <circle cx="31" cy="50" r="1.0" fill="#16a34a"/>
-              <circle cx="37" cy="46" r="1.4" fill="#16a34a"/>
-            </svg>
-          </span>
-          Bittensor-Labs
-        </h1>
-        <span class="meta">
-          <span class="status-dot" aria-hidden="true"></span>
-          <span class="tagline">the incentive layer</span>
-        </span>
+    <div class="logo-section">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+          <path d="M2 17l10 5 10-5"/>
+          <path d="M2 12l10 5 10-5"/>
+        </svg>
+        <div class="logo-text">
+          <span class="logo-title">Bittensor-Labs</span>
+          <span class="logo-subtitle">the incentive layer</span>
+        </div>
       </div>
     </div>
-
+    
     <div class="header-actions">
       <div class="price-pill" aria-live="polite" title="Total Active Neurons">
         <span class="price-icon" aria-hidden="true">
@@ -66,11 +48,9 @@
         <span id="totalNeurons" class="skeleton-text">Loading...</span>
       </div>
       
-      <div class="price-pill">
-        <a href="https://taostats.io" target="_blank" rel="noopener" class="price-link">
-          <span class="price-icon">🔗</span>
-          <span id="taoPrice">$403.10</span>
-        </a>
+      <div class="price-pill" id="taoPricePill">
+        <span class="price-icon">τ</span>
+        <span id="taoPrice">$403.10</span>
       </div>
     </div>
   </div>
