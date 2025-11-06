@@ -209,9 +209,10 @@ async function updateNetworkStats(data) {
 
   // Circulating Supply aus CoinGecko holen
   const circSupply = await fetchCirculatingSupply();
-  if (elements.circulatingSupply && circSupply) {
+  const supplyEl = document.getElementById('circulatingSupply');
+  if (supplyEl && circSupply) {
     const current = (circSupply / 1_000_000).toFixed(2);
-    elements.circulatingSupply.textContent = `${current}M / 21M τ`;
+    supplyEl.textContent = `${current}M / 21M τ`;
     window.circulatingSupply = circSupply;
   } else {
     // Fallback: dynamisch berechnen
@@ -219,9 +220,9 @@ async function updateNetworkStats(data) {
     let fallbackSupply = typeof data.blockHeight === 'number' && data.blockHeight > 0
       ? data.blockHeight * emissionPerBlock
       : null;
-    if (elements.circulatingSupply && fallbackSupply) {
+    if (supplyEl && fallbackSupply) {
       const current = (fallbackSupply / 1_000_000).toFixed(2);
-      elements.circulatingSupply.textContent = `${current}M / 21M τ`;
+      supplyEl.textContent = `${current}M / 21M τ`;
       window.circulatingSupply = fallbackSupply;
     }
   }
@@ -427,7 +428,7 @@ async function initDashboard() {
     fetchNetworkData(),
     fetchTaoPrice()
   ]);
-  await updateNetworkStats(networkData); // <-- await!
+  await updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
   const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
   const priceHistory = await fetchPriceHistory(currentPriceRange);
