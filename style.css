@@ -399,19 +399,13 @@ body {
   z-index: 20;
 }
 
-.info-badge:hover {
-  color: var(--accent);
-  border-color: var(--accent);
-  background: rgba(34, 197, 94, 0.1);
-}
-
 .info-badge::after {
   content: attr(data-tooltip);
   position: absolute;
-  left: 50%;
   top: 120%;
+  left: 50%;
   transform: translateX(-50%);
-  min-width: 180px;
+  min-width: 160px;
   max-width: 260px;
   background: #222;
   color: #fff;
@@ -419,17 +413,32 @@ body {
   border-radius: 8px;
   font-size: 0.95em;
   white-space: pre-line;
+  word-break: break-word;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, left 0.2s, right 0.2s, transform 0.2s;
   box-shadow: 0 4px 24px #000a;
   z-index: 999;
 }
 
-.info-badge:hover::after,
-.info-badge.show-tooltip::after {
+.info-badge.show-tooltip::after,
+.info-badge:hover::after {
   opacity: 1;
   pointer-events: auto;
+}
+
+/* Tooltip nach rechts ausrichten */
+.info-badge.tooltip-right::after {
+  left: auto;
+  right: 0;
+  transform: none;
+}
+
+/* Tooltip nach links ausrichten */
+.info-badge.tooltip-left::after {
+  left: 0;
+  right: auto;
+  transform: none;
 }
 
 /* ---- Charts (Dynamisch) ---- */

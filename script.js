@@ -428,6 +428,41 @@ function setupInfoBadges() {
 }
 setupInfoBadges();
 
+function setupResponsiveTooltips() {
+  document.querySelectorAll('.info-badge').forEach(badge => {
+    badge.addEventListener('mouseenter', positionTooltip);
+    badge.addEventListener('focus', positionTooltip);
+    badge.addEventListener('click', positionTooltip); // Für mobile
+
+    function positionTooltip() {
+      // Tooltip temporär sichtbar machen, um Breite zu messen
+      badge.classList.add('show-tooltip');
+      const rect = badge.getBoundingClientRect();
+      const tooltipWidth = 220; // Mittelwert aus min/max-width oben
+      const padding = 16;
+
+      // Entferne vorherige Ausrichtung
+      badge.classList.remove('tooltip-left', 'tooltip-right');
+
+      // Prüfe, ob rechts genug Platz ist
+      if (rect.right + tooltipWidth / 2 + padding > window.innerWidth) {
+        badge.classList.add('tooltip-left');
+      } else if (rect.left - tooltipWidth / 2 - padding < 0) {
+        badge.classList.add('tooltip-right');
+      } // sonst Standard (zentriert)
+
+      // Tooltip nach kurzer Zeit wieder ausblenden (für mobile)
+      if ('ontouchstart' in window) {
+        setTimeout(() => badge.classList.remove('show-tooltip'), 2500);
+      }
+    }
+    // Tooltip ausblenden, wenn Maus weg
+    badge.addEventListener('mouseleave', () => badge.classList.remove('show-tooltip'));
+    badge.addEventListener('blur', () => badge.classList.remove('show-tooltip'));
+  });
+}
+setupResponsiveTooltips();
+
 // ===== Data Refresh =====
 async function refreshDashboard() {
   console.log('🔄 Refreshing dashboard data...');
