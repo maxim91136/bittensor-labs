@@ -179,6 +179,25 @@ function updateTaoPrice(priceData) {
     priceEl.textContent = 'N/A';
     if (changeEl) changeEl.style.display = 'none';
   }
+  lastPrice = priceData.price;
+  // Nach dem Setzen von lastPrice:
+  if (window.circulatingSupply && lastPrice) {
+    updateMarketCapAndFDV(lastPrice, window.circulatingSupply);
+  }
+}
+
+function updateMarketCapAndFDV(price, circulatingSupply) {
+  const marketCapEl = document.getElementById('marketCap');
+  const fdvEl = document.getElementById('fdv');
+  const maxSupply = 21_000_000;
+  if (marketCapEl && price && circulatingSupply) {
+    const marketCap = price * circulatingSupply;
+    marketCapEl.textContent = `$${marketCap.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
+  }
+  if (fdvEl && price) {
+    const fdv = price * maxSupply;
+    fdvEl.textContent = `$${fdv.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
+  }
 }
 
 async function updateNetworkStats(data) {
