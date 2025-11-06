@@ -149,6 +149,17 @@ async function fetchPriceHistory(range = '7') {
   } catch { return null; }
 }
 
+async function fetchCirculatingSupply() {
+  try {
+    const res = await fetch('https://api.coingecko.com/api/v3/coins/bittensor');
+    const data = await res.json();
+    return data.market_data?.circulating_supply ?? null;
+  } catch (err) {
+    console.warn('⚠️ Circulating supply fetch failed:', err);
+    return null;
+  }
+}
+
 // ===== UI Updates =====
 function updateTaoPrice(priceData) {
   const priceEl = document.getElementById('taoPrice');
@@ -169,7 +180,7 @@ function updateTaoPrice(priceData) {
   }
 }
 
-function updateNetworkStats(data) {
+async function updateNetworkStats(data) {
   const elements = {
     blockHeight: document.getElementById('blockHeight'),
     subnets: document.getElementById('subnets'),
@@ -196,35 +207,37 @@ function updateNetworkStats(data) {
     elements.totalNeurons.textContent = formatFull(data.totalNeurons);
   }
 
-  // Circulating Supply dynamisch berechnen
-  const emissionPerBlock = 1; // TAO pro Block
-  let circulatingSupply = typeof data.blockHeight === 'number' && data.blockHeight > 0
-    ? data.blockHeight * emissionPerBlock
-    : null;
-
-  // Kachel updaten
-  const supplyEl = document.getElementById('circulatingSupply');
-  if (supplyEl && circulatingSupply) {
-    const current = (circulatingSupply / 1_000_000).toFixed(2);
-    supplyEl.textContent = `${current}M / 21M τ`;
+  // Circulating Supply aus CoinGecko holen
+  const circSupply = await fetchCirculatingSupply();
+  if (elements.circulatingSupply && circSupply) {
+    const current = (circSupply / 1_000_000).toFixed(2);
+    elements.circulatingSupply.textContent = `${current}M / 21M τ`;
+    window.circulatingSupply = circSupply;
+  } else {
+    // Fallback: dynamisch berechnen
+    const emissionPerBlock = 1;
+    let fallbackSupply = typeof data.blockHeight === 'number' && data.blockHeight > 0
+      ? data.blockHeight * emissionPerBlock
+      : null;
+    if (elements.circulatingSupply && fallbackSupply) {
+      const current = (fallbackSupply / 1_000_000).toFixed(2);
+      elements.circulatingSupply.textContent = `${current}M / 21M τ`;
+      window.circulatingSupply = fallbackSupply;
+    }
   }
-
-  // Setze global für Countdown!
-  window.circulatingSupply = circulatingSupply;
 
   // Halving-Berechnung
   const HALVING_SUPPLY = 10_500_000;
   const emissionPerDay = typeof data.emission === 'string'
     ? parseInt(data.emission.replace(/,/g, ''))
     : data.emission;
-  const daysToHalving = circulatingSupply && emissionPerDay
-    ? (HALVING_SUPPLY - circulatingSupply) / emissionPerDay
+  const daysToHalving = window.circulatingSupply && emissionPerDay
+    ? (HALVING_SUPPLY - window.circulatingSupply) / emissionPerDay
     : null;
   window.halvingDate = daysToHalving && daysToHalving > 0
     ? new Date(Date.now() + daysToHalving * 24 * 60 * 60 * 1000)
     : null;
 
-  // Jetzt Countdown starten
   startHalvingCountdown();
 }
 
@@ -414,7 +427,7 @@ async function initDashboard() {
     fetchNetworkData(),
     fetchTaoPrice()
   ]);
-  updateNetworkStats(networkData);
+  await updateNetworkStats(networkData); // <-- await!
   updateTaoPrice(taoPrice);
   const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
   const priceHistory = await fetchPriceHistory(currentPriceRange);
