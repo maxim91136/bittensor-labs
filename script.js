@@ -407,6 +407,27 @@ function setupMaxTooltip() {
   }
 }
 
+// Info-Badge Tooltip für Mobile & Desktop
+function setupInfoBadges() {
+  document.querySelectorAll('.info-badge').forEach(badge => {
+    // Für Touch: Tooltip per Klick toggeln
+    badge.addEventListener('click', function (e) {
+      e.stopPropagation();
+      // Toggle Klasse für Sichtbarkeit
+      badge.classList.toggle('show-tooltip');
+      // Andere Tooltips schließen
+      document.querySelectorAll('.info-badge').forEach(other => {
+        if (other !== badge) other.classList.remove('show-tooltip');
+      });
+    });
+  });
+  // Tooltip schließen, wenn außerhalb geklickt wird
+  document.addEventListener('click', () => {
+    document.querySelectorAll('.info-badge').forEach(badge => badge.classList.remove('show-tooltip'));
+  });
+}
+setupInfoBadges();
+
 // ===== Data Refresh =====
 async function refreshDashboard() {
   console.log('🔄 Refreshing dashboard data...');

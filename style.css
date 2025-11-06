@@ -434,9 +434,11 @@ body {
   z-index: 10;
 }
 
-.info-badge:hover::after {
+.info-badge.show-tooltip::after {
   opacity: 1;
   transform: translateX(-50%) translateY(-8px);
+  pointer-events: auto;
+  z-index: 100;
 }
 
 /* ---- Charts (Dynamisch) ---- */
