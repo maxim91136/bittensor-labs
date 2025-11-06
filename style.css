@@ -304,7 +304,7 @@ body {
 /* ---- Stats Grid (Glassmorphism Enhanced) ---- */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 160px), 1fr));
+  grid-template-columns: repeat(4, 1fr); /* 2 rows, 4 columns */
   gap: var(--gap-md);
   margin-bottom: var(--space-lg);
   animation: fadeInUp 0.8s ease-out 0.1s both;
@@ -718,17 +718,4 @@ body {
 .dynamic-tooltip.visible {
   opacity: 1;
   pointer-events: auto;
-}
-
-/* Add to your style.css for the placeholder card styling */
-.placeholder-card {
-  opacity: 0.6;
-  border: 1.5px dashed #9ca3af;
-  background: repeating-linear-gradient(
-    135deg,
-    rgba(255,255,255,0.02),
-    rgba(255,255,255,0.02) 10px,
-    rgba(255,255,255,0.04) 10px,
-    rgba(255,255,255,0.04) 20px
-  );
 }
