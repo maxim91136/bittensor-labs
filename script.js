@@ -407,61 +407,60 @@ function setupMaxTooltip() {
   }
 }
 
-// Info-Badge Tooltip für Mobile & Desktop
-function setupInfoBadges() {
+// ===== Dynamic Tooltip System =====
+function setupDynamicTooltips() {
+  // Tooltip-Element einmalig anlegen
+  let tooltip = document.createElement('div');
+  tooltip.className = 'dynamic-tooltip';
+  document.body.appendChild(tooltip);
+
+  function showTooltip(e, text) {
+    tooltip.textContent = text;
+    tooltip.classList.add('visible');
+    // Position berechnen
+    const rect = e.target.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    let top = rect.bottom + 8;
+    let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+
+    // Am rechten Rand anpassen
+    if (left + tooltipRect.width > window.innerWidth - 8) {
+      left = window.innerWidth - tooltipRect.width - 8;
+    }
+    // Am linken Rand anpassen
+    if (left < 8) left = 8;
+
+    // Wenn unten zu wenig Platz, nach oben anzeigen
+    if (top + tooltipRect.height > window.innerHeight - 8) {
+      top = rect.top - tooltipRect.height - 8;
+    }
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
+  }
+
+  function hideTooltip() {
+    tooltip.classList.remove('visible');
+  }
+
   document.querySelectorAll('.info-badge').forEach(badge => {
-    // Für Touch: Tooltip per Klick toggeln
-    badge.addEventListener('click', function (e) {
+    const text = badge.getAttribute('data-tooltip');
+    // Desktop: Hover
+    badge.addEventListener('mouseenter', e => showTooltip(e, text));
+    badge.addEventListener('mouseleave', hideTooltip);
+    badge.addEventListener('focus', e => showTooltip(e, text));
+    badge.addEventListener('blur', hideTooltip);
+    // Mobile: Touch/Klick
+    badge.addEventListener('click', e => {
       e.stopPropagation();
-      // Toggle Klasse für Sichtbarkeit
-      badge.classList.toggle('show-tooltip');
-      // Andere Tooltips schließen
-      document.querySelectorAll('.info-badge').forEach(other => {
-        if (other !== badge) other.classList.remove('show-tooltip');
-      });
+      showTooltip(e, text);
+      setTimeout(hideTooltip, 2500);
     });
   });
-  // Tooltip schließen, wenn außerhalb geklickt wird
-  document.addEventListener('click', () => {
-    document.querySelectorAll('.info-badge').forEach(badge => badge.classList.remove('show-tooltip'));
-  });
+
+  // Tooltip schließen, wenn außerhalb geklickt wird (mobile)
+  document.addEventListener('click', hideTooltip);
 }
-setupInfoBadges();
-
-function setupResponsiveTooltips() {
-  document.querySelectorAll('.info-badge').forEach(badge => {
-    badge.addEventListener('mouseenter', positionTooltip);
-    badge.addEventListener('focus', positionTooltip);
-    badge.addEventListener('click', positionTooltip); // Für mobile
-
-    function positionTooltip() {
-      // Tooltip temporär sichtbar machen, um Breite zu messen
-      badge.classList.add('show-tooltip');
-      const rect = badge.getBoundingClientRect();
-      const tooltipWidth = 220; // Mittelwert aus min/max-width oben
-      const padding = 16;
-
-      // Entferne vorherige Ausrichtung
-      badge.classList.remove('tooltip-left', 'tooltip-right');
-
-      // Prüfe, ob rechts genug Platz ist
-      if (rect.right + tooltipWidth / 2 + padding > window.innerWidth) {
-        badge.classList.add('tooltip-left');
-      } else if (rect.left - tooltipWidth / 2 - padding < 0) {
-        badge.classList.add('tooltip-right');
-      } // sonst Standard (zentriert)
-
-      // Tooltip nach kurzer Zeit wieder ausblenden (für mobile)
-      if ('ontouchstart' in window) {
-        setTimeout(() => badge.classList.remove('show-tooltip'), 2500);
-      }
-    }
-    // Tooltip ausblenden, wenn Maus weg
-    badge.addEventListener('mouseleave', () => badge.classList.remove('show-tooltip'));
-    badge.addEventListener('blur', () => badge.classList.remove('show-tooltip'));
-  });
-}
-setupResponsiveTooltips();
+setupDynamicTooltips();
 
 // ===== Data Refresh =====
 async function refreshDashboard() {
