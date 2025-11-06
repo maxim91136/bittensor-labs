@@ -183,46 +183,65 @@
       </div>
       <div id="priceRangeNote" class="chart-note" aria-live="polite"></div>
     </section>
-  </div>
 
-  <!-- DELETE this entire duplicate section:
-  <section class="dashboard-row charts"> ... second TAO Price History ... </section>
-  -->
+    <!-- NEW: Disclaimer Card -->
+    <section class="dashboard-card disclaimer-card">
+      <div class="disclaimer-header">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="18" height="18">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="16" x2="12" y2="12"></line>
+          <line x1="12" y1="8" x2="12.01" y2="8"></line>
+        </svg>
+        <h3>Disclaimer & Data Sources</h3>
+      </div>
+      
+      <div class="disclaimer-content">
+        <p class="disclaimer-text">
+          This is an <strong>unofficial community project</strong> and hobby dashboard. 
+          Not affiliated with or endorsed by the Opentensor Foundation. 
+          "Bittensor" and "TAO" are trademarks of their respective owners.
+        </p>
+
+        <div class="data-sources-grid">
+          <div class="source-item">
+            <span class="source-label">Network Data</span>
+            <a href="https://github.com/opentensor/bittensor" target="_blank" rel="noopener noreferrer">
+              Bittensor Python SDK
+            </a>
+          </div>
+          
+          <div class="source-item">
+            <span class="source-label">Price Data</span>
+            <a href="https://www.coingecko.com/en/api" target="_blank" rel="noopener noreferrer">
+              CoinGecko API
+            </a>
+          </div>
+
+          <div class="source-item">
+            <span class="source-label">Source Code</span>
+            <a href="https://github.com/maxim91136/bittensor-labs" target="_blank" rel="noopener noreferrer">
+              GitHub Repository
+            </a>
+          </div>
+
+          <div class="source-item">
+            <span class="source-label">Official Site</span>
+            <a href="https://bittensor.com" target="_blank" rel="noopener noreferrer">
+              bittensor.com
+            </a>
+          </div>
+        </div>
+
+        <p class="coingecko-attribution">
+          This product uses the CoinGecko API but is not endorsed or certified by CoinGecko.
+        </p>
+      </div>
+    </section>
+  </div>
 </main>
 
 <footer class="site-footer">
-  <p><strong>Disclaimer:</strong> Unofficial community project. Not affiliated with the Opentensor Foundation. “Bittensor” and “TAO” are trademarks of their respective owners.</p>
-
-  <p>This is a hobby and learning project — financed entirely out of pocket.</p>
-
-  <p>Data sources:</p>
-  <ul class="data-sources">
-    <li>
-      Bittensor network (Python SDK):
-      <a href="https://github.com/opentensor/bittensor" target="_blank" rel="noopener noreferrer">github.com/opentensor/bittensor</a>
-    </li>
-    <li>
-      API — Network:
-      <a href="https://bittensor-labs.pages.dev/api/network" target="_blank" rel="noopener noreferrer">/api/network</a>
-    </li>
-    <li>
-      API — History:
-      <a href="https://bittensor-labs.pages.dev/api/history" target="_blank" rel="noopener noreferrer">/api/history</a>
-    </li>
-    <li>
-      Price:
-      <a href="https://www.coingecko.com/en/api" target="_blank" rel="noopener noreferrer">CoinGecko API</a>
-    </li>
-  </ul>
-
-  <p>
-    Source code:
-    <a href="https://github.com/maxim91136/bittensor-labs" target="_blank" rel="noopener noreferrer">github.com/maxim91136/bittensor-labs</a>
-    · Official:
-    <a href="https://bittensor.com" target="_blank" rel="noopener noreferrer">bittensor.com</a>
-  </p>
-
-  <p class="attribution">This product uses the CoinGecko API but is not endorsed or certified by CoinGecko.</p>
+  <p>© 2025 Bittensor-Labs · Community Project · Built with ❤️ for the Bittensor Ecosystem</p>
 </footer>
 </body>
 </html>
