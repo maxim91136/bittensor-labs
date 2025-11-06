@@ -125,13 +125,13 @@ async function fetchNetworkData() {
 
 async function fetchTaoPrice() {
   try {
-    const res = await fetch(`${COINGECKO_API}/coins/bittensor?localization=false&tickers=false&community_data=false&developer_data=false`);
+    const res = await fetch(`${COINGECKO_API}/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_circulating_supply=true`);
     const data = await res.json();
     
     return {
-      price: data.market_data?.current_price?.usd,
-      change24h: data.market_data?.price_change_percentage_24h,
-      circulatingSupply: data.market_data?.circulating_supply
+      price: data.bittensor?.usd,
+      change24h: data.bittensor?.usd_24h_change,
+      circulatingSupply: data.bittensor?.circulating_supply
     };
   } catch (err) {
     return { price: null, change24h: null, circulatingSupply: null };
@@ -464,20 +464,15 @@ async function initDashboard() {
 
 // ===== Halving Countdown =====
 function calculateHalvingDate(circulatingSupply, emissionRate) {
-  const totalSupply = 21000000; // Max supply for Bitcoin
-  const blocksPerHalving = 210000; // Bitcoin halving event occurs every 210,000 blocks
-  const secondsPerBlock = 600; // Average time between blocks in seconds (10 minutes)
+  const HALVING_SUPPLY = 10_500_000; // 50% of 21M
+  const remaining = HALVING_SUPPLY - circulatingSupply;
   
-  const currentReward = emissionRate / 1000000; // Convert to TAO units
-  const nextHalvingReward = currentReward / 2;
+  if (remaining <= 0) return null;
   
-  // Calculate blocks to next halving
-  const blocksToHalving = Math.ceil((totalSupply - circulatingSupply) / (currentReward - nextHalvingReward));
+  const daysLeft = remaining / emissionRate;
+  const msLeft = daysLeft * 24 * 60 * 60 * 1000;
   
-  // Calculate time to next halving in milliseconds
-  const timeToHalving = blocksToHalving * blocksPerHalving * secondsPerBlock * 1000;
-  
-  return new Date(Date.now() + timeToHalving);
+  return new Date(Date.now() + msLeft);
 }
 
 function updateHalvingCountdown() {
@@ -517,19 +512,6 @@ function startHalvingCountdown() {
   // TODO: State Management verbessern
   
   console.log('⚠️ Halving countdown needs circulatingSupply from CoinGecko');
-}
-
-// ===== Service Worker Registration (for PWA) =====
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(registration => {
-        console.log('✅ Service Worker registered:', registration);
-      })
-      .catch(error => {
-        console.error('❌ Service Worker registration failed:', error);
-      });
-  });
 }
 
 // Start the dashboard initialization
