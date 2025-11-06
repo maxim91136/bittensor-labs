@@ -449,4 +449,24 @@ async function initDashboard() {
   // Load price history
   const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
   const priceHistory = await fetchPriceHistory(currentPriceRange);
-  if
+  if (priceHistory) {
+    createPriceChart(priceHistory, currentPriceRange);
+  } else {
+    console.warn('⚠️  No price history available');
+    if (priceCard) {
+      priceCard.classList.remove('loading');
+    }
+  }
+
+  // Auto-refresh every 60 seconds
+  setInterval(refreshDashboard, REFRESH_INTERVAL);
+  
+  console.log('✅ Dashboard initialized');
+}
+
+// Start dashboard when DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initDashboard);
+} else {
+  initDashboard();
+}
