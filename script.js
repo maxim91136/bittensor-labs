@@ -361,6 +361,15 @@ function createPriceChart(priceHistory, range = '7') {
   setPriceRangeNote(range);
 }
 
+function setPriceRangeNote(range) {
+  const noteEl = document.getElementById('priceRangeNote');
+  if (!noteEl) return;
+  if (range === '7') noteEl.textContent = 'Showing last 7 days';
+  else if (range === '30') noteEl.textContent = 'Showing last 30 days';
+  else if (range === '365') noteEl.textContent = 'Showing last 365 days';
+  else noteEl.textContent = '';
+}
+
 // ===== Time Range Toggle =====
 function setupTimeRangeToggle() {
   const buttons = document.querySelectorAll('.time-btn');
