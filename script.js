@@ -164,23 +164,19 @@ async function fetchPriceHistory(range = '7') {
 function updateNetworkStats(data) {
   const elements = {
     blockHeight: document.getElementById('blockHeight'),
-    maxSupply: document.getElementById('maxSupply'),
+    // maxSupply: document.getElementById('maxSupply'), // ENTFERNT
     subnets: document.getElementById('subnets'),
     emission: document.getElementById('emission'),
     totalNeurons: document.getElementById('totalNeurons'),
     validators: document.getElementById('validators')
   };
 
-  // Animate numbers instead of instant update
   if (data.block_height !== undefined) {
     const currentValue = parseInt(elements.blockHeight.textContent.replace(/,/g, '')) || 0;
     animateValue(elements.blockHeight, currentValue, data.block_height, 800);
   }
   
-  if (data.max_supply !== undefined) {
-    const currentValue = parseInt(elements.maxSupply.textContent.replace(/[^0-9]/g, '')) || 0;
-    animateValue(elements.maxSupply, currentValue, data.max_supply, 1000);
-  }
+  // MAX SUPPLY UPDATE ENTFERNT
   
   if (data.total_subnets !== undefined) {
     const currentValue = parseInt(elements.subnets.textContent.replace(/,/g, '')) || 0;
@@ -506,12 +502,21 @@ function updateHalvingCountdown() {
 }
 
 function startHalvingCountdown() {
-  if (!circulatingSupply) return;
+  if (halvingInterval) {
+    clearInterval(halvingInterval);
+    halvingInterval = null;
+  }
   
+  // Get emission rate from DOM
   const emissionRate = parseFloat(document.getElementById('emission')?.textContent.replace(/[^0-9.]/g, '')) || 7200;
-  halvingDate = calculateHalvingDate(circulatingSupply, emissionRate);
-  updateHalvingCountdown();
-  halvingInterval = setInterval(updateHalvingCountdown, 60 * 60 * 1000);
+  
+  // Get circulating supply from state (wird von fetchTaoPrice() gesetzt)
+  // Temporär: Nutze einen globalen State oder fetch nochmal
+  
+  // Für jetzt: Wir müssen circulatingSupply speichern
+  // TODO: State Management verbessern
+  
+  console.log('⚠️ Halving countdown needs circulatingSupply from CoinGecko');
 }
 
 // ===== Service Worker Registration (for PWA) =====
