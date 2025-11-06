@@ -1,7 +1,7 @@
 import bittensor as bt
 import json
 import os
-import sys  # ✅ FIX 1
+import sys
 from typing import Dict, Any, List
 from datetime import datetime, timezone
 
@@ -14,8 +14,8 @@ def fetch_metrics() -> Dict[str, Any]:
     # Get current block
     current_block = subtensor.get_current_block()
     
-    # ✅ FIX 2: Korrekte Methode (ohne 'get_')
-    all_subnets = subtensor.get_subnets()  # Oder: list(range(subtensor.max_n))
+    # Get all subnets
+    all_subnets = subtensor.get_subnets()
     
     # Count validators and neurons
     total_validators = 0
@@ -24,7 +24,6 @@ def fetch_metrics() -> Dict[str, Any]:
     for netuid in all_subnets:
         try:
             metagraph = subtensor.metagraph(netuid)
-            # Check if validator_permit exists (might be validator_trust in newer versions)
             if hasattr(metagraph, 'validator_permit'):
                 total_validators += len([uid for uid in metagraph.uids if metagraph.validator_permit[uid]])
             total_neurons += len(metagraph.uids)
@@ -32,13 +31,12 @@ def fetch_metrics() -> Dict[str, Any]:
             print(f"Warning: Could not fetch metagraph for netuid {netuid}: {e}", file=sys.stderr)
             continue
     
-    # Calculate daily emission (7200 TAO/day currently)
-    daily_emission = 7200  # This is hardcoded for now
+    # Calculate daily emission
+    daily_emission = 7200
     
-    # ✅ Get circulating supply from chain
+    # Get circulating supply
     try:
         total_issuance = subtensor.total_issuance()
-        # Convert Balance object to float
         if hasattr(total_issuance, 'tao'):
             circulating_supply = float(total_issuance.tao)
         else:
@@ -57,7 +55,6 @@ def fetch_metrics() -> Dict[str, Any]:
         "_timestamp": datetime.now(timezone.utc).isoformat()
     }
     
-    # Only add circulatingSupply if we got a valid value
     if circulating_supply is not None:
         result["circulatingSupply"] = circulating_supply
     
@@ -66,7 +63,15 @@ def fetch_metrics() -> Dict[str, Any]:
 if __name__ == "__main__":
     try:
         metrics = fetch_metrics()
+        
+        # ✅ NEU: Schreibe metrics.json in das Root-Verzeichnis
+        output_path = os.path.join(os.getcwd(), "metrics.json")
+        with open(output_path, "w") as f:
+            json.dump(metrics, f, indent=2)
+        
+        print(f"✅ Metrics written to {output_path}")
         print(json.dumps(metrics, indent=2))
+        
     except Exception as e:
-        print(f"Error: {e}", file=sys.stderr)
+        print(f"❌ Error: {e}", file=sys.stderr)
         sys.exit(1)
