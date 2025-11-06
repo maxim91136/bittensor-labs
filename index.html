@@ -20,6 +20,11 @@
 <body>
 <header class="site-header">
   <div class="header-content">
+    <div class="halving-pill">
+      <span class="halving-icon">🔥</span>
+      <span id="halvingCountdown">Calculating...</span>
+    </div>
+    
     <div class="logo-section">
       <div class="logo">
         <span class="brand-mark" aria-hidden="true">
@@ -160,6 +165,18 @@
           <span class="info-badge" data-tooltip="Validators securing the network">ⓘ</span>
         </div>
         <div class="stat-value" id="validators">1.381</div>
+      </div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-icon">💎</div>
+      <div class="stat-content">
+        <div class="stat-label">
+          Circulating Supply
+          <span class="info-badge" data-tooltip="Current supply / Max 21M">ⓘ</span>
+        </div>
+        <div class="stat-value" id="circulatingSupply">10.19M / 21M τ</div>
+        <div class="stat-progress">48.5%</div>
       </div>
     </div>
   </div>

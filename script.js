@@ -11,6 +11,10 @@ let lastPrice = null;
 let currentPriceRange = '7';
 let isLoadingPrice = false;
 
+// State
+let halvingDate = null;
+let halvingInterval = null;
+
 // ===== Utility Functions =====
 function animateValue(element, start, end, duration = 1000) {
   const startTime = performance.now();
@@ -120,17 +124,16 @@ async function fetchNetworkData() {
 
 async function fetchTaoPrice() {
   try {
-    const res = await fetch(`${COINGECKO_API}/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true`);
-    if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
-    
+    const res = await fetch(`${COINGECKO_API}/coins/bittensor?localization=false&tickers=false&community_data=false&developer_data=false`);
     const data = await res.json();
-    const price = data?.bittensor?.usd;
-    const change24h = data?.bittensor?.usd_24h_change;
     
-    return { price, change24h };
+    return {
+      price: data.market_data?.current_price?.usd,
+      change24h: data.market_data?.price_change_percentage_24h,
+      circulatingSupply: data.market_data?.circulating_supply
+    };
   } catch (err) {
-    console.error('❌ fetchTaoPrice:', err);
-    return { price: null, change24h: null };
+    return { price: null, change24h: null, circulatingSupply: null };
   }
 }
 
@@ -452,21 +455,57 @@ async function initDashboard() {
   if (priceHistory) {
     createPriceChart(priceHistory, currentPriceRange);
   } else {
-    console.warn('⚠️  No price history available');
-    if (priceCard) {
-      priceCard.classList.remove('loading');
-    }
+    console.warn('⚠️  No price history received');
   }
-
-  // Auto-refresh every 60 seconds
-  setInterval(refreshDashboard, REFRESH_INTERVAL);
+  
+  // Start halving countdown if applicable
+  startHalvingCountdown();
   
   console.log('✅ Dashboard initialized');
 }
 
-// Start dashboard when DOM is ready
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initDashboard);
-} else {
-  initDashboard();
+// ===== Halving Countdown =====
+function calculateHalvingDate(circulatingSupply, emissionRate) {
+  const HALVING_SUPPLY = 10_500_000;
+  const remaining = HALVING_SUPPLY - circulatingSupply;
+  if (remaining <= 0) return null;
+  
+  const daysLeft = remaining / emissionRate;
+  return new Date(Date.now() + daysLeft * 24 * 60 * 60 * 1000);
 }
+
+function updateHalvingCountdown() {
+  if (!halvingDate) return;
+  const distance = halvingDate - Date.now();
+  
+  const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  
+  document.getElementById('halvingCountdown').textContent = 
+    `Halving in ${days}d ${hours}h`;
+}
+
+function startHalvingCountdown() {
+  // Stop any existing countdown
+  if (halvingInterval) {
+    clearInterval(halvingInterval);
+    halvingInterval = null;
+  }
+  
+  // Calculate next halving date
+  const emissionRate = parseFloat(document.getElementById('emission').textContent.replace(/[^0-9.]/g, ''));
+  const circulatingSupply = parseFloat(document.getElementById('maxSupply').textContent.replace(/[^0-9.]/g, ''));
+  halvingDate = calculateHalvingDate(circulatingSupply, emissionRate);
+  
+  // Immediate update
+  updateHalvingCountdown();
+  
+  // Update every hour
+  halvingInterval = setInterval(updateHalvingCountdown, 60 * 60 * 1000);
+}
+
+// Start dashboard initialization
+initDashboard();
+
+// Global refresh interval (z.B. für Preisupdates)
+setInterval(refreshDashboard, REFRESH_INTERVAL);
