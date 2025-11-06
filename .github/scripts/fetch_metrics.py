@@ -1,141 +1,52 @@
-import json, os, gc
 from typing import Dict, Any, List
 from datetime import datetime, timezone
 import bittensor as bt
+import json
+import os
 
 NETWORK = os.getenv("NETWORK", "finney")
 
-def as_bool(v) -> bool:
-    if hasattr(v, "item"):
-        try:
-            return bool(v.item())
-        except Exception:
-            pass
-    return bool(v)
-
-def gather() -> Dict[str, Any]:
-    st = bt.subtensor(network=NETWORK)
-    now = datetime.now(timezone.utc)
-
-    try:
-        block = st.get_current_block()
-    except Exception:
-        block = None
-
-    try:
-        netuids: List[int] = st.get_subnets()
-    except Exception:
-        netuids = []
-
-    total_subnets = len(netuids)
+def fetch_metrics() -> Dict[str, Any]:
+    """Fetch all Bittensor network metrics"""
+    subtensor = bt.subtensor(network=NETWORK)
+    
+    # Get current block
+    current_block = subtensor.get_current_block()
+    
+    # Get all subnets
+    all_subnets = subtensor.get_all_subnet_netuids()
+    
+    # Count validators and neurons
     total_validators = 0
     total_neurons = 0
-
-    for uid in netuids:
-        lite = None
-        try:
-            lite = st.neurons_lite(uid)
-        except Exception:
-            try:
-                lite = st.get_neurons_lite(uid)
-            except Exception:
-                lite = None
-
-        counted_from_lite = False
-        if lite:
-            total_neurons += len(lite)
-            n0 = lite[0]
-            cand_attrs = ("validator_permit", "is_validator", "validatorPermit", "validator", "is_val")
-            attr = next((a for a in cand_attrs if hasattr(n0, a)), None)
-            if attr:
-                try:
-                    total_validators += sum(1 for n in lite if hasattr(n, attr) and as_bool(getattr(n, attr)))
-                    counted_from_lite = True
-                except Exception:
-                    counted_from_lite = False
-
-        if not counted_from_lite:
-            try:
-                mg = st.metagraph(uid)
-                vp = getattr(mg, "validator_permit", None) or getattr(mg, "validator_permits", None)
-                if vp is not None:
-                    arr = vp.tolist() if hasattr(vp, "tolist") else list(vp)
-                    total_validators += sum(1 for x in arr if as_bool(x))
-            except Exception:
-                pass
-            finally:
-                try:
-                    del mg
-                except Exception:
-                    pass
-                gc.collect()
-
-        if lite:
-            del lite
-            gc.collect()
-
-    # Gather subnet data for Top 10
-    subnet_data: List[Dict[str, Any]] = []
-    st = bt.subtensor()
-
-    try:
-        get_all = getattr(st, "get_all_subnets_info", None)
-        if callable(get_all):
-            infos = get_all()  # Liste von Subnet-Infos
-            for info in infos:
-                uid = int(getattr(info, "netuid", -1))
-                name = getattr(info, "name", f"Subnet {uid}")
-                em = (
-                    getattr(info, "emission", None)
-                    or getattr(info, "emission_per_block", None)
-                    or getattr(info, "emission_rate", None)
-                    or 0
-                )
-                subnet_data.append({"netuid": uid, "name": name, "emission": float(em)})
-        else:
-            # Fallback: einzeln pro netuid
-            netuids = getattr(st, "get_all_subnet_netuids", lambda: [])() or getattr(st, "netuids", lambda: [])()
-            for uid in netuids:
-                try:
-                    info = getattr(st, "get_subnet_info", lambda _u: None)(uid)
-                    name = getattr(info, "name", f"Subnet {uid}") if info else f"Subnet {uid}"
-                    em = (
-                        getattr(info, "emission", None)
-                        or getattr(info, "emission_per_block", None)
-                        or getattr(info, "emission_rate", None)
-                        or 0
-                    )
-                    subnet_data.append({"netuid": int(uid), "name": name, "emission": float(em)})
-                except Exception:
-                    continue
-    except Exception as e:
-        print("failed to collect subnets:", e)
-
-    subnet_data.sort(key=lambda x: x["emission"], reverse=True)
-    top_subnets = subnet_data[:10]
-
-    # Write subnets.json
-    subnets_payload = {
-        "subnets": top_subnets,
-        "updatedAt": now.isoformat(),
-        "updatedAtEpoch": int(now.timestamp())
-    }
-    with open("subnets.json", "w") as f:
-        json.dump(subnets_payload, f)
-
+    
+    for netuid in all_subnets:
+        metagraph = subtensor.metagraph(netuid)
+        total_validators += len([uid for uid in metagraph.uids if metagraph.validator_permit[uid]])
+        total_neurons += len(metagraph.uids)
+    
+    # Calculate daily emission (7200 TAO/day currently)
+    daily_emission = 7200  # This is hardcoded for now, can be calculated from chain
+    
+    # ✅ NEU: Get circulating supply from chain
+    total_issuance = subtensor.total_issuance()  # Returns Balance object
+    circulating_supply = float(total_issuance)    # Convert to float
+    
     return {
-        "blockHeight": block,
+        "blockHeight": current_block,
         "validators": total_validators,
-        "subnets": total_subnets,
-        "emission": "7,200",
+        "subnets": len(all_subnets),
+        "emission": f"{daily_emission:,}",
         "totalNeurons": total_neurons,
-        "_source": "gh-action+bittensor-sdk",
-        "updatedAt": now.isoformat(),
-        "updatedAtEpoch": int(now.timestamp()),
+        "circulatingSupply": circulating_supply,  # ✅ NEU
+        "_source": "bittensor-sdk",
+        "_timestamp": datetime.now(timezone.utc).isoformat()
     }
 
 if __name__ == "__main__":
-    data = gather()
-    with open("metrics.json", "w") as f:
-        json.dump(data, f)
-    print(json.dumps(data))
+    try:
+        metrics = fetch_metrics()
+        print(json.dumps(metrics, indent=2))
+    except Exception as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
