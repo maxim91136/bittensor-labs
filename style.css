@@ -75,14 +75,29 @@ body {
   align-items: center;
   justify-content: center;
   gap: var(--space-md);
-  flex-wrap: wrap;
-  /* NEU: Immer vertikal (Logo oben, Pills darunter) */
+  /* Logo oben, Pills darunter */
   flex-direction: column;
 }
 
 .logo-section {
   flex: none;
   order: -1; /* Logo ganz oben */
+}
+
+.pills-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-sm);
+  justify-content: center;
+  /* NEU: Kein wrap mehr – Pills bleiben immer nebeneinander */
+  /* flex-wrap: wrap; entfernt */
+}
+
+/* Stelle sicher, dass Pills nicht zu schmal werden */
+.halving-pill,
+.header-actions .price-pill {
+  flex-shrink: 0;
+  min-width: 120px; /* Mindestbreite, um Stapeln zu verhindern */
 }
 
 .logo {
