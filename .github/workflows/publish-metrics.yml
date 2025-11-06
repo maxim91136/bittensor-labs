@@ -26,63 +26,90 @@ jobs:
         run: |
           python .github/scripts/fetch_metrics.py
 
-      - name: Build history array (last 24h)
+      - name: Push metrics to Cloudflare KV
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
         run: |
+          URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/bittensor_metrics"
+          
           if [ ! -f metrics.json ]; then
-            echo "no metrics.json"
+            echo "❌ no metrics.json"
             exit 1
           fi
           
-          # Download existing history
-          HISTORY_URL="https://api.cloudflare.com/client/v4/accounts/${{ secrets.CF_ACCOUNT_ID }}/storage/kv/namespaces/${{ secrets.CF_KV_NAMESPACE_ID }}/values/history"
+          echo "📤 Pushing metrics to Cloudflare KV..."
           
-          curl -fsSL \
-            -H "Authorization: Bearer ${{ secrets.CF_API_TOKEN }}" \
-            "$HISTORY_URL" > history_old.json || echo "[]" > history_old.json
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT \
+            "$URL" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @metrics.json)
           
-          # Append new metrics
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "Response code: $HTTP_CODE"
+          echo "Response body: $BODY"
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Failed to push metrics"
+            exit 1
+          fi
+          
+          echo "✅ Metrics pushed successfully"
+
+      - name: Build and push history
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
+        run: |
+          HISTORY_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/history"
+          
+          echo "📥 Fetching existing history..."
+          
+          # Try to fetch existing history (might not exist yet)
+          HTTP_CODE=$(curl -s -w "%{http_code}" -o history_old.json \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            "$HISTORY_URL")
+          
+          if [ "$HTTP_CODE" = "404" ]; then
+            echo "⚠️  No existing history, creating new one"
+            echo "[]" > history_old.json
+          elif [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Failed to fetch history: HTTP $HTTP_CODE"
+            echo "[]" > history_old.json
+          else
+            echo "✅ Existing history fetched"
+          fi
+          
+          # Append new metrics to history
           NEW_ENTRY=$(cat metrics.json | jq -c .)
           jq --argjson new "$NEW_ENTRY" '. + [$new] | .[-96:]' history_old.json > history.json
           
-          echo "History entries: $(jq 'length' history.json)"
-
-      - name: Push history to Cloudflare KV
-        env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
-        run: |
-          URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/history"
+          HISTORY_COUNT=$(jq 'length' history.json)
+          echo "📊 History entries: $HISTORY_COUNT"
           
-          if [ ! -f history.json ]; then
-            echo "no history.json"
+          # Push updated history
+          echo "📤 Pushing history to Cloudflare KV..."
+          
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X PUT \
+            "$HISTORY_URL" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @history.json)
+          
+          HTTP_CODE=$(echo "$RESPONSE" | tail -n1)
+          BODY=$(echo "$RESPONSE" | head -n-1)
+          
+          echo "Response code: $HTTP_CODE"
+          echo "Response body: $BODY"
+          
+          if [ "$HTTP_CODE" != "200" ]; then
+            echo "❌ Failed to push history"
             exit 1
           fi
           
-          curl -fsSL -X PUT \
-            "$URL" \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data-binary @history.json
-
-      - name: Push to Cloudflare KV (debug)
-        env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
-        run: |
-          URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/metrics"
-          
-          if [ ! -f metrics.json ]; then
-            echo "no metrics.json"
-            exit 1
-          fi
-          
-          curl -fsSL -X PUT \
-            "$URL" \
-            -H "Authorization: Bearer $CF_API_TOKEN" \
-            -H "Content-Type: application/json" \
-            --data-binary @metrics.json
-          
-          echo "Response:"
-          cat metrics.json | jq .
+          echo "✅ History pushed successfully"
