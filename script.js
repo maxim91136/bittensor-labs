@@ -196,6 +196,12 @@ function updateMarketCapAndFDV(price, circulatingSupply) {
   }
 }
 
+function tryUpdateMarketCapAndFDV() {
+  if (window.circulatingSupply && lastPrice) {
+    updateMarketCapAndFDV(lastPrice, window.circulatingSupply);
+  }
+}
+
 async function updateNetworkStats(data) {
   const elements = {
     blockHeight: document.getElementById('blockHeight'),
