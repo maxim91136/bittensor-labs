@@ -62,42 +62,53 @@ body {
   top: 0;
   z-index: 100;
   background: rgba(10, 14, 18, 0.95);
-  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border);
+  padding-top: 12px;
+  padding-bottom: 12px;
   animation: fadeInUp 0.6s ease-out;
 }
 
 .header-content {
   max-width: 1200px;
   margin: 0 auto;
-  padding: var(--space-md) var(--space-md);
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-md);
-  /* Logo oben, Pills darunter */
   flex-direction: column;
+  align-items: center;
+  gap: 18px;
 }
 
 .logo-section {
-  flex: none;
-  order: -1; /* Logo ganz oben */
+  display: flex;
+  justify-content: center;
+  width: 100%;
 }
 
 .pills-row {
   display: flex;
-  align-items: center;
-  gap: var(--gap-sm);
+  flex-direction: row;
+  gap: 14px;
   justify-content: center;
-  /* NEU: Kein wrap mehr – Pills bleiben immer nebeneinander */
-  /* flex-wrap: wrap; entfernt */
+  width: 100%;
 }
 
 /* Stelle sicher, dass Pills nicht zu schmal werden */
 .halving-pill,
 .header-actions .price-pill {
-  flex-shrink: 0;
+  flex-shrink: 1;
   min-width: 120px; /* Mindestbreite, um Stapeln zu verhindern */
+}
+
+/* Pills sollen niemals umbrechen */
+@media (max-width: 400px) {
+  .pills-row {
+    gap: 6px;
+  }
+  .halving-pill,
+  .price-pill {
+    min-width: 90px;
+    font-size: 0.9em;
+    padding: 4px 8px;
+  }
 }
 
 .logo {
