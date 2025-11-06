@@ -127,21 +127,31 @@ async function fetchNetworkData() {
   }
 }
 
+// ===== Data Fetching =====
 async function fetchTaoPrice() {
   try {
-    // ✅ Nur noch Price + 24h Change holen (kein Circ Supply mehr)
-    const res = await fetch(`${COINGECKO_API}/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true`);
-    if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
+    // ✅ Nutze /coins/bittensor für Price + Circulating Supply
+    const res = await fetch(`${COINGECKO_API}/coins/bittensor?localization=false&tickers=false&community_data=false&developer_data=false&sparkline=false`);
+    
+    if (!res.ok) {
+      // Fallback bei Rate Limit
+      if (res.status === 429) {
+        console.warn('⚠️ CoinGecko rate limit, using cached data');
+        return { price: null, change24h: null, circulatingSupply: null };
+      }
+      throw new Error(`CoinGecko error: ${res.status}`);
+    }
     
     const data = await res.json();
     
     return {
-      price: data?.bittensor?.usd || null,
-      change24h: data?.bittensor?.usd_24h_change || null
+      price: data.market_data?.current_price?.usd || null,
+      change24h: data.market_data?.price_change_percentage_24h || null,
+      circulatingSupply: data.market_data?.circulating_supply || null
     };
   } catch (err) {
     console.error('❌ fetchTaoPrice:', err);
-    return { price: null, change24h: null };
+    return { price: null, change24h: null, circulatingSupply: null };
   }
 }
 
@@ -168,71 +178,6 @@ async function fetchPriceHistory(range = '7') {
 }
 
 // ===== UI Updates =====
-function updateNetworkStats(data) {
-  const elements = {
-    blockHeight: document.getElementById('blockHeight'),
-    subnets: document.getElementById('subnets'),
-    emission: document.getElementById('emission'),
-    totalNeurons: document.getElementById('totalNeurons'),
-    validators: document.getElementById('validators'),
-    circulatingSupply: document.getElementById('circulatingSupply') // ✅ NEU
-  };
-
-  // Animate Block Height
-  if (data.blockHeight !== undefined) {
-    const currentValue = parseInt(elements.blockHeight.textContent.replace(/,/g, '')) || 0;
-    animateValue(elements.blockHeight, currentValue, data.blockHeight, 800);
-  }
-  
-  // Animate Subnets
-  if (data.subnets !== undefined) {
-    const currentValue = parseInt(elements.subnets.textContent.replace(/,/g, '')) || 0;
-    animateValue(elements.subnets, currentValue, data.subnets, 600);
-  }
-  
-  // Animate Emission
-  if (data.emission !== undefined) {
-    const rate = typeof data.emission === 'string' 
-      ? parseInt(data.emission.replace(/,/g, '')) 
-      : data.emission;
-    const currentValue = parseInt(elements.emission.textContent.replace(/[^0-9]/g, '')) || 0;
-    animateValue(elements.emission, currentValue, rate, 800);
-  }
-  
-  // Animate Total Neurons
-  if (data.totalNeurons !== undefined) {
-    const currentValue = parseInt(elements.totalNeurons.textContent.replace(/,/g, '')) || 0;
-    animateValue(elements.totalNeurons, currentValue, data.totalNeurons, 1000);
-  }
-  
-  // Animate Validators
-  if (data.validators !== undefined) {
-    const currentValue = parseInt(elements.validators.textContent.replace(/,/g, '')) || 0;
-    animateValue(elements.validators, currentValue, data.validators, 800);
-  }
-  
-  // ✅ NEU: Update Circulating Supply
-  if (data.circulatingSupply !== undefined) {
-    circulatingSupply = data.circulatingSupply;
-    
-    const supplyEl = elements.circulatingSupply;
-    const progressEl = document.querySelector('.stat-progress');
-    
-    if (supplyEl) {
-      const current = (data.circulatingSupply / 1_000_000).toFixed(2);
-      supplyEl.textContent = `${current}M / 21M τ`;
-    }
-    
-    if (progressEl) {
-      const percent = ((data.circulatingSupply / 21_000_000) * 100).toFixed(1);
-      progressEl.textContent = `${percent}%`;
-    }
-    
-    // Start halving countdown with fresh supply data
-    startHalvingCountdown();
-  }
-}
-
 function updateTaoPrice(priceData) {
   const priceEl = document.getElementById('taoPrice');
   const changeEl = document.getElementById('priceChange');
@@ -240,11 +185,12 @@ function updateTaoPrice(priceData) {
   
   if (!priceEl) return;
   
+  // Update Price
   if (priceData.price) {
     priceEl.textContent = formatPrice(priceData.price);
     priceEl.classList.remove('skeleton-text');
     
-    // Update 24h change indicator
+    // Update 24h change
     if (priceData.change24h !== null && priceData.change24h !== undefined && changeEl) {
       const change = priceData.change24h;
       const isPositive = change >= 0;
@@ -260,21 +206,69 @@ function updateTaoPrice(priceData) {
     priceEl.classList.remove('skeleton-text');
     if (changeEl) changeEl.style.display = 'none';
   }
-}
-
-function setPriceRangeNote(range) {
-  const el = document.getElementById('priceRangeNote');
-  if (!el) return;
-  if (range === '365') {
-    el.textContent = 'Showing last 365 days (CoinGecko free tier limit).';
-  } else {
-    el.textContent = '';
+  
+  // ✅ Update Circulating Supply Card
+  if (priceData.circulatingSupply) {
+    circulatingSupply = priceData.circulatingSupply;
+    
+    const supplyEl = document.getElementById('circulatingSupply');
+    const progressEl = document.querySelector('.stat-progress');
+    
+    if (supplyEl) {
+      const current = (priceData.circulatingSupply / 1_000_000).toFixed(2);
+      supplyEl.textContent = `${current}M / 21M τ`;
+    }
+    
+    if (progressEl) {
+      const percent = ((priceData.circulatingSupply / 21_000_000) * 100).toFixed(1);
+      progressEl.textContent = `${percent}%`;
+    }
+    
+    // Start halving countdown
+    startHalvingCountdown();
   }
 }
 
-// ===== Chart Creation =====
+function updateNetworkStats(data) {
+  const elements = {
+    blockHeight: document.getElementById('blockHeight'),
+    subnets: document.getElementById('subnets'),
+    emission: document.getElementById('emission'),
+    totalNeurons: document.getElementById('totalNeurons'),
+    validators: document.getElementById('validators')
+    // ✅ ENTFERNT: circulatingSupply (kommt jetzt von CoinGecko)
+  };
 
-// removed: createValidatorsChart (no validator chart)
+  if (data.blockHeight !== undefined) {
+    const currentValue = parseInt(elements.blockHeight.textContent.replace(/,/g, '')) || 0;
+    animateValue(elements.blockHeight, currentValue, data.blockHeight, 800);
+  }
+  
+  if (data.subnets !== undefined) {
+    const currentValue = parseInt(elements.subnets.textContent.replace(/,/g, '')) || 0;
+    animateValue(elements.subnets, currentValue, data.subnets, 600);
+  }
+  
+  if (data.emission !== undefined) {
+    const rate = typeof data.emission === 'string' 
+      ? parseInt(data.emission.replace(/,/g, '')) 
+      : data.emission;
+    const currentValue = parseInt(elements.emission.textContent.replace(/[^0-9]/g, '')) || 0;
+    animateValue(elements.emission, currentValue, rate, 800);
+  }
+  
+  if (data.totalNeurons !== undefined) {
+    const currentValue = parseInt(elements.totalNeurons.textContent.replace(/,/g, '')) || 0;
+    animateValue(elements.totalNeurons, currentValue, data.totalNeurons, 1000);
+  }
+  
+  if (data.validators !== undefined) {
+    const currentValue = parseInt(elements.validators.textContent.replace(/,/g, '')) || 0;
+    animateValue(elements.validators, currentValue, data.validators, 800);
+  }
+}
+
+// ✅ ENTFERNT: createValidatorsChart (no validator chart)
 
 // Price chart stays unchanged
 function createPriceChart(priceHistory, range = '7') {
@@ -556,4 +550,17 @@ function startHalvingCountdown() {
   
   if (!halvingDate) {
     const countdownEl = document.getElementById('halvingCountdown');
-    if
+    countdownEl.textContent = 'Halving Info N/A';
+    return;
+  }
+  
+  updateHalvingCountdown();
+  
+  halvingInterval = setInterval(updateHalvingCountdown, 1000);
+}
+
+// Initialisierung
+initDashboard();
+
+// ===== Polling =====
+// setInterval(refreshDashboard, REFRESH_INTERVAL);

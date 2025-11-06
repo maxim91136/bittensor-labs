@@ -34,17 +34,6 @@ def fetch_metrics() -> Dict[str, Any]:
     # Calculate daily emission
     daily_emission = 7200
     
-    # Get circulating supply
-    try:
-        total_issuance = subtensor.total_issuance()
-        if hasattr(total_issuance, 'tao'):
-            circulating_supply = float(total_issuance.tao)
-        else:
-            circulating_supply = float(total_issuance)
-    except Exception as e:
-        print(f"Warning: Could not fetch total_issuance: {e}", file=sys.stderr)
-        circulating_supply = None
-    
     result = {
         "blockHeight": current_block,
         "validators": total_validators,
@@ -55,16 +44,13 @@ def fetch_metrics() -> Dict[str, Any]:
         "_timestamp": datetime.now(timezone.utc).isoformat()
     }
     
-    if circulating_supply is not None:
-        result["circulatingSupply"] = circulating_supply
-    
     return result
 
 if __name__ == "__main__":
     try:
         metrics = fetch_metrics()
         
-        # ✅ NEU: Schreibe metrics.json in das Root-Verzeichnis
+        # Write metrics.json
         output_path = os.path.join(os.getcwd(), "metrics.json")
         with open(output_path, "w") as f:
             json.dump(metrics, f, indent=2)
