@@ -68,102 +68,68 @@
 
 <main class="dashboard">
   <div class="stats-grid">
+    <!-- Example stat cards, replace values dynamically as needed -->
     <div class="stat-card">
-      <div class="stat-icon" aria-hidden="true">
-        <!-- NEUES ICON: Block/Würfel -->
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="4" y="4" width="16" height="16" rx="5" stroke="#22c55e" fill="none"/>
-          <rect x="8" y="8" width="8" height="8" rx="2" stroke="#22c55e" fill="#22c55e" opacity="0.18"/>
-        </svg>
-      </div>
+      <div class="stat-icon" aria-hidden="true">⛓️</div>
       <div class="stat-content">
-        <div class="stat-label">
-          Block Height
-          <span class="info-badge" data-tooltip="Current block number of the Bittensor blockchain">ⓘ</span>
-        </div>
-        <div class="stat-value" id="blockHeight">0</div>
+        <div class="stat-label">Block Height</div>
+        <div class="stat-value" id="blockHeight">—</div>
       </div>
     </div>
-
     <div class="stat-card">
-      <div class="stat-icon" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-          <rect x="3" y="3" width="7" height="7"></rect>
-          <rect x="14" y="3" width="7" height="7"></rect>
-          <rect x="14" y="14" width="7" height="7"></rect>
-          <rect x="3" y="14" width="7" height="7"></rect>
-        </svg>
-      </div>
+      <div class="stat-icon" aria-hidden="true">🧩</div>
       <div class="stat-content">
-        <div class="stat-label">
-          Total Subnets
-          <span class="info-badge" data-tooltip="Number of active subnets in the network">ⓘ</span>
-        </div>
-        <div class="stat-value" id="subnets">0</div>
+        <div class="stat-label">Total Subnets</div>
+        <div class="stat-value" id="subnets">—</div>
       </div>
     </div>
-
     <div class="stat-card">
-      <div class="stat-icon" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-          <line x1="12" y1="1" x2="12" y2="23"></line>
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
-        </svg>
-      </div>
+      <div class="stat-icon" aria-hidden="true">🧑‍💻</div>
       <div class="stat-content">
-        <div class="stat-label">
-          Emission Rate
-          <span class="info-badge" data-tooltip="Daily TAO emission (1 τ per block)">ⓘ</span>
-        </div>
-        <div class="stat-value" id="emission">7,200 τ/day</div>
+        <div class="stat-label">Active Validators</div>
+        <div class="stat-value" id="validators">—</div>
       </div>
     </div>
-
     <div class="stat-card">
-      <div class="stat-icon" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-          <path d="M12 2a3 3 0 0 0-3 3v4a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
-          <path d="M12 9v4"/>
-          <circle cx="12" cy="17" r="1"/>
-          <path d="M7 13h10"/>
-        </svg>
-      </div>
+      <div class="stat-icon" aria-hidden="true">💎</div>
       <div class="stat-content">
-        <div class="stat-label">
-          Total Neurons
-          <span class="info-badge" data-tooltip="All active neurons across subnets">ⓘ</span>
-        </div>
-        <div class="stat-value" id="totalNeurons">32.664</div>
+        <div class="stat-label">Circulating Supply</div>
+        <div class="stat-value" id="circulatingSupply">—</div>
       </div>
     </div>
-
     <div class="stat-card">
-      <div class="stat-icon" aria-hidden="true">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-          <circle cx="9" cy="7" r="4"></circle>
-          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-        </svg>
-      </div>
+      <div class="stat-icon" aria-hidden="true">💰</div>
       <div class="stat-content">
-        <div class="stat-label">
-          Active Validators
-          <span class="info-badge" data-tooltip="Validators securing the network">ⓘ</span>
-        </div>
-        <div class="stat-value" id="validators">1.381</div>
+        <div class="stat-label">Market Cap</div>
+        <div class="stat-value" id="marketCap">—</div>
       </div>
     </div>
-
     <div class="stat-card">
-      <div class="stat-icon">💎</div>
+      <div class="stat-icon" aria-hidden="true">🌐</div>
       <div class="stat-content">
-        <div class="stat-label">
-          Circulating Supply
-          <span class="info-badge" data-tooltip="Current supply / Max 21M">ⓘ</span>
-        </div>
-        <div class="stat-value" id="circulatingSupply">10.19M / 21M τ</div>
-        <div class="stat-progress">48.5%</div>
+        <div class="stat-label">FDV</div>
+        <div class="stat-value" id="fdv">—</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">⚡</div>
+      <div class="stat-content">
+        <div class="stat-label">Emission Rate</div>
+        <div class="stat-value" id="emission">—</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" aria-hidden="true">🧠</div>
+      <div class="stat-content">
+        <div class="stat-label">Total Neurons</div>
+        <div class="stat-value" id="totalNeurons">—</div>
+      </div>
+    </div>
+    <div class="stat-card placeholder-card">
+      <div class="stat-icon" aria-hidden="true">💡</div>
+      <div class="stat-content">
+        <div class="stat-label">Thinking about it</div>
+        <div class="stat-value" style="font-size:1.1em; color:#9ca3af;">Another metric…</div>
       </div>
     </div>
   </div>
