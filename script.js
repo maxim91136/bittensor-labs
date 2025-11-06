@@ -170,7 +170,6 @@ function updateTaoPrice(priceData) {
     priceEl.classList.remove('skeleton-text');
     if (changeEl && priceData.change24h !== undefined && priceData.change24h !== null) {
       const change = priceData.change24h;
-      // Variante 1: 24h explizit anzeigen
       changeEl.textContent = `${change > 0 ? '↑' : '↓'}${change.toFixed(2)}% (24h)`;
       changeEl.style.display = 'inline';
       changeEl.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
@@ -180,10 +179,7 @@ function updateTaoPrice(priceData) {
     if (changeEl) changeEl.style.display = 'none';
   }
   lastPrice = priceData.price;
-  // Nach dem Setzen von lastPrice:
-  if (window.circulatingSupply && lastPrice) {
-    updateMarketCapAndFDV(lastPrice, window.circulatingSupply);
-  }
+  tryUpdateMarketCapAndFDV();
 }
 
 function updateMarketCapAndFDV(price, circulatingSupply) {
@@ -246,6 +242,7 @@ async function updateNetworkStats(data) {
       window.circulatingSupply = fallbackSupply;
     }
   }
+  tryUpdateMarketCapAndFDV();
 
   // Halving-Berechnung
   const HALVING_SUPPLY = 10_500_000;
