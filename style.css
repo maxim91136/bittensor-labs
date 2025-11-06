@@ -243,6 +243,51 @@ body {
   50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.6); }
 }
 
+/* ---- Halving Pill ---- */
+.halving-pill {
+  display: flex;
+  align-items: center;
+  gap: clamp(6px, 1.5vw, 8px);
+  padding: var(--pill-padding);
+  background: linear-gradient(135deg, rgba(255,107,53,0.08), rgba(255,107,53,0.03));
+  border: 1px solid rgba(255,107,53,0.2);
+  border-radius: 20px;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text);
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.halving-pill:hover {
+  background: linear-gradient(135deg, rgba(255,107,53,0.12), rgba(255,107,53,0.05));
+  border-color: rgba(255,107,53,0.3);
+  box-shadow: 0 4px 12px rgba(255,107,53,0.15);
+}
+
+.halving-icon {
+  color: var(--brand);
+  display: flex;
+  align-items: center;
+  font-size: 1.1em;
+}
+
+.halving-countdown {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+/* Mobile: Stack vertically */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+  }
+  
+  .halving-pill {
+    order: -1;
+  }
+}
+
 /* ---- Dashboard (Container Query Ready) ---- */
 .dashboard {
   container-type: inline-size;

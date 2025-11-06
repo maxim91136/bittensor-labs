@@ -114,26 +114,34 @@ function setCachedPrice(range, data) {
 // ===== API Fetchers =====
 async function fetchNetworkData() {
   try {
-    const response = await fetch(`${API_BASE}/network`, { cache: 'no-store' });
-    if (!response.ok) throw new Error('Network response failed');
-    return await response.json();
-  } catch (error) {
-    console.error('❌ Error fetching network data:', error);
+    const res = await fetch(`${API_BASE}/network`);
+    if (!res.ok) throw new Error(`Network API error: ${res.status}`);
+    const data = await res.json();
+    
+    console.log('🔍 Backend data keys:', Object.keys(data)); // DEBUG
+    
+    return data;
+  } catch (err) {
+    console.error('❌ fetchNetworkData:', err);
     return null;
   }
 }
 
 async function fetchTaoPrice() {
   try {
-    const res = await fetch(`${COINGECKO_API}/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_circulating_supply=true`);
+    // ÄNDERUNG: Nutze /coins/bittensor statt /simple/price
+    const res = await fetch(`${COINGECKO_API}/coins/bittensor?localization=false&tickers=false&community_data=false&developer_data=false`);
+    if (!res.ok) throw new Error(`CoinGecko error: ${res.status}`);
+    
     const data = await res.json();
     
     return {
-      price: data.bittensor?.usd,
-      change24h: data.bittensor?.usd_24h_change,
-      circulatingSupply: data.bittensor?.circulating_supply
+      price: data.market_data?.current_price?.usd || null,
+      change24h: data.market_data?.price_change_percentage_24h || null,
+      circulatingSupply: data.market_data?.circulating_supply || null
     };
   } catch (err) {
+    console.error('❌ fetchTaoPrice:', err);
     return { price: null, change24h: null, circulatingSupply: null };
   }
 }
@@ -227,9 +235,25 @@ function updateTaoPrice(priceData) {
     if (changeEl) changeEl.style.display = 'none';
   }
   
-  // Store circulating supply globally
+  // NEU: Update Circulating Supply Card
   if (priceData.circulatingSupply) {
     circulatingSupply = priceData.circulatingSupply;
+    
+    const supplyEl = document.getElementById('circulatingSupply');
+    const progressEl = document.querySelector('.stat-progress');
+    
+    if (supplyEl) {
+      const current = (priceData.circulatingSupply / 1_000_000).toFixed(2);
+      supplyEl.textContent = `${current}M / 21M τ`;
+    }
+    
+    if (progressEl) {
+      const percent = ((priceData.circulatingSupply / 21_000_000) * 100).toFixed(1);
+      progressEl.textContent = `${percent}%`;
+    }
+    
+    // Start halving countdown
+    startHalvingCountdown();
   }
 }
 
@@ -476,42 +500,56 @@ function calculateHalvingDate(circulatingSupply, emissionRate) {
 }
 
 function updateHalvingCountdown() {
-  const el = document.getElementById('halvingCountdown');
-  if (!el || !halvingDate) return;
+  const countdownEl = document.getElementById('halvingCountdown');
+  if (!countdownEl || !halvingDate) return;
   
   const now = Date.now();
-  const diff = halvingDate - now;
+  const distance = halvingDate.getTime() - now;
   
-  if (diff <= 0) {
-    el.textContent = 'Halving event in progress...';
-    clearInterval(halvingInterval);
-    halvingInterval = null;
+  if (distance < 0) {
+    countdownEl.textContent = 'Halving Live! 🎉';
+    if (halvingInterval) {
+      clearInterval(halvingInterval);
+      halvingInterval = null;
+    }
     return;
   }
   
-  const hours = Math.floor(diff / (1000 * 60 * 60));
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
   
-  el.textContent = `${hours}h ${minutes}m ${seconds}s`;
+  // Compact format
+  if (days > 0) {
+    countdownEl.textContent = `Halving in ${days}d ${hours}h`;
+  } else if (hours > 0) {
+    countdownEl.textContent = `Halving in ${hours}h ${minutes}m`;
+  } else {
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+    countdownEl.textContent = `${minutes}m ${seconds}s`;
+  }
 }
 
 function startHalvingCountdown() {
-  if (halvingInterval) {
-    clearInterval(halvingInterval);
-    halvingInterval = null;
+  if (halvingInterval) clearInterval(halvingInterval);
+  
+  if (!circulatingSupply) {
+    console.warn('⚠️ No circulating supply for halving countdown');
+    return;
   }
   
-  // Get emission rate from DOM
-  const emissionRate = parseFloat(document.getElementById('emission')?.textContent.replace(/[^0-9.]/g, '')) || 7200;
+  const emissionRate = parseFloat(document.getElementById('emission')?.textContent.replace(/[^0-9]/g, '')) || 7200;
   
-  // Get circulating supply from state (wird von fetchTaoPrice() gesetzt)
-  // Temporär: Nutze einen globalen State oder fetch nochmal
+  halvingDate = calculateHalvingDate(circulatingSupply, emissionRate);
   
-  // Für jetzt: Wir müssen circulatingSupply speichern
-  // TODO: State Management verbessern
+  if (!halvingDate) {
+    const countdownEl = document.getElementById('halvingCountdown');
+    if (countdownEl) countdownEl.textContent = 'Halving Reached';
+    return;
+  }
   
-  console.log('⚠️ Halving countdown needs circulatingSupply from CoinGecko');
+  updateHalvingCountdown();
+  halvingInterval = setInterval(updateHalvingCountdown, 1000); // Update every second
 }
 
 // Start the dashboard initialization
