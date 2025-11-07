@@ -107,7 +107,6 @@ async function fetchNetworkData() {
     const res = await fetch(`${API_BASE}/network`);
     if (!res.ok) throw new Error(`Network API error: ${res.status}`);
     const data = await res.json();
-    console.log('🔍 Backend data keys:', Object.keys(data)); // DEBUG
     return data;
   } catch (err) {
     console.error('❌ fetchNetworkData:', err);
@@ -521,14 +520,12 @@ setupDynamicTooltips();
 
 // ===== Data Refresh =====
 async function refreshDashboard() {
-  console.log('🔄 Refreshing dashboard data...');
   const [networkData, taoPrice] = await Promise.all([
     fetchNetworkData(),
     fetchTaoPrice()
   ]);
   updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
-  console.log('✅ Dashboard updated');
 }
 
 // ===== Auto-Refresh mit Countdown-Circle =====
@@ -539,15 +536,14 @@ let refreshTimer = null;
 function renderRefreshIndicator() {
   const el = document.getElementById('refresh-indicator');
   if (!el) return;
-  // SVG Circle (kompakt)
   const radius = 7;
   const stroke = 2.2;
   const circ = 2 * Math.PI * radius;
   const progress = (refreshCountdown / REFRESH_SECONDS);
   el.innerHTML = `
-    <svg viewBox="0 0 18 18">
-      <circle cx="9" cy="9" r="${radius}" stroke="#222" stroke-width="${stroke}" fill="none"/>
-      <circle cx="9" cy="9" r="${radius}" stroke="#22c55e" stroke-width="${stroke}" fill="none"
+    <svg viewBox="0 0 16 16">
+      <circle cx="8" cy="8" r="${radius}" stroke="#222" stroke-width="${stroke}" fill="none"/>
+      <circle cx="8" cy="8" r="${radius}" stroke="#22c55e" stroke-width="${stroke}" fill="none"
         stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - progress)}"
         style="transition: stroke-dashoffset 0.5s;"/>
     </svg>
@@ -581,7 +577,6 @@ function startAutoRefresh() {
 
 // ===== Initialization =====
 async function initDashboard() {
-  console.log('🚀 Initializing Bittensor-Labs Dashboard...');
   setupMaxTooltip();
   setupTimeRangeToggle();
   const [networkData, taoPrice] = await Promise.all([
@@ -596,7 +591,7 @@ async function initDashboard() {
     createPriceChart(priceHistory, currentPriceRange);
   }
   startHalvingCountdown();
-  startAutoRefresh(); // <--- NEU: Auto-Refresh starten
+  startAutoRefresh();
 }
 
 // ===== Halving Countdown =====
@@ -650,4 +645,4 @@ function startHalvingCountdown() {
 }
 
 // Initialisierung
-initDashboard();
+initDashboard();s
