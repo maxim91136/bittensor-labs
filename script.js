@@ -635,6 +635,14 @@ async function initDashboard() {
   ]);
   await updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
+
+  // NEU: Taostats für Volume holen und Kachel befüllen
+  const taostats = await fetchTaostats();
+  const volumeEl = document.getElementById('volume24h');
+  if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
+    volumeEl.textContent = `$${taostats.volume_24h.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+  }
+
   const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
   const priceHistory = await fetchPriceHistory(currentPriceRange);
   if (priceHistory) {
