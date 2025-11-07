@@ -538,6 +538,15 @@ async function refreshDashboard() {
   ]);
   updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
+
+  // LAST UPDATE setzen
+  const lastUpdateEl = document.getElementById('lastUpdate');
+  if (lastUpdateEl) {
+    const now = new Date();
+    const hh = now.getHours().toString().padStart(2, '0');
+    const mm = now.getMinutes().toString().padStart(2, '0');
+    lastUpdateEl.textContent = `Updated: ${hh}:${mm}`;
+  }
 }
 
 // ===== Auto-Refresh mit Countdown-Circle =====
