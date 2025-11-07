@@ -757,10 +757,11 @@ body {
   gap: 12px;
 }
 
+/* --- Refresh Indicator (Kompakt & Dezent) --- */
 .refresh-indicator {
   width: 16px;
   height: 16px;
-  margin: 0 6px 0 0;
+  margin-right: 10px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -768,7 +769,7 @@ body {
   position: relative;
   cursor: pointer;
   user-select: none;
-  opacity: 0.7;
+  opacity: 0.8;
   transition: opacity 0.2s;
 }
 .refresh-indicator svg {
@@ -783,67 +784,6 @@ body {
   align-items: center;
   justify-content: center;
   font-size: 0.7em;
-  font-weight: 600;
-  color: #22c55e;
-  pointer-events: none;
-  letter-spacing: -0.5px;
-}
-.refresh-indicator .refresh-text {
-  display: none;
-}
-.refresh-indicator:hover {
-  opacity: 1;
-}
-
-@media (max-width: 600px) {
-  .stat-label {
-    font-size: 0.72rem;
-    letter-spacing: 0.01em;
-  }
-  .stat-value {
-    font-size: 1.05rem;
-    word-break: break-all;
-  }
-  .stat-card {
-    padding: 10px 6px;
-  }
-  .stat-icon {
-    width: 28px;
-    height: 28px;
-    font-size: 1.1em;
-  }
-  .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* --- Refresh Indicator (Kompakt & Dezent) --- */
-.refresh-indicator {
-  width: 18px;
-  height: 18px;
-  margin-left: 10px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  position: relative;
-  cursor: pointer;
-  user-select: none;
-  opacity: 0.8;
-  transition: opacity 0.2s;
-}
-.refresh-indicator svg {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-.refresh-indicator .refresh-label {
-  position: absolute;
-  left: 0; right: 0; top: 0; bottom: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75em;
   font-weight: 600;
   color: #22c55e;
   pointer-events: none;
