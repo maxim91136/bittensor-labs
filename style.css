@@ -805,3 +805,9 @@ body {
     display: block;
   }
 }
+
+@media (max-width: 700px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
