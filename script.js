@@ -498,14 +498,13 @@ function setupDynamicTooltips() {
     tooltip.classList.remove('visible');
   }
 
+  // Info-Badges
   document.querySelectorAll('.info-badge').forEach(badge => {
     const text = badge.getAttribute('data-tooltip');
-    // Desktop: Hover
     badge.addEventListener('mouseenter', e => showTooltip(e, text));
     badge.addEventListener('mouseleave', hideTooltip);
     badge.addEventListener('focus', e => showTooltip(e, text));
     badge.addEventListener('blur', hideTooltip);
-    // Mobile: Touch/Klick
     badge.addEventListener('click', e => {
       e.stopPropagation();
       showTooltip(e, text);
@@ -513,7 +512,20 @@ function setupDynamicTooltips() {
     });
   });
 
-  // Tooltip schließen, wenn außerhalb geklickt wird (mobile)
+  // Halving-Pill Tooltip aktivieren
+  document.querySelectorAll('.halving-pill[data-tooltip]').forEach(pill => {
+    const text = pill.getAttribute('data-tooltip');
+    pill.addEventListener('mouseenter', e => showTooltip(e, text));
+    pill.addEventListener('mouseleave', hideTooltip);
+    pill.addEventListener('focus', e => showTooltip(e, text));
+    pill.addEventListener('blur', hideTooltip);
+    pill.addEventListener('click', e => {
+      e.stopPropagation();
+      showTooltip(e, text);
+      setTimeout(hideTooltip, 2500);
+    });
+  });
+
   document.addEventListener('click', hideTooltip);
 }
 setupDynamicTooltips();
