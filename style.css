@@ -803,21 +803,19 @@ body {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
-  .last-update {
-    top: 10px;
-    left: 10px;
-    font-size: 0.95em;
-  }
-}
-
+  
 .last-update {
-  position: absolute;
-  top: 18px;
-  left: 18px;
+  text-align: right;
   color: #9ca3af;
   font-size: 0.85em;
+  margin: 0 0 12px 0;
   opacity: 0.7;
   letter-spacing: 0.01em;
-  z-index: 10;
-  pointer-events: none;
+}
+@media (max-width: 700px) {
+  .last-update {
+    text-align: left;
+    font-size: 0.95em;
+    margin-left: 2px;
+  }
 }
