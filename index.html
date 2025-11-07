@@ -78,14 +78,15 @@
         <div class="stat-value" id="blockHeight">—</div>
       </div>
     </div>
-   <a class="stat-card" href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" title="View Subnet Explorer on Taostats.io" style="text-decoration: none; color: inherit; cursor: pointer;">
-    <span class="info-badge" data-tooltip="Number of active subnets in the network">i</span>
-    <div class="stat-icon" aria-hidden="true">🧩</div>
-    <div class="stat-content">
-      <div class="stat-label">Subnets</div>
-      <div class="stat-value" id="subnets">—</div>
-    </div>
-  </a>
+   <a class="stat-card" href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" title="View Subnet Explorer on Taostats.io" style="text-decoration: none; color: inherit; cursor: pointer; position: relative;">
+  <!-- Info-Badge vom Link ausnehmen -->
+  <span class="info-badge" data-tooltip="Number of active subnets in the network" style="position: absolute; top: 10px; left: 10px; z-index: 2; pointer-events: auto;"></span>
+  <div class="stat-icon" aria-hidden="true">🧩</div>
+  <div class="stat-content">
+    <div class="stat-label">Subnets</div>
+    <div class="stat-value" id="subnets">—</div>
+  </div>
+</a>
     <div class="stat-card">
       <span class="info-badge" data-tooltip="Number of active validators securing the network">i</span>
       <div class="stat-icon" aria-hidden="true">🧑‍💻</div>

@@ -688,3 +688,17 @@ function startHalvingCountdown() {
 
 // Initialisierung
 initDashboard();
+
+// Stoppe Link-Klick auf Info-Badge (Pro-Lösung)
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.stat-card .info-badge').forEach(badge => {
+    badge.addEventListener('click', function(e) {
+      e.stopPropagation();
+      e.preventDefault();
+      // Tooltip wird wie gewohnt angezeigt, aber Link nicht ausgelöst
+    });
+    badge.addEventListener('touchstart', function(e) {
+      e.stopPropagation();
+    });
+  });
+});

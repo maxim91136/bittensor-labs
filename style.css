@@ -822,3 +822,16 @@ body {
     margin-left: 2px;
   }
 }
+
+.stat-card .info-badge {
+  pointer-events: auto;
+  z-index: 2;
+}
+.stat-card .info-badge:active,
+.stat-card .info-badge:focus {
+  outline: none;
+}
+/* Verhindert, dass der Link beim Klick auf die Info-Badge ausgelöst wird */
+.stat-card .info-badge {
+  cursor: pointer;
+}
