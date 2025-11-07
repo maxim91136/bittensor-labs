@@ -597,4 +597,30 @@ document.addEventListener('DOMContentLoaded', () => {
       e.stopPropagation();
     });
   });
+
+  // Zeitbereichs-Buttons für das Chart
+  document.querySelectorAll('.time-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      const range = btn.getAttribute('data-range'); // "7", "30", "365"
+      if (range === currentPriceRange) return; // Kein Reload, wenn gleich
+      currentPriceRange = range;
+
+      // Button-UI aktualisieren
+      document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      // Chart-Skeleton anzeigen (optional)
+      const priceCard = btn.closest('.dashboard-card');
+      if (priceCard) priceCard.classList.add('loading');
+
+      // Daten laden und Chart neu zeichnen
+      const priceHistory = await fetchPriceHistory(currentPriceRange);
+      if (priceHistory) {
+        createPriceChart(priceHistory, currentPriceRange);
+      }
+
+      // Skeleton ausblenden
+      if (priceCard) priceCard.classList.remove('loading');
+    });
+  });
 });
