@@ -455,7 +455,6 @@ function startAutoRefresh() {
 
 // ===== Initialization =====
 async function initDashboard() {
-  setupMaxTooltip();
   setupTimeRangeToggle();
   const [networkData, taoPrice] = await Promise.all([
     fetchNetworkData(),
