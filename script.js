@@ -531,6 +531,53 @@ async function refreshDashboard() {
   console.log('✅ Dashboard updated');
 }
 
+// ===== Auto-Refresh mit Countdown-Circle =====
+const REFRESH_SECONDS = 60; // alle 60 Sekunden
+let refreshCountdown = REFRESH_SECONDS;
+let refreshTimer = null;
+
+function renderRefreshIndicator() {
+  const el = document.getElementById('refresh-indicator');
+  if (!el) return;
+  // SVG Circle (animiert)
+  const radius = 12;
+  const stroke = 3;
+  const circ = 2 * Math.PI * radius;
+  const progress = (refreshCountdown / REFRESH_SECONDS);
+  el.innerHTML = `
+    <svg viewBox="0 0 28 28">
+      <circle cx="14" cy="14" r="${radius}" stroke="#222" stroke-width="${stroke}" fill="none"/>
+      <circle cx="14" cy="14" r="${radius}" stroke="#22c55e" stroke-width="${stroke}" fill="none"
+        stroke-dasharray="${circ}" stroke-dashoffset="${circ * (1 - progress)}"
+        style="transition: stroke-dashoffset 0.5s;"/>
+    </svg>
+    <span class="refresh-label">${refreshCountdown}</span>
+  `;
+  el.title = `Auto-refresh in ${refreshCountdown}s`;
+}
+
+function startAutoRefresh() {
+  renderRefreshIndicator();
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    refreshCountdown--;
+    if (refreshCountdown <= 0) {
+      refreshCountdown = REFRESH_SECONDS;
+      refreshDashboard();
+    }
+    renderRefreshIndicator();
+  }, 1000);
+  // Klick auf den Circle = sofort refreshen
+  const el = document.getElementById('refresh-indicator');
+  if (el) {
+    el.onclick = () => {
+      refreshCountdown = REFRESH_SECONDS;
+      refreshDashboard();
+      renderRefreshIndicator();
+    };
+  }
+}
+
 // ===== Initialization =====
 async function initDashboard() {
   console.log('🚀 Initializing Bittensor-Labs Dashboard...');
@@ -548,6 +595,7 @@ async function initDashboard() {
     createPriceChart(priceHistory, currentPriceRange);
   }
   startHalvingCountdown();
+  startAutoRefresh(); // <--- NEU: Auto-Refresh starten
 }
 
 // ===== Halving Countdown =====
