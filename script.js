@@ -455,16 +455,20 @@ function startAutoRefresh() {
 
 // ===== Initialization of Price Chart =====
 function createPriceChart(priceHistory, range) {
-  const ctx = document.getElementById('priceChart').getContext('2d');
+  const canvas = document.getElementById('priceChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
   const labels = priceHistory.map(([timestamp]) => {
     const date = new Date(timestamp);
     return `${date.getMonth()+1}/${date.getDate()}`;
   });
   const data = priceHistory.map(([_, price]) => price);
 
-  if (window.priceChart) {
+  // Nur destroy, wenn Chart-Objekt und Methode existieren
+  if (window.priceChart && typeof window.priceChart.destroy === 'function') {
     window.priceChart.destroy();
   }
+
   window.priceChart = new Chart(ctx, {
     type: 'line',
     data: {
