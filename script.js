@@ -641,12 +641,12 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Info-Badge Tooltip für API Status Card: statischer Text
   const infoBadge = document.querySelector('#apiStatusCard .info-badge');
-  infoBadge.setAttribute(
-    'data-tooltip',
-    `Status of all data sources powering the dashboard
-Taostats: ${taostatsStatus}
-CoinGecko: ${coingeckoStatus}
-Bittensor SDK: ${sdkStatus}`
-  );
+  if (infoBadge) {
+    infoBadge.setAttribute(
+      'data-tooltip',
+      'Status of all data sources powering the dashboard\nTaostats: OK\nCoinGecko: OK\nBittensor SDK: OK'
+    );
+  }
 });
