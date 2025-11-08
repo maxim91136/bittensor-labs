@@ -625,4 +625,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (priceCard) priceCard.classList.remove('loading');
     });
   });
+
+  const infoBadge = document.querySelector('#apiStatusCard .info-badge');
+  infoBadge.setAttribute(
+    'data-tooltip',
+    `Status of all data sources powering the dashboard
+Taostats: ${taostatsStatus}
+CoinGecko: ${coingeckoStatus}
+Bittensor SDK: ${sdkStatus}`
+  );
 });
