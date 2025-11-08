@@ -175,6 +175,36 @@
       <div id="priceRangeNote" class="chart-note" aria-live="polite"></div>
     </section>
       <div class="last-update" id="lastUpdate"></div>
+
+    <!-- Socials & Top Links Card (als eigene dashboard-card, nicht stat-card) -->
+    <section class="dashboard-card socials-card">
+      <div class="card-header">
+        <h3>TAO Socials & Useful Links</h3>
+      </div>
+      <div class="socials-links">
+  <a href="https://x.com/bittensor?s=20" target="_blank" rel="noopener" title="X (Twitter)">
+    <svg role="img" viewBox="0 0 24 24" width="22" height="22" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+      <title>X</title>
+      <path d="M17.53 3.25h3.71l-7.98 9.14 9.41 8.36h-7.44l-5.89-6.98-6.75 6.98H2.47l8.51-9.84L1.41 3.25h7.61l5.63 6.67z"/>
+    </svg>
+    X
+  </a>
+        <a href="https://discord.gg/bittensor" target="_blank" rel="noopener" title="Discord">
+          <svg role="img" viewBox="0 0 24 24" width="22" height="22" fill="#fff" xmlns="http://www.w3.org/2000/svg">
+            <title>Discord</title>
+            <path d="M20.317 4.369A19.791 19.791 0 0 0 16.885 3.3a.05.05 0 0 0-.052.025c-.228.397-.482.912-.661 1.32a18.524 18.524 0 0 0-5.034 0c-.18-.41-.434-.923-.661-1.32a.05.05 0 0 0-.052-.025c-3.432.1-6.13 1.19-6.13 1.19a.043.043 0 0 0-.021.018C.356 7.053-.213 9.67.066 12.248c.01.092.07.184.15.23a19.736 19.736 0 0 0 5.993 2.013.05.05 0 0 0 .053-.02c.462-.632.875-1.295 1.226-1.994a.05.05 0 0 0-.028-.07c-.652-.247-1.27-.547-1.853-.892a.05.05 0 0 1-.007-.082c.124-.094.249-.19.368-.287a.05.05 0 0 1 .051-.007c3.927 1.793 8.18 1.793 12.061 0a.05.05 0 0 1 .052.006c.12.098.244.194.369.288a.05.05 0 0 1-.006.082 12.298 12.298 0 0 1-1.854.892.05.05 0 0 0-.028.07c.36.699.773 1.362 1.226 1.994a.05.05 0 0 0 .053.02 19.736 19.736 0 0 0 5.993-2.013.05.05 0 0 0 .15-.23c.334-3.042-.559-5.634-2.419-7.861a.034.034 0 0 0-.02-.018ZM8.02 13.317c-.784 0-1.426-.718-1.426-1.599 0-.881.632-1.599 1.426-1.599.797 0 1.438.726 1.426 1.599 0 .881-.632 1.599-1.426 1.599Zm7.96 0c-.784 0-1.426-.718-1.426-1.599 0-.881.632-1.599 1.426-1.599.797 0 1.438.726 1.426 1.599 0 .881-.629 1.599-1.426 1.599Z" fill="#fff"/>
+          </svg>
+          Discord
+        </a>
+        <a href="https://github.com/opentensor" target="_blank" rel="noopener" title="GitHub">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2C6.477 2 2 6.484 2 12.021c0 4.428 2.865 8.184 6.839 9.525.5.092.682-.217.682-.482 0-.237-.009-.868-.013-1.703-2.782.605-3.369-1.342-3.369-1.342-.454-1.155-1.11-1.463-1.11-1.463-.908-.62.069-.608.069-.608 1.004.07 1.532 1.032 1.532 1.032.892 1.529 2.341 1.088 2.91.833.091-.647.35-1.088.636-1.339-2.221-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.254-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.025A9.564 9.564 0 0 1 12 6.844c.85.004 1.705.115 2.504.338 1.909-1.295 2.747-1.025 2.747-1.025.546 1.378.202 2.396.1 2.65.64.7 1.028 1.595 1.028 2.688 0 3.847-2.337 4.695-4.566 4.944.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .267.18.579.688.481C19.138 20.2 22 16.447 22 12.021 22 6.484 17.523 2 12 2Z" fill="#fff"/>
+          </svg>
+          GitHub
+        </a>
+      </div>
+    </section>
+
     <!-- Disclaimer Card -->
     <section class="dashboard-card disclaimer-card">
       <div class="disclaimer-header">
@@ -186,51 +216,57 @@
         <h3>Disclaimer & Data Sources</h3>
       </div>
 
-      <div class="disclaimer-content">
-        <p class="disclaimer-text">
-          This is an <strong>unofficial community project</strong> and hobby dashboard.<br>
-          Not affiliated with or endorsed by the Opentensor Foundation.<br>
-          "Bittensor" and "TAO" are trademarks of their respective owners.<br>
-          Price and supply data are sourced from Taostats and CoinGecko for good accuracy.
-        </p>
-
-        <div class="data-sources-grid">
-          <div class="source-item">
-            <span class="source-label">Network Data</span>
-            <a href="https://github.com/opentensor/bittensor" target="_blank" rel="noopener noreferrer">
-              Bittensor Python SDK
-            </a>
-          </div>
-          <div class="source-item">
-            <span class="source-label">Price & Supply</span>
-            <a href="https://taostats.io/" target="_blank" rel="noopener noreferrer">
-              Taostats API
-            </a>
-          </div>
-          <div class="source-item">
-            <span class="source-label">Price & Supply</span>
-            <a href="https://www.coingecko.com/en/api" target="_blank" rel="noopener noreferrer">
-              CoinGecko API
-            </a>
-          </div>
-          <div class="source-item">
-            <span class="source-label">Source Code</span>
-            <a href="https://github.com/maxim91136/bittensor-labs" target="_blank" rel="noopener noreferrer">
-              GitHub Repository
-            </a>
-          </div>
-          <div class="source-item">
-            <span class="source-label">Official Site</span>
-            <a href="https://bittensor.com" target="_blank" rel="noopener noreferrer">
-              bittensor.com
-            </a>
-          </div>
+      <div class="data-sources-grid">
+        <div class="source-item">
+          <span class="source-label">Network Data</span>
+          <a href="https://github.com/opentensor/bittensor" target="_blank" rel="noopener noreferrer">
+            Bittensor Python SDK
+          </a>
         </div>
-
-        <p class="coingecko-attribution">
-          This product uses the Taostats and CoinGecko APIs but is not endorsed or certified by either provider.
-        </p>
+        <div class="source-item">
+          <span class="source-label">Price & Supply</span>
+          <a href="https://taostats.io/" target="_blank" rel="noopener noreferrer">
+            Taostats API
+          </a>
+        </div>
+        <div class="source-item">
+          <span class="source-label">Price & Supply</span>
+          <a href="https://www.coingecko.com/en/api" target="_blank" rel="noopener noreferrer">
+            CoinGecko API
+          </a>
+        </div>
+        <div class="source-item">
+          <span class="source-label">Source Code</span>
+          <a href="https://github.com/maxim91136/bittensor-labs" target="_blank" rel="noopener noreferrer">
+            GitHub Repository
+          </a>
+        </div>
+        <div class="source-item">
+          <span class="source-label">Official Site</span>
+          <a href="https://bittensor.com" target="_blank" rel="noopener noreferrer">
+            bittensor.com
+          </a>
+        </div>
+        <div class="source-item">
+          <span class="source-label">SVG Logos</span>
+          <a href="https://simpleicons.org" target="_blank" rel="noopener noreferrer">
+            simpleicons.org
+          </a>
+        </div>
+        <!-- NEU: Disclaimer als eigenes Feld -->
+        <div class="source-item">
+          <span class="source-label">Disclaimer</span>
+          <span class="disclaimer-text">
+            This is an <strong>unofficial community project</strong> and hobby dashboard.<br>
+            Not affiliated with or endorsed by the Opentensor Foundation.<br>
+            "Bittensor" and "TAO" are trademarks of their respective owners.<br>
+            Price and supply data are sourced from Taostats and CoinGecko for good accuracy.
+          </span>
+        </div>
       </div>
+      <p class="coingecko-attribution">
+        This product uses the Taostats and CoinGecko APIs but is not endorsed or certified by either provider.
+      </p>
     </section>
   </div>
 </main>

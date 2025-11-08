@@ -416,6 +416,22 @@ body {
   pointer-events: auto;
 }
 
+.svg-attribution {
+  font-size: 0.95em;
+  color: #bbb;
+  margin-top: 0.7em;
+  margin-bottom: 0.2em;
+}
+.svg-attribution a {
+  color: #fff;
+  text-decoration: underline;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+.svg-attribution a:hover {
+  opacity: 1;
+}
+
 /* ---- Charts (Dynamisch) ---- */
 .dashboard-grid {
   display: grid;
@@ -863,4 +879,57 @@ body {
   height: 320px;
   display: flex;
   align-items: stretch;
+}
+
+/* ---- Soziale Medien Karten ---- */
+.socials-card {
+  background: rgba(17, 19, 24, 0.6);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 1em;
+  animation: fadeInUp 0.8s ease-out 0.3s both;
+}
+
+.socials-card .card-header {
+  margin-bottom: 0.5em;
+}
+
+.socials-links {
+  display: flex;
+  gap: 2.2em;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-top: 0.5em;
+}
+
+.socials-links a {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  font-size: 1.05em;
+  color: #fff;
+  text-decoration: none;
+  background: none;
+  padding: 0.2em 0.7em;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.socials-links a:hover {
+  background: rgba(255,255,255,0.07);
+}
+
+.socials-links svg {
+  width: 22px;
+  height: 22px;
+  fill: #fff;
+  opacity: 0.85;
+  transition: opacity 0.2s;
+}
+
+.socials-links a:hover svg {
+  opacity: 1;
 }
