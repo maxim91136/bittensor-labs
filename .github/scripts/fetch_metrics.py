@@ -29,10 +29,10 @@ def fetch_metrics() -> Dict[str, Any]:
     for netuid in subnets:
         try:
             metagraph = subtensor.metagraph(netuid)
-            # Validatoren zählen
+            # Count validators
             if hasattr(metagraph, 'validator_permit'):
                 total_validators += sum(1 for uid in metagraph.uids if metagraph.validator_permit[uid])
-            # Neuronen zählen
+            # Count neurons
             total_neurons += len(metagraph.uids)
         except Exception as e:
             print(f"Metagraph fetch failed for netuid {netuid}: {e}", file=sys.stderr)

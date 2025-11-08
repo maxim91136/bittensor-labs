@@ -7,12 +7,12 @@ from typing import Dict, Any, List
 import bittensor as bt
 
 app = FastAPI()
-CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))  # längerer Cache spart RAM/Calls
+CACHE_TTL = int(os.getenv("CACHE_TTL", "300"))  # longer cache saves RAM/calls
 _cache: Dict[str, Any] = {"data": None, "ts": 0.0}
 _lock = threading.Lock()
 
 def _is_validator_flag(x) -> bool:
-  # robust gegen dict/obj/verschiedene Feldnamen
+  # robust against dict/obj/different field names
   try:
     if isinstance(x, dict):
       for k in ("validator_permit", "is_validator", "validator", "validatorPermit"):
@@ -55,7 +55,7 @@ def gather_metrics(network: str = "finney") -> Dict[str, Any]:
   total_neurons = 0
 
   for uid in netuids:
-    # 1) leichter Pfad: neurons_lite
+    # 1) easy path: neurons_lite
     lite = None
     try:
       try:
@@ -74,7 +74,7 @@ def gather_metrics(network: str = "finney") -> Dict[str, Any]:
         gc.collect()
       continue
 
-    # 2) Fallback: voller Metagraph (direkt wieder freigeben)
+    # 2) Fallback: full Metagraph (release immediately)
     try:
       mg = st.metagraph(uid)
       total_neurons += int(getattr(mg, "n", 0)) or 0
