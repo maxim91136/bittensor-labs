@@ -514,7 +514,7 @@ async function initDashboard() {
   // API Status initial befüllen
   const apiStatusEl = document.getElementById('apiStatus');
   const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon');
-  let statusText = 'All systems operational';
+  let statusText = 'All systems ok';
   let statusIcon = '🟢';
   if (!networkData || !taostats) {
     statusText = 'API error';
