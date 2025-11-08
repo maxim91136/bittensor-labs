@@ -1,3 +1,10 @@
+  if (num === null || num === undefined || isNaN(num)) return '—';
+  num = Number(num);
+  if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(2) + 'B';
+  if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'M';
+  if (num >= 1_000) return (num / 1_000).toFixed(1) + 'K';
+  return num.toLocaleString('en-US');
+}
 // ===== API Configuration =====
 const API_BASE = '/api';
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
@@ -221,12 +228,12 @@ function updateMarketCapAndFDV(price, circulatingSupply) {
   const fdvEl = document.getElementById('fdv');
   const maxSupply = 21_000_000;
   if (marketCapEl && price && circulatingSupply) {
-  const marketCap = price * circulatingSupply;
-  marketCapEl.textContent = `$${marketCap.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
+    const marketCap = price * circulatingSupply;
+    marketCapEl.textContent = `$${formatCompact(marketCap)}`;
   }
   if (fdvEl && price) {
-  const fdv = price * maxSupply;
-  fdvEl.textContent = `$${fdv.toLocaleString('en-US', {maximumFractionDigits: 0})}`;
+    const fdv = price * maxSupply;
+    fdvEl.textContent = `$${formatCompact(fdv)}`;
   }
 }
 
@@ -403,7 +410,7 @@ async function refreshDashboard() {
   // Volume aus taostats holen!
   const volumeEl = document.getElementById('volume24h');
   if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
-  volumeEl.textContent = `$${taostats.volume_24h.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
   }
 
   // API Status setzen
@@ -523,7 +530,7 @@ async function initDashboard() {
   const taostats = await fetchTaostats();
   const volumeEl = document.getElementById('volume24h');
   if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
-    volumeEl.textContent = `$${taostats.volume_24h.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
   }
 
   // API Status initial befüllen
