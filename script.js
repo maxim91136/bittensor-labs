@@ -50,7 +50,7 @@ function formatFull(num) {
   return Math.round(Number(num)).toLocaleString('en-US');
 }
 
-// Kompakte Anzeige für große Zahlen (z.B. 1.23M, 4.56B)
+// Compact display for large numbers (e.g. 1.23M, 4.56B)
 function formatCompact(num) {
   num = Number(num);
   if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(2) + 'B';
@@ -387,7 +387,7 @@ async function refreshDashboard() {
   updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
 
-  // LAST UPDATE aus Taostats, sonst Fallback
+  // LAST UPDATE from Taostats, otherwise fallback
   const lastUpdateEl = document.getElementById('lastUpdate');
   let lastUpdated = null;
   if (taoPrice && taoPrice._source === 'taostats' && taoPrice.last_updated) {
@@ -406,13 +406,13 @@ async function refreshDashboard() {
     if (lastUpdateEl) lastUpdateEl.textContent = `Updated: --:--`;
   }
 
-  // Volume aus taostats holen!
+  // Get volume from taostats!
   const volumeEl = document.getElementById('volume24h');
   if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
   volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
   }
 
-  // API Status setzen
+  // Set API status
   const apiStatusEl = document.getElementById('apiStatus');
   const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon');
   let statusText = 'All systems ok';
@@ -428,7 +428,7 @@ async function refreshDashboard() {
   if (apiStatusIcon) apiStatusIcon.textContent = statusIcon;
 }
 
-// ===== Auto-Refresh mit Countdown-Circle =====
+// ===== Auto-refresh with countdown circle =====
 const REFRESH_SECONDS = 60;
 let refreshCountdown = REFRESH_SECONDS;
 let refreshTimer = null;
@@ -485,7 +485,7 @@ function createPriceChart(priceHistory, range) {
   });
   const data = priceHistory.map(([_, price]) => price);
 
-  // Nur destroy, wenn Chart-Objekt und Methode existieren
+  // Only destroy if chart object and method exist
   if (window.priceChart && typeof window.priceChart.destroy === 'function') {
     window.priceChart.destroy();
   }
@@ -525,14 +525,14 @@ async function initDashboard() {
   await updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
 
-  // Volume initial befüllen
+  // Fill initial volume
   const taostats = await fetchTaostats();
   const volumeEl = document.getElementById('volume24h');
   if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
     volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
   }
 
-  // API Status initial befüllen
+  // Fill initial API status
   const apiStatusEl = document.getElementById('apiStatus');
   const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon');
   let statusText = 'All systems ok';
@@ -606,10 +606,10 @@ function startHalvingCountdown() {
   window.halvingInterval = setInterval(updateHalvingCountdown, 1000);
 }
 
-// Initialisierung
+// Initialization
 initDashboard();
 
-// Stoppe Link-Klick auf Info-Badge (Pro-Lösung)
+// Prevent link click on info badge (pro solution)
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.stat-card .info-badge').forEach(badge => {
     badge.addEventListener('click', function(e) {
@@ -621,33 +621,33 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Zeitbereichs-Buttons für das Chart
+  // Time range buttons for the chart
   document.querySelectorAll('.time-btn').forEach(btn => {
     btn.addEventListener('click', async (e) => {
-      const range = btn.getAttribute('data-range'); // "7", "30", "365"
-      if (range === currentPriceRange) return; // Kein Reload, wenn gleich
+  const range = btn.getAttribute('data-range'); // "7", "30", "365"
+  if (range === currentPriceRange) return; // No reload if same
       currentPriceRange = range;
 
-      // Button-UI aktualisieren
+  // Update button UI
       document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
 
-      // Chart-Skeleton anzeigen (optional)
+  // Show chart skeleton (optional)
       const priceCard = btn.closest('.dashboard-card');
       if (priceCard) priceCard.classList.add('loading');
 
-      // Daten laden und Chart neu zeichnen
+  // Load data and redraw chart
       const priceHistory = await fetchPriceHistory(currentPriceRange);
       if (priceHistory) {
         createPriceChart(priceHistory, currentPriceRange);
       }
 
-      // Skeleton ausblenden
+  // Hide skeleton
       if (priceCard) priceCard.classList.remove('loading');
     });
   });
 
-  // Info-Badge Tooltip für API Status Card: statischer Text
+  // Info badge tooltip for API status card: static text
   const infoBadge = document.querySelector('#apiStatusCard .info-badge');
   if (infoBadge) {
     infoBadge.setAttribute(

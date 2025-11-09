@@ -1,4 +1,4 @@
-/* Links immer grün, auch wenn besucht */
+/* Links are always green, even when visited */
 a,
 a:visited {
   color: rgba(34, 197, 94, 0.7);
