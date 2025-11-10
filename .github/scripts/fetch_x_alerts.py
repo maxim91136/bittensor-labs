@@ -20,7 +20,8 @@ if len(sys.argv) < 2:
     sys.exit(1)
 X_USER_ID = sys.argv[1]
 
-API_URL = f"https://api.twitter.com/2/users/{X_USER_ID}/tweets?max_results=10&tweet.fields=created_at,author_id,text"
+# max_results changed to 5 to limit data fetched
+API_URL = f"https://api.twitter.com/2/users/{X_USER_ID}/tweets?max_results=5&tweet.fields=created_at,author_id,text"
 HEADERS = {
     "Authorization": f"Bearer {X_BEARER_TOKEN}",
     "Content-Type": "application/json"
