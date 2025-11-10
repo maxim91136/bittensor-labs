@@ -23,7 +23,7 @@ HEADERS = {
 
 PARAMS = {
     "query": ALERTS_QUERY,
-    "max_results": 10,
+    "max_results": 5,
     "tweet.fields": "created_at,author_id,text"
 }
 

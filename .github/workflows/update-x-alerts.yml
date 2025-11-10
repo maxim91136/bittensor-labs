@@ -3,7 +3,7 @@ name: Fetch TAO Alerts from X to Cloudflare KV
 on:
   schedule:
     - cron: '*/15 * * * *'
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   fetch-x-alerts:
