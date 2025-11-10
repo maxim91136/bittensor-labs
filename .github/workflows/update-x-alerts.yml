@@ -22,9 +22,8 @@ jobs:
       - name: Fetch TAO Alerts from X
         env:
           X_BEARER_TOKEN: ${{ secrets.X_BEARER_TOKEN }}
-          X_USER_ID: ${{ secrets.X_USER_ID }}
         run: |
-            python .github/scripts/fetch_x_alerts.py
+          python .github/scripts/fetch_x_alerts.py 1033343626296942592
       - name: Push X Alerts to Cloudflare KV
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
