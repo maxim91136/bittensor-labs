@@ -101,6 +101,9 @@ body {
 .price-pill {
   min-width: 160px;
   flex-shrink: 1;
+  border-radius: 999px;
+  box-shadow: 0 2px 8px 0 rgba(34,197,94,0.08) inset, 0 1px 8px 0 rgba(0,0,0,0.08);
+  background: linear-gradient(135deg, rgba(34,197,94,0.08) 0%, rgba(34,197,94,0.03) 100%);
 }
 
 /* Pills niemals umbrechen lassen */
