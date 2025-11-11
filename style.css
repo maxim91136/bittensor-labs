@@ -99,7 +99,7 @@ body {
 
 .halving-pill,
 .price-pill {
-  min-width: 120px;
+  min-width: 160px;
   flex-shrink: 1;
 }
 
