@@ -1,3 +1,7 @@
+/* Socials & Useful Links Table: Mehr Padding für Zellen */
+table.socials-useful-table td, table.socials-useful-table th {
+  padding: 10px 12px;
+}
 /* Links are always green, even when visited */
 a,
 a:visited {
