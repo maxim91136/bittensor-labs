@@ -607,6 +607,7 @@ function updateHalvingCountdown() {
 }
 // Prevent link click on info badge (pro solution)
 document.addEventListener('DOMContentLoaded', () => {
+  initDashboard();
   document.querySelectorAll('.stat-card .info-badge').forEach(badge => {
     badge.addEventListener('click', function(e) {
       e.stopPropagation();
