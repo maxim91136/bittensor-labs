@@ -467,6 +467,7 @@ body {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  /* Keine feste Höhe, Cards sind dynamisch */
 }
 
 .dashboard-card::before {
@@ -891,8 +892,9 @@ body {
 }
 
 /* Falls der Eltern-Container zu klein ist: */
-.dashboard-card {
-  min-height: 400px;
+
+.socials-card {
+  /* min-height entfernt, Card passt sich dynamisch an */
 }
 
 .chart-container {
@@ -911,10 +913,23 @@ body {
   border-radius: 12px;
   padding: var(--space-md) var(--space-md);
   gap: 0.5em;
-  min-height: unset; /* Card nicht künstlich verlängern */
+  min-height: 320px;
   display: flex;
   flex-direction: column;
   gap: 1em;
+  flex-grow: 1;
+  animation: fadeInUp 0.8s ease-out 0.3s both;
+}
+
+.useful-links-card {
+  background: rgba(17, 19, 24, 0.6);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: var(--space-md) var(--space-md);
+  /* min-height entfernt, Card passt sich dynamisch an */
+  display: flex;
+  flex-direction: column;
+  gap: 0.5em;
   animation: fadeInUp 0.8s ease-out 0.3s both;
 }
 
@@ -932,12 +947,15 @@ body {
   gap: 1em;
 }
 
-.socials-card h3 {
+
+.socials-card h3,
+.useful-links-card h3 {
   font-size: var(--text-base);
   margin-bottom: 0.1em;
 }
 
-.socials-card h3 + h3 {
+.socials-card h3 + h3,
+.useful-links-card h3 + h3 {
   margin-top: 0.2em;
 }
 
