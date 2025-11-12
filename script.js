@@ -610,23 +610,25 @@ function updateHalvingCountdown() {
   }
 }
 
-function startHalvingCountdown() {
-  const countdownEl = document.getElementById('halvingCountdown');
-  if (!window.circulatingSupply || !window.halvingDate || !countdownEl) {
-    countdownEl.textContent = 'Calculating...';
+function updateHalvingCountdown() {
+  const el = document.getElementById('halvingCountdown');
+  if (!el || !window.halvingDate) {
+    el.textContent = 'Calculating...';
     return;
   }
-  if (window.halvingInterval) {
-    clearInterval(window.halvingInterval);
-    window.halvingInterval = null;
+  const now = new Date();
+  const diff = window.halvingDate - now;
+  if (diff <= 0) {
+    el.textContent = 'Halved!';
+    return;
   }
-  updateHalvingCountdown();
-  window.halvingInterval = setInterval(updateHalvingCountdown, 1000);
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+  // Show days, hours, minutes, and seconds
+  el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
-
-// Initialization
-initDashboard();
-
 // Prevent link click on info badge (pro solution)
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('.stat-card .info-badge').forEach(badge => {
