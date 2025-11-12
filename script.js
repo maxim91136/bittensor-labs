@@ -584,31 +584,7 @@ function calculateHalvingDate(circulatingSupply, emissionRate) {
   return new Date(Date.now() + msLeft);
 }
 
-function updateHalvingCountdown() {
-  const countdownEl = document.getElementById('halvingCountdown');
-  if (!countdownEl || !window.halvingDate) return;
-  const now = Date.now();
-  const distance = window.halvingDate.getTime() - now;
-  if (distance < 0) {
-    countdownEl.textContent = 'Halving Live! 🎉';
-    if (window.halvingInterval) {
-      clearInterval(window.halvingInterval);
-      window.halvingInterval = null;
-    }
-    return;
-  }
-  const days = Math.floor(distance / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-  if (days > 0) {
-    countdownEl.textContent = `Halving in ${days}d ${hours}h`;
-  } else if (hours > 0) {
-    countdownEl.textContent = `Halving in ${hours}h ${minutes}m`;
-  } else {
-    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-    countdownEl.textContent = `${minutes}m ${seconds}s`;
-  }
-}
+// ...existing code...
 
 function updateHalvingCountdown() {
   const el = document.getElementById('halvingCountdown');
