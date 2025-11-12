@@ -19,11 +19,11 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install requests beautifulsoup4
-      - name: Run treasury worker
+      - name: Run treasury worker (Cloudflare KV)
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
+          CF_KV_KEY: treasury_data
         run: |
           python .github/scripts/treasury_worker.py
-      - name: Upload treasury data
-        uses: actions/upload-artifact@v4
-        with:
-          name: treasury-data
-          path: .github/scripts/treasury_data.json

@@ -1,25 +1,34 @@
 // API handler for treasury data
-// Reads the file treasury_data.json and returns it as a JSON response
+// Fetches treasury data from Cloudflare KV Namespace via API
 
-const fs = require('fs');
-const path = require('path');
+const fetch = require('node-fetch');
+
+const CF_ACCOUNT_ID = process.env.CF_ACCOUNT_ID;
+const CF_KV_NAMESPACE_ID = process.env.CF_KV_NAMESPACE_ID;
+const CF_KV_KEY = process.env.CF_KV_KEY || 'treasury_data';
+const CF_API_TOKEN = process.env.CF_API_TOKEN;
 
 module.exports = async (req, res) => {
-  // Path to treasury data file
-  const dataPath = path.join(__dirname, 'treasury_data.json');
-
-  // Check if the file exists
-  if (!fs.existsSync(dataPath)) {
-    res.status(404).json({ error: 'No treasury data found.' });
+  if (!CF_ACCOUNT_ID || !CF_KV_NAMESPACE_ID || !CF_KV_KEY || !CF_API_TOKEN) {
+    res.status(500).json({ error: 'Cloudflare KV credentials missing.' });
     return;
   }
-
-  // Read file and return as JSON
+  const url = `https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/${CF_KV_KEY}`;
   try {
-    const data = fs.readFileSync(dataPath, 'utf8');
-    const json = JSON.parse(data);
-    res.status(200).json(json);
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${CF_API_TOKEN}`,
+        'Content-Type': 'application/json'
+      }
+    });
+    if (!response.ok) {
+      res.status(response.status).json({ error: 'Failed to fetch treasury data from KV.' });
+      return;
+    }
+    const data = await response.json();
+    res.status(200).json(data);
   } catch (err) {
-    res.status(500).json({ error: 'Error reading treasury data.' });
+    res.status(500).json({ error: 'Error fetching treasury data from KV.' });
   }
 };
