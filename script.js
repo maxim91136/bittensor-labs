@@ -588,9 +588,6 @@ function calculateHalvingDate(circulatingSupply, emissionRate) {
   const msLeft = daysLeft * 24 * 60 * 60 * 1000;
   return new Date(Date.now() + msLeft);
 }
-
-// ...existing code...
-
 function updateHalvingCountdown() {
   const el = document.getElementById('halvingCountdown');
   if (!el || !window.halvingDate) {
