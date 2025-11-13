@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: pip install requests
       - name: Fetch ATH/ATL data
-        run: python .github/scripts/fetch_ath-atl-coingecko.py
+        run: python .github/scripts/fetch_ath-atl.py
       - name: Commit KV file
         run: |
           git config --global user.name 'github-actions'
