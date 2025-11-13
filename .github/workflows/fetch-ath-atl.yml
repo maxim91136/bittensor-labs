@@ -23,4 +23,5 @@ jobs:
           git config --global user.email 'github-actions@github.com'
           git add tao_ath_atl.json
           git commit -m 'Update ATH/ATL data from Coingecko' || echo 'No changes to commit'
+          git remote set-url origin https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/maxim91136/bittensor-labs.git
           git push
