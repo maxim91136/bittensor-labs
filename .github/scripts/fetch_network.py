@@ -53,12 +53,12 @@ def fetch_metrics() -> Dict[str, Any]:
 
 if __name__ == "__main__":
     try:
-        metrics = fetch_metrics()
-        output_path = os.path.join(os.getcwd(), "metrics.json")
+        network_data = fetch_metrics()
+        output_path = os.path.join(os.getcwd(), "network.json")
         with open(output_path, "w") as f:
-            json.dump(metrics, f, indent=2)
-        print(f"✅ Metrics written to {output_path}", file=sys.stderr)
-        print(json.dumps(metrics, indent=2))
+            json.dump(network_data, f, indent=2)
+        print(f"✅ Network data written to {output_path}", file=sys.stderr)
+        print(json.dumps(network_data, indent=2))
     except Exception as e:
         print(f"❌ Error: {e}", file=sys.stderr)
         sys.exit(1)

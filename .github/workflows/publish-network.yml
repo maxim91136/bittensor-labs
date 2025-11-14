@@ -1,4 +1,4 @@
-name: Publish Bittensor metrics to Cloudflare KV
+name: Publish Bittensor network data to Cloudflare KV
 
 on:
   schedule:
@@ -24,7 +24,7 @@ jobs:
 
       - name: Generate metrics
         run: |
-          python .github/scripts/fetch_metrics.py
+          python .github/scripts/fetch_network.py
 
       - name: Build history array (last 24h)
         env:
@@ -37,39 +37,11 @@ jobs:
             exit 1
           fi
 
-          HISTORY_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/history"
-
-          # Fetch existing history (404 = not present yet)
-          HTTP=$(curl -s -o history_old.json -w "%{http_code}" \
-            -H "Authorization: Bearer ${CF_API_TOKEN}" \
-            "$HISTORY_URL" || true)
-
-          if [ "$HTTP" != "200" ]; then
-            echo "[]" > history_old.json
-          fi
-
-          NEW_ENTRY=$(jq -c . < metrics.json)
-          jq --argjson new "$NEW_ENTRY" '. + [$new] | .[-96:]' history_old.json > history.json
-          echo "History entries: $(jq 'length' history.json)"
-
-      - name: Push history to Cloudflare KV
-        env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}   # ← same mapping
-        run: |
-          URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/history"
-          curl -fsSL -X PUT \
-            "$URL" \
-            -H "Authorization: Bearer ${CF_API_TOKEN}" \
-            -H "Content-Type: application/json" \
-            --data-binary @history.json
-
       - name: Push to Cloudflare KV (debug)
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}   # fix: same as for History
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
         run: |
           URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/metrics"  # fix: key = metrics
           if [ ! -f metrics.json ]; then
