@@ -1158,9 +1158,11 @@ header.site-header.light-bg {
   border: 1px solid #c0c0c0 !important;
 }
 #bgToggleBtn.light-bg {
-  background: #dadada !important;
-  color: #222 !important;
-  box-shadow: 0 1px 1px #0001;
+  /* Keep the toggle obvious in light backgrounds: use a dark rounded button */
+  background: #111318 !important; /* darker for visibility */
+  color: #fff !important;
+  border: 1px solid rgba(0,0,0,0.2) !important;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.12) !important;
 }
 .stat-value.light-bg {
   color: #222 !important;
