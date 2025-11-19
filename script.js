@@ -725,6 +725,12 @@ document.addEventListener('DOMContentLoaded', () => {
             ch.style.webkitTextFillColor = '#000';
           });
         }
+          // Ensure anchor links inside disclaimer remain green in Light Mode (Safari fallback)
+          const anchors = el.querySelectorAll('a');
+          anchors.forEach(a => {
+            a.style.setProperty('color', '#22c55e', 'important');
+            a.style.setProperty('-webkit-text-fill-color', '#22c55e', 'important');
+          });
         if (el.classList.contains('price-pill')) {
           el.style.background = '#fff';
           el.style.borderColor = '#dcdcdc';
@@ -758,6 +764,11 @@ document.addEventListener('DOMContentLoaded', () => {
             ch.style.opacity = '';
             ch.style.fontWeight = '';
             ch.style.webkitTextFillColor = '';
+          });
+          // clear anchor overrides as well
+          el.querySelectorAll('a').forEach(a => {
+            a.style.removeProperty('color');
+            a.style.removeProperty('-webkit-text-fill-color');
           });
         }
       }

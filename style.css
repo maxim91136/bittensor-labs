@@ -1239,6 +1239,14 @@ header.site-header.light-bg {
   color: rgba(34, 197, 94, 0.8) !important;
 }
 
+/* Make sure disclaimer links are green across browsers and modes (Safari fallback) */
+.disclaimer-card a,
+.disclaimer-card .source-item a,
+.disclaimer-card.light-bg a {
+  color: rgba(34, 197, 94, 0.85) !important;
+  -webkit-text-fill-color: rgba(34, 197, 94, 0.85) !important; /* Safari fallback */
+}
+
 /* ATH / ATL color accents - keep them color-coded across themes */
 .ath-atl-pill.atl-pill {
   background: rgba(239,68,68,0.04) !important;
