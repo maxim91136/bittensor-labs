@@ -683,28 +683,38 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!btn || !moonIcon || !sunIcon) return;
   const body = document.body;
   // Initial state from localStorage
-  if (localStorage.getItem('bgMode') === 'light') {
-    body.style.background = '#f7f7f7';
-    body.classList.add('light-bg');
-    moonIcon.style.display = 'none';
-    sunIcon.style.display = 'inline';
-  } else {
-    moonIcon.style.display = 'inline';
-    sunIcon.style.display = 'none';
-  }
-  btn.addEventListener('click', function() {
-    if (body.classList.contains('light-bg')) {
-      body.style.background = '';
-      body.classList.remove('light-bg');
-      localStorage.setItem('bgMode', 'dark');
-      moonIcon.style.display = 'inline';
-      sunIcon.style.display = 'none';
-    } else {
+  const header = document.querySelector('header.site-header');
+  const elementsToToggle = [
+    body,
+    header,
+    ...document.querySelectorAll('.dashboard-card, .stat-card, .price-pill, .halving-pill, .ath-atl-pill, .whitepaper-btn, #bgToggleBtn, .stat-value, .info-badge')
+  ];
+  function setLightMode(active) {
+    elementsToToggle.forEach(el => {
+      if (!el) return;
+      if (active) {
+        el.classList.add('light-bg');
+      } else {
+        el.classList.remove('light-bg');
+      }
+    });
+    if (active) {
       body.style.background = '#f7f7f7';
-      body.classList.add('light-bg');
-      localStorage.setItem('bgMode', 'light');
+      if (header) header.style.background = '#f7f7f7';
       moonIcon.style.display = 'none';
       sunIcon.style.display = 'inline';
+    } else {
+      body.style.background = '';
+      if (header) header.style.background = '';
+      moonIcon.style.display = 'inline';
+      sunIcon.style.display = 'none';
     }
+  }
+  // Initial state
+  setLightMode(localStorage.getItem('bgMode') === 'light');
+  btn.addEventListener('click', function() {
+    const isLight = body.classList.contains('light-bg');
+    setLightMode(!isLight);
+    localStorage.setItem('bgMode', isLight ? 'dark' : 'light');
   });
 });

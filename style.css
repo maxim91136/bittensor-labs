@@ -1042,3 +1042,82 @@ body {
 .whitepaper-btn {
   font-size: 0.70em;
 }
+
+/* ---- Light Mode Overrides ---- */
+body.light-bg, header.site-header.light-bg {
+  background: #f9fafb !important;
+  color: #222 !important;
+}
+header.site-header.light-bg {
+  background: #f9fafb !important;
+  border-bottom: 1px solid #e5e7eb !important;
+}
+.logo-title {
+  color: #ff6b35;
+}
+.logo-subtitle {
+  color: #555;
+}
+.dashboard-card.light-bg,
+.stat-card.light-bg {
+  background: #fff !important;
+  color: #222 !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 2px 8px #0001;
+}
+.price-pill.light-bg,
+.halving-pill.light-bg {
+  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+  color: #222 !important;
+  border-color: #e5e7eb !important;
+}
+.price-change.light-bg.positive {
+  color: #15803d !important;
+  background: #e6fbe8 !important;
+}
+.price-change.light-bg.negative {
+  color: #b91c1c !important;
+  background: #fdeaea !important;
+}
+.ath-atl-pill.light-bg {
+  background: #f3f4f6 !important;
+  color: #222 !important;
+  border-color: #e5e7eb !important;
+}
+.whitepaper-btn.light-bg {
+  background: #fff !important;
+  color: #22c55e !important;
+  border: 1px solid #e5e7eb !important;
+}
+#bgToggleBtn.light-bg {
+  background: #e5e7eb !important;
+  color: #222 !important;
+  box-shadow: 0 1px 4px #0001;
+}
+.stat-value.light-bg {
+  color: #222 !important;
+}
+.info-badge.light-bg {
+  background: #e5e7eb !important;
+  color: #222 !important;
+}
+.site-footer.light-bg {
+  background: #f3f4f6 !important;
+  color: #222 !important;
+}
+.last-update.light-bg {
+  color: #555 !important;
+}
+.chart-note.light-bg {
+  color: #555 !important;
+}
+.disclaimer-card.light-bg {
+  background: #f9fafb !important;
+  color: #222 !important;
+  border: 1px solid #e5e7eb !important;
+}
+.data-sources-grid .source-item.light-bg {
+  background: #fff !important;
+  color: #222 !important;
+  border: 1px solid #e5e7eb !important;
+}
