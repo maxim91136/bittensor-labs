@@ -675,4 +675,25 @@ document.addEventListener('DOMContentLoaded', () => {
       infoBadge.setAttribute('data-tooltip', 'API status: Network, Taostats, Coingecko');
     }
   })();
+
+  // Background toggle button
+  const btn = document.getElementById('bgToggleBtn');
+  if (!btn) return;
+  const body = document.body;
+  // Initial state from localStorage
+  if (localStorage.getItem('bgMode') === 'light') {
+    body.style.background = '#f7f7f7';
+    body.classList.add('light-bg');
+  }
+  btn.addEventListener('click', function() {
+    if (body.classList.contains('light-bg')) {
+      body.style.background = '';
+      body.classList.remove('light-bg');
+      localStorage.setItem('bgMode', 'dark');
+    } else {
+      body.style.background = '#f7f7f7';
+      body.classList.add('light-bg');
+      localStorage.setItem('bgMode', 'light');
+    }
+  });
 });
