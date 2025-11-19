@@ -1,3 +1,7 @@
+.pill-value.light-bg,
+.pill-value.skeleton-text.light-bg {
+  color: #222 !important;
+}
 .pill-value.light-bg {
   color: #222 !important;
 }
