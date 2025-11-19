@@ -716,6 +716,14 @@ document.addEventListener('DOMContentLoaded', () => {
           el.style.color = '#000';
           el.style.backdropFilter = 'none';
           el.style.filter = 'none';
+          // also set child elements explicitly to avoid CSS overrides
+          const txt = el.querySelectorAll('.disclaimer-text, .disclaimer-header h3, .coingecko-attribution, .source-label');
+          txt.forEach(ch => {
+            ch.style.color = '#000';
+            ch.style.opacity = '1';
+            ch.style.fontWeight = '600';
+            ch.style.webkitTextFillColor = '#000';
+          });
         }
         if (el.classList.contains('price-pill')) {
           el.style.background = '#fff';
@@ -742,6 +750,16 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.borderLeft = '';
         el.style.backdropFilter = '';
         el.style.filter = '';
+        if (el.classList.contains('disclaimer-card')) {
+          // clear inline styles from children
+          const txt = el.querySelectorAll('.disclaimer-text, .disclaimer-header h3, .coingecko-attribution, .source-label');
+          txt.forEach(ch => {
+            ch.style.color = '';
+            ch.style.opacity = '';
+            ch.style.fontWeight = '';
+            ch.style.webkitTextFillColor = '';
+          });
+        }
       }
     });
     if (active) {
