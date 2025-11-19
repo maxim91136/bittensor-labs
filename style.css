@@ -1110,18 +1110,28 @@ header.site-header.light-bg {
 }
 .price-pill.light-bg,
 .halving-pill.light-bg {
-  background: linear-gradient(135deg, #e2e2e2 0%, #dadada 100%) !important;
-  color: #222 !important;
-  border-color: #c0c0c0 !important;
-  box-shadow: 0 1px 1px #0001;
+  /* higher contrast for pills in Light Mode: cleaner white background, stronger shadow and border */
+  background: linear-gradient(135deg, #ffffff 0%, #fbfbfb 100%) !important;
+  color: #000 !important;
+  border-color: #dcdcdc !important;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08) !important; /* lifts the pill above the page */
+  transform: translateZ(0);
 }
 .price-pill.light-bg .price-icon {
-  color: #22c55e !important;
+  color: var(--accent) !important;
+}
+.price-pill.light-bg {
+  border-left: 4px solid var(--accent) !important; /* green accent for price */
+}
+.halving-pill.light-bg {
+  border-left: 4px solid var(--brand) !important; /* orange accent for halving */
 }
 .price-pill.light-bg .pill-value,
 .halving-pill.light-bg .pill-value,
 .pill-value.skeleton-text.light-bg {
   color: #000 !important;
+  -webkit-text-fill-color: #000 !important; /* Safari / iOS fallback */
+  font-weight: 800 !important; /* stronger weight for better legibility */
 }
 .price-change.light-bg.positive {
   color: #15803d !important;
@@ -1164,7 +1174,8 @@ header.site-header.light-bg {
   color: #222 !important;
 }
 .disclaimer-card.light-bg {
-  background: #e2e2e2 !important;
+  /* stronger, near-white background for maximal contrast in Light Mode */
+  background: #ffffff !important;
   color: #000 !important;
   border: 1px solid #c0c0c0 !important;
 }
@@ -1177,12 +1188,25 @@ header.site-header.light-bg {
 .disclaimer-card.light-bg .disclaimer-text,
 .disclaimer-card.light-bg .source-label {
   color: #000 !important;
+  -webkit-text-fill-color: #000 !important; /* Safari / iOS fallback for disclaimer text */
+  font-weight: 600 !important;
+}
+
+/* Ensure all disclaimer-descendants are dark in Light Mode; but keep links colored */
+.disclaimer-card.light-bg *:not(a) {
+  color: #000 !important;
+  -webkit-text-fill-color: #000 !important;
+  opacity: 1 !important;
+  filter: none !important;
 }
 .disclaimer-card.light-bg .disclaimer-text strong {
   color: #000 !important;
+  -webkit-text-fill-color: #000 !important; /* Safari fallback */
 }
 .disclaimer-card.light-bg .coingecko-attribution {
   color: #000 !important;
+  -webkit-text-fill-color: #000 !important; /* Safari fallback */
+  font-weight: 500 !important;
 }
 .disclaimer-card.light-bg a {
   color: #1a3a7c !important;
