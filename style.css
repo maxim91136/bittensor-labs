@@ -877,8 +877,8 @@ body {
 
 /* --- Refresh Indicator (Kompakt & Dezent) --- */
 .refresh-indicator {
-  width: 22px; /* slightly smaller for better visual balance */
-  height: 22px;
+  width: 18px; /* a bit smaller to satisfy the request */
+  height: 18px;
   margin-right: 10px;
   display: flex;
   align-items: center;
@@ -888,13 +888,13 @@ body {
   transition: opacity 0.2s;
 }
 .refresh-indicator svg {
-  width: 22px;
-  height: 22px;
+  width: 18px;
+  height: 18px;
   display: block;
 }
 /* Slightly thicker stroke for larger icons so it doesn't look thin */
 .refresh-indicator svg circle {
-  stroke-width: 2.4px; /* slightly thinner for smaller size */
+  stroke-width: 2px; /* thinner so the ring scales down well */
 }
 .refresh-indicator .refresh-label {
   position: absolute;
@@ -911,26 +911,26 @@ body {
 }
 @media (min-width: 600px) {
   .refresh-indicator {
-    width: 30px; /* desktop: a bit smaller than before */
-    height: 30px;
+    width: 26px; /* desktop: reduced to match smaller default */
+    height: 26px;
   }
   .refresh-indicator svg {
-    width: 30px;
-    height: 30px;
+    width: 26px;
+    height: 26px;
   }
   .refresh-indicator .refresh-label {
-    font-size: 0.95em; /* slightly smaller on wide screens */
+    font-size: 0.9em; /* slightly smaller on wide screens */
   }
 }
 @media (max-width: 420px) {
   /* On very small screens, shrink label to avoid overlap */
   .refresh-indicator {
-    width: 20px;
-    height: 20px;
+    width: 16px;
+    height: 16px;
     margin-right: 8px;
   }
-  .refresh-indicator svg { width: 20px; height: 20px; }
-  .refresh-indicator .refresh-label { font-size: 0.72em; }
+  .refresh-indicator svg { width: 16px; height: 16px; }
+  .refresh-indicator .refresh-label { font-size: 0.68em; }
 }
 @media (max-width: 700px) {
   .stats-grid {
