@@ -877,8 +877,8 @@ body {
 
 /* --- Refresh Indicator (Kompakt & Dezent) --- */
 .refresh-indicator {
-  width: 26px; /* larger by default for better visibility */
-  height: 26px;
+  width: 22px; /* slightly smaller for better visual balance */
+  height: 22px;
   margin-right: 10px;
   display: flex;
   align-items: center;
@@ -888,13 +888,13 @@ body {
   transition: opacity 0.2s;
 }
 .refresh-indicator svg {
-  width: 26px;
-  height: 26px;
+  width: 22px;
+  height: 22px;
   display: block;
 }
 /* Slightly thicker stroke for larger icons so it doesn't look thin */
 .refresh-indicator svg circle {
-  stroke-width: 2.8px; /* overrides the inline stroke-width set by script */
+  stroke-width: 2.4px; /* slightly thinner for smaller size */
 }
 .refresh-indicator .refresh-label {
   position: absolute;
@@ -902,7 +902,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.9em; /* bigger countdown text */
+  font-size: 0.8em; /* slightly smaller label */
   font-weight: 600;
   color: #22c55e;
   -webkit-text-fill-color: #22c55e; /* Safari fallback */
@@ -911,26 +911,26 @@ body {
 }
 @media (min-width: 600px) {
   .refresh-indicator {
-    width: 36px; /* desktop: larger, clearer */
-    height: 36px;
+    width: 30px; /* desktop: a bit smaller than before */
+    height: 30px;
   }
   .refresh-indicator svg {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
   .refresh-indicator .refresh-label {
-    font-size: 1.05em; /* larger on wide screens */
+    font-size: 0.95em; /* slightly smaller on wide screens */
   }
 }
 @media (max-width: 420px) {
   /* On very small screens, shrink label to avoid overlap */
   .refresh-indicator {
-    width: 22px;
-    height: 22px;
+    width: 20px;
+    height: 20px;
     margin-right: 8px;
   }
-  .refresh-indicator svg { width: 22px; height: 22px; }
-  .refresh-indicator .refresh-label { font-size: 0.8em; }
+  .refresh-indicator svg { width: 20px; height: 20px; }
+  .refresh-indicator .refresh-label { font-size: 0.72em; }
 }
 @media (max-width: 700px) {
   .stats-grid {
