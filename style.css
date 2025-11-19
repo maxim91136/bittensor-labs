@@ -1074,12 +1074,12 @@ body {
 
 /* ---- Light Mode Overrides ---- */
 body.light-bg, header.site-header.light-bg {
-  background: #f4f6fa !important;
-  color: #23272f !important;
+  background: #ececec !important;
+  color: #222 !important;
 }
 header.site-header.light-bg {
-  background: #f4f6fa !important;
-  border-bottom: 1px solid #dbe2ea !important;
+  background: #ececec !important;
+  border-bottom: 1px solid #d3d3d3 !important;
 }
 .logo-title {
   color: #ff6b35;
@@ -1089,17 +1089,17 @@ header.site-header.light-bg {
 }
 .dashboard-card.light-bg,
 .stat-card.light-bg {
-  background: #f8fafc !important;
-  color: #23272f !important;
-  border: 1px solid #dbe2ea !important;
-  box-shadow: 0 2px 8px #0001;
+  background: #e0e0e0 !important;
+  color: #222 !important;
+  border: 1px solid #cccccc !important;
+  box-shadow: 0 1px 2px #0001;
 }
 .price-pill.light-bg,
 .halving-pill.light-bg {
-  background: linear-gradient(135deg, #f6f8fa 0%, #e3e8ef 100%) !important;
-  color: #23272f !important;
-  border-color: #dbe2ea !important;
-  box-shadow: 0 1px 4px #0001;
+  background: linear-gradient(135deg, #e0e0e0 0%, #d3d3d3 100%) !important;
+  color: #222 !important;
+  border-color: #cccccc !important;
+  box-shadow: 0 1px 2px #0001;
 }
 .price-pill.light-bg .price-icon {
   color: #22c55e !important;
@@ -1113,51 +1113,51 @@ header.site-header.light-bg {
   background: #fbeaea !important;
 }
 .ath-atl-pill.light-bg {
-  background: #f6f8fa !important;
-  color: #23272f !important;
-  border-color: #dbe2ea !important;
+  background: #e0e0e0 !important;
+  color: #222 !important;
+  border-color: #cccccc !important;
 }
 .whitepaper-btn.light-bg {
-  background: #f8fafc !important;
+  background: #f5f5f5 !important;
   color: #22c55e !important;
-  border: 1px solid #dbe2ea !important;
+  border: 1px solid #d3d3d3 !important;
 }
 #bgToggleBtn.light-bg {
-  background: #e3e8ef !important;
-  color: #23272f !important;
+  background: #e3e3e3 !important;
+  color: #222 !important;
   box-shadow: 0 1px 4px #0001;
 }
 .stat-value.light-bg {
-  color: #23272f !important;
+  color: #222 !important;
 }
 .info-badge.light-bg {
-  background: #e3e8ef !important;
-  color: #23272f !important;
+  background: #e3e3e3 !important;
+  color: #222 !important;
 }
 .site-footer.light-bg {
-  background: #f4f6fa !important;
-  color: #23272f !important;
+  background: #ececec !important;
+  color: #222 !important;
 }
 .last-update.light-bg {
-  color: #4b5563 !important;
+  color: #333 !important;
 }
 .chart-note.light-bg {
-  color: #4b5563 !important;
+  color: #333 !important;
 }
 .disclaimer-card.light-bg {
-  background: #f4f6fa !important;
-  color: #23272f !important;
-  border: 1px solid #dbe2ea !important;
+  background: #ececec !important;
+  color: #222 !important;
+  border: 1px solid #d3d3d3 !important;
 }
 .disclaimer-card.light-bg .disclaimer-text,
 .disclaimer-card.light-bg .source-label {
-  color: #4b5563 !important;
+  color: #333 !important;
 }
 .disclaimer-card.light-bg a {
-  color: #2563eb !important;
+  color: #1d4ed8 !important;
 }
 .data-sources-grid .source-item.light-bg {
-  background: #f8fafc !important;
-  color: #23272f !important;
-  border: 1px solid #dbe2ea !important;
+  background: #f5f5f5 !important;
+  color: #222 !important;
+  border: 1px solid #d3d3d3 !important;
 }
