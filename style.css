@@ -1,6 +1,6 @@
 .pill-value.light-bg,
 .pill-value.skeleton-text.light-bg {
-  color: #222 !important;
+  color: #000 !important;
 }
 .pill-value.light-bg {
   color: #222 !important;
@@ -1154,12 +1154,12 @@ header.site-header.light-bg {
 }
 .disclaimer-card.light-bg {
   background: #e2e2e2 !important;
-  color: #222 !important;
+  color: #000 !important;
   border: 1px solid #c0c0c0 !important;
 }
 .disclaimer-card.light-bg .disclaimer-text,
 .disclaimer-card.light-bg .source-label {
-  color: #222 !important;
+  color: #000 !important;
 }
 .disclaimer-card.light-bg a {
   color: #1a3a7c !important;
