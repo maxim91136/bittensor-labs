@@ -1056,7 +1056,7 @@ header.site-header.light-bg {
   color: #ff6b35;
 }
 .logo-subtitle {
-  color: #555;
+  color: #555 !important;
 }
 .dashboard-card.light-bg,
 .stat-card.light-bg {
@@ -1067,17 +1067,21 @@ header.site-header.light-bg {
 }
 .price-pill.light-bg,
 .halving-pill.light-bg {
-  background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%) !important;
+  background: linear-gradient(135deg, #f5f5f5 0%, #eaeaea 100%) !important;
   color: #222 !important;
-  border-color: #e5e7eb !important;
+  border-color: #d1d5db !important;
+  box-shadow: 0 1px 4px #0001;
+}
+.price-pill.light-bg .price-icon {
+  color: #22c55e !important;
 }
 .price-change.light-bg.positive {
   color: #15803d !important;
-  background: #e6fbe8 !important;
+  background: #eafbe6 !important;
 }
 .price-change.light-bg.negative {
   color: #b91c1c !important;
-  background: #fdeaea !important;
+  background: #fbeaea !important;
 }
 .ath-atl-pill.light-bg {
   background: #f3f4f6 !important;
@@ -1102,7 +1106,7 @@ header.site-header.light-bg {
   color: #222 !important;
 }
 .site-footer.light-bg {
-  background: #f3f4f6 !important;
+  background: #f9fafb !important;
   color: #222 !important;
 }
 .last-update.light-bg {
@@ -1115,6 +1119,13 @@ header.site-header.light-bg {
   background: #f9fafb !important;
   color: #222 !important;
   border: 1px solid #e5e7eb !important;
+}
+.disclaimer-card.light-bg .disclaimer-text,
+.disclaimer-card.light-bg .source-label {
+  color: #555 !important;
+}
+.disclaimer-card.light-bg a {
+  color: #1d4ed8 !important;
 }
 .data-sources-grid .source-item.light-bg {
   background: #fff !important;
