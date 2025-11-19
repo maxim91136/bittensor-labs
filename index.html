@@ -27,7 +27,7 @@
         <!-- Sun icon hidden by default -->
         <svg id="sunIcon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff200" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
       </span>
-    <!-- Button weiter oben rechts platzieren -->
+    <!-- Button positioned top right -->
     <style>
       #bgToggleBtn { top: 8px !important; right: 12px !important; }
     </style>
@@ -59,7 +59,7 @@
           </span>
           <div class="logo-text">
             <span class="logo-title">Bittensor-Labs</span>
-            <span class="logo-subtitle">the incentive layer dashboard</span>
+            <span class="logo-subtitle light-bg">the incentive layer dashboard</span>
           </div>
         </div>
       </div>
@@ -72,15 +72,15 @@
       </a>
     </div>
     
-  <!-- NEW: Group pills in a single row -->
+  <!-- Pills grouped in a single row -->
     <div class="pills-row">
       <div class="halving-pill" data-tooltip="Next halving at 10.5M TAO. Emission drops by 50%.">
-  <span class="halving-icon" style="font-size:1.7em; font-family:'Segoe UI',Arial,sans-serif; font-weight:bold; animation: halving-pulse 2.5s infinite; display:flex; align-items:center; justify-content:center;">½&nbsp;</span>
-        <span id="halvingCountdown">Calculating...</span>
+    <span class="halving-icon" style="font-size:1.7em; font-family:'Segoe UI',Arial,sans-serif; font-weight:bold; animation: halving-pulse 2.5s infinite; display:flex; align-items:center; justify-content:center;">½&nbsp;</span>
+      <span id="halvingCountdown" class="pill-value">Calculating...</span>
       </div>
       <div class="price-pill" id="taoPricePill" title="TAO Price (USD)">
         <span class="price-icon">τ</span>
-        <span id="taoPrice" class="skeleton-text"></span>
+        <span id="taoPrice" class="pill-value skeleton-text"></span>
         <span id="priceChange" class="price-change" style="display: none;"></span>
       </div>
     </div>
@@ -90,7 +90,7 @@
 <main class="dashboard">
   <div class="stats-grid">
   <a class="stat-card" href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; cursor: pointer; position: relative;">
-  <!-- Exclude info-badge from link -->
+  <!-- Info-badge is not part of link -->
   <span class="info-badge" data-tooltip="Number of active subnets in the network">i</span>
   <div class="stat-icon" aria-hidden="true">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -252,7 +252,7 @@
   </div>
 
   <div class="dashboard-grid">
-  <!-- Keep only ONE price chart card -->
+  <!-- Only one price chart card is shown -->
     <section class="dashboard-card loading" aria-labelledby="price-heading">
       <div class="card-header">
         <h2 id="price-heading">TAO Price History</h2>
@@ -292,7 +292,7 @@
       allowfullscreen
       style="width: 100%; aspect-ratio: 16/9; max-width: 720px; border-radius: 8px; box-shadow: 0 2px 12px #0003;">
     </iframe>
-    <!-- NEW: Second Video -->
+    <!-- Second Video -->
     <iframe 
       src="https://www.youtube.com/embed/SEDNBQ52M8k?si=e30hmJj-DhZskuir" 
       title="The Art of Disruption: Bittensor and the New Intelligence Economy" 
@@ -342,7 +342,7 @@
           </span>
         </div>
       </div>
-      <p class="coingecko-attribution">
+      <p class="disclaimer-text coingecko-attribution">
         This product uses the Bittensor SDK, Taostats and CoinGecko APIs but is not endorsed or certified by either provider.
       </p>
     </section>

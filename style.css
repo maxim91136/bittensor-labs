@@ -921,7 +921,7 @@ body {
   }
 }
 
-/* Korrekt: last-update außerhalb des Media Queries */
+/* Correct: last-update outside media queries */
 .last-update {
   text-align: center;
   color: #9ca3af;
@@ -951,7 +951,7 @@ body {
 .stat-card .info-badge:focus {
   outline: none;
 }
-/* Verhindert, dass der Link beim Klick auf die Info-Badge ausgelöst wird */
+/* Prevents link from triggering when clicking info-badge */
 .stat-card .info-badge {
   cursor: pointer;
 }
@@ -963,7 +963,7 @@ body {
   background: transparent;
 }
 
-/* Falls der Eltern-Container zu klein ist: */
+/* If parent container is too small: */
 
 .socials-card {
 
@@ -976,7 +976,7 @@ body {
   align-items: stretch;
 }
 
-/* ---- Soziale Medien Karten ---- */
+/* ---- Social Media Cards ---- */
 .socials-card {
   background: rgba(17, 19, 24, 0.6);
   border: 1px solid rgba(255,255,255,0.1);
@@ -996,7 +996,7 @@ body {
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12px;
   padding: var(--space-md) var(--space-md);
-  /* min-height entfernt, Card passt sich dynamisch an */
+  /* min-height removed, card adapts dynamically */
   display: flex;
   flex-direction: column;
   gap: 0.5em;
