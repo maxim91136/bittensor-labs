@@ -314,7 +314,10 @@ async function updateNetworkStats(data) {
   }
   tryUpdateMarketCapAndFDV();
 
-  const HALVING_SUPPLY = 10_500_000;
+  // Use generated thresholds to support future halving events (first threshold only)
+  const thresholds = generateHalvingThresholds(21_000_000, 6);
+  window.halvingThresholds = thresholds;
+  const HALVING_SUPPLY = thresholds.length ? thresholds[0] : 10_500_000;
   // parse emission from API (TAO/day) or fallback to supply delta per day
   let emissionPerDay = null;
   if (data && (data.emission !== undefined && data.emission !== null)) {
@@ -337,8 +340,7 @@ async function updateNetworkStats(data) {
 
   // Compute halving date simply by remaining supply / emission per day
   const remaining = window.circulatingSupply ? (HALVING_SUPPLY - window.circulatingSupply) : null;
-  // Expose fixed halving thresholds (useful for tooltips / UI if needed)
-  window.halvingThresholds = generateHalvingThresholds(21_000_000, 6);
+  // halvingThresholds already generated above
   // detect crossing: previous < threshold <= current
   const crossing = prevSupply !== null && prevSupply < HALVING_SUPPLY && window.circulatingSupply >= HALVING_SUPPLY;
   if (crossing) {
@@ -356,6 +358,19 @@ async function updateNetworkStats(data) {
   } else {
     window.halvingDate = null;
   }
+
+  // update pill tooltip and Next Halving stat card
+  const halvingPill = document.querySelector('.halving-pill');
+  if (halvingPill) {
+    const remainingSafe = Math.max(0, remaining || 0);
+    halvingPill.setAttribute('data-tooltip', `Next halving: ${formatNumber(HALVING_SUPPLY, 1)} TAO. Remaining ${formatNumber(remainingSafe, 0)} TAO.`);
+  }
+  const nextHalvingValue = document.getElementById('nextHalvingValue');
+  const nextRemaining = document.getElementById('nextHalvingRemaining');
+  if (nextHalvingValue) nextHalvingValue.textContent = formatNumber(HALVING_SUPPLY, 1);
+  if (nextRemaining) nextRemaining.textContent = formatNumber(Math.max(0, remaining || 0), 0) + ' TAO';
+  // store previous circulating supply snapshot for next refresh
+  window._prevCircSupply = window.circulatingSupply;
 
   startHalvingCountdown();
 }
@@ -402,14 +417,13 @@ function setupDynamicTooltips() {
   });
 
   document.querySelectorAll('.halving-pill[data-tooltip]').forEach(pill => {
-    const text = pill.getAttribute('data-tooltip');
-    pill.addEventListener('mouseenter', e => showTooltip(e, text));
+    pill.addEventListener('mouseenter', e => showTooltip(e, pill.getAttribute('data-tooltip') || ''));
     pill.addEventListener('mouseleave', hideTooltip);
-    pill.addEventListener('focus', e => showTooltip(e, text));
+    pill.addEventListener('focus', e => showTooltip(e, pill.getAttribute('data-tooltip') || ''));
     pill.addEventListener('blur', hideTooltip);
     pill.addEventListener('click', e => {
       e.stopPropagation();
-      showTooltip(e, text);
+      showTooltip(e, pill.getAttribute('data-tooltip') || '');
       setTimeout(hideTooltip, 2500);
     });
   });
@@ -619,9 +633,8 @@ function startHalvingCountdown() {
   updateHalvingCountdown();
   window.halvingInterval = setInterval(updateHalvingCountdown, 1000);
 }
-function calculateHalvingDate(circulatingSupply, emissionRate) {
-  const HALVING_SUPPLY = 10_500_000;
-  const remaining = HALVING_SUPPLY - circulatingSupply;
+function calculateHalvingDate(circulatingSupply, emissionRate, halvingThreshold = 10_500_000) {
+  const remaining = halvingThreshold - circulatingSupply;
   if (remaining <= 0) return null;
   const daysLeft = remaining / emissionRate;
   const msLeft = daysLeft * 24 * 60 * 60 * 1000;

@@ -337,6 +337,12 @@ body {
   box-shadow: 0 4px 12px rgba(255,107,53,0.15);
 }
 
+.halving-pill.just-halved {
+  transform: scale(1.04);
+  box-shadow: 0 10px 30px rgba(34,197,94,0.18);
+  border-color: rgba(34,197,94,0.35);
+}
+
 .halving-icon {
   color: var(--brand);
   display: flex;
