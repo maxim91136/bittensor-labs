@@ -243,6 +243,10 @@ function tryUpdateMarketCapAndFDV() {
 }
 
 async function updateNetworkStats(data) {
+  // Keep previous supply snapshot for delta-based emission fallback and crossing detection
+  const prevSupply = window.circulatingSupply ?? null;
+  const prevSupplyTs = window._prevSupplyTs ?? null;
+  const nowTs = Date.now();
   const elements = {
     blockHeight: document.getElementById('blockHeight'),
     subnets: document.getElementById('subnets'),
@@ -293,6 +297,8 @@ async function updateNetworkStats(data) {
     supplyEl.textContent = `${current}M / 21M τ`;
     supplyEl.title = `Source: ${window._circSupplySource || 'unknown'}`;
     window.circulatingSupply = circSupply;
+    // Save the timestamp and previous supply for next update
+    window._prevSupplyTs = nowTs;
   } else {
     const emissionPerBlock = 1;
     let fallbackSupply = typeof data.blockHeight === 'number' && data.blockHeight > 0
@@ -303,20 +309,53 @@ async function updateNetworkStats(data) {
       supplyEl.textContent = `${current}M / 21M τ`;
       supplyEl.title = 'Source: fallback';
       window.circulatingSupply = fallbackSupply;
+      window._prevSupplyTs = nowTs;
     }
   }
   tryUpdateMarketCapAndFDV();
 
   const HALVING_SUPPLY = 10_500_000;
-  const emissionPerDay = typeof data.emission === 'string'
-    ? parseInt(data.emission.replace(/,/g, ''))
-    : data.emission;
-  const daysToHalving = window.circulatingSupply && emissionPerDay
-    ? (HALVING_SUPPLY - window.circulatingSupply) / emissionPerDay
-    : null;
-  window.halvingDate = daysToHalving && daysToHalving > 0
-    ? new Date(Date.now() + daysToHalving * 24 * 60 * 60 * 1000)
-    : null;
+  // parse emission from API (TAO/day) or fallback to supply delta per day
+  let emissionPerDay = null;
+  if (data && (data.emission !== undefined && data.emission !== null)) {
+    emissionPerDay = typeof data.emission === 'string'
+      ? parseFloat(data.emission.replace(/,/g, ''))
+      : Number(data.emission);
+  }
+  // fallback: estimate emission from previous supply snapshot
+  if ((!emissionPerDay || !Number.isFinite(emissionPerDay) || emissionPerDay <= 0) && prevSupply !== null && prevSupplyTs) {
+    const supplyDelta = Number(window.circulatingSupply) - Number(prevSupply);
+    const msDelta = nowTs - prevSupplyTs;
+    if (msDelta > 0) {
+      const daysDelta = msDelta / (24 * 60 * 60 * 1000);
+      const estimate = supplyDelta / daysDelta;
+      if (Number.isFinite(estimate) && estimate > 0) {
+        emissionPerDay = estimate;
+      }
+    }
+  }
+
+  // Compute halving date simply by remaining supply / emission per day
+  const remaining = window.circulatingSupply ? (HALVING_SUPPLY - window.circulatingSupply) : null;
+  // Expose fixed halving thresholds (useful for tooltips / UI if needed)
+  window.halvingThresholds = generateHalvingThresholds(21_000_000, 6);
+  // detect crossing: previous < threshold <= current
+  const crossing = prevSupply !== null && prevSupply < HALVING_SUPPLY && window.circulatingSupply >= HALVING_SUPPLY;
+  if (crossing) {
+    window.halvingJustHappened = { threshold: HALVING_SUPPLY, at: new Date() };
+    window.halvingDate = new Date();
+    // UI: quick animation on pill, if present
+    const pill = document.querySelector('.halving-pill');
+    if (pill) {
+      pill.classList.add('just-halved');
+      setTimeout(() => pill.classList.remove('just-halved'), 8000);
+    }
+  } else if (remaining !== null && emissionPerDay && emissionPerDay > 0 && remaining > 0) {
+    const daysToHalving = remaining / emissionPerDay;
+    window.halvingDate = new Date(Date.now() + daysToHalving * 24 * 60 * 60 * 1000);
+  } else {
+    window.halvingDate = null;
+  }
 
   startHalvingCountdown();
 }
@@ -587,6 +626,19 @@ function calculateHalvingDate(circulatingSupply, emissionRate) {
   const daysLeft = remaining / emissionRate;
   const msLeft = daysLeft * 24 * 60 * 60 * 1000;
   return new Date(Date.now() + msLeft);
+}
+
+/**
+ * Generate fixed halving thresholds for the token supply.
+ * Example: for maxSupply=21_000_000 and maxEvents=6 it returns [10.5M, 15.75M, ...]
+ */
+function generateHalvingThresholds(maxSupply = 21_000_000, maxEvents = 6) {
+  const arr = [];
+  for (let n = 1; n <= maxEvents; n++) {
+    const threshold = Math.round(maxSupply * (1 - 1 / Math.pow(2, n)));
+    arr.push(threshold);
+  }
+  return arr;
 }
 function updateHalvingCountdown() {
   const el = document.getElementById('halvingCountdown');
