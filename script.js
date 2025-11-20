@@ -363,7 +363,8 @@ async function updateNetworkStats(data) {
   const halvingPill = document.querySelector('.halving-pill');
   if (halvingPill) {
     const remainingSafe = Math.max(0, remaining || 0);
-    halvingPill.setAttribute('data-tooltip', `Next halving: ${formatNumber(HALVING_SUPPLY, 1)} TAO. Remaining ${formatNumber(remainingSafe, 0)} TAO.`);
+    // Remove trailing periods behind "TAO" in tooltip per user request
+    halvingPill.setAttribute('data-tooltip', `Next halving: ${formatNumber(HALVING_SUPPLY, 1)} TAO Remaining ${formatNumber(remainingSafe, 0)} TAO`);
   }
   // We intentionally don't add a new stat-card for the halving; keep the pill-only UI.
   // store previous circulating supply snapshot for next refresh
