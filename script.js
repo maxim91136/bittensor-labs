@@ -370,6 +370,34 @@ async function updateNetworkStats(data) {
   // store previous circulating supply snapshot for next refresh
   window._prevCircSupply = window.circulatingSupply;
 
+  // map preview KPIs (minimal): fill nodes (neurons), last updated
+  try {
+    const mapNodesCount = document.getElementById('mapNodesCount');
+    const mapTopCountry = document.getElementById('mapTopCountry');
+    const mapLastUpdate = document.getElementById('mapLastUpdate');
+    if (mapNodesCount) {
+      // prefer a 'totalNeurons' field if available
+      const nodes = data && data.totalNeurons ? Number(data.totalNeurons) : (data && data.validators ? Number(data.validators) : null);
+      mapNodesCount.textContent = nodes != null && !isNaN(nodes) ? formatFull(nodes) : '—';
+    }
+    if (mapTopCountry) {
+      // top country not available in network API; leave placeholder
+      mapTopCountry.textContent = '—';
+    }
+    if (mapLastUpdate) {
+      // if the API provides a timestamp, use it; otherwise fallback to now
+      const ts = data && (data._timestamp || data.last_updated || data.timestamp || null);
+      if (ts) {
+        const d = new Date(ts);
+        mapLastUpdate.textContent = d.toLocaleString();
+      } else {
+        mapLastUpdate.textContent = new Date().toLocaleString();
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to update map preview KPIs', e);
+  }
+
   startHalvingCountdown();
 }
 

@@ -279,6 +279,25 @@
         </div>
       </div>
     </section>
+      <!-- Map Preview Card (Option A) -->
+      <section class="dashboard-card map-preview-card" aria-labelledby="map-preview-heading">
+        <div class="card-header">
+          <h3 id="map-preview-heading">Miner Map</h3>
+          <span class="info-badge" data-tooltip="Distribution of miners; click to open the interactive map">i</span>
+        </div>
+        <div class="map-preview-body">
+          <!-- Place your provided map thumbnail at assets/miner-map-thumb.png to use a custom image here -->
+          <img id="mapThumb" src="assets/miner-map-thumb.png" alt="Miner map preview" style="width:260px;height:140px;border-radius:8px;object-fit:cover; border:1px solid rgba(255,255,255,0.04)">
+          <div style="flex:1;display:flex;flex-direction:column;gap:6px;justify-content:center;">
+            <div style="font-weight:700;">Active Nodes: <span id="mapNodesCount">—</span></div>
+            <div style="color:var(--text-muted);">Top Country: <span id="mapTopCountry">—</span></div>
+            <div style="color:var(--text-muted);">Last update: <span id="mapLastUpdate">—</span></div>
+            <div style="margin-top:8px;">
+              <a href="https://learnbittensor.org/map" target="_blank" rel="noopener" class="card-badge">Open Map</a>
+            </div>
+          </div>
+        </div>
+      </section>
       <div class="last-update" id="lastUpdate"></div>
   <!-- Dashboard card: Film -->
     <section class="dashboard-card film-card">

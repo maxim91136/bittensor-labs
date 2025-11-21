@@ -515,6 +515,26 @@ body {
   /* Keine feste Höhe, Cards sind dynamisch */
 }
 
+/* Map Preview Card - Minimal styling */
+.map-preview-card .card-header h3 {
+  margin: 0;
+  font-size: var(--text-base);
+  font-weight: 600;
+}
+.map-preview-card .map-preview-body {
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.map-preview-card img#mapThumb {
+  width: 260px;
+  height: 140px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.map-preview-card .card-badge { margin-top: 6px; display:inline-block }
+
 .dashboard-card::before {
   content: '';
   position: absolute;
