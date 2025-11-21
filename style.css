@@ -1354,6 +1354,19 @@ header.site-header.light-bg {
   color: rgba(34, 197, 94, 0.8) !important;
 }
 
+/* Light mode: brighten the map thumbnail so it reads on light backgrounds.
+   This is a minimal fix — we only add a soft brightness filter and a lighter
+   border color, leaving the original image unchanged. */
+body.light-bg .map-preview-card img#mapThumb {
+  filter: brightness(1.45) saturate(0.88) contrast(1.02);
+  border-color: rgba(0,0,0,0.08) !important;
+}
+/* Also slightly lighten the card background and border for contrast */
+body.light-bg .map-preview-card {
+  background: #fff !important;
+  border-color: #e6e6e6 !important;
+}
+
 /* Make sure disclaimer links are green across browsers and modes (Safari fallback) */
 .disclaimer-card a,
 .disclaimer-card .source-item a,
