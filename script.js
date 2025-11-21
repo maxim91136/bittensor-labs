@@ -223,12 +223,11 @@ function updateTaoPrice(priceData) {
   lastPrice = priceData.price;
   tryUpdateMarketCapAndFDV();
 
-  // Choose the supply value used for Halving calculations:
-  // Prefer on-chain `totalIssuanceHuman` returned by /api/network, otherwise fallback to Taostats circulating supply.
-  const supplyForHalving = (data && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null)
-    ? Number(data.totalIssuanceHuman)
-    : (window.circulatingSupply ?? null);
-  window._halvingSupplySource = (data && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null) ? 'on-chain' : (window._circSupplySource || 'taostats');
+  
+
+  
+
+  
 }
 
 function updateMarketCapAndFDV(price, circulatingSupply) {
@@ -320,6 +319,13 @@ async function updateNetworkStats(data) {
     }
   }
   tryUpdateMarketCapAndFDV();
+
+  // Choose the supply value used for Halving calculations:
+  // Prefer on-chain `totalIssuanceHuman` returned by /api/network, otherwise fallback to Taostats circulating supply.
+  const supplyForHalving = (data && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null)
+    ? Number(data.totalIssuanceHuman)
+    : (window.circulatingSupply ?? null);
+  window._halvingSupplySource = (data && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null) ? 'on-chain' : (window._circSupplySource || 'taostats');
 
   // Use generated thresholds to support future halving events (first threshold only)
   const thresholds = generateHalvingThresholds(21_000_000, 6);
