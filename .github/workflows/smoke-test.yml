@@ -1,0 +1,40 @@
+name: Smoke Test
+
+on:
+  push:
+    tags:
+      - 'v*'
+      - 'v*-rc.*'
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Health check - Network API
+        run: |
+          set -e
+          URL="https://bittensor-labs.com/api/network"
+          echo "Checking $URL"
+          status=$(curl -s -o /dev/stderr -w "%{http_code}" "$URL") || true
+          echo "HTTP status: $status"
+          if [ "$status" != "200" ]; then
+            echo "🛑 Network API returned non-200 code"; exit 1
+          fi
+          ping=$(curl -s "$URL")
+          echo "$ping" | jq . > /dev/null || (echo "🛑 Invalid JSON"; exit 1)
+          # Check required fields
+          echo "$ping" | jq -e '.halvingThresholds | length > 0' || (echo "🛑 halvingThresholds missing"; exit 1)
+          echo "$ping" | jq -e '.totalIssuanceHuman != null' || (echo "🛑 totalIssuanceHuman missing"; exit 1)
+
+      - name: Health check - Frontend
+        run: |
+          set -e
+          SITE_URL="https://bittensor-labs.com/"
+          echo "Checking site root $SITE_URL"
+          status=$(curl -s -o /dev/null -w "%{http_code}" "$SITE_URL") || true
+          if [ "$status" != "200" ]; then
+            echo "🛑 Site root returned non-200"; exit 1
+          fi

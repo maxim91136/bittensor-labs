@@ -1,0 +1,21 @@
+name-template: 'v$NEXT_PATCH_VERSION'
+tag-template: 'v$NEXT_PATCH_VERSION'
+categories:
+  - title: "Added"
+    labels:
+      - "feat"
+      - "enhancement"
+  - title: "Fixed"
+    labels:
+      - "fix"
+  - title: "Chore"
+    labels:
+      - "chore"
+change-template: '- $TITLE (#$NUMBER) by @$AUTHOR'
+change-title-escapes: " ["
+template: |
+  ## Changes
+  $CHANGES
+
+  ---
+  _This release was automatically drafted by the release-drafter action._
