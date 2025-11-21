@@ -534,6 +534,16 @@ body {
   border: 1px solid rgba(255,255,255,0.04);
 }
 .map-preview-card .card-badge { margin-top: 6px; display:inline-block }
+.map-preview-card { display:flex; flex-direction:column; align-items:center; justify-content:center; }
+.map-preview-card .map-preview-body { justify-content:center; width:100%; }
+
+@media (min-width: 900px) {
+  .map-preview-card img#mapThumb { width: 420px; height: 220px; }
+  .map-preview-card .card-header { justify-content:center; }
+}
+@media (min-width: 1200px) {
+  .map-preview-card img#mapThumb { width: 540px; height: 300px; }
+}
 
 .dashboard-card::before {
   content: '';
