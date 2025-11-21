@@ -1015,6 +1015,9 @@ body {
     font-size: 0.70em;
     margin-left: 2px;
   }
+  /* Map preview thumbnail: larger and stacked on mobile */
+  .map-preview-card .map-preview-body { flex-direction: column; align-items: center; }
+  .map-preview-card img#mapThumb { width: 90% !important; height: auto !important; max-height: 260px; }
 }
 
 .stat-card .info-badge {
