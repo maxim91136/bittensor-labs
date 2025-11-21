@@ -544,6 +544,18 @@ body {
 /* Keep map preview header consistent with other card headers */
 .map-preview-card .card-header { justify-content: space-between; width: 100%; }
 
+/* Attribution for the Map preview image */
+.map-preview-card .map-attribution {
+  margin-top: 8px;
+  font-size: var(--text-xs);
+  color: rgba(255,255,255,0.45);
+  text-align: center;
+}
+.map-preview-card .map-attribution a {
+  color: rgba(34,197,94,0.8);
+  text-decoration: underline;
+}
+
 .dashboard-card::before {
   content: '';
   position: absolute;
