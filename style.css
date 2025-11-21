@@ -516,7 +516,7 @@ body {
 }
 
 /* Map Preview Card - Minimal styling */
-.map-preview-card .card-header h2 {
+.map-preview-card .card-header h2, .map-preview-card .card-header h3 {
   margin: 0;
   /* Match other card headers for a consistent look */
   font-size: 1.1em;
@@ -538,11 +538,11 @@ body {
   border: 1px solid rgba(255,255,255,0.04);
 }
 .map-preview-card .card-badge { margin-top: 6px; display:inline-block }
-.map-preview-card { display:flex; flex-direction:column; align-items:center; justify-content:flex-start; }
+.map-preview-card { display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-start; }
 .map-preview-card .map-preview-body { justify-content:center; width:100%; }
 
 /* Keep map preview header consistent with other card headers */
-.map-preview-card .card-header { justify-content: space-between; }
+.map-preview-card .card-header { justify-content: space-between; width: 100%; }
 
 .dashboard-card::before {
   content: '';
