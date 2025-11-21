@@ -716,6 +716,7 @@ body {
 .disclaimer-text {
   line-height: 1.5;
   color: rgba(255, 255, 255, 0.45);
+  font-size: var(--text-xs);
 }
 
 .disclaimer-text strong {
@@ -1327,7 +1328,8 @@ header.site-header.light-bg {
 .disclaimer-card.light-bg .source-label {
   color: #000 !important;
   -webkit-text-fill-color: #000 !important; /* Safari / iOS fallback for disclaimer text */
-  font-weight: 600 !important;
+  /* Keep the original font-weight to preserve the existing design */
+  font-weight: 400 !important;
 }
 
 /* Ensure all disclaimer-descendants are dark in Light Mode; but keep links colored */

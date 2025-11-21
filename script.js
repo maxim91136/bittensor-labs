@@ -414,6 +414,18 @@ function setupDynamicTooltips() {
       showTooltip(e, text);
       setTimeout(hideTooltip, 2500);
     });
+    // Swap the miner map thumbnail once per theme change (only update once)
+    const mapThumb = document.getElementById('mapThumb');
+    if (mapThumb) {
+      if (active) {
+        mapThumb.src = 'assets/miner-map-thumb-light.png';
+        mapThumb.style.filter = 'none';
+      } else {
+        mapThumb.src = 'assets/miner-map-thumb.png';
+        mapThumb.style.filter = '';
+      }
+    }
+    
   });
 
   document.querySelectorAll('.halving-pill[data-tooltip]').forEach(pill => {
@@ -789,7 +801,8 @@ document.addEventListener('DOMContentLoaded', () => {
           txt.forEach(ch => {
             ch.style.color = '#000';
             ch.style.opacity = '1';
-            ch.style.fontWeight = '600';
+            // Keep font weight unchanged so we don't alter the original design
+            ch.style.fontWeight = '';
             ch.style.webkitTextFillColor = '#000';
           });
         }
@@ -813,6 +826,7 @@ document.addEventListener('DOMContentLoaded', () => {
           el.style.color = '#000';
           el.style.borderLeft = `4px solid ${brand}`;
         }
+        // (Map thumbnail swap is handled once after this loop to avoid repeated DOM updates.)
       } else {
         // Remove inline styles to fall back to CSS rules for Dark Mode
         el.style.background = '';
