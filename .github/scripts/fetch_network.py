@@ -39,6 +39,13 @@ def fetch_metrics() -> Dict[str, Any]:
             continue
 
     daily_emission = 7200
+    
+    def generate_halving_thresholds(max_supply: int = 21000000, max_events: int = 6):
+        arr = []
+        for n in range(1, max_events + 1):
+            threshold = round(max_supply * (1 - 1 / (2 ** n)))
+            arr.append(int(threshold))
+        return arr
     # Total issuance from on-chain storage
     total_issuance_raw = None
     total_issuance_human = None
@@ -73,6 +80,7 @@ def fetch_metrics() -> Dict[str, Any]:
         "emission": daily_emission,
         "totalIssuance": total_issuance_raw,
         "totalIssuanceHuman": total_issuance_human,
+        "halvingThresholds": generate_halving_thresholds(),
         "_source": "bittensor-sdk",
         "_timestamp": datetime.now(timezone.utc).isoformat()
     }

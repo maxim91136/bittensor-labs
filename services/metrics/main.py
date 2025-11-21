@@ -37,6 +37,17 @@ def _count_validators_from_mg(mg) -> int:
   except:
     return 0
 
+
+def generate_halving_thresholds(max_supply: int = 21_000_000, max_events: int = 6) -> List[int]:
+  """Generate halving thresholds list similar to frontend JS generator.
+  For max_events n, thresholds = round(max_supply * (1 - 1/2^n)) for n=1..max_events
+  """
+  arr: List[int] = []
+  for n in range(1, max_events + 1):
+    threshold = round(max_supply * (1 - 1 / (2 ** n)))
+    arr.append(int(threshold))
+  return arr
+
 def gather_metrics(network: str = "finney") -> Dict[str, Any]:
   st = bt.subtensor(network=network)
 
@@ -122,6 +133,7 @@ def gather_metrics(network: str = "finney") -> Dict[str, Any]:
     "totalNeurons": total_neurons,
     "totalIssuance": total_issuance_raw,
     "totalIssuanceHuman": total_issuance_human,
+    "halvingThresholds": generate_halving_thresholds(),
     "_source": "bittensor-sdk"
   }
 

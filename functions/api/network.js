@@ -44,6 +44,7 @@ export async function onRequest(context) {
       subnets: m.subnets ?? 0,
       emission: m.emission ?? '7,200',
       totalNeurons: m.totalNeurons ?? 0,
+      halvingThresholds: m.halvingThresholds ?? null,
       totalIssuance: m.totalIssuance ?? null,
       totalIssuanceHuman: m.totalIssuanceHuman ?? null,
       _source: m._source || 'kv-cache'
