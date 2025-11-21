@@ -895,15 +895,7 @@ document.addEventListener('DOMContentLoaded', () => {
       sunIcon.style.display = 'none';
     }
   }
-  // Preload light thumbnail to reduce flicker when toggling themes
-  (function preloadLightThumb(){
-    try {
-      const img = new Image();
-      img.src = 'assets/miner-map-thumb-light.png';
-    } catch (e) {
-      // ignore in environments that prevent preloading
-    }
-  })();
+  // NOTE: Preloading is handled via <link rel="preload"> in index.html — avoid duplicate downloads
   // Initial state
   setLightMode(localStorage.getItem('bgMode') === 'light');
   btn.addEventListener('click', function() {
