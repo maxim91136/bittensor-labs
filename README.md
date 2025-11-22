@@ -52,3 +52,14 @@ MIT License
 ## Contact
 
 For questions or feedback, please open an [Issue](https://github.com/maxim91136/bittensor-labs/issues) or submit a Pull Request on GitHub.
+
+## Disclaimer & Data Sources
+
+This dashboard is an independent, community-run project provided for informational purposes only and is not affiliated with, endorsed by, or certified by the Opentensor Foundation.
+
+- Primary data is acquired on-chain via the repository's network API (`/api/network`).
+- Price and supplementary supply metrics may be provided by third-party services (e.g. Taostats, CoinGecko) as fallbacks; these can be subject to rate limits and may not always be real-time.
+- This project is not financial, legal, or investment advice. Always verify critical information using authoritative sources and consult a professional before acting on any data shown here.
+- All data is provided "as-is" without warranty of any kind; the project maintainer disclaims liability for losses resulting from the use of this site.
+- This site uses Cloudflare for security and performance; personal data is not stored by the project unless explicitly submitted by you.
+- "Bittensor", "TAO" and other asset names are trademarks of their respective owners and are used for identification only.
