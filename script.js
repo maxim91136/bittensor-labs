@@ -806,7 +806,17 @@ async function initDashboard() {
       }
 
       // Hook up the buttons
-      if (openBtn) openBtn.addEventListener('click', openModal);
+      if (openBtn) openBtn.addEventListener('click', (e) => {
+        // If the embed failed (fallback) then allow the anchor's default behaviour
+        // so the user can open the model in a new tab. Otherwise, prevent
+        // navigation and open the modal in-place.
+        if (embed && embed.classList.contains('fallback-active')) {
+          // Let the link open in a new tab (anchor has target="_blank")
+          return;
+        }
+        e.preventDefault();
+        openModal();
+      });
       if (closeBtn) closeBtn.addEventListener('click', closeModal);
       // Allow clicking outside the modal body to close it
       if (modal) {
