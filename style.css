@@ -1096,7 +1096,9 @@ body {
 .taotensor-embed {
   display: block;
   width: 100%;
-  height: 360px;
+  /* Make the embed taller and responsive: smaller on mobile, larger on wide screens */
+  height: clamp(360px, 48vh, 780px);
+  min-height: 320px;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.06);
@@ -1125,7 +1127,7 @@ body.light-bg .taotensor-embed iframe { filter: none }
   color: var(--text-muted);
   background: rgba(255,255,255,0.02);
 }
-.taotensor-embed .embed-fallback img { width: 100%; height: 240px; max-height: 320px; object-fit: cover; border-radius: 8px; display: block }
+.taotensor-embed .embed-fallback img { width: 100%; height: 100%; max-height: none; object-fit: cover; border-radius: 8px; display: block }
 /* When in dark mode, gently invert the preview so it looks more native */
 body:not(.light-bg) .taotensor-embed .embed-fallback img {
   filter: invert(0.96) hue-rotate(200deg) saturate(0.85) brightness(0.92) contrast(0.95);
