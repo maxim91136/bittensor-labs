@@ -11,7 +11,7 @@ jobs:
     env:
       MIN_FETCH_AGE_SECONDS: 900
       # Comma-separated list of Nitter instances to try
-      NITTER_INSTANCES: https://nitter.net,https://nitter.snopyta.org
+      NITTER_INSTANCES: https://nitter.kavin.rocks,https://nitter.net,https://nitter.snopyta.org
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -51,6 +51,11 @@ jobs:
           fi
           SINCE=$(echo "$VAL" | jq -r '.alerts[0].id // empty')
           FETCHED_AT=$(echo "$VAL" | jq -r '.fetched_at // empty')
+          COOLDOWN=$(curl -fsSL -H "Authorization: Bearer ${CF_API_TOKEN}" "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/x_alerts_cooldown" || true)
+          COOLDOWN_TS=$(echo "$COOLDOWN" | jq -r '.cooldown_until // empty')
+          echo "since_id=$SINCE" >> $GITHUB_OUTPUT
+          echo "fetched_at=$FETCHED_AT" >> $GITHUB_OUTPUT
+          echo "cooldown=$COOLDOWN_TS" >> $GITHUB_OUTPUT
           echo "since_id=$SINCE" >> $GITHUB_OUTPUT
           echo "fetched_at=$FETCHED_AT" >> $GITHUB_OUTPUT
 
@@ -58,7 +63,19 @@ jobs:
         id: skip_check
         run: |
           fetched_at="${{ steps.get_since.outputs.fetched_at }}"
+          cooldown="${{ steps.get_since.outputs.cooldown }}"
           MIN_AGE=${{ env.MIN_FETCH_AGE_SECONDS }}
+          if [ -n "$cooldown" ]; then
+            # check cooldown timestamp: skip fetch if the cooldown is in the future
+            TS=$(date -u -d "$cooldown" +%s 2>/dev/null || true)
+            if [ -n "$TS" ]; then
+              NOW=$(date -u +%s)
+              if [ "$NOW" -lt "$TS" ]; then
+                echo "skip_fetch=true" >> $GITHUB_OUTPUT
+                exit 0
+              fi
+            fi
+          fi
           if [ -z "$fetched_at" ]; then
             echo "skip_fetch=false" >> $GITHUB_OUTPUT
             exit 0
@@ -126,6 +143,35 @@ jobs:
             fi
           else
             echo "skipped=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Write cooldown to Cloudflare KV if skipped
+        if: ${{ steps.cf.outputs.enabled == 'true' && steps.check_skipped.outputs.skipped == 'true' }}
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+        run: |
+          if [ -f x_alerts_latest.json ]; then
+            cooldown=$(jq -r '.cooldown_until // empty' x_alerts_latest.json)
+            fetched_at=$(jq -r '.fetched_at // empty' x_alerts_latest.json)
+            reason=$(jq -r '.error // .wait_seconds // empty' x_alerts_latest.json)
+            if [ -n "$cooldown" ]; then
+              echo "{\"cooldown_until\": \"$cooldown\", \"fetched_at\": \"$fetched_at\", \"reason\": \"$reason\"}" > cooldown.json
+              status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/x_alerts_cooldown" \
+                -H "Authorization: Bearer ${CF_API_TOKEN}" \
+                -H "Content-Type: application/json" \
+                --data-binary @cooldown.json)
+              echo "Cloudflare cooldown KV HTTP Status: $status"
+              if [ "$status" != "200" ] && [ "$status" != "204" ]; then
+                echo "KV write failed with status $status"
+                curl -v -X PUT "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/x_alerts_cooldown" \
+                  -H "Authorization: Bearer ${CF_API_TOKEN}" \
+                  -H "Content-Type: application/json" \
+                  --data-binary @cooldown.json || true
+                exit 1
+              fi
+            fi
           fi
 
       - name: Write to Cloudflare KV if configured

@@ -12,7 +12,7 @@ import os
 import sys
 import json
 import argparse
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import time
 from typing import Optional
 
@@ -23,6 +23,9 @@ except Exception:
 
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
+
+def iso_plus_seconds(seconds: int):
+    return (datetime.now(timezone.utc) + timedelta(seconds=seconds)).isoformat()
 
 def fetch_tweets(bearer_token: str, user_id: str, max_results: int = 5, max_attempts: int = 3, backoff_seconds: int = 2, since_id: Optional[str] = None):
     # Deprecated: Legacy X/Twitter API fetcher retained for compatibility.
@@ -159,7 +162,14 @@ def fetch_nitter(nitter_instance: str, username: str, max_results: int = 5, sinc
                             now_ts = int(time.time())
                             wait = max(0, reset_ts - now_ts)
                             if wait > 300:
-                                return {'fetched_at': now_iso(), 'alerts': [], '_skipped': True, 'wait_seconds': wait}
+                                # Return skip + cooldown timestamp
+                                return {
+                                    'fetched_at': now_iso(),
+                                    'alerts': [],
+                                    '_skipped': True,
+                                    'wait_seconds': wait,
+                                    'cooldown_until': iso_plus_seconds(wait)
+                                }
                             time.sleep(wait + 1)
                         except Exception:
                             pass
@@ -287,7 +297,15 @@ def main(argv=None):
                 continue
         if out is None:
             print(f"All Nitter instances failed. Last error: {last_error}")
-            out = {'fetched_at': now_iso(), 'alerts': [], '_skipped': True, 'error': str(last_error)}
+            # Set a default cooldown to avoid hammering instances if everything failed
+            cooldown_seconds = 3600
+            out = {
+                'fetched_at': now_iso(),
+                'alerts': [],
+                '_skipped': True,
+                'error': str(last_error),
+                'cooldown_until': iso_plus_seconds(cooldown_seconds)
+            }
         out_str = json.dumps(out, indent=2)
         out_path = args.out or 'x_alerts_latest.json'
         if out_path:
