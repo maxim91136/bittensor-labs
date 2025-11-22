@@ -12,10 +12,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Node 20
+      - name: Setup node (used by other steps)
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+
+      - name: Setup Python 3.x
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
 
       - name: Fetch alerts from X (Twitter)
         id: fetch
@@ -25,7 +30,8 @@ jobs:
           ALERTS_MAX: 5
         run: |
           mkdir -p data
-          OUT_PATH=alerts.json node .github/scripts/fetch_x_alerts.js
+          python -m pip install --upgrade pip && python -m pip install requests || true
+          python .github/scripts/fetch_x_alerts.py -o alerts.json -m 5
           # ensure file exists
           if [ ! -f alerts.json ]; then
             echo "alerts.json not created"
