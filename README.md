@@ -37,6 +37,14 @@ Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
 Pull requests and issues are welcome! Please follow the guidelines in CONTRIBUTING.md.
 
+## CI & Releases
+
+- The Release Drafter action used in this repository requires a GitHub secret named `GH_TOKEN` that has write permissions for releases and pull requests. Add it in the repository Settings → Secrets.
+- The Smoke Test workflow (`.github/workflows/smoke-test.yml`) can be triggered manually from Actions (workflow_dispatch). It accepts inputs:
+	- `url`: the Network API URL to validate (defaults to production API)
+	- `skip_cloudflare_check`: `true` or `false`. When `true`, Cloudflare challenge pages will be treated leniently and skip the JSON validation step (useful for manual or ephemeral environments).
+- For debugging in the client, set `window._debug = true` in the browser console to get debug logs about halving calculation and fallback behavior.
+
 ## License
 
 MIT License
