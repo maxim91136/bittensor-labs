@@ -505,7 +505,11 @@ function setupDynamicTooltips() {
   }
 
   document.querySelectorAll('.info-badge').forEach(badge => {
+    // Skip any info-badge that lives in the TAO Tensor Law card (we removed it)
+    if (badge.closest && badge.closest('.taotensor-card')) return;
     const text = badge.getAttribute('data-tooltip');
+    // Only initialize tooltips for badges that actually have tooltip text
+    if (!text) return;
     badge.addEventListener('mouseenter', e => showTooltip(e, text));
     badge.addEventListener('mouseleave', hideTooltip);
     badge.addEventListener('focus', e => showTooltip(e, text));
@@ -763,6 +767,59 @@ async function initDashboard() {
           embed.classList.add('fallback-active');
         }
       }, 1500);
+      // Modal / full-screen behavior for the embed
+      const openBtn = document.getElementById('taotensorFullBtn');
+      const modal = document.getElementById('taotensorModal');
+      const modalContent = document.getElementById('taotensorModalContent');
+      const closeBtn = document.getElementById('taotensorModalClose');
+      let originalParent = null;
+      const placeholder = document.createElement('div');
+      placeholder.className = 'tao-embed-placeholder';
+
+      function openModal() {
+        if (!embed || !frame) return;
+        // If we are in fallback mode, just open in a new tab instead
+        if (embed.classList.contains('fallback-active')) {
+          window.open(frame?.src || 'https://taotensorlaw.com', '_blank');
+          return;
+        }
+        if (modal.classList.contains('active')) return;
+        originalParent = frame.parentNode;
+        // Reserve a placeholder where the frame was
+        originalParent.replaceChild(placeholder, frame);
+        // Move iframe into modal content so it keeps state
+        modalContent.appendChild(frame);
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        try { frame.focus(); } catch (e) {}
+      }
+
+      function closeModal() {
+        if (!originalParent) return;
+        if (!modal.classList.contains('active')) return;
+        // Move iframe back to its original location
+        modalContent.removeChild(frame);
+        originalParent.replaceChild(frame, placeholder);
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        try { frame.focus(); } catch (e) {}
+      }
+
+      // Hook up the buttons
+      if (openBtn) openBtn.addEventListener('click', openModal);
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      // Allow clicking outside the modal body to close it
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) closeModal();
+        });
+      }
+      // Escape key to close
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+          closeModal();
+        }
+      });
     });
 
   // Fill initial volume and expose taostats globally
