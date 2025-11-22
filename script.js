@@ -266,9 +266,12 @@ function updateTaoPrice(priceData) {
       } else if (priceData && priceData.change24h !== undefined && priceData.change24h !== null) {
         parts.push(`24h: ${formatPercent(priceData.change24h)}`);
       }
-      if (parts.length) {
-        const source = (window._taostats && window._taostats._source) ? window._taostats._source : 'Taostats';
-        pill.setAttribute('data-tooltip', `Price changes: ${parts.join(' • ')} • Source: ${source}`);
+          if (parts.length) {
+            const source = (window._taostats && window._taostats._source) ? window._taostats._source : 'Taostats';
+            const lines = ['Price changes:'];
+            parts.forEach(p => lines.push(p));
+            lines.push(`Source: ${source}`);
+            pill.setAttribute('data-tooltip', lines.join('\n'));
       } else {
         pill.removeAttribute('data-tooltip');
       }
@@ -455,8 +458,13 @@ async function updateNetworkStats(data) {
   if (halvingPill) {
     const remainingSafe = Math.max(0, remaining || 0);
     const halvingSourceLabel = (window._halvingSupplySource === 'on-chain') ? 'On-chain (TotalIssuance)' : 'Taostats (circulating_supply)';
-    // Remove trailing periods behind "TAO" in tooltip per user request
-    halvingPill.setAttribute('data-tooltip', `Next halving: ${formatNumber(HALVING_SUPPLY)} TAO Remaining: ${formatNumber(remainingSafe)} TAO Source: ${halvingSourceLabel}`);
+    // Multi-line tooltip for halving similar to price pill
+    const halvingLines = [
+      `Next halving: ${formatNumber(HALVING_SUPPLY)} TAO`,
+      `Remaining: ${formatNumber(remainingSafe)} TAO`,
+      `Source: ${halvingSourceLabel}`
+    ];
+    halvingPill.setAttribute('data-tooltip', halvingLines.join('\n'));
   }
   // We intentionally don't add a new stat-card for the halving; keep the pill-only UI.
   // store previous circulating and halving-supply snapshots for next refresh
@@ -734,6 +742,8 @@ async function initDashboard() {
     fetchTaoPrice(),
     fetchTaostats()
   ]);
+  // Expose taostats globally and update UI after available
+  window._taostats = taostats ?? null;
   await updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
 
