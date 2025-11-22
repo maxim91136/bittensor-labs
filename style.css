@@ -1138,6 +1138,25 @@ body:not(.light-bg) .taotensor-embed .embed-fallback img {
 .taotensor-embed.fallback-active .embed-fallback { display: block }
 .taotensor-embed.fallback-active iframe { display: none }
 
+/* Mobile-specific adjustments: increase embed size on narrow screens so
+   the TAO Tensor Law disclaimer is fully visible for 2 - 3 sentences.
+   This addresses a UX issue where the embedded site's disclaimer is cut
+   off on smaller viewports (e.g., phones). */
+@media (max-width: 768px) {
+  .taotensor-embed {
+    /* Larger mobile-friendly min height — tuned to show more of the embed's top content */
+    min-height: 720px;
+    /* Make height responsive but biased to taller sizes for small devices */
+    height: clamp(520px, 82vh, 1080px);
+  }
+  .taotensor-embed .embed-fallback img { object-position: top center; }
+}
+
+/* Very small phones (narrow screens) — still allow large previews but avoid too many scroll jumps */
+@media (max-width: 420px) {
+  .taotensor-embed { min-height: 760px; height: clamp(560px, 86vh, 1080px); }
+}
+
 .useful-links-card {
   background: rgba(17, 19, 24, 0.6);
   border: 1px solid rgba(255,255,255,0.1);
