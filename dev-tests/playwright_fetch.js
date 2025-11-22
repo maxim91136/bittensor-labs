@@ -54,13 +54,27 @@ if (!url) {
       process.exit(2);
     }
     const status = response ? response.status() : 599;
+    // Save status for GitHub workflow to use
+    try { fs.writeFileSync(path.resolve('/tmp', 'playwright_status'), String(status)); } catch (e) { /* ignore */ }
     console.log('Playwright status', status);
     await browser.close();
     // 0 success, 2 non-200 status (but body captured), 3 error
     process.exit(status === 200 ? 0 : 2);
   } catch (e) {
     console.error('Playwright fetch error', e && e.stack || e);
-    await browser.close();
-    process.exit(3);
+    try { await browser.close(); } catch (e) { /* ignore */ }
+    // Try a lightweight Node fetch fallback before giving up (Node 18+ has fetch built-in)
+    try {
+      console.log('Attempting Node fetch fallback...');
+      const nodeRes = await fetch(url, { method: 'GET' });
+      const nodeText = await nodeRes.text();
+      fs.writeFileSync(path.resolve('/tmp', 'playwright_body'), nodeText);
+      try { fs.writeFileSync(path.resolve('/tmp', 'playwright_status'), String(nodeRes.status)); } catch(e) {}
+      console.log('Node fetch status', nodeRes.status);
+      process.exit(nodeRes.status === 200 ? 0 : 2);
+    } catch (ne) {
+      console.error('Node fetch fallback failed', ne && ne.stack || ne);
+      process.exit(3);
+    }
   }
 })();

@@ -131,6 +131,14 @@ jobs:
           set -e
             SKIP_CF="${{ github.event.inputs.skip_cloudflare_check || 'false' }}"
             if [ ! -f /tmp/api_ok ]; then
+              # If we have a status file, check if it's a 403/401 and skip is enabled
+              if [ -f /tmp/playwright_status ]; then
+                PLAYWRIGHT_STATUS=$(cat /tmp/playwright_status | tr -d '\n' || true)
+                echo "Detected playwright_status=$PLAYWRIGHT_STATUS"
+                if [ "${SKIP_CF}" = "true" ] && ([ "${PLAYWRIGHT_STATUS}" = "403" ] || [ "${PLAYWRIGHT_STATUS}" = "401" ]); then
+                  echo "⚠️ Playwright returned ${PLAYWRIGHT_STATUS} and skip enabled — skipping JSON validation"; exit 0
+                fi
+              fi
               # If a body is present but indicates a Cloudflare challenge, either skip (if requested) or fail strictly
               if [ -f /tmp/body ] && (grep -qi "Just a moment" /tmp/body || grep -qi "Enable JavaScript and cookies" /tmp/body); then
                 if [ "${SKIP_CF}" = "true" ]; then
