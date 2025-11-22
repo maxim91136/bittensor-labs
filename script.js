@@ -15,6 +15,9 @@ let isLoadingPrice = false;
 window.halvingDate = null;
 window.halvingInterval = null;
 window.circulatingSupply = null;
+window._prevHalvingTs = null;
+// Toggle to enable debugging messages in console: set `window._debug = true` at runtime
+window._debug = false;
 
 // ===== Utility Functions =====
 function animateValue(element, start, end, duration = 1000) {
@@ -250,8 +253,9 @@ function tryUpdateMarketCapAndFDV() {
 
 async function updateNetworkStats(data) {
   // Keep previous supply snapshot for delta-based emission fallback and crossing detection
-  const prevSupply = window.circulatingSupply ?? null;
   const prevSupplyTs = window._prevSupplyTs ?? null;
+  const prevHalvingSupply = (window._prevHalvingSupply !== undefined) ? window._prevHalvingSupply : null;
+  const prevHalvingTs = window._prevHalvingTs ?? null;
   const nowTs = Date.now();
   const elements = {
     blockHeight: document.getElementById('blockHeight'),
@@ -305,6 +309,8 @@ async function updateNetworkStats(data) {
     window.circulatingSupply = circSupply;
     // Save the timestamp and previous supply for next update
     window._prevSupplyTs = nowTs;
+    // debug: mark that we have circ supply from external source
+    if (window._circSupplySource && window._debug) console.debug('circ supply source:', window._circSupplySource);
   } else {
     const emissionPerBlock = 1;
     let fallbackSupply = typeof data.blockHeight === 'number' && data.blockHeight > 0
@@ -316,16 +322,24 @@ async function updateNetworkStats(data) {
       supplyEl.title = 'Source: fallback';
       window.circulatingSupply = fallbackSupply;
       window._prevSupplyTs = nowTs;
+      if (window._debug) console.debug('circ supply fallback to block-derived supply');
     }
   }
   tryUpdateMarketCapAndFDV();
 
   // Choose the supply value used for Halving calculations:
   // Prefer on-chain `totalIssuanceHuman` returned by /api/network, otherwise fallback to Taostats circulating supply.
+  // Halving uses on-chain TotalIssuance when available, otherwise we fall back to circulatingSupply
   const supplyForHalving = (data && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null)
     ? Number(data.totalIssuanceHuman)
     : (window.circulatingSupply ?? null);
-  window._halvingSupplySource = (data && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null) ? 'on-chain' : (window._circSupplySource || 'taostats');
+  if (data && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null) {
+    window._halvingSupplySource = 'on-chain';
+    if (window._debug) console.debug('Halving: using on-chain totalIssuanceHuman for halving calculation', Number(data.totalIssuanceHuman));
+  } else {
+    window._halvingSupplySource = (window._circSupplySource || 'taostats');
+    if (window._debug) console.debug('Halving: falling back to circulatingSupply for halving calculation');
+  }
 
   // Use generated thresholds to support future halving events (first threshold only)
   const thresholds = generateHalvingThresholds(21_000_000, 6);
@@ -337,20 +351,30 @@ async function updateNetworkStats(data) {
     emissionPerDay = typeof data.emission === 'string'
       ? parseFloat(data.emission.replace(/,/g, ''))
       : Number(data.emission);
+    if (Number.isFinite(emissionPerDay) && emissionPerDay > 0 && window._debug) {
+      console.debug('Emission from /api/network used:', emissionPerDay, 'TAO/day');
+    }
   }
   // fallback: estimate emission from previous supply snapshot
   // Use previous halving supply snapshot when available so we estimate emission for the same supply basis.
-  const prevHalvingSupply = (window._prevHalvingSupply !== undefined) ? window._prevHalvingSupply : (window._prevCircSupply ?? null);
-  if ((!emissionPerDay || !Number.isFinite(emissionPerDay) || emissionPerDay <= 0) && prevHalvingSupply !== null && prevSupplyTs) {
-    const supplyDelta = Number((supplyForHalving ?? window.circulatingSupply)) - Number(prevHalvingSupply);
-    const msDelta = nowTs - prevSupplyTs;
+  // Use previous halving snapshot if present for a consistent emission estimate.
+  const basePrevSupply = prevHalvingSupply ?? (window._prevCircSupply ?? null);
+  const basePrevTs = prevHalvingSupply !== null ? prevHalvingTs : prevSupplyTs;
+  if ((!emissionPerDay || !Number.isFinite(emissionPerDay) || emissionPerDay <= 0) && basePrevSupply !== null && basePrevTs) {
+    const supplyDelta = Number((supplyForHalving ?? window.circulatingSupply)) - Number(basePrevSupply);
+    const msDelta = nowTs - basePrevTs;
     if (msDelta > 0) {
       const daysDelta = msDelta / (24 * 60 * 60 * 1000);
       const estimate = supplyDelta / daysDelta;
       if (Number.isFinite(estimate) && estimate > 0) {
         emissionPerDay = estimate;
+        if (window._debug) console.debug('Emission fallback estimate from supply delta:', emissionPerDay, 'TAO/day');
       }
     }
+  }
+  // If we couldn't infer emission and there was no previous snapshot to compare, log for debugging
+  if ((!emissionPerDay || !Number.isFinite(emissionPerDay) || emissionPerDay <= 0) && (!basePrevSupply || !basePrevTs)) {
+    if (window._debug) console.debug('Emission estimate unavailable: no /api/network emission and no previous halving snapshot to estimate from');
   }
 
   // Compute halving date simply by remaining supply / emission per day
@@ -381,12 +405,15 @@ async function updateNetworkStats(data) {
     const remainingSafe = Math.max(0, remaining || 0);
     const halvingSourceLabel = (window._halvingSupplySource === 'on-chain') ? 'On-chain (TotalIssuance)' : 'Taostats (circulating_supply)';
     // Remove trailing periods behind "TAO" in tooltip per user request
-    halvingPill.setAttribute('data-tooltip', `Next halving: ${formatNumber(HALVING_SUPPLY, 1)} TAO Remaining ${formatNumber(remainingSafe, 0)} TAO • Source: ${halvingSourceLabel}`);
+    halvingPill.setAttribute('data-tooltip', `Next halving: ${formatNumber(HALVING_SUPPLY)} TAO Remaining ${formatNumber(remainingSafe)} TAO • Source: ${halvingSourceLabel}`);
   }
   // We intentionally don't add a new stat-card for the halving; keep the pill-only UI.
   // store previous circulating and halving-supply snapshots for next refresh
   window._prevCircSupply = window.circulatingSupply;
-  window._prevHalvingSupply = (supplyForHalving !== null && supplyForHalving !== undefined) ? supplyForHalving : window._prevHalvingSupply;
+  if (supplyForHalving !== null && supplyForHalving !== undefined) {
+    window._prevHalvingSupply = supplyForHalving;
+    window._prevHalvingTs = nowTs;
+  }
 
   // Map preview only contains a thumbnail + button to open interactive map (no KPIs)
 
@@ -689,13 +716,7 @@ function startHalvingCountdown() {
   updateHalvingCountdown();
   window.halvingInterval = setInterval(updateHalvingCountdown, 1000);
 }
-function calculateHalvingDate(circulatingSupply, emissionRate, halvingThreshold = 10_500_000) {
-  const remaining = halvingThreshold - circulatingSupply;
-  if (remaining <= 0) return null;
-  const daysLeft = remaining / emissionRate;
-  const msLeft = daysLeft * 24 * 60 * 60 * 1000;
-  return new Date(Date.now() + msLeft);
-}
+// calculateHalvingDate removed: we compute halving date inline to maintain a single source of truth
 
 /**
  * Generate fixed halving thresholds for the token supply.
@@ -728,7 +749,7 @@ function updateHalvingCountdown() {
   // Show days, hours, minutes, and seconds
   el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
-// Prevent link click on info badge (pro solution)
+// Prevent link clicks on info-badge controls
 
 // Fetch ATH/ATL data and update pills
 async function updateAthAtlPills() {
@@ -754,7 +775,7 @@ document.addEventListener('DOMContentLoaded', () => {
     await initDashboard();
     await updateAthAtlPills();
 
-    // Prevent link click on info badge (pro solution)
+    // Prevent link clicks on info-badge controls
     document.querySelectorAll('.stat-card .info-badge').forEach(badge => {
       badge.addEventListener('click', function(e) {
         e.stopPropagation();
