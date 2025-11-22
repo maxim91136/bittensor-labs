@@ -1,6 +1,9 @@
 const fs = require('fs');
 const path = require('path');
-const { chromium } = require('playwright');
+// Attempt to require 'playwright' first; fall back to 'playwright-core' if needed
+let playwright = null;
+try { playwright = require('playwright'); } catch (e) { playwright = require('playwright-core'); }
+const { chromium } = playwright;
 
 const url = process.argv[2];
 if (!url) {

@@ -66,6 +66,10 @@ jobs:
           # Setup Node and Playwright (Node is configured by setup-node in previous step).
           # Use `npm ci` only if a lockfile exists for deterministic installs.
           pushd dev-tests
+          echo "----- package.json -----"
+          cat package.json || true
+          echo "----- package-lock.json -----"
+          if [ -f package-lock.json ]; then cat package-lock.json; else echo "(no lockfile)"; fi
           if [ -f package-lock.json ]; then
             echo "package-lock.json found: running npm ci (or falling back to npm install if it fails)"
             npm ci || npm install
@@ -73,17 +77,35 @@ jobs:
             echo "No lockfile found: running npm install"
             npm install
           fi
-          # Debug versions
+          # Attempt a lightweight rebuild to ensure native modules and scripts are ready
+          npm rebuild || true
+          # Debug versions and folders
           echo "node version: $(node -v)" || true
           echo "npm version: $(npm -v)" || true
+          echo "List modules (top-level):"; ls -la node_modules || true
           echo "List bin directory (node_modules/.bin):"; ls -la node_modules/.bin || true
+          # Ensure playwright-core is resolvable; if not, attempt to install playwright-core explicitly
+          node -e "try{require('playwright-core'); console.log('playwright-core: ok'); process.exit(0);}catch(e){console.error('playwright-core missing'); process.exit(1);}" || (
+            echo "Attempting explicit install of playwright-core and playwright..";
+            npm install --no-audit --no-fund playwright-core playwright || true
+          )
           # Show whether playwright CLI is available
           npx playwright --version || true
-          # Try installing browsers and dependencies; try with deps first
-          npx playwright install --with-deps chromium || npx playwright install chromium || true
+          # Try installing browsers and dependencies; try with deps first and add retries
+          for i in 1 2 3; do
+            npx playwright install --with-deps chromium && break || (
+              echo "playwright install attempt $i failed, retrying...";
+              sleep 3
+            );
+          done
           popd
-          # Run the fetcher; output error if exit non-zero
-          node dev-tests/playwright_fetch.js "$URL" || true
+          # Run the fetcher; output error if exit non-zero and dump diagnostics
+          node dev-tests/playwright_fetch.js "$URL" || (
+            echo "Playwright fetch failed; dumping diagnostics (npm ls, size of node_modules)...";
+            npm ls --depth=0 || true;
+            du -sh node_modules || true;
+            true
+          )
           if [ -f /tmp/playwright_body ]; then
             echo "Copying playwright_body to /tmp/body"
             cp /tmp/playwright_body /tmp/body
