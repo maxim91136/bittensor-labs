@@ -254,18 +254,15 @@ function updateTaoPrice(priceData) {
     if (pill) {
       const ts = window._taostats ?? null;
       const parts = [];
-      if (ts) {
-        const p1h = readPercentValue(ts, ['percent_change_1h','percent_change_1hr','pct_change_1h','percent_1h_change','percent_change_1Hour','percent_change_1hr']);
-        const p24 = readPercentValue(ts, ['percent_change_24h','percent_change_24hr','pct_change_24h','percent_24h_change','percent_change_24hr']) ?? priceData.change24h ?? null;
-        const p7d = readPercentValue(ts, ['percent_change_7d','percent_change_7day','pct_change_7d','percent_change_7day']);
-        const p30d = readPercentValue(ts, ['percent_change_30d','percent_change_30day','pct_change_30d','percent_change_30day']);
-        if (p1h !== null && p1h !== undefined) parts.push(`1h: ${formatPercent(p1h)}`);
-        if (p24 !== null && p24 !== undefined) parts.push(`24h: ${formatPercent(p24)}`);
-        if (p7d !== null && p7d !== undefined) parts.push(`7d: ${formatPercent(p7d)}`);
-        if (p30d !== null && p30d !== undefined) parts.push(`30d: ${formatPercent(p30d)}`);
-      } else if (priceData && priceData.change24h !== undefined && priceData.change24h !== null) {
-        parts.push(`24h: ${formatPercent(priceData.change24h)}`);
-      }
+      // Always display lines in a consistent order (1h, 24h, 7d, 30d), using placeholders when missing
+      const p1h = readPercentValue(ts, ['percent_change_1h','percent_change_1hr','pct_change_1h','percent_1h_change','percent_change_1Hour','percent_change_1hr']);
+      const p24 = readPercentValue(ts, ['percent_change_24h','percent_change_24hr','pct_change_24h','percent_24h_change','percent_change_24hr']) ?? priceData.change24h ?? null;
+      const p7d = readPercentValue(ts, ['percent_change_7d','percent_change_7day','pct_change_7d','percent_change_7day']);
+      const p30d = readPercentValue(ts, ['percent_change_30d','percent_change_30day','pct_change_30d','percent_change_30day']);
+      parts.push(`1h: ${formatPercent(p1h)}`);
+      parts.push(`24h: ${formatPercent(p24)}`);
+      parts.push(`7d: ${formatPercent(p7d)}`);
+      parts.push(`30d: ${formatPercent(p30d)}`);
           if (parts.length) {
             const source = (window._taostats && window._taostats._source) ? window._taostats._source : 'Taostats';
             const lines = ['Price changes:'];
