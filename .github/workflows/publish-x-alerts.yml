@@ -63,21 +63,16 @@ jobs:
             echo "skip_fetch=false" >> $GITHUB_OUTPUT
             exit 0
           fi
-          # compute age seconds using Python (robust ISO parsing)
-          AGE=$(python - <<'PY'
-import sys
-from datetime import datetime, timezone
-fetched_at=sys.argv[1]
-try:
-    # make sure 'Z' timezone works, replace 'Z' with '+00:00' (Python accepts both)
-    fetched_at = fetched_at.replace('Z', '+00:00')
-    dt = datetime.fromisoformat(fetched_at)
-    age = int((datetime.now(timezone.utc) - dt).total_seconds())
-    print(age)
-except Exception:
-    print(-1)
-PY
-"$fetched_at")
+          # compute age seconds using GNU date (UTC)
+          AGE=-1
+          if command -v date >/dev/null 2>&1; then
+            # Try to parse ISO8601 timestamp and compute delta in seconds
+            TS=$(date -u -d "$fetched_at" +%s 2>/dev/null || true)
+            if [ -n "$TS" ]; then
+              NOW=$(date -u +%s)
+              AGE=$((NOW - TS))
+            fi
+          fi
           if [ "$AGE" -lt 0 ]; then
             # invalid timestamp, do not skip
             echo "skip_fetch=false" >> $GITHUB_OUTPUT
