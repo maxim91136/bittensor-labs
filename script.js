@@ -729,15 +729,16 @@ function createPriceChart(priceHistory, range) {
 
 // ===== Initialization =====
 async function initDashboard() {
-  const [networkData, taoPrice] = await Promise.all([
+  const [networkData, taoPrice, taostats] = await Promise.all([
     fetchNetworkData(),
-    fetchTaoPrice()
+    fetchTaoPrice(),
+    fetchTaostats()
   ]);
   await updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
 
-  // Fill initial volume
-  const taostats = await fetchTaostats();
+  // Fill initial volume and expose taostats globally
+  window._taostats = taostats ?? null;
   window._taostats = taostats ?? null;
   const volumeEl = document.getElementById('volume24h');
   if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
