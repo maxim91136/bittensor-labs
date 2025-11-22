@@ -62,9 +62,16 @@ jobs:
           fi
           echo "Running Playwright fallback"
           URL="${{ github.event.inputs.url || 'https://bittensor-labs.com/api/network' }}"
-          # Setup Node and Playwright (Node is configured by setup-node in previous step)
+          # Setup Node and Playwright (Node is configured by setup-node in previous step).
+          # Use `npm ci` only if a lockfile exists for deterministic installs.
           pushd dev-tests
-          npm ci || npm install
+          if [ -f package-lock.json ]; then
+            echo "package-lock.json found: running npm ci"
+            npm ci
+          else
+            echo "No lockfile found: running npm install"
+            npm install
+          fi
           npx playwright install chromium
           popd
           node dev-tests/playwright_fetch.js "$URL" || true
