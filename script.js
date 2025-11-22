@@ -817,6 +817,27 @@ async function initDashboard() {
         e.preventDefault();
         openModal();
       });
+      // On mobile screens, intercept a tap on the overlay to open the modal (avoid clipped iframe tooltips)
+      const overlay = document.getElementById('taotensorOverlay');
+      if (overlay) {
+        overlay.addEventListener('click', (e) => {
+          // If embed fallback is active, open external link instead
+          if (embed && embed.classList.contains('fallback-active')) return;
+          openModal();
+        });
+      }
+      // Hide overlay when fallback is active or when the iframe fails to load
+      function updateOverlayVisibility() {
+        if (!overlay) return;
+        if (embed && embed.classList.contains('fallback-active')) {
+          overlay.setAttribute('aria-hidden', 'true');
+        } else {
+          overlay.setAttribute('aria-hidden', 'false');
+        }
+      }
+      // Initialize overlay visibility now and after fallback detection timeout
+      updateOverlayVisibility();
+      setTimeout(updateOverlayVisibility, 1600);
       if (closeBtn) closeBtn.addEventListener('click', closeModal);
       // Allow clicking outside the modal body to close it
       if (modal) {
