@@ -25,7 +25,7 @@ jobs:
           ALERTS_MAX: 5
         run: |
           mkdir -p data
-          OUT_PATH=alerts.json node scripts/fetch_x_alerts.mjs
+          OUT_PATH=alerts.json node .github/scripts/fetch_x_alerts.js
           # ensure file exists
           if [ ! -f alerts.json ]; then
             echo "alerts.json not created"

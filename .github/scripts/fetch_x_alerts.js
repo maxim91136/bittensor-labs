@@ -1,24 +1,24 @@
 #!/usr/bin/env node
-/* Fetch latest tweets for a user and output a JSON with `fetched_at` and `alerts` */
+/*
+ * Fetch latest tweets for a user and output a JSON with `fetched_at` and `alerts`.
+ * Designed to run in CI or locally (Node 18/20). Uses global fetch.
+ */
 
-import fs from 'fs';
-import process from 'node:process';
+const fs = require('fs');
+const process = require('process');
 
 const token = process.env.X_BEARER_TOKEN;
 const userId = process.env.X_USER_ID;
 const limit = parseInt(process.env.ALERTS_MAX || '5', 10);
+const outPath = process.env.OUT_PATH || process.argv[2];
 
-if (!token || !userId) {
-  console.error('Missing X_BEARER_TOKEN or X_USER_ID');
-  process.exit(2);
-}
-
-export function nowISO() {
+function nowISO() {
   return new Date().toISOString();
 }
 
 async function fetchTweets() {
-  const url = new URL(`https://api.twitter.com/2/users/${userId}/tweets`);
+  const base = `https://api.twitter.com/2/users/${userId}/tweets`;
+  const url = new URL(base);
   url.searchParams.set('max_results', String(Math.min(100, limit)));
   url.searchParams.set('tweet.fields', 'created_at,edit_history_tweet_ids,author_id');
 
@@ -52,14 +52,17 @@ async function fetchTweets() {
 }
 
 async function main() {
+  if (!token || !userId) {
+    console.error('Missing X_BEARER_TOKEN or X_USER_ID');
+    process.exit(2);
+  }
+
   try {
     const out = await fetchTweets();
-    // Print to stdout or write to file if path passed
-    const path = process.env.OUT_PATH;
     const json = JSON.stringify(out, null, 2);
-    if (path) {
-      fs.writeFileSync(path, json);
-      console.log('Wrote', path);
+    if (outPath) {
+      fs.writeFileSync(outPath, json, { encoding: 'utf-8' });
+      console.log('Wrote', outPath);
     } else {
       console.log(json);
     }
@@ -70,7 +73,6 @@ async function main() {
   }
 }
 
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1].endsWith('fetch_x_alerts.mjs')) {
+if (require.main === module) {
   main();
 }
-
