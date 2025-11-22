@@ -52,7 +52,7 @@ def fetch_tweets(bearer_token: str, user_id: str, max_results: int = 5):
 
 def main(argv=None):
     p = argparse.ArgumentParser()
-    p.add_argument('--out', '-o', help='Write output JSON to path (default: stdout)')
+    p.add_argument('--out', '-o', help='Write output JSON to path (default: x_alerts_latest.json)')
     p.add_argument('--max', '-m', help='Max number of tweets to fetch', type=int, default=5)
     args = p.parse_args(argv)
 
@@ -65,10 +65,11 @@ def main(argv=None):
     try:
         out = fetch_tweets(bearer, user_id, args.max)
         out_str = json.dumps(out, indent=2)
-        if args.out:
-            with open(args.out, 'w', encoding='utf-8') as fh:
+        out_path = args.out or 'x_alerts_latest.json'
+        if out_path:
+            with open(out_path, 'w', encoding='utf-8') as fh:
                 fh.write(out_str)
-            print('Wrote', args.out)
+            print('Wrote', out_path)
         else:
             print(out_str)
     except Exception as e:

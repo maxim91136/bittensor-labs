@@ -31,25 +31,19 @@ jobs:
         run: |
           mkdir -p data
           python -m pip install --upgrade pip && python -m pip install requests || true
-          python .github/scripts/fetch_x_alerts.py -o alerts.json -m 5
+          python .github/scripts/fetch_x_alerts.py -o x_alerts_latest.json -m 5
           # ensure file exists
-          if [ ! -f alerts.json ]; then
+          if [ ! -f x_alerts_latest.json ]; then
             echo "alerts.json not created"
             exit 1
           fi
-          cat alerts.json
-
-      - name: Upload artifact (backup)
-        uses: actions/upload-artifact@v3
-        with:
-          name: x_alerts_latest
-          path: alerts.json
+          cat x_alerts_latest.json
 
       - name: Determine if Cloudflare KV is configured
         id: cf
         run: |
           enabled=false
-          if [ -n "${{ secrets.CF_API_TOKEN }}" ] && [ -n "${{ secrets.CF_ACCOUNT_ID }}" ] && [ -n "${{ secrets.CF_KV_NAMESPACE_ID }}" ]; then
+          if [ -n "${{ secrets.CF_API_TOKEN }}" ] && [ -n "${{ secrets.CF_ACCOUNT_ID }}" ] && [ -n "${{ secrets.CF_METRICS_NAMESPACE_ID }}" ]; then
             enabled=true
           fi
           echo "enabled=${enabled}" >> $GITHUB_OUTPUT
@@ -59,36 +53,23 @@ jobs:
         env:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
         run: |
           echo "Attempting to write to Cloudflare KV..."
           status=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/x_alerts_latest" \
             -H "Authorization: Bearer ${CF_API_TOKEN}" \
             -H "Content-Type: application/json" \
-            --data-binary @alerts.json)
+            --data-binary @x_alerts_latest.json)
           echo "Cloudflare API HTTP Status: $status"
           if [ "$status" != "200" ] && [ "$status" != "204" ]; then
             echo "Cloudflare KV write failed with status $status";
             curl -v -X PUT "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/x_alerts_latest" \
               -H "Authorization: Bearer ${CF_API_TOKEN}" \
               -H "Content-Type: application/json" \
-              --data-binary @alerts.json || true
+              --data-binary @x_alerts_latest.json || true
             exit 1
           fi
-
-      - name: Commit JSON to repo (fallback/record)
-        if: ${{ steps.cf.outputs.enabled != 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: (Optional) show created file
         run: |
-          git config user.name 'github-actions[bot]'
-          git config user.email 'github-actions[bot]@users.noreply.github.com'
-          mkdir -p data
-          mv alerts.json data/x_alerts_latest.json
-          git add data/x_alerts_latest.json
-          if git diff --cached --quiet; then
-            echo "No changes to commit"
-          else
-            git commit -m "chore: update x_alerts_latest.json"
-            git push origin HEAD:main
-          fi
+          ls -la x_alerts_latest.json || true
+          echo "Done"
