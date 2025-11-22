@@ -130,6 +130,14 @@ jobs:
         run: |
           set -e
             SKIP_CF="${{ github.event.inputs.skip_cloudflare_check || 'false' }}"
+            # If playwright produced a status and skip is enabled, accept 401/403
+            if [ -f /tmp/playwright_status ]; then
+              PLAYWRIGHT_STATUS=$(cat /tmp/playwright_status | tr -d '\n' || true)
+              echo "Found PLAYWRIGHT_STATUS=$PLAYWRIGHT_STATUS"
+              if [ "${SKIP_CF}" = "true" ] && ([ "${PLAYWRIGHT_STATUS}" = "403" ] || [ "${PLAYWRIGHT_STATUS}" = "401" ]); then
+                echo "⚠️ Playwright returned ${PLAYWRIGHT_STATUS} and skip enabled — skipping JSON validation"; exit 0
+              fi
+            fi
             if [ ! -f /tmp/api_ok ]; then
               # If we have a status file, check if it's a 403/401 and skip is enabled
               if [ -f /tmp/playwright_status ]; then
@@ -156,8 +164,16 @@ jobs:
             fi
             echo "🛑 Cloudflare challenge detected in API response"; exit 1
           fi
-          # parse JSON if possible
-          echo "$BODY" | jq . > /dev/null || (echo "🛑 Invalid JSON"; exit 1)
+          # parse JSON if possible, or tolerate HTTP 403/401 when skip enabled
+          if ! echo "$BODY" | jq . > /dev/null; then
+            if [ "${SKIP_CF}" = "true" ] && [ -f /tmp/playwright_status ]; then
+              PLAYWRIGHT_STATUS=$(cat /tmp/playwright_status | tr -d '\n' || true)
+              if [ "${PLAYWRIGHT_STATUS}" = "403" ] || [ "${PLAYWRIGHT_STATUS}" = "401" ]; then
+                echo "⚠️ Invalid JSON but skip enabled and status ${PLAYWRIGHT_STATUS} — pass"; exit 0
+              fi
+            fi
+            echo "🛑 Invalid JSON"; exit 1
+          fi
           # Check required fields
           echo "$BODY" | jq -e '.halvingThresholds | length > 0' || (echo "🛑 halvingThresholds missing"; exit 1)
           echo "$BODY" | jq -e '.totalIssuanceHuman != null' || (echo "🛑 totalIssuanceHuman missing"; exit 1)
