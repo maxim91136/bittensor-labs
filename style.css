@@ -1090,6 +1090,49 @@ body {
   animation: fadeInUp 0.8s ease-out 0.3s both;
 }
 
+/* ---- TAO Tensor Law Embed Card ---- */
+.taotensor-card { }
+.taotensor-card .card-header h2 { display:flex; align-items:center; gap:8px; }
+.taotensor-embed {
+  display: block;
+  width: 100%;
+  height: 360px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+}
+.taotensor-embed iframe {
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
+/* Dark mode presentation: attempt to make the embedded site look dark by filtering it.
+   Only apply when the page is in dark mode (body does not have .light-bg). */
+body:not(.light-bg) .taotensor-embed iframe {
+  filter: invert(0.96) hue-rotate(200deg) saturate(0.9) brightness(0.95);
+  transform: scale(1.01); /* slightly scale so borders don't show in some layouts */
+}
+/* Light mode: keep the embed unchanged */
+body.light-bg .taotensor-embed { background: #fff; border-color:#e6e6e6 }
+body.light-bg .taotensor-embed iframe { filter: none }
+
+/* Fallback message styling inside the card */
+.taotensor-embed .embed-fallback {
+  display: none;
+  padding: var(--card-padding);
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.02);
+}
+.taotensor-embed .embed-fallback img { width: 100%; height: 240px; max-height: 320px; object-fit: cover; border-radius: 8px; display: block }
+/* When in dark mode, gently invert the preview so it looks more native */
+body:not(.light-bg) .taotensor-embed .embed-fallback img {
+  filter: invert(0.96) hue-rotate(200deg) saturate(0.85) brightness(0.92) contrast(0.95);
+}
+.taotensor-embed.fallback-active .embed-fallback { display: block }
+.taotensor-embed.fallback-active iframe { display: none }
+
 .useful-links-card {
   background: rgba(17, 19, 24, 0.6);
   border: 1px solid rgba(255,255,255,0.1);

@@ -744,6 +744,27 @@ async function initDashboard() {
   await updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
 
+    // TAO Tensor Law iframe fallback: hide iframe if blocked and show a friendly fallback message
+    document.addEventListener('DOMContentLoaded', function() {
+      const embed = document.getElementById('taotensorEmbed');
+      const frame = document.getElementById('taotensorFrame');
+      if (!embed || !frame) return;
+      // If the iframe cannot load due to X-Frame-Options, we detect via a timeout and 'load' event
+      let loaded = false;
+      frame.addEventListener('load', function() { loaded = true; });
+      // After a short delay, if the frame didn't load, show fallback
+      setTimeout(function() {
+        try {
+          // Some browsers will block access; in that case, the 'load' event won't fire or will be blocked
+          if (!loaded) {
+            embed.classList.add('fallback-active');
+          }
+        } catch (e) {
+          embed.classList.add('fallback-active');
+        }
+      }, 1500);
+    });
+
   // Fill initial volume and expose taostats globally
   window._taostats = taostats ?? null;
   window._taostats = taostats ?? null;
