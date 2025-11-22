@@ -1,4 +1,4 @@
-name: Fetch and Push X Alerts to Cloudflare KV
+name: Fetch and Push TAO Alerts (Nitter RSS) to Cloudflare KV
 
 on:
   schedule:
@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       MIN_FETCH_AGE_SECONDS: 900
+      # Comma-separated list of Nitter instances to try
+      NITTER_INSTANCES: https://nitter.net,https://nitter.snopyta.org
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -26,7 +28,8 @@ jobs:
 
       - name: Using Nitter RSS as data source
         run: |
-          echo "Using Nitter instance: https://nitter.net and user: bittensor_alert"
+          instances=${NITTER_INSTANCES:-"https://nitter.net,https://nitter.snopyta.org"}
+          echo "Using Nitter instances: $instances and user: bittensor_alert"
 
       - name: Fetch last since_id from Cloudflare KV
         id: get_since
@@ -81,21 +84,22 @@ jobs:
             echo "skip_fetch=false" >> $GITHUB_OUTPUT
           fi
 
-      - name: Fetch alerts from X (Twitter)
+      - name: Fetch alerts via Nitter RSS (RSS feed)
         if: ${{ steps.skip_check.outputs.skip_fetch != 'true' }}
         id: fetch
         env:
           RETRY_ATTEMPTS: 3
           RETRY_BACKOFF: 2
-          ALERTS_MAX: 1
+          ALERTS_MAX: 3
           FETCH_SOURCE: nitter
-          NITTER_INSTANCE: https://nitter.net
+          NITTER_INSTANCES: https://nitter.net,https://nitter.snopyta.org
+          # Optional: add more known public Nitter instances separated by comma
           NITTER_USERNAME: bittensor_alert
           SINCE_ID: ${{ steps.get_since.outputs.since_id }}
         run: |
           mkdir -p data
-          python -m pip install --upgrade pip && python -m pip install requests || true
-          python .github/scripts/fetch_x_alerts.py -o x_alerts_latest.json -m 1 --source nitter --nitter-instance "$NITTER_INSTANCE" --username "$NITTER_USERNAME" --since "$SINCE_ID"
+          python -m pip install --upgrade pip && python -m pip install -r .github/scripts/requirements.txt || true
+          python .github/scripts/fetch_x_alerts.py -o x_alerts_latest.json -m 3 --source nitter --nitter-instances "$NITTER_INSTANCES" --username "$NITTER_USERNAME" --since "$SINCE_ID" --retries "$RETRY_ATTEMPTS" --backoff "$RETRY_BACKOFF"
           if [ ! -f x_alerts_latest.json ]; then
             echo "alerts.json not created"
             exit 1

@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Fetch latest Tweets for a user (TAO Alert) and write to file / stdout.
+"""Fetch latest alerts for a user using Nitter RSS (TAO Alert) and write to file / stdout.
+
+Primary source is Nitter RSS (free, no API key). This script keeps legacy
+`fetch_tweets()` (X/Twitter API) as an optional fallback, but Nitter RSS is
+the preferred method to avoid rate limits and API changes.
 
 Usage:
-  X_BEARER_TOKEN='...' X_USER_ID='...' python3 .github/scripts/fetch_x_alerts.py --out alerts.json --max 5
+    python3 .github/scripts/fetch_x_alerts.py --out alerts.json --max 3
 """
 import os
 import sys
@@ -10,6 +14,7 @@ import json
 import argparse
 from datetime import datetime, timezone
 import time
+from typing import Optional
 
 try:
     import requests
@@ -19,7 +24,9 @@ except Exception:
 def now_iso():
     return datetime.now(timezone.utc).isoformat()
 
-def fetch_tweets(bearer_token: str, user_id: str, max_results: int = 5, max_attempts: int = 3, backoff_seconds: int = 2, since_id: str | None = None):
+def fetch_tweets(bearer_token: str, user_id: str, max_results: int = 5, max_attempts: int = 3, backoff_seconds: int = 2, since_id: Optional[str] = None):
+    # Deprecated: Legacy X/Twitter API fetcher retained for compatibility.
+    # Prefer `fetch_nitter()` for Nitter RSS as the primary data source.
     url = f"https://api.twitter.com/2/users/{user_id}/tweets"
     params = {
         'max_results': min(100, max_results),
@@ -132,21 +139,50 @@ def fetch_tweets(bearer_token: str, user_id: str, max_results: int = 5, max_atte
         })
     return {'fetched_at': now_iso(), 'alerts': alerts}
 
-def fetch_nitter(nitter_instance: str, username: str, max_results: int = 5, since_id: str | None = None):
+def fetch_nitter(nitter_instance: str, username: str, max_results: int = 5, since_id: Optional[str] = None, max_attempts: int = 3, backoff_seconds: int = 2):
     # Fetch RSS feed for the user using Nitter instance and parse to alerts format
     url = f"{nitter_instance.rstrip('/')}/{username}/rss"
-    try:
-        if requests:
-            r = requests.get(url, headers={'Accept': 'application/rss+xml'}, timeout=15)
-            r.raise_for_status()
-            raw = r.text
-        else:
-            from urllib.request import Request, urlopen
-            req = Request(url, headers={'Accept': 'application/rss+xml'})
-            with urlopen(req, timeout=15) as res:
-                raw = res.read().decode('utf-8')
-    except Exception as e:
-        raise RuntimeError(f"Failed to fetch Nitter RSS: {e}")
+    attempt = 0
+    while True:
+        attempt += 1
+        try:
+            if requests:
+                r = requests.get(url, headers={'Accept': 'application/rss+xml'}, timeout=15)
+                # If 429, allow handling below
+                status_code = getattr(r, 'status_code', None)
+                if status_code == 429:
+                    resp_headers = getattr(r, 'headers', {}) or {}
+                    reset = resp_headers.get('x-rate-limit-reset') or resp_headers.get('X-Rate-Limit-Reset')
+                    if reset:
+                        try:
+                            reset_ts = int(reset)
+                            now_ts = int(time.time())
+                            wait = max(0, reset_ts - now_ts)
+                            if wait > 300:
+                                return {'fetched_at': now_iso(), 'alerts': [], '_skipped': True, 'wait_seconds': wait}
+                            time.sleep(wait + 1)
+                        except Exception:
+                            pass
+                    else:
+                        if attempt >= max_attempts:
+                            raise RuntimeError('Rate limited (429)')
+                        time.sleep(backoff_seconds * (2 ** (attempt - 1)))
+                        continue
+                r.raise_for_status()
+                raw = r.text
+            else:
+                from urllib.request import Request, urlopen
+                req = Request(url, headers={'Accept': 'application/rss+xml'})
+                with urlopen(req, timeout=15) as res:
+                    raw = res.read().decode('utf-8')
+            # Success: exit the loop
+            break
+        except Exception as e:
+            if attempt >= max_attempts:
+                raise RuntimeError(f"Failed to fetch Nitter RSS from {nitter_instance}: {e}")
+            sleep_for = backoff_seconds * (2 ** (attempt - 1))
+            time.sleep(sleep_for)
+            continue
 
     # Parse RSS XML
     import xml.etree.ElementTree as ET
@@ -209,22 +245,49 @@ def main(argv=None):
     p.add_argument('--out', '-o', help='Write output JSON to path (default: x_alerts_latest.json)')
     p.add_argument('--since', help='Only return tweets with ID greater than (i.e., more recent) than this Tweet ID', default=None)
     p.add_argument('--source', help='Data source to fetch (x|nitter)', choices=['x','nitter'], default=None)
-    p.add_argument('--nitter-instance', help='Nitter instance base URL (e.g. https://nitter.net)', default='https://nitter.net')
+    p.add_argument('--nitter-instance', help='Nitter instance base URL (e.g. https://nitter.net)', default=None)
+    p.add_argument('--nitter-instances', help='Comma-separated list of Nitter instance base URLs (try in order)', default=None)
     p.add_argument('--username', help='Username to fetch from (for Nitter source)', default='bittensor_alert')
     p.add_argument('--max', '-m', help='Max number of tweets to fetch', type=int, default=5)
+    p.add_argument('--retries', type=int, help='Number of retry attempts for requests (overrides env RETRY_ATTEMPTS)', default=None)
+    p.add_argument('--backoff', type=int, help='Backoff seconds for retry backoff (overrides env RETRY_BACKOFF)', default=None)
     args = p.parse_args(argv)
 
     # We now use only Nitter as the primary data source (free RSS). Keep CLI `--source` for future use.
     source = args.source or 'nitter'
 
-    attempts = int(os.getenv('RETRY_ATTEMPTS', '3'))
-    backoff = int(os.getenv('RETRY_BACKOFF', '2'))
+    attempts = int(args.retries) if (args.retries is not None) else int(os.getenv('RETRY_ATTEMPTS', '3'))
+    backoff = int(args.backoff) if (args.backoff is not None) else int(os.getenv('RETRY_BACKOFF', '2'))
     since_id = args.since or os.getenv('SINCE_ID')
     try:
         # Always fetch from Nitter (free RSS) to avoid X API usage and rate limits
-        inst = args.nitter_instance or os.getenv('NITTER_INSTANCE', 'https://nitter.net')
         username = args.username or os.getenv('NITTER_USERNAME', 'bittensor_alert')
-        out = fetch_nitter(inst, username, max_results=args.max, since_id=since_id)
+        # Create a list of candidate Nitter instances to try
+        inst_list = []
+        if args.nitter_instances:
+            inst_list = [i.strip() for i in args.nitter_instances.split(',') if i.strip()]
+        elif args.nitter_instance:
+            inst_list = [args.nitter_instance]
+        elif os.getenv('NITTER_INSTANCES'):
+            inst_list = [i.strip() for i in os.getenv('NITTER_INSTANCES').split(',') if i.strip()]
+        elif os.getenv('NITTER_INSTANCE'):
+            inst_list = [os.getenv('NITTER_INSTANCE')]
+        else:
+            inst_list = ['https://nitter.net']
+
+        out = None
+        last_error = None
+        for inst in inst_list:
+            try:
+                out = fetch_nitter(inst, username, max_results=args.max, since_id=since_id, max_attempts=attempts, backoff_seconds=backoff)
+                break
+            except Exception as e:
+                last_error = e
+                print(f"Failed to fetch from {inst}: {e}")
+                continue
+        if out is None:
+            print(f"All Nitter instances failed. Last error: {last_error}")
+            out = {'fetched_at': now_iso(), 'alerts': [], '_skipped': True, 'error': str(last_error)}
         out_str = json.dumps(out, indent=2)
         out_path = args.out or 'x_alerts_latest.json'
         if out_path:
