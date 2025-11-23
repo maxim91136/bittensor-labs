@@ -202,7 +202,8 @@ def fetch_metrics() -> Dict[str, Any]:
     emission_sd_7d = None
     # emission_daily = mean per_day for last 24h
     deltas_last_24h = [d['per_day'] for d in per_interval_deltas if d['ts'] >= (int(datetime.now(timezone.utc).timestamp()) - 86400)]
-    if deltas_last_24h:
+    # require at least 3 interval samples in the last 24h to compute a reliable daily estimate
+    if len(deltas_last_24h) >= 3:
         # use winsorized mean for last 24h to smooth out spikes
         emission_daily = winsorized_mean(deltas_last_24h, 0.1)
     # build daily means from per-interval deltas grouped by UTC date
@@ -216,22 +217,18 @@ def fetch_metrics() -> Dict[str, Any]:
     emission_7d = None
     emission_30d = None
     emission_sd_7d = None
-    if daily_means:
-        # last 7 days
-        if len(daily_means) >= 1:
-            last7 = daily_means[-7:]
-            if last7 and len(last7) > 0:
-                emission_7d = winsorized_mean(last7, 0.1)
-                # compute sd
-                import math
-                mean7 = emission_7d
-                sd7 = math.sqrt(sum((v - mean7) ** 2 for v in last7) / len(last7)) if len(last7) > 0 else 0
-                emission_sd_7d = sd7
-        # 30d
-        if daily_means and len(daily_means) >= 1:
-            last30 = daily_means[-30:]
-            if last30 and len(last30) > 0:
-                emission_30d = winsorized_mean(last30, 0.1)
+    # compute 7d and 30d only when we have enough daily means
+    if len(daily_means) >= 7:
+        last7 = daily_means[-7:]
+        emission_7d = winsorized_mean(last7, 0.1)
+        # compute sd
+        import math
+        mean7 = emission_7d
+        sd7 = math.sqrt(sum((v - mean7) ** 2 for v in last7) / len(last7)) if len(last7) > 0 else 0
+        emission_sd_7d = sd7
+    if len(daily_means) >= 30:
+        last30 = daily_means[-30:]
+        emission_30d = winsorized_mean(last30, 0.1)
 
     # Attach emission values to result (history is saved separately)
     result['emission_daily'] = round(emission_daily, 2) if emission_daily is not None else None
@@ -240,6 +237,19 @@ def fetch_metrics() -> Dict[str, Any]:
     result['emission_sd_7d'] = round(emission_sd_7d, 2) if emission_sd_7d is not None else None
     result['emission_samples'] = len(per_interval_deltas)
     result['last_issuance_ts'] = history[-1]['ts'] if history else None
+
+    # Diagnostic fields for projection confidence
+    history_samples = len(history)
+    per_interval_samples = len(per_interval_deltas)
+    days_of_history = None
+    if history_samples >= 2:
+        try:
+            days_of_history = round((history[-1]['ts'] - history[0]['ts']) / 86400.0, 3)
+        except Exception:
+            days_of_history = None
+    result['history_samples'] = history_samples
+    result['per_interval_samples'] = per_interval_samples
+    result['days_of_history'] = days_of_history
 
     # --- Halving projection: compute average net emission from history and ETA to thresholds ---
     projection_method = None
@@ -290,6 +300,13 @@ def fetch_metrics() -> Dict[str, Any]:
 
     result['avg_emission_for_projection'] = round(avg_for_projection, 3) if avg_for_projection is not None else None
     result['projection_method'] = projection_method
+    # projection confidence: high if >=7 days, medium if >=1 day and daily estimate exists, low otherwise
+    projection_confidence = 'low'
+    if days_of_history is not None and days_of_history >= 7:
+        projection_confidence = 'high'
+    elif days_of_history is not None and days_of_history >= 1 and result.get('emission_daily') is not None:
+        projection_confidence = 'medium'
+    result['projection_confidence'] = projection_confidence
     result['halving_estimates'] = compute_halving_estimates(cur_iss, result.get('halvingThresholds', []), avg_for_projection, projection_method)
 
     # Save the full history to a separate file: normally we only write local `issuance_history.json`
