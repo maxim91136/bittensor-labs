@@ -73,14 +73,37 @@ jobs:
             echo "CF env not configured; failing to avoid silent skips" >&2
             exit 1
           fi
+          # Install jq to canonicalize JSON (stable compare)
+          if ! command -v jq >/dev/null 2>&1; then
+            sudo apt-get update && sudo apt-get install -y jq
+          fi
+          # Use canonicalized JSON (sorted keys) to compute hash
+          LOCAL_CANONICAL=$(jq -cS '.' issuance_history.json 2>/dev/null || cat issuance_history.json)
+          LOCAL_HASH=$(printf "%s" "$LOCAL_CANONICAL" | sha256sum | awk '{print $1}')
           URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/issuance_history"
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+          # Fetch the current KV value to decide whether we need to push
+          HTTP_STATUS_KV=$(curl -s -o /tmp/kv_current.json -w "%{http_code}" -H "Authorization: Bearer ${CF_API_TOKEN}" "$URL" || true)
+          if [ "$HTTP_STATUS_KV" = "200" ]; then
+            KV_CANONICAL=$(jq -cS '.' /tmp/kv_current.json 2>/dev/null || cat /tmp/kv_current.json)
+            KV_HASH=$(printf "%s" "$KV_CANONICAL" | sha256sum | awk '{print $1}')
+            if [ "$LOCAL_HASH" = "$KV_HASH" ]; then
+              echo "issuance_history.json unchanged vs KV; skipping push"
+              exit 0
+            fi
+          elif [ "$HTTP_STATUS_KV" = "404" ]; then
+            echo "issuance_history key not present in KV; pushing new value"
+          else
+            # 403 or other status — proceed with push but warn
+            echo "Warning: KV read returned HTTP $HTTP_STATUS_KV; proceeding with push (may overwrite)." >&2
+          fi
+          # Do the push
+          HTTP_STATUS_PUT=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
             "$URL" \
             -H "Authorization: Bearer $CF_API_TOKEN" \
             -H "Content-Type: application/json" \
             --data-binary @issuance_history.json || true)
-          if [ "$HTTP_STATUS" != "200" ] && [ "$HTTP_STATUS" != "204" ]; then
-            echo "Failed to push issuance_history to Cloudflare KV: HTTP $HTTP_STATUS" >&2
+          if [ "$HTTP_STATUS_PUT" != "200" ] && [ "$HTTP_STATUS_PUT" != "204" ]; then
+            echo "Failed to push issuance_history to Cloudflare KV: HTTP $HTTP_STATUS_PUT" >&2
             exit 1
           fi
           echo "OK: issuance_history pushed to Cloudflare KV"
