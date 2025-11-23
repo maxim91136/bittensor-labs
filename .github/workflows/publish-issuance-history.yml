@@ -22,13 +22,29 @@ jobs:
         run: |
           pip install bittensor
 
-      - name: Generate network metrics and history
+      - name: Fetch API `/api/network` and `/api/issuance_history` from the site
         env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          SITE_URL: https://bittensor-labs.com
         run: |
-          python .github/scripts/fetch_network.py
+          set -euo pipefail
+          # fetch network metrics
+          echo "Fetching ${SITE_URL}/api/network"
+          HTTP_STATUS=$(curl -s -o network.json -w "%{http_code}" ${SITE_URL}/api/network || true)
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "Failed to fetch /api/network: HTTP $HTTP_STATUS" >&2
+            # Continue — the purpose of this job is issuance_history; but if /api/network is missing, warn
+          else
+            echo "OK: network.json downloaded"
+          fi
+          # fetch issuance_history
+          echo "Fetching ${SITE_URL}/api/issuance_history"
+          HTTP_STATUS=$(curl -s -o issuance_history.json -w "%{http_code}" ${SITE_URL}/api/issuance_history || true)
+          if [ "$HTTP_STATUS" != "200" ]; then
+            echo "No issuance_history at ${SITE_URL}/api/issuance_history (HTTP $HTTP_STATUS), skipping local creation" >&2
+            if [ -f issuance_history.json ]; then rm -f issuance_history.json; fi
+          else
+            echo "OK: issuance_history.json downloaded"
+          fi
 
       - name: Push Issuance History to Cloudflare KV (if present)
         env:
