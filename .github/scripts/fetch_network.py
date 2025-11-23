@@ -241,6 +241,57 @@ def fetch_metrics() -> Dict[str, Any]:
     result['emission_samples'] = len(per_interval_deltas)
     result['last_issuance_ts'] = history[-1]['ts'] if history else None
 
+    # --- Halving projection: compute average net emission from history and ETA to thresholds ---
+    projection_method = None
+    avg_for_projection = None
+    # Prefer robust 7d winsorized mean, then daily, then 30d, then fallback to simple mean
+    if emission_7d is not None and emission_7d > 0:
+        avg_for_projection = emission_7d
+        projection_method = 'emission_7d'
+    elif emission_daily is not None and emission_daily > 0:
+        avg_for_projection = emission_daily
+        projection_method = 'emission_daily'
+    elif emission_30d is not None and emission_30d > 0:
+        avg_for_projection = emission_30d
+        projection_method = 'emission_30d'
+    else:
+        vals = [d['per_day'] for d in per_interval_deltas if isinstance(d.get('per_day'), (int, float))]
+        if vals:
+            avg_for_projection = sum(vals) / len(vals)
+            projection_method = 'mean_from_intervals'
+
+    def compute_halving_estimates(current_issuance: float, thresholds: List[int], avg_emission_per_day: float, method: str):
+        estimates = []
+        now_dt = datetime.now(timezone.utc)
+        for th in thresholds:
+            try:
+                th_val = float(th)
+            except Exception:
+                th_val = None
+            if th_val is None:
+                estimates.append({'threshold': th, 'remaining': None, 'days': None, 'eta': None, 'method': method})
+                continue
+            if current_issuance is None or avg_emission_per_day is None or avg_emission_per_day <= 0:
+                estimates.append({'threshold': th_val, 'remaining': None, 'days': None, 'eta': None, 'method': method})
+                continue
+            remaining = th_val - float(current_issuance)
+            if remaining <= 0:
+                estimates.append({'threshold': th_val, 'remaining': 0.0, 'days': 0.0, 'eta': now_dt.isoformat(), 'method': method})
+                continue
+            days = remaining / float(avg_emission_per_day)
+            eta = now_dt + timedelta(days=days)
+            estimates.append({'threshold': th_val, 'remaining': round(remaining, 6), 'days': round(days, 3), 'eta': eta.isoformat(), 'method': method})
+        return estimates
+
+    try:
+        cur_iss = result.get('totalIssuanceHuman')
+    except Exception:
+        cur_iss = None
+
+    result['avg_emission_for_projection'] = round(avg_for_projection, 3) if avg_for_projection is not None else None
+    result['projection_method'] = projection_method
+    result['halving_estimates'] = compute_halving_estimates(cur_iss, result.get('halvingThresholds', []), avg_for_projection, projection_method)
+
     # Save the full history to a separate file: normally we only write local `issuance_history.json`
     # if KV read succeeded (so we can safely append). However, CI can set the environment var
     # `FORCE_ISSUANCE_ON_KV_FAIL=1` to force local writing even when the KV read failed (useful when
