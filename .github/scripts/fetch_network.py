@@ -293,12 +293,13 @@ def fetch_metrics() -> Dict[str, Any]:
 
     result['avg_emission_for_projection'] = round(avg_for_projection, 3) if avg_for_projection is not None else None
     result['projection_method'] = projection_method
-    # projection confidence: high if >=7 days, medium if >=1 day and daily estimate exists, low otherwise
+    # projection confidence: 'low' (<3 days), 'medium' (>=3 days), 'high' (>=7 days)
     projection_confidence = 'low'
-    if days_of_history is not None and days_of_history >= 7:
-        projection_confidence = 'high'
-    elif days_of_history is not None and days_of_history >= 1 and result.get('emission_daily') is not None:
-        projection_confidence = 'medium'
+    if days_of_history is not None:
+        if days_of_history >= 7:
+            projection_confidence = 'high'
+        elif days_of_history >= 3:
+            projection_confidence = 'medium'
     result['projection_confidence'] = projection_confidence
     result['halving_estimates'] = compute_halving_estimates(cur_iss, result.get('halvingThresholds', []), avg_for_projection, projection_method)
 
