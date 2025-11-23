@@ -250,13 +250,21 @@ def fetch_metrics() -> Dict[str, Any]:
     # --- Halving projection: compute average net emission from history and ETA to thresholds ---
     projection_method = None
     avg_for_projection = None
-    # Prefer robust 7d winsorized mean, then daily, then fallback to simple mean
-    if emission_7d is not None and emission_7d > 0:
+    # Select projection average based on data-availability thresholds (use confidence rules)
+    # - if we have >=7 days of history: use emission_7d
+    # - elif we have >=3 days and a daily estimate: use emission_daily
+    # - elif we have a daily estimate (but <3 days): use daily with low confidence
+    # - else fallback to simple mean of interval deltas if available
+    if days_of_history is not None and days_of_history >= 7 and emission_7d is not None:
         avg_for_projection = emission_7d
         projection_method = 'emission_7d'
-    elif emission_daily is not None and emission_daily > 0:
+    elif days_of_history is not None and days_of_history >= 3 and emission_daily is not None:
         avg_for_projection = emission_daily
         projection_method = 'emission_daily'
+    elif emission_daily is not None:
+        # daily exists but less than 3 days of history — use it but mark as low-confidence method
+        avg_for_projection = emission_daily
+        projection_method = 'emission_daily_low_confidence'
     else:
         vals = [d['per_day'] for d in per_interval_deltas if isinstance(d.get('per_day'), (int, float))]
         if vals:
