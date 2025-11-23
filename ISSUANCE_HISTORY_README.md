@@ -11,7 +11,7 @@ This file documents the collection and usage of the `issuance_history` Cloudflar
 Testing & Local Tools
 - `.github/scripts/generate_test_issuance_history.py` can be used to generate synthetic history for local testing.
 - `.github/scripts/compute_emission_from_history.py` will compute emission stats from a local `issuance_history.json` file.
-- A smoke test workflow `.github/workflows/issuance_history_smoke.yml` checks that the `/api/issuance_history` endpoint has at least 2 samples; it runs every 30 minutes and reports failures.
+  
 
 Security Notes
 - The Cloudflare token used by the CI (`CF_API_TOKEN`) must have **both** read and write permissions for the KV namespace to allow the script to append snapshots safely.
