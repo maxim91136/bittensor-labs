@@ -44,6 +44,15 @@ jobs:
             -H "Authorization: Bearer $CF_API_TOKEN" \
             -H "Content-Type: application/json" \
             --data-binary @network.json
+          # Also push the full issuance_history separately under key 'issuance_history'
+          URL2="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/issuance_history"
+          if [ -f issuance_history.json ]; then
+            curl -fsSL -X PUT \
+              "$URL2" \
+              -H "Authorization: Bearer $CF_API_TOKEN" \
+              -H "Content-Type: application/json" \
+              --data-binary @issuance_history.json || true
+          fi
           
           echo "Response:"
           cat network.json | jq .

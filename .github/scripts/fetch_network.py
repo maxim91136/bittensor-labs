@@ -198,14 +198,21 @@ def fetch_metrics() -> Dict[str, Any]:
             if last30 and len(last30) > 0:
                 emission_30d = winsorized_mean(last30, 0.1)
 
-    # Attach history and emission values to result
-    result['issuance_history'] = history
+    # Attach emission values to result (history is saved separately)
     result['emission_daily'] = round(emission_daily, 2) if emission_daily is not None else None
     result['emission_7d'] = round(emission_7d, 2) if emission_7d is not None else None
     result['emission_30d'] = round(emission_30d, 2) if emission_30d is not None else None
     result['emission_sd_7d'] = round(emission_sd_7d, 2) if emission_sd_7d is not None else None
-    result['emission_samples'] = len(daily_deltas)
+    result['emission_samples'] = len(per_interval_deltas)
     result['last_issuance_ts'] = history[-1]['ts'] if history else None
+
+    # Save the full history to a separate file (to be PUT into KV as issuance_history)
+    try:
+        history_path = os.path.join(os.getcwd(), 'issuance_history.json')
+        with open(history_path, 'w') as hf:
+            json.dump(history, hf, indent=2)
+    except Exception:
+        pass
     return result
 
 if __name__ == "__main__":
