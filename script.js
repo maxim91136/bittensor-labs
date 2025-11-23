@@ -385,16 +385,18 @@ async function updateNetworkStats(data) {
   }
   tryUpdateMarketCapAndFDV();
 
-  // Determine supply used for halving calculation: prefer API `supplyUsed` and totalIssuance, otherwise fall back to circSupply
-  const supplyForHalving = (data && data.supplyUsed === 'total' && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null)
+  // Choose the supply value used for Halving calculations:
+  // Prefer on-chain `totalIssuanceHuman` returned by /api/network, otherwise fallback to Taostats circulating supply.
+  // Halving uses on-chain TotalIssuance when available, otherwise we fall back to circulatingSupply
+  const supplyForHalving = (data && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null)
     ? Number(data.totalIssuanceHuman)
     : (window.circulatingSupply ?? null);
-  if (data && data.supplyUsed === 'total') {
+  if (data && data.totalIssuanceHuman !== undefined && data.totalIssuanceHuman !== null) {
     window._halvingSupplySource = 'on-chain';
     if (window._debug) console.debug('Halving: using on-chain totalIssuanceHuman for halving calculation', Number(data.totalIssuanceHuman));
   } else {
     window._halvingSupplySource = (window._circSupplySource || 'taostats');
-    if (window._debug) console.debug('Halving: falling back to circulatingSupply for halving calculation', window._halvingSupplySource);
+    if (window._debug) console.debug('Halving: falling back to circulatingSupply for halving calculation');
   }
 
   // Use generated thresholds to support future halving events (first threshold only)
@@ -406,19 +408,12 @@ async function updateNetworkStats(data) {
   const HALVING_SUPPLY = thresholds.length ? thresholds[window._halvingIndex] : 10_500_000;
   // parse emission from API (TAO/day) or fallback to supply delta per day
   let emissionPerDay = null;
-  // Prefer server-side computed emission_7d (TTI-based) if present, else emission_30d, else legacy emission
-  if (data && (data.emission_7d !== undefined && data.emission_7d !== null)) {
-    emissionPerDay = Number(data.emission_7d);
-    if (window._debug) console.debug('Emission (7d) from /api/network used:', emissionPerDay, 'TAO/day');
-  } else if (data && (data.emission_30d !== undefined && data.emission_30d !== null)) {
-    emissionPerDay = Number(data.emission_30d);
-    if (window._debug) console.debug('Emission (30d) from /api/network used:', emissionPerDay, 'TAO/day');
-  } else if (data && (data.emission !== undefined && data.emission !== null)) {
+  if (data && (data.emission !== undefined && data.emission !== null)) {
     emissionPerDay = typeof data.emission === 'string'
       ? parseFloat(data.emission.replace(/,/g, ''))
       : Number(data.emission);
     if (Number.isFinite(emissionPerDay) && emissionPerDay > 0 && window._debug) {
-      console.debug('Legacy emission from /api/network used:', emissionPerDay, 'TAO/day');
+      console.debug('Emission from /api/network used:', emissionPerDay, 'TAO/day');
     }
   }
   // fallback: estimate emission from previous supply snapshot
