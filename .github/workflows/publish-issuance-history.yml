@@ -22,9 +22,12 @@ jobs:
         run: |
           pip install bittensor
 
-      - name: Fetch API `/api/network` and `/api/issuance_history` from the site
+      - name: Fetch API `/api/network` and `/api/issuance_history` from the site (with CF KV fallback)
         env:
           SITE_URL: https://bittensor-labs.com
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
         run: |
           set -euo pipefail
           # fetch network metrics
@@ -40,8 +43,21 @@ jobs:
           echo "Fetching ${SITE_URL}/api/issuance_history"
           HTTP_STATUS=$(curl -s -o issuance_history.json -w "%{http_code}" ${SITE_URL}/api/issuance_history || true)
           if [ "$HTTP_STATUS" != "200" ]; then
-            echo "No issuance_history at ${SITE_URL}/api/issuance_history (HTTP $HTTP_STATUS), skipping local creation" >&2
-            if [ -f issuance_history.json ]; then rm -f issuance_history.json; fi
+            echo "No issuance_history at ${SITE_URL}/api/issuance_history (HTTP $HTTP_STATUS)"
+            if [ -n "${CF_ACCOUNT_ID:-}" ] && [ -n "${CF_API_TOKEN:-}" ] && [ -n "${CF_KV_NAMESPACE_ID:-}" ]; then
+              echo "Attempting to read issuance_history directly from Cloudflare KV using the CF API"
+              KV_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/issuance_history"
+              HTTP_STATUS_KV=$(curl -s -o issuance_history.json -w "%{http_code}" -H "Authorization: Bearer ${CF_API_TOKEN}" "$KV_URL" || true)
+              if [ "$HTTP_STATUS_KV" != "200" ]; then
+                echo "Failed to read issuance_history directly from KV (HTTP $HTTP_STATUS_KV); no issuance_history created locally" >&2
+                if [ -f issuance_history.json ]; then rm -f issuance_history.json; fi
+              else
+                echo "OK: issuance_history.json retrieved from Cloudflare KV"
+              fi
+            else
+              echo "No CF creds to access KV directly and public API returned $HTTP_STATUS; skipping" >&2
+              if [ -f issuance_history.json ]; then rm -f issuance_history.json; fi
+            fi
           else
             echo "OK: issuance_history.json downloaded"
           fi
