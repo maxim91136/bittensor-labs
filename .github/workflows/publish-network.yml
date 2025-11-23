@@ -77,31 +77,38 @@ jobs:
           if ! command -v jq >/dev/null 2>&1; then
             sudo apt-get update && sudo apt-get install -y jq
           fi
-          # Use canonicalized JSON (sorted keys) to compute hash
+          # Use canonicalized JSON to compute hashes and to merge if KV contains prior history
           LOCAL_CANONICAL=$(jq -cS '.' issuance_history.json 2>/dev/null || cat issuance_history.json)
           LOCAL_HASH=$(printf "%s" "$LOCAL_CANONICAL" | sha256sum | awk '{print $1}')
           URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/issuance_history"
-          # Fetch the current KV value to decide whether we need to push
           HTTP_STATUS_KV=$(curl -s -o /tmp/kv_current.json -w "%{http_code}" -H "Authorization: Bearer ${CF_API_TOKEN}" "$URL" || true)
           if [ "$HTTP_STATUS_KV" = "200" ]; then
-            KV_CANONICAL=$(jq -cS '.' /tmp/kv_current.json 2>/dev/null || cat /tmp/kv_current.json)
-            KV_HASH=$(printf "%s" "$KV_CANONICAL" | sha256sum | awk '{print $1}')
+            # Merge KV value and local file into a single deduplicated, sorted array to avoid overwriting
+            MERGED_CANONICAL=$(jq -cS 'add | unique_by(.ts) | sort_by(.ts)' /tmp/kv_current.json issuance_history.json 2>/dev/null || true)
+            if [ -z "$MERGED_CANONICAL" ]; then
+              echo "Failed to canonicalize merged JSON; aborting" >&2; exit 1; fi
+            KV_HASH=$(printf "%s" "$MERGED_CANONICAL" | sha256sum | awk '{print $1}')
             if [ "$LOCAL_HASH" = "$KV_HASH" ]; then
               echo "issuance_history.json unchanged vs KV; skipping push"
               exit 0
             fi
+            # write merged to temp and push the merged file
+            printf "%s" "$MERGED_CANONICAL" > /tmp/issuance_history_merged.json
+            PUSH_FILE=/tmp/issuance_history_merged.json
           elif [ "$HTTP_STATUS_KV" = "404" ]; then
             echo "issuance_history key not present in KV; pushing new value"
+            PUSH_FILE=issuance_history.json
           else
-            # 403 or other status — proceed with push but warn
+            # 403 or other status — cannot read KV; proceed to push local (force) but warn
             echo "Warning: KV read returned HTTP $HTTP_STATUS_KV; proceeding with push (may overwrite)." >&2
+            PUSH_FILE=issuance_history.json
           fi
           # Do the push
           HTTP_STATUS_PUT=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
             "$URL" \
             -H "Authorization: Bearer $CF_API_TOKEN" \
             -H "Content-Type: application/json" \
-            --data-binary @issuance_history.json || true)
+            --data-binary @$PUSH_FILE || true)
           if [ "$HTTP_STATUS_PUT" != "200" ] && [ "$HTTP_STATUS_PUT" != "204" ]; then
             echo "Failed to push issuance_history to Cloudflare KV: HTTP $HTTP_STATUS_PUT" >&2
             exit 1
