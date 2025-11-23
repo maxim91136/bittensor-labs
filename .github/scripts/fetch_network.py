@@ -2,8 +2,10 @@ import bittensor as bt
 import json
 import os
 import sys
-from typing import Dict, Any
-from datetime import datetime, timezone
+from typing import Dict, Any, List
+from datetime import datetime, timezone, timedelta
+import urllib.request
+import urllib.error
 
 NETWORK = os.getenv("NETWORK", "finney")
 
@@ -84,6 +86,114 @@ def fetch_metrics() -> Dict[str, Any]:
         "_source": "bittensor-sdk",
         "_timestamp": datetime.now(timezone.utc).isoformat()
     }
+    # Attempt to read existing metrics from Cloudflare KV (if env provided)
+    existing = None
+    try:
+        cf_account = os.getenv('CF_ACCOUNT_ID')
+        cf_token = os.getenv('CF_API_TOKEN')
+        cf_kv_ns = os.getenv('CF_METRICS_NAMESPACE_ID')
+        if cf_account and cf_token and cf_kv_ns:
+            kv_url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/storage/kv/namespaces/{cf_kv_ns}/values/metrics"
+            req = urllib.request.Request(kv_url, method='GET', headers={
+                'Authorization': f'Bearer {cf_token}'
+            })
+            try:
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    if resp.status == 200:
+                        existing = json.loads(resp.read())
+            except urllib.error.HTTPError as e:
+                # no existing KV or insufficient permissions, ignore
+                pass
+            except Exception:
+                pass
+    except Exception:
+        existing = None
+
+    # Build / update daily issuance history based on existing KV if present
+    try:
+        history: List[Dict[str, Any]] = existing.get('issuance_history', []) if isinstance(existing, dict) else []
+    except Exception:
+        history = []
+
+    # Add/Update daily aggregate for today (UTC)
+    try:
+        now = datetime.now(timezone.utc)
+        date_key = now.strftime('%Y-%m-%d')
+        # Convert to seconds epoch
+        ts = int(now.timestamp())
+        if total_issuance_human is not None:
+            # If today's entry exists, update; otherwise append
+            if history and history[-1].get('date') == date_key:
+                history[-1]['issuance'] = float(total_issuance_human)
+                history[-1]['ts'] = ts
+            else:
+                history.append({'date': date_key, 'ts': ts, 'issuance': float(total_issuance_human)})
+            # Keep at most 90 daily entries (approx 3 months)
+            max_daily = 90
+            if len(history) > max_daily:
+                history = history[-max_daily:]
+    except Exception:
+        history = history
+
+    # Compute daily per-day deltas and emission aggregates
+    def compute_daily_deltas(hist: List[Dict[str, Any]]) -> List[float]:
+        out: List[float] = []
+        for i in range(1, len(hist)):
+            a = hist[i - 1]
+            b = hist[i]
+            dt = b['ts'] - a['ts']
+            if dt <= 0:
+                continue
+            delta = b['issuance'] - a['issuance']
+            per_day = delta * (86400.0 / dt)
+            out.append(per_day)
+        return out
+
+    def winsorized_mean(arr: List[float], trim=0.1) -> float:
+        n = len(arr)
+        if n == 0:
+            return None
+        s = sorted(arr)
+        k = int(n * trim)
+        if k >= n // 2:
+            # fallback to mean
+            return sum(s) / len(s)
+        trimmed = s[k:n - k]
+        if not trimmed:
+            return sum(s) / len(s)
+        return sum(trimmed) / len(trimmed)
+
+    daily_deltas = compute_daily_deltas(history)
+    emission_daily = None
+    emission_7d = None
+    emission_30d = None
+    emission_sd_7d = None
+    if daily_deltas:
+        emission_daily = daily_deltas[-1] if daily_deltas else None
+        if len(daily_deltas) >= 1:
+            # 7d
+            last7 = [d for d_ts, d in zip(history[1:], daily_deltas) if d is not None][-7:]
+            if last7 and len(last7) > 0:
+                emission_7d = winsorized_mean(last7, 0.1)
+                # compute sd
+                import math
+                mean7 = emission_7d
+                sd7 = math.sqrt(sum((v - mean7) ** 2 for v in last7) / len(last7)) if len(last7) > 0 else 0
+                emission_sd_7d = sd7
+        # 30d
+        if len(daily_deltas) >= 1:
+            last30 = [d for d_ts, d in zip(history[1:], daily_deltas) if d is not None][-30:]
+            if last30 and len(last30) > 0:
+                emission_30d = winsorized_mean(last30, 0.1)
+
+    # Attach history and emission values to result
+    result['issuance_history'] = history
+    result['emission_daily'] = round(emission_daily, 2) if emission_daily is not None else None
+    result['emission_7d'] = round(emission_7d, 2) if emission_7d is not None else None
+    result['emission_30d'] = round(emission_30d, 2) if emission_30d is not None else None
+    result['emission_sd_7d'] = round(emission_sd_7d, 2) if emission_sd_7d is not None else None
+    result['emission_samples'] = len(daily_deltas)
+    result['last_issuance_ts'] = history[-1]['ts'] if history else None
     return result
 
 if __name__ == "__main__":
