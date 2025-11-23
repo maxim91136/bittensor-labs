@@ -109,34 +109,31 @@ def fetch_metrics() -> Dict[str, Any]:
     except Exception:
         existing = None
 
-    # Build / update daily issuance history based on existing KV if present
+    # Build / update high-frequency issuance history (15min snapshots) based on existing KV if present
     try:
         history: List[Dict[str, Any]] = existing.get('issuance_history', []) if isinstance(existing, dict) else []
     except Exception:
         history = []
 
-    # Add/Update daily aggregate for today (UTC)
+    # Add new 15-minute snapshot
     try:
         now = datetime.now(timezone.utc)
-        date_key = now.strftime('%Y-%m-%d')
-        # Convert to seconds epoch
         ts = int(now.timestamp())
         if total_issuance_human is not None:
-            # If today's entry exists, update; otherwise append
-            if history and history[-1].get('date') == date_key:
+            # Append snapshot; no date-based deduplication - but drop duplicates if same second
+            if history and history[-1].get('ts') == ts:
                 history[-1]['issuance'] = float(total_issuance_human)
-                history[-1]['ts'] = ts
             else:
-                history.append({'date': date_key, 'ts': ts, 'issuance': float(total_issuance_human)})
-            # Keep at most 90 daily entries (approx 3 months)
-            max_daily = 90
-            if len(history) > max_daily:
-                history = history[-max_daily:]
+                history.append({'ts': ts, 'issuance': float(total_issuance_human)})
+            # Keep at most N entries: 15min sampling -> 96 entries/day -> 30d ~ 2880
+            max_entries = 2880
+            if len(history) > max_entries:
+                history = history[-max_entries:]
     except Exception:
         history = history
 
-    # Compute daily per-day deltas and emission aggregates
-    def compute_daily_deltas(hist: List[Dict[str, Any]]) -> List[float]:
+    # Compute per-interval normalized (TAO/day) deltas from the 15m-ish history
+    def compute_per_interval_deltas(hist: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         out: List[float] = []
         for i in range(1, len(hist)):
             a = hist[i - 1]
@@ -146,7 +143,7 @@ def fetch_metrics() -> Dict[str, Any]:
                 continue
             delta = b['issuance'] - a['issuance']
             per_day = delta * (86400.0 / dt)
-            out.append(per_day)
+            out.append({'ts': b['ts'], 'per_day': per_day})
         return out
 
     def winsorized_mean(arr: List[float], trim=0.1) -> float:
@@ -163,16 +160,31 @@ def fetch_metrics() -> Dict[str, Any]:
             return sum(s) / len(s)
         return sum(trimmed) / len(trimmed)
 
-    daily_deltas = compute_daily_deltas(history)
+    per_interval_deltas = compute_per_interval_deltas(history)
     emission_daily = None
     emission_7d = None
     emission_30d = None
     emission_sd_7d = None
-    if daily_deltas:
-        emission_daily = daily_deltas[-1] if daily_deltas else None
-        if len(daily_deltas) >= 1:
-            # 7d
-            last7 = [d for d_ts, d in zip(history[1:], daily_deltas) if d is not None][-7:]
+    # emission_daily = mean per_day for last 24h
+    deltas_last_24h = [d['per_day'] for d in per_interval_deltas if d['ts'] >= (int(datetime.now(timezone.utc).timestamp()) - 86400)]
+    if deltas_last_24h:
+        # use winsorized mean for last 24h to smooth out spikes
+        emission_daily = winsorized_mean(deltas_last_24h, 0.1)
+    # build daily means from per-interval deltas grouped by UTC date
+    daily_groups: Dict[str, List[float]] = {}
+    for d in per_interval_deltas:
+        day = datetime.fromtimestamp(d['ts'], timezone.utc).strftime('%Y-%m-%d')
+        daily_groups.setdefault(day, []).append(d['per_day'])
+    # sort by day
+    days_sorted = sorted(daily_groups.keys())
+    daily_means = [sum(daily_groups[day]) / len(daily_groups[day]) for day in days_sorted]
+    emission_7d = None
+    emission_30d = None
+    emission_sd_7d = None
+    if daily_means:
+        # last 7 days
+        if len(daily_means) >= 1:
+            last7 = daily_means[-7:]
             if last7 and len(last7) > 0:
                 emission_7d = winsorized_mean(last7, 0.1)
                 # compute sd
@@ -181,8 +193,8 @@ def fetch_metrics() -> Dict[str, Any]:
                 sd7 = math.sqrt(sum((v - mean7) ** 2 for v in last7) / len(last7)) if len(last7) > 0 else 0
                 emission_sd_7d = sd7
         # 30d
-        if len(daily_deltas) >= 1:
-            last30 = [d for d_ts, d in zip(history[1:], daily_deltas) if d is not None][-30:]
+        if daily_means and len(daily_means) >= 1:
+            last30 = daily_means[-30:]
             if last30 and len(last30) > 0:
                 emission_30d = winsorized_mean(last30, 0.1)
 
