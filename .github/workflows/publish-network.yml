@@ -30,17 +30,7 @@ jobs:
         run: |
           python .github/scripts/fetch_network.py
 
-      - name: Verify CF API token
-        env:
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-        run: |
-          # verify token validity early so a 401 will fail fast
-          echo "Verifying CF API token via user/tokens/verify"
-          resp=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $CF_API_TOKEN" https://api.cloudflare.com/client/v4/user/tokens/verify || true)
-          echo "token verify http status: $resp"
-          if [ "$resp" != "200" ]; then
-            echo "ERROR: CF_API_TOKEN verify failed (http status: $resp). Ensure token is set correctly in GitHub secrets and is not expired."; exit 1
-          fi
+      # NOTE: token verify step removed per ops request (restore default behavior)
 
       - name: Push to Cloudflare KV (debug)
         env:
@@ -51,14 +41,7 @@ jobs:
           URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/metrics"  # fix: key = metrics
           if [ ! -f network.json ]; then
             echo "no network.json"; exit 1; fi
-          # Check issuance_history read permission (fail early if token lacks READ)
-          resp=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $CF_API_TOKEN" \
-            "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/issuance_history" || true)
-          echo "KV read status: $resp"
-          if [ "$resp" = "403" ]; then
-            echo "ERROR: CF_API_TOKEN missing Workers KV READ; add Read permission to the token in Cloudflare Dashboard"
-            exit 1
-          fi
+          # (no pre-check) Write network.json and issuance_history.json if present
 
           curl -fsSL -X PUT \
             "$URL" \
