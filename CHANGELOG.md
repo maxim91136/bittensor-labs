@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.3 (Release Candidate)
+### Added
+- Backend: sequential halving simulation and per-step projection fields (`emission_used`, `step`, `delta`).
+- API: `halving_estimates`, `avg_emission_for_projection`, `projection_method`, `projection_confidence`, `projection_days_used`, `history_samples`, and diagnostics are returned in `network.json`.
+- Frontend: `AVG. EMISSION / DAY` now prefers `avg_emission_for_projection`; halving pill tooltip shows projection metadata and confidence.
+### Changed
+- Tooltip system: dynamic reading of `data-tooltip`, persistent mobile halving tooltip, and a wider desktop tooltip (`.dynamic-tooltip.wide`).
+- Halving pill: confidence classes (`confidence-low|medium|high`) and subtle color accents added.
+### Fixed
+- Halving projection logic in the producer: emission halves sequentially between thresholds (previously the same emission was used for all steps).
+
+
 ## v1.0.0-rc.2 (Release Candidate)
 ### Added
 - TAO Tensor Law embed card under the price chart with live iframe (and preview fallback image).
