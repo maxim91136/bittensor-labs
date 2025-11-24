@@ -582,6 +582,7 @@ function setupDynamicTooltips() {
   function showTooltip(e, text, opts = {}) {
     // opts.persistent -> keep tooltip visible until explicitly closed/tapped again
     const persistent = !!opts.persistent;
+    const wide = !!opts.wide;
     tooltipOwner = e.target;
     tooltipPersistent = persistent;
     tooltip.dataset.persistent = persistent ? 'true' : 'false';
@@ -609,6 +610,8 @@ function setupDynamicTooltips() {
       if (tooltipClose && tooltip.contains(tooltipClose)) tooltip.removeChild(tooltipClose);
       tooltip.classList.remove('persistent');
     }
+    // wide option: allow wider tooltip for desktop halving pill
+    if (wide) tooltip.classList.add('wide'); else tooltip.classList.remove('wide');
     tooltip.classList.add('visible');
     const rect = e.target.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
@@ -637,27 +640,35 @@ function setupDynamicTooltips() {
   document.querySelectorAll('.info-badge').forEach(badge => {
     // Skip any info-badge that lives in the TAO Tensor Law card (we removed it)
     if (badge.closest && badge.closest('.taotensor-card')) return;
-    const text = badge.getAttribute('data-tooltip');
     // Only initialize tooltips for badges that actually have tooltip text
-    if (!text) return;
-    badge.addEventListener('mouseenter', e => showTooltip(e, text));
+    // Read the attribute at event time so updates to `data-tooltip` later are respected.
+    badge.addEventListener('mouseenter', e => {
+      const txt = badge.getAttribute('data-tooltip');
+      if (txt) showTooltip(e, txt, { persistent: false });
+    });
     badge.addEventListener('mouseleave', hideTooltip);
-    badge.addEventListener('focus', e => showTooltip(e, text));
+    badge.addEventListener('focus', e => {
+      const txt = badge.getAttribute('data-tooltip');
+      if (txt) showTooltip(e, txt, { persistent: false });
+    });
     badge.addEventListener('blur', hideTooltip);
     badge.addEventListener('click', e => {
       e.stopPropagation();
-      // non-persistent for info badges
-      showTooltip(e, text, { persistent: false });
-      setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
+      const txt = badge.getAttribute('data-tooltip');
+      if (txt) {
+        showTooltip(e, txt, { persistent: false });
+        setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
+      }
     });
     // No theme-dependent behavior here; map swap is handled centrally in setLightMode().
   });
 
   const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
   document.querySelectorAll('.halving-pill').forEach(pill => {
-    pill.addEventListener('mouseenter', e => { if (!isTouch) showTooltip(e, pill.getAttribute('data-tooltip') || ''); });
+    // Use a wider tooltip on desktop so the halving projection content can breathe
+    pill.addEventListener('mouseenter', e => { if (!isTouch) showTooltip(e, pill.getAttribute('data-tooltip') || '', { wide: true }); });
     pill.addEventListener('mouseleave', e => { if (!isTouch) hideTooltip(); });
-    pill.addEventListener('focus', e => { if (!isTouch) showTooltip(e, pill.getAttribute('data-tooltip') || ''); });
+    pill.addEventListener('focus', e => { if (!isTouch) showTooltip(e, pill.getAttribute('data-tooltip') || '', { wide: true }); });
     pill.addEventListener('blur', e => { if (!isTouch) hideTooltip(); });
     pill.addEventListener('click', e => {
       e.stopPropagation();
@@ -670,7 +681,8 @@ function setupDynamicTooltips() {
           showTooltip(e, text, { persistent: true });
         }
       } else {
-        showTooltip(e, text, { persistent: false });
+        // On desktop clicking the pill should show the same wide variant as hover
+        showTooltip(e, text, { persistent: false, wide: true });
         setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
       }
     });
