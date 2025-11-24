@@ -310,12 +310,13 @@ def fetch_metrics() -> Dict[str, Any]:
             except Exception:
                 th_val = None
             if th_val is None:
-                estimates.append({'threshold': th, 'remaining': None, 'days': None, 'eta': None, 'method': method})
+                estimates.append({'threshold': th, 'remaining': None, 'days': None, 'eta': None, 'method': method, 'emission_used': None})
                 continue
 
             # If we've already passed this threshold, mark zero and halve emission for next
             if cur >= th_val:
-                estimates.append({'threshold': th_val, 'remaining': 0.0, 'days': 0.0, 'eta': now_dt.isoformat(), 'method': method})
+                # emission_used is the emission that was in effect for reaching this threshold
+                estimates.append({'threshold': th_val, 'remaining': 0.0, 'days': 0.0, 'eta': now_dt.isoformat(), 'method': method, 'emission_used': round(emission, 6) if emission is not None else None})
                 if emission > 0:
                     emission = emission / 2.0
                 # keep current time and issuance at least at threshold
@@ -324,13 +325,13 @@ def fetch_metrics() -> Dict[str, Any]:
 
             # If emission is not positive, we cannot reach the threshold
             if emission is None or emission <= 0:
-                estimates.append({'threshold': th_val, 'remaining': round(th_val - cur, 6), 'days': None, 'eta': None, 'method': method})
+                estimates.append({'threshold': th_val, 'remaining': round(th_val - cur, 6), 'days': None, 'eta': None, 'method': method, 'emission_used': emission})
                 continue
 
             remaining = th_val - cur
             days = remaining / emission
             eta = now_dt + timedelta(days=days)
-            estimates.append({'threshold': th_val, 'remaining': round(remaining, 6), 'days': round(days, 3), 'eta': eta.isoformat(), 'method': method})
+            estimates.append({'threshold': th_val, 'remaining': round(remaining, 6), 'days': round(days, 3), 'eta': eta.isoformat(), 'method': method, 'emission_used': round(emission, 6)})
 
             # advance simulation: jump to threshold time and issuance, then halve emission
             now_dt = eta
