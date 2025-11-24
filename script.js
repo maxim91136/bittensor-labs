@@ -366,18 +366,13 @@ async function updateNetworkStats(data) {
         if (emissionCard) {
           const badge = emissionCard.querySelector('.info-badge');
             if (badge) {
-            const parts = [];
-            if (data && data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null) {
-              parts.push(`Avg projection: ${formatFull(Math.round(Number(data.avg_emission_for_projection)))} TAO/day`);
-              parts.push(`Method: ${data.projection_method ?? 'unknown'}`);
-              parts.push(`Confidence: ${data.projection_confidence ?? 'unknown'}`);
-              parts.push(`Days used: ${data.projection_days_used ?? 'n/a'}`);
-            } else if (data && (data.emission !== undefined && data.emission !== null)) {
-              parts.push(`Reported emission: ${formatFull(Math.round(Number(data.emission)))} TAO/day`);
-            } else {
-              parts.push('Emission: unavailable');
-            }
-            badge.setAttribute('data-tooltip', parts.join('\n'));
+            // Short, user-friendly info tooltip explaining what the KPI represents.
+            const tooltipText = data && (data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null)
+              ? 'Avg emission rate used for halving projections (based on our own issuance history). Confidence shown in the Halving pill.'
+              : (data && (data.emission !== undefined && data.emission !== null))
+                ? 'Reported emission rate (static) from the network API.'
+                : 'Emission: unavailable';
+            badge.setAttribute('data-tooltip', tooltipText);
           }
         }
       } catch (e) {
@@ -530,13 +525,13 @@ async function updateNetworkStats(data) {
       const avg = (data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null)
         ? Number(data.avg_emission_for_projection)
         : (data.emission ?? null);
-      halvingLines.push(`Projection method: ${method}`);
-      halvingLines.push(`Projection confidence: ${confidence}`);
+      halvingLines.push(`Halving projection method: ${method}`);
+      halvingLines.push(`Halving projection confidence: ${confidence}`);
       if (avg !== null) halvingLines.push(`Avg emission used: ${formatFull(Math.round(Number(avg)))} TAO/day`);
 
       // Include short list of upcoming halving estimates (step, threshold, eta, emission_used)
       if (Array.isArray(data.halving_estimates) && data.halving_estimates.length) {
-        halvingLines.push('Projections:');
+        halvingLines.push('Halving projections:');
         data.halving_estimates.slice(0, 3).forEach(h => {
           const step = h.step !== undefined ? `#${h.step}` : '';
           const t = formatNumber(h.threshold);
@@ -580,9 +575,40 @@ function setupDynamicTooltips() {
   let tooltip = document.createElement('div');
   tooltip.className = 'dynamic-tooltip';
   document.body.appendChild(tooltip);
+  let tooltipClose = null;
+  let tooltipPersistent = false;
+  let tooltipOwner = null;
 
-  function showTooltip(e, text) {
-    tooltip.textContent = text;
+  function showTooltip(e, text, opts = {}) {
+    // opts.persistent -> keep tooltip visible until explicitly closed/tapped again
+    const persistent = !!opts.persistent;
+    tooltipOwner = e.target;
+    tooltipPersistent = persistent;
+    tooltip.dataset.persistent = persistent ? 'true' : 'false';
+    // Build content (preserve newlines)
+    tooltip.innerHTML = '';
+    const body = document.createElement('div');
+    body.className = 'tooltip-body';
+    body.textContent = text;
+    tooltip.appendChild(body);
+    if (persistent) {
+      // add close control
+      if (!tooltipClose) {
+        tooltipClose = document.createElement('button');
+        tooltipClose.className = 'tooltip-close';
+        tooltipClose.setAttribute('aria-label', 'Close');
+        tooltipClose.textContent = '×';
+        tooltipClose.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          hideTooltip();
+        });
+      }
+      tooltip.appendChild(tooltipClose);
+      tooltip.classList.add('persistent');
+    } else {
+      if (tooltipClose && tooltip.contains(tooltipClose)) tooltip.removeChild(tooltipClose);
+      tooltip.classList.remove('persistent');
+    }
     tooltip.classList.add('visible');
     const rect = e.target.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
@@ -601,6 +627,11 @@ function setupDynamicTooltips() {
 
   function hideTooltip() {
     tooltip.classList.remove('visible');
+    tooltipPersistent = false;
+    tooltipOwner = null;
+    tooltip.dataset.persistent = 'false';
+    if (tooltipClose && tooltip.contains(tooltipClose)) tooltip.removeChild(tooltipClose);
+    tooltip.classList.remove('persistent');
   }
 
   document.querySelectorAll('.info-badge').forEach(badge => {
@@ -615,21 +646,33 @@ function setupDynamicTooltips() {
     badge.addEventListener('blur', hideTooltip);
     badge.addEventListener('click', e => {
       e.stopPropagation();
-      showTooltip(e, text);
+      // non-persistent for info badges
+      showTooltip(e, text, { persistent: false });
       setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
     });
     // No theme-dependent behavior here; map swap is handled centrally in setLightMode().
   });
 
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
   document.querySelectorAll('.halving-pill').forEach(pill => {
-    pill.addEventListener('mouseenter', e => showTooltip(e, pill.getAttribute('data-tooltip') || ''));
-    pill.addEventListener('mouseleave', hideTooltip);
-    pill.addEventListener('focus', e => showTooltip(e, pill.getAttribute('data-tooltip') || ''));
-    pill.addEventListener('blur', hideTooltip);
+    pill.addEventListener('mouseenter', e => { if (!isTouch) showTooltip(e, pill.getAttribute('data-tooltip') || ''); });
+    pill.addEventListener('mouseleave', e => { if (!isTouch) hideTooltip(); });
+    pill.addEventListener('focus', e => { if (!isTouch) showTooltip(e, pill.getAttribute('data-tooltip') || ''); });
+    pill.addEventListener('blur', e => { if (!isTouch) hideTooltip(); });
     pill.addEventListener('click', e => {
       e.stopPropagation();
-      showTooltip(e, pill.getAttribute('data-tooltip') || '');
-      setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
+      const text = pill.getAttribute('data-tooltip') || '';
+      if (isTouch) {
+        // Toggle persistent tooltip on touch devices
+        if (tooltipPersistent && tooltipOwner === pill) {
+          hideTooltip();
+        } else {
+          showTooltip(e, text, { persistent: true });
+        }
+      } else {
+        showTooltip(e, text, { persistent: false });
+        setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
+      }
     });
   });
 
@@ -645,7 +688,11 @@ function setupDynamicTooltips() {
     });
   });
 
-  document.addEventListener('click', hideTooltip);
+  // document click should hide tooltip only when not persistent
+  document.addEventListener('click', (e) => {
+    if (tooltipPersistent) return;
+    hideTooltip();
+  });
 }
 
 // ===== Version fetch and apply =====

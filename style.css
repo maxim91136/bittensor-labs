@@ -506,6 +506,29 @@ body {
   pointer-events: auto;
 }
 
+/* Persistent tooltip variant (used for mobile halving pill) */
+.dynamic-tooltip.persistent {
+  max-width: 92vw;
+  max-height: 72vh;
+  overflow: auto;
+  padding-right: 28px; /* space for close button */
+}
+.dynamic-tooltip .tooltip-close {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+.dynamic-tooltip .tooltip-body {
+  white-space: pre-line;
+}
+
 .svg-attribution {
   font-size: 0.95em;
   color: #bbb;
