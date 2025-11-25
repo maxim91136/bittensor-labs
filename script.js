@@ -60,6 +60,12 @@ function formatFull(num) {
   return Math.round(Number(num)).toLocaleString('en-US');
 }
 
+// Exact formatting with thousands separators and two decimals
+function formatExact(num) {
+  if (num === null || num === undefined || isNaN(Number(num))) return '—';
+  return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 // Compact display for large numbers (e.g. 1.23M, 4.56B)
 function formatCompact(num) {
   num = Number(num);
@@ -69,7 +75,8 @@ function formatCompact(num) {
 }
 
 function formatPrice(price) {
-  return `$${price.toFixed(2)}`;
+  if (price === null || price === undefined || Number.isNaN(Number(price))) return 'N/A';
+  return `$${Number(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // Round up to 2 decimal places (ceiling)
@@ -245,19 +252,19 @@ function updateTaoPrice(priceData) {
   const priceEl = document.getElementById('taoPrice');
   const changeEl = document.getElementById('priceChange');
   if (!priceEl) return;
-  if (priceData.price) {
-    priceEl.textContent = `$${priceData.price.toFixed(2)}`;
-    priceEl.classList.remove('skeleton-text');
-    if (changeEl && priceData.change24h !== undefined && priceData.change24h !== null) {
-      const change = priceData.change24h;
-      changeEl.textContent = `${change > 0 ? '↑' : '↓'}${change.toFixed(2)}% (24h)`;
-      changeEl.style.display = 'inline';
-      changeEl.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+    if (priceData.price) {
+      priceEl.textContent = formatPrice(priceData.price);
+      priceEl.classList.remove('skeleton-text');
+      if (changeEl && priceData.change24h !== undefined && priceData.change24h !== null) {
+        const change = priceData.change24h;
+        changeEl.textContent = `${change > 0 ? '↑' : '↓'}${formatPercent(change)} (24h)`;
+        changeEl.style.display = 'inline';
+        changeEl.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+      }
+    } else {
+      priceEl.textContent = 'N/A';
+      if (changeEl) changeEl.style.display = 'none';
     }
-  } else {
-    priceEl.textContent = 'N/A';
-    if (changeEl) changeEl.style.display = 'none';
-  }
   lastPrice = priceData.price;
   tryUpdateMarketCapAndFDV();
 
@@ -358,12 +365,12 @@ async function updateNetworkStats(data) {
         const avgVal = Number(data.avg_emission_for_projection);
         const roundedUp = roundUpTo2(avgVal);
         elements.emission.textContent = roundedUp.toFixed(2);
-        elements.emission.title = `Avg emission used for projection (${data.projection_method ?? 'unknown'}) — exact: ${avgVal.toFixed(2)} TAO/day`;
+        elements.emission.title = `Avg emission used for projection (${data.projection_method ?? 'unknown'}) — exact: ${formatExact(avgVal)} TAO/day`;
       } else if (data && (data.emission !== undefined && data.emission !== null)) {
         const emissionVal = Number(data.emission);
         const roundedUp2 = roundUpTo2(emissionVal);
         elements.emission.textContent = roundedUp2.toFixed(2);
-        elements.emission.title = `Reported emission (static) from /api/network — exact: ${emissionVal.toFixed(2)} TAO/day`;
+        elements.emission.title = `Reported emission (static) from /api/network — exact: ${formatExact(emissionVal)} TAO/day`;
       } else {
         elements.emission.textContent = '—';
         elements.emission.title = '';
@@ -401,7 +408,7 @@ async function updateNetworkStats(data) {
   if (supplyEl && circSupply) {
     const current = (circSupply / 1_000_000).toFixed(2);
     supplyEl.textContent = `${current}M / 21M τ`;
-    supplyEl.title = `Source: ${window._circSupplySource || 'unknown'} — ${Number(circSupply).toFixed(2)} TAO`;
+    supplyEl.title = `Source: ${window._circSupplySource || 'unknown'} — ${formatExact(circSupply)} TAO`;
     window.circulatingSupply = circSupply;
     // Save the timestamp and previous supply for next update
     window._prevSupplyTs = nowTs;
@@ -411,7 +418,7 @@ async function updateNetworkStats(data) {
       const supplyCard = supplyEl.closest ? supplyEl.closest('.stat-card') : null;
       if (supplyCard) {
         const badge = supplyCard.querySelector('.info-badge');
-        if (badge) badge.setAttribute('data-tooltip', `Current circulating supply of TAO tokens — exact: ${Number(circSupply).toFixed(2)} TAO`);
+        if (badge) badge.setAttribute('data-tooltip', `Current circulating supply of TAO tokens — exact: ${formatExact(circSupply)} TAO`);
       }
     } catch (e) {
       if (window._debug) console.debug('Failed to set circulatingsupply info-badge tooltip', e);
@@ -424,7 +431,7 @@ async function updateNetworkStats(data) {
     if (supplyEl && fallbackSupply) {
       const current = (fallbackSupply / 1_000_000).toFixed(2);
       supplyEl.textContent = `${current}M / 21M τ`;
-      supplyEl.title = `Source: fallback — ${Number(fallbackSupply).toFixed(2)} TAO`;
+      supplyEl.title = `Source: fallback — ${formatExact(fallbackSupply)} TAO`;
       window.circulatingSupply = fallbackSupply;
       window._prevSupplyTs = nowTs;
       if (window._debug) console.debug('circ supply fallback to block-derived supply');
@@ -432,7 +439,7 @@ async function updateNetworkStats(data) {
         const supplyCard = supplyEl.closest ? supplyEl.closest('.stat-card') : null;
         if (supplyCard) {
           const badge = supplyCard.querySelector('.info-badge');
-          if (badge) badge.setAttribute('data-tooltip', `Current circulating supply of TAO tokens — exact: ${Number(fallbackSupply).toFixed(2)} TAO`);
+          if (badge) badge.setAttribute('data-tooltip', `Current circulating supply of TAO tokens — exact: ${formatExact(fallbackSupply)} TAO`);
         }
       } catch (e) {
         if (window._debug) console.debug('Failed to set circulatingsupply info-badge tooltip (fallback)', e);
@@ -532,20 +539,24 @@ async function updateNetworkStats(data) {
   }
 
   // update pill tooltip and include projection metadata (method, confidence, sample)
+  // Precompute avg emission (if available) so tooltip logic can reference it safely
+  const avg = (data && (data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null))
+    ? Number(data.avg_emission_for_projection)
+    : (data && (data.emission !== undefined && data.emission !== null) ? Number(data.emission) : null);
   const halvingPill = document.querySelector('.halving-pill');
   if (halvingPill) {
     const remainingSafe = Math.max(0, remaining || 0);
     const halvingSourceLabel = (window._halvingSupplySource === 'on-chain') ? 'On-chain (TotalIssuance)' : 'Taostats (circulating_supply)';
     const halvingLines = [
-      `Next threshold: ${formatNumber(HALVING_SUPPLY)} TAO (${Number(HALVING_SUPPLY).toFixed(2)} exact)`,
-      `Remaining: ${formatNumber(remainingSafe)} TAO (${Number(remainingSafe).toFixed(2)} exact)`,
+      `Next threshold: ${formatNumber(HALVING_SUPPLY)} TAO → ${formatExact(HALVING_SUPPLY)} exact`,
+      `Remaining: ${formatNumber(remainingSafe)} TAO → ${formatExact(remainingSafe)} exact`,
       `Source: ${halvingSourceLabel}`
     ];
     if (window._lastHalving) {
       const dt = new Date(window._lastHalving.at);
       // If avg emission is known, show Threshold -> Date -> Avg emission on one line
       if (avg !== null) {
-        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} → ${dt.toLocaleString()} → Avg emission used: ${Number(avg).toFixed(2)} TAO/day`);
+        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} → ${dt.toLocaleString()} → Avg emission used: ${formatExact(avg)} TAO/day`);
       } else {
         halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} @ ${dt.toLocaleString()}`);
       }
@@ -555,12 +566,9 @@ async function updateNetworkStats(data) {
     if (data) {
       const method = data.projection_method ?? (data.avg_emission_for_projection ? 'projection' : 'unknown');
       const confidence = data.projection_confidence ?? 'unknown';
-      const avg = (data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null)
-        ? Number(data.avg_emission_for_projection)
-        : (data.emission ?? null);
       halvingLines.push(`Halving projection method: ${method}`);
       halvingLines.push(`Halving projection confidence: ${confidence}`);
-      if (avg !== null) halvingLines.push(`Avg emission used: ${Number(avg).toFixed(2)} TAO/day`);
+      if (avg !== null) halvingLines.push(`Avg emission used: ${formatExact(avg)} TAO/day`);
 
       // Include short list of upcoming halving estimates (step, threshold, eta, emission_used)
       if (Array.isArray(data.halving_estimates) && data.halving_estimates.length) {
@@ -569,7 +577,7 @@ async function updateNetworkStats(data) {
           const step = h.step !== undefined ? `#${h.step}` : '';
           const t = formatNumber(h.threshold);
           const eta = h.eta ? new Date(h.eta).toLocaleDateString() : 'N/A';
-          const used = h.emission_used !== undefined ? `${Number(h.emission_used).toFixed(2)} TAO/day` : '';
+          const used = h.emission_used !== undefined ? `${formatExact(h.emission_used)} TAO/day` : '';
           halvingLines.push(`${step} ${t} → ${eta} ${used}`);
         });
       }
