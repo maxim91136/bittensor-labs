@@ -13,10 +13,6 @@ jobs:
   deploy:
     name: Publish Worker
     runs-on: ubuntu-latest
-    # Assign this job to the `production` environment so deployments require
-    # manual approval if you configure required reviewers in repository
-    # Settings → Environments → production → Protection rules
-    environment: production
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
