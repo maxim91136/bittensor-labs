@@ -8,6 +8,7 @@ on:
       - 'functions/**'
       - 'worker-entry.js'
       - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch: {}
 
 jobs:
   deploy:
