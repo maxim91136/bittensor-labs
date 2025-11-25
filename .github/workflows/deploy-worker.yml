@@ -25,7 +25,7 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_METRICS_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
         run: |
-          cat > wrangler.toml <<'TOML'
+          cat > wrangler.toml <<TOML
           name = "bittensor-ath-atl"
           main = "./worker-entry.js"
           compatibility_date = "2025-11-25"
@@ -42,5 +42,5 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
           echo "Publishing worker using wrangler..."
-          # wrangler v3 uses `deploy` and reads credentials from CLOUDFLARE_API_TOKEN or wrangler.toml
+          # wrangler v4 uses `deploy` and reads credentials from CLOUDFLARE_API_TOKEN or wrangler.toml
           wrangler deploy
