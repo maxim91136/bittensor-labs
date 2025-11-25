@@ -81,3 +81,26 @@ Detailed documentation for issuance history and halving projections lives under 
 - `docs/ISSUANCE_HISTORY_README.md` — operational notes about how issuance snapshots are collected and stored in Cloudflare KV.
 
 Visit the `docs/` directory for more details on using the network API and interpreting projection results.
+
+## Deployment (Cloudflare Worker)
+
+The repository includes a GitHub Actions workflow to deploy the Cloudflare Worker that serves the ATH/ATL API.
+
+- When the workflow runs: it is triggered automatically on `push` to `main` **only** when one of the following paths changes:
+	- `functions/**`
+	- `worker-entry.js`
+	- `.github/workflows/deploy-worker.yml`
+
+- Manual trigger: you can also start the deploy from the Actions UI using the **Run workflow** button (or via `gh workflow run deploy-worker.yml --ref main`).
+
+- What the workflow does: it generates a `wrangler.toml` from repository secrets and runs `wrangler deploy` to publish the Worker.
+
+- Safety: only worker-related pushes start the workflow (prevents accidental deploys from unrelated edits). If you want full manual-only deploys, run the workflow from the Actions UI.
+
+Example quick checks after deploy:
+
+```bash
+curl -sS https://<your-worker>.workers.dev/api/ath-atl | jq .
+curl -sS https://<your-worker>.workers.dev/api/ath-atl/health | jq .
+```
+
