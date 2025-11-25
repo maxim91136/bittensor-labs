@@ -25,61 +25,124 @@ jobs:
             exit 1
           fi
           # Ensure required fields are present and numeric
-          ATH=$(jq -r '.ath // empty' tao_ath_atl.json)
-          ATL=$(jq -r '.atl // empty' tao_ath_atl.json)
-          if [ -z "$ATH" ] || [ -z "$ATL" ]; then
-            echo "Validation failed: 'ath' or 'atl' missing"
-            jq . tao_ath_atl.json || true
-            exit 2
-          fi
-          echo "Validation passed: ath=$ATH atl=$ATL"
+          name: Fetch and Push ATH/ATL from Coingecko to Cloudflare KV
+          on:
+            workflow_dispatch:
+            schedule:
+              - cron: '0 */3 * * *' # Every 3 hours
 
-      # R2 upload removed: no R2 bucket configured in this repo/account
+          jobs:
+            fetch-ath-atl:
+              runs-on: ubuntu-latest
+              steps:
+                - name: Checkout repository
+                  uses: actions/checkout@v3
+                - name: Set up Python
+                  uses: actions/setup-python@v4
+                  with:
+                    python-version: '3.10'
+                - name: Install dependencies
+                  run: pip install requests
+                - name: Fetch ATH/ATL data
+                  run: python .github/scripts/fetch_ath_atl.py
 
-      - name: Push ATH/ATL data to Cloudflare KV (write-if-newer)
-        env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
-        run: |
-          set -euo pipefail
-          URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/tao_ath_atl"
-          NEW_UPDATED=$(jq -r '.updated // empty' tao_ath_atl.json)
-          if [ -z "$NEW_UPDATED" ]; then
-            echo "No updated timestamp in tao_ath_atl.json — writing to KV by default"
-            curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
-            exit 0
-          fi
+                - name: Validate generated ATH/ATL JSON
+                  run: |
+                    if [ ! -f tao_ath_atl.json ]; then
+                      echo "No tao_ath_atl.json found"
+                      exit 1
+                    fi
+                    # Ensure required fields are present and numeric
+                    ATH=$(jq -r '.ath // empty' tao_ath_atl.json)
+                    ATL=$(jq -r '.atl // empty' tao_ath_atl.json)
+                    if [ -z "$ATH" ] || [ -z "$ATL" ]; then
+                      echo "Validation failed: 'ath' or 'atl' missing"
+                      jq . tao_ath_atl.json || true
+                      exit 2
+                    fi
+                    echo "Validation passed: ath=$ATH atl=$ATL"
 
-          # Fetch existing value from KV (may return empty)
-          EXISTING_RAW=$(curl -fsS -H "Authorization: Bearer ${CF_API_TOKEN}" "$URL" || echo '')
-          if [ -z "$EXISTING_RAW" ]; then
-            echo "No existing KV value — writing new value"
-            curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
-            exit 0
-          fi
+                # R2 upload removed: no R2 bucket configured in this repo/account
 
-          EXISTING_UPDATED=$(echo "$EXISTING_RAW" | jq -r '.updated // empty' || echo '')
-          if [ -z "$EXISTING_UPDATED" ]; then
-            echo "Existing KV has no updated timestamp — overwriting"
-            curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
-            exit 0
-          fi
+                - name: Push ATH/ATL data to Cloudflare KV (write-if-newer)
+                  env:
+                    CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+                    CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+                    CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+                  run: |
+                    set -euo pipefail
+                    URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/tao_ath_atl"
+                    NEW_UPDATED=$(jq -r '.updated // empty' tao_ath_atl.json)
+                    if [ -z "$NEW_UPDATED" ]; then
+                      echo "No updated timestamp in tao_ath_atl.json — writing to KV by default"
+                      curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
+                      exit 0
+                    fi
 
-          # Convert to epoch seconds for robust comparison
-          NEW_TS=$(date -u -d "$NEW_UPDATED" +%s 2>/dev/null || echo '')
-          EXISTING_TS=$(date -u -d "$EXISTING_UPDATED" +%s 2>/dev/null || echo '')
-          if [ -z "$NEW_TS" ] || [ -z "$EXISTING_TS" ]; then
-            echo "Could not parse timestamps; writing to KV to be safe"
-            curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
-            exit 0
-          fi
+                    # Fetch existing value from KV (may return empty)
+                    EXISTING_RAW=$(curl -fsS -H "Authorization: Bearer ${CF_API_TOKEN}" "$URL" || echo '')
+                    if [ -z "$EXISTING_RAW" ]; then
+                      echo "No existing KV value — writing new value"
+                      curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
+                      exit 0
+                    fi
 
-          if [ "$NEW_TS" -le "$EXISTING_TS" ]; then
-            echo "Skipping KV write: existing entry is newer or equal (existing=$EXISTING_UPDATED, new=$NEW_UPDATED)"
-            exit 0
-          else
-            echo "New data is newer — writing to KV (existing=$EXISTING_UPDATED, new=$NEW_UPDATED)"
-            curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
-            exit 0
-          fi
+                    EXISTING_UPDATED=$(echo "$EXISTING_RAW" | jq -r '.updated // empty' || echo '')
+                    if [ -z "$EXISTING_UPDATED" ]; then
+                      echo "Existing KV has no updated timestamp — overwriting"
+                      curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
+                      exit 0
+                    fi
+
+                    # Use a small python snippet to compare ISO timestamps (portable across runners)
+                    export NEW_UPDATED
+                    export EXISTING_UPDATED
+                    python - <<'PY'
+          import os,sys
+          from datetime import datetime
+
+          new = os.environ.get('NEW_UPDATED')
+          ex = os.environ.get('EXISTING_UPDATED')
+          def to_ts(s):
+              if not s:
+                  raise ValueError('empty')
+              # Handle trailing Z and ISO formats
+              try:
+                  if s.endswith('Z'):
+                      s = s[:-1] + '+00:00'
+                  return datetime.fromisoformat(s).timestamp()
+              except Exception:
+                  # try a fallback parse
+                  try:
+                      return datetime.strptime(s, '%Y-%m-%dT%H:%M:%S.%fZ').timestamp()
+                  except Exception:
+                      raise
+
+          try:
+              n = to_ts(new)
+              e = to_ts(ex)
+          except Exception:
+              # signal parsing error
+              sys.exit(2)
+
+          if n <= e:
+              # new is older or equal → exit code 1 (shell will skip write)
+              sys.exit(1)
+          else:
+              # new is newer → exit code 0 (shell will perform write)
+              sys.exit(0)
+          PY
+
+                    PY_EXIT=$?
+                    if [ "$PY_EXIT" -eq 2 ]; then
+                      echo "Could not parse timestamps; writing to KV to be safe"
+                      curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
+                      exit 0
+                    elif [ "$PY_EXIT" -eq 1 ]; then
+                      echo "Skipping KV write: existing entry is newer or equal (existing=$EXISTING_UPDATED, new=$NEW_UPDATED)"
+                      exit 0
+                    else
+                      echo "New data is newer — writing to KV (existing=$EXISTING_UPDATED, new=$NEW_UPDATED)"
+                      curl -fsSL -X PUT "$URL" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @tao_ath_atl.json
+                      exit 0
+                    fi

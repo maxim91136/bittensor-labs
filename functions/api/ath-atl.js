@@ -9,7 +9,7 @@ export async function onRequest(context) {
   };
 
   if (context.request.method === 'OPTIONS') {
-    return new Response(null, { status: 204, headers: cors });
+}
   }
 
   const KV = context.env?.METRICS_KV;
