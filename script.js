@@ -543,7 +543,12 @@ async function updateNetworkStats(data) {
     ];
     if (window._lastHalving) {
       const dt = new Date(window._lastHalving.at);
-      halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} @ ${dt.toLocaleString()}`);
+      // If avg emission is known, show Threshold -> Date -> Avg emission on one line
+      if (avg !== null) {
+        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} → ${dt.toLocaleString()} → Avg emission used: ${Number(avg).toFixed(2)} TAO/day`);
+      } else {
+        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} @ ${dt.toLocaleString()}`);
+      }
     }
 
     // Add projection metadata from /api/network if available
