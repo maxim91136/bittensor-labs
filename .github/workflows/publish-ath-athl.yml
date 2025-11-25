@@ -34,21 +34,7 @@ jobs:
           fi
           echo "Validation passed: ath=$ATH atl=$ATL"
 
-      - name: Upload backup to Cloudflare R2 (optional)
-        if: ${{ secrets.R2_BUCKET != '' && secrets.R2_ACCOUNT_ID != '' && secrets.R2_ACCESS_KEY_ID != '' }}
-        env:
-          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
-          R2_BUCKET: ${{ secrets.R2_BUCKET }}
-          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        run: |
-          set -euo pipefail
-          pip install --quiet awscli
-          # find the backup file we wrote
-          BACKUP=$(ls tao_ath_atl-*.json | tail -n1)
-          ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"
-          echo "Uploading $BACKUP to R2 bucket ${R2_BUCKET}"
-          aws --endpoint-url "$ENDPOINT" s3 cp "$BACKUP" s3://${R2_BUCKET}/backups/
+      # R2 upload removed: no R2 bucket configured in this repo/account
 
       - name: Push ATH/ATL data to Cloudflare KV
         env:
