@@ -3,6 +3,11 @@ name: Deploy Cloudflare Worker
 on:
   push:
     branches: [ main ]
+    # Only run this deploy workflow when worker-related files change
+    paths:
+      - 'functions/**'
+      - 'worker-entry.js'
+      - '.github/workflows/deploy-worker.yml'
 
 jobs:
   deploy:
