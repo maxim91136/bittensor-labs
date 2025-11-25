@@ -27,8 +27,7 @@ jobs:
         run: |
           cat > wrangler.toml <<'TOML'
           name = "bittensor-ath-atl"
-          main = "./functions"
-          type = "javascript"
+          main = "./worker-entry.js"
           compatibility_date = "2025-11-25"
 
           account_id = "${CF_ACCOUNT_ID}"
