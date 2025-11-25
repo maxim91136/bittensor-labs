@@ -26,7 +26,7 @@ export async function onRequest(context) {
     // 1) Metriken aus KV (Key: "metrics")
     let m = KV ? await KV.get('metrics', { type: 'json' }) : null;
 
-    // 2) Blockhöhe live auffrischen (optional)
+    // 2) Refresh block height live (optional)
     try {
       const header = await rpcCall('chain_getHeader');
       const live = header?.number ? parseInt(header.number, 16) : null;
