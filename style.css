@@ -363,11 +363,12 @@ body {
   filter: drop-shadow(0 0 6px rgba(234,179,8,0.06));
 }
 .halving-pill.confidence-high {
-  border-left: 4px solid var(--accent);
-  box-shadow: inset 0 0 24px rgba(34,197,94,0.03), 0 4px 18px rgba(0,0,0,0.22);
+  /* Distinct color for high confidence to avoid clashing with price green */
+  border-left: 4px solid #0ea5ff; /* cyan-blue */
+  box-shadow: inset 0 0 24px rgba(14,165,255,0.03), 0 4px 18px rgba(0,0,0,0.22);
 }
 .halving-pill.confidence-high .halving-icon {
-  filter: drop-shadow(0 0 6px rgba(34,197,94,0.06));
+  filter: drop-shadow(0 0 6px rgba(14,165,255,0.06));
 }
 
 .halving-icon {
