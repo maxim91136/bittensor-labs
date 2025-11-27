@@ -127,7 +127,15 @@ def fetch_top_subnets() -> Dict[str, object]:
     # First pass: collect neuron counts and validator counts
     for netuid in subnets:
         try:
-            metagraph = subtensor.metagraph(netuid)
+            # Coerce netuid into a plain int to avoid passing numpy/int-like
+            # types into `subtensor.metagraph` which may perform boolean
+            # checks on inputs and trigger ambiguous-truth errors.
+            try:
+                netuid_i = int(netuid)
+            except Exception:
+                netuid_i = netuid
+
+            metagraph = subtensor.metagraph(netuid_i)
 
             # Normalize `uids` into a plain Python list. Some metagraphs
             # return numpy arrays or other sequences which are ambiguous
@@ -159,7 +167,7 @@ def fetch_top_subnets() -> Dict[str, object]:
                 validators = 0
 
             results.append({
-                'netuid': int(netuid),
+                'netuid': int(netuid_i) if isinstance(netuid_i, (int,)) or (isinstance(netuid_i, (str,)) and str(netuid_i).isdigit()) else int(netuid),
                 'neurons': neurons,
                 'validators': validators
             })
