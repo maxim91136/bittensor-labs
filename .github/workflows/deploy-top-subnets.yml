@@ -1,0 +1,50 @@
+name: Deploy Top-Subnets Worker
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'functions/**'
+      - 'worker-top-subnets-entry.js'
+      - '.github/workflows/deploy-top-subnets.yml'
+  workflow_dispatch: {}
+
+jobs:
+  deploy:
+    name: Publish Top-Subnets Worker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Prepare `wrangler.toml` from secrets
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_METRICS_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+        run: |
+          cat > wrangler.toml <<TOML
+          name = "bittensor-top-subnets"
+          main = "./worker-top-subnets-entry.js"
+          compatibility_date = "2025-11-25"
+
+          account_id = "${CF_ACCOUNT_ID}"
+
+          [[kv_namespaces]]
+          binding = "METRICS_KV"
+          id = "${CF_METRICS_NAMESPACE_ID}"
+          TOML
+
+      - name: Publish with Wrangler
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          echo "Publishing top-subnets worker using wrangler..."
+          wrangler deploy
