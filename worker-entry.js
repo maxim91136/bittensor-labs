@@ -2,6 +2,7 @@ import * as ath from './functions/api/ath-atl.js';
 import * as athHealth from './functions/api/ath-atl-health.js';
 import * as network from './functions/api/network.js';
 import * as issuance from './functions/api/issuance_history.js';
+import * as topSubnets from './functions/api/top_subnets.js';
 
 export default {
   async fetch(request, env, ctx) {
@@ -26,6 +27,11 @@ export default {
     // Issuance history endpoint
     if (url.pathname === '/api/issuance_history' || url.pathname.startsWith('/api/issuance_history')) {
       if (typeof issuance.onRequest === 'function') return issuance.onRequest(context);
+    }
+
+    // Top subnets endpoint
+    if (url.pathname === '/api/top_subnets' || url.pathname.startsWith('/api/top_subnets')) {
+      if (typeof topSubnets.onRequest === 'function') return topSubnets.onRequest(context);
     }
 
     return new Response(JSON.stringify({ error: 'not_found' }), { status: 404, headers: { 'Content-Type': 'application/json' } });
