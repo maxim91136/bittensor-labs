@@ -155,6 +155,35 @@ def fetch_top_subnets() -> Dict[str, object]:
             neurons = len(uids_list)
             total_neurons += neurons
 
+            # Try to collect optional subnet metadata if present on metagraph
+            subnet_name = None
+            subnet_price = None
+            try:
+                # common possible attributes
+                for attr in ('subnet_name', 'name', 'display_name', 'title'):
+                    val = getattr(metagraph, attr, None)
+                    if val:
+                        subnet_name = str(val)
+                        break
+                # metadata/dict-like places
+                meta = getattr(metagraph, 'metadata', None) or getattr(metagraph, 'meta', None)
+                if meta and isinstance(meta, dict):
+                    if subnet_name is None and 'name' in meta:
+                        subnet_name = str(meta.get('name'))
+                    # price may be stored under common keys
+                    for pkey in ('price', 'token_price', 'price_usd'):
+                        if pkey in meta and meta.get(pkey) is not None:
+                            subnet_price = meta.get(pkey)
+                            break
+                # direct price attribute
+                if subnet_price is None:
+                    p = getattr(metagraph, 'price', None)
+                    if p is not None:
+                        subnet_price = p
+            except Exception:
+                subnet_name = subnet_name or None
+                subnet_price = subnet_price or None
+
             # Safely read validator_permit mapping (may be missing, array-like, or not a dict)
             # Avoid using `or {}` which triggers a truth-value check on array-like objects.
             permit = getattr(metagraph, 'validator_permit', None)
@@ -172,7 +201,11 @@ def fetch_top_subnets() -> Dict[str, object]:
             results.append({
                 'netuid': int(netuid_i) if isinstance(netuid_i, (int,)) or (isinstance(netuid_i, (str,)) and str(netuid_i).isdigit()) else int(netuid),
                 'neurons': neurons,
-                'validators': validators
+                'validators': validators,
+                'subnet_name': subnet_name,
+                'subnet_price': subnet_price,
+                # neuron share will be helpful for later
+                'neuron_share': round((neurons / total_neurons) if total_neurons > 0 else 0.0, 6)
             })
         except Exception as e:
             print(f'⚠️ metagraph fetch failed for netuid {netuid}: {e}', file=sys.stderr)
@@ -196,6 +229,11 @@ def fetch_top_subnets() -> Dict[str, object]:
         share = (entry['neurons'] / total_neurons) if total_neurons > 0 else 0.0
         est = share * DAILY_EMISSION
         entry['estimated_emission_daily'] = round(float(est), 6)
+        # also include emission share percent of assumed daily emission
+        try:
+            entry['emission_share_percent'] = round((entry['estimated_emission_daily'] / DAILY_EMISSION) * 100.0, 4)
+        except Exception:
+            entry['emission_share_percent'] = 0.0
 
     # Sort and take top N (default 10)
     sorted_subnets = sorted(results, key=lambda x: x.get('estimated_emission_daily', 0.0), reverse=True)
