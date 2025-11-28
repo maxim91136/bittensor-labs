@@ -162,7 +162,60 @@ def fetch_top_subnets() -> Dict[str, object]:
                 break
         return out
 
-    taostats_map = _fetch_taostats(NETWORK)
+    # First, try to read Taostats data from Cloudflare KV if credentials
+    # are provided in the environment (this helps CI jobs reuse an existing
+    # `taostats_latest` KV entry instead of hitting protected Taostats APIs).
+    taostats_map = {}
+    try:
+        cf_acc = os.getenv('CF_ACCOUNT_ID')
+        cf_token = os.getenv('CF_API_TOKEN')
+        cf_ns = os.getenv('CF_KV_NAMESPACE_ID') or os.getenv('CF_METRICS_NAMESPACE_ID')
+        if cf_acc and cf_token and cf_ns:
+            try:
+                url = f'https://api.cloudflare.com/client/v4/accounts/{cf_acc}/storage/kv/namespaces/{cf_ns}/values/taostats_subnets'
+                req = urllib.request.Request(url, method='GET', headers={
+                    'Authorization': f'Bearer {cf_token}',
+                    'Accept': 'application/json'
+                })
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    if resp.status == 200:
+                        raw = resp.read()
+                        try:
+                            kj = json.loads(raw)
+                            # Expecting either a mapping or an object with 'data'
+                            if isinstance(kj, dict) and 'data' in kj and isinstance(kj.get('data'), list):
+                                items = kj.get('data')
+                            elif isinstance(kj, list):
+                                items = kj
+                            elif isinstance(kj, dict):
+                                # if the KV stores a dict of netuid->item
+                                try:
+                                    taostats_map = {int(k): v for k, v in kj.items()}
+                                except Exception:
+                                    taostats_map = {}
+                                items = None
+                            else:
+                                items = None
+                            if items:
+                                for item in items:
+                                    try:
+                                        netuid = item.get('netuid') if isinstance(item, dict) else None
+                                        if netuid is None and isinstance(item, dict) and 'id' in item:
+                                            netuid = item.get('id')
+                                        if netuid is None:
+                                            continue
+                                        taostats_map[int(netuid)] = item
+                                    except Exception:
+                                        continue
+                        except Exception:
+                            taostats_map = {}
+            except Exception:
+                taostats_map = {}
+    except Exception:
+        taostats_map = {}
+    # If KV didn't produce anything, fall back to direct HTTP fetches
+    if not taostats_map:
+        taostats_map = _fetch_taostats(NETWORK)
     # Debug: report Taostats map size and a tiny sample so CI logs show whether Taostats responded
     try:
         if taostats_map is None:
@@ -449,11 +502,15 @@ def main():
     cf_token = os.getenv('CF_API_TOKEN')
     cf_ns = os.getenv('CF_KV_NAMESPACE_ID') or os.getenv('CF_METRICS_NAMESPACE_ID')
     if cf_acc and cf_token and cf_ns:
-        print('Attempting KV PUT for top_subnets...')
-        data = json.dumps(out).encode('utf-8')
-        ok = put_to_kv(cf_acc, cf_token, cf_ns, 'top_subnets', data)
-        if not ok:
-            print('KV PUT failed; leaving local file only', file=sys.stderr)
+        # Avoid overwriting KV with an empty `top_subnets` payload.
+        if not out.get('top_subnets'):
+            print('⚠️ top_subnets is empty — skipping KV PUT to avoid clearing existing data', file=sys.stderr)
+        else:
+            print('Attempting KV PUT for top_subnets...')
+            data = json.dumps(out).encode('utf-8')
+            ok = put_to_kv(cf_acc, cf_token, cf_ns, 'top_subnets', data)
+            if not ok:
+                print('KV PUT failed; leaving local file only', file=sys.stderr)
     else:
         print('CF credentials missing; skipped KV PUT')
 

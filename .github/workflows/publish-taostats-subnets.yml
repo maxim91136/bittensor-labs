@@ -1,0 +1,46 @@
+name: Fetch and Push Taostats Subnets to Cloudflare KV
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'  # every 15 minutes
+  workflow_dispatch: {}
+
+jobs:
+  fetch-taostats-subnets:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install requests
+        run: pip install requests
+
+      - name: Fetch Taostats subnets
+        env:
+          TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
+          NETWORK: ${{ env.NETWORK }}
+        run: |
+          python .github/scripts/fetch_taostats_subnets.py
+
+      - name: Push Taostats subnets to Cloudflare KV
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+        run: |
+          if [ ! -f taostats_subnets.json ]; then
+            echo "No taostats_subnets.json found"
+            exit 1
+          fi
+          URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/taostats_subnets"
+          curl -fsSL -X PUT \
+            "$URL" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @taostats_subnets.json
