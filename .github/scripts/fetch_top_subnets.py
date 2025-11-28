@@ -14,6 +14,7 @@ from typing import List, Dict
 from datetime import datetime, timezone
 import urllib.request
 import urllib.error
+import ssl
 
 NETWORK = os.getenv('NETWORK', 'finney')
 DAILY_EMISSION = float(os.getenv('DAILY_EMISSION', '7200'))
@@ -52,6 +53,39 @@ def fetch_top_subnets() -> Dict[str, object]:
     except Exception as e:
         print('❌ bittensor import failed:', e, file=sys.stderr)
         raise
+    # Try to fetch Taostats data (preferred source for emission_share if available)
+    def _fetch_taostats(network: str, limit: int = 500) -> Dict[int, Dict]:
+        out = {}
+        url = f"https://api.taostats.io/subnets/?network={network}&limit={limit}"
+        try:
+            # taostats uses HTTPS; ignore cert issues in CI if they appear
+            ctx = ssl.create_default_context()
+            req = urllib.request.Request(url, method='GET')
+            with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
+                data = resp.read()
+                try:
+                    j = json.loads(data)
+                except Exception:
+                    return out
+                # taostats returns an object with "data" key or a list
+                items = j.get('data') if isinstance(j, dict) and 'data' in j else j
+                if not items:
+                    return out
+                for item in items:
+                    try:
+                        netuid = item.get('netuid')
+                        if netuid is None:
+                            # some items may use numeric keys
+                            continue
+                        out[int(netuid)] = item
+                    except Exception:
+                        continue
+        except Exception:
+            # silent fail — we'll fall back to on-chain calculations
+            return {}
+        return out
+
+    taostats_map = _fetch_taostats(NETWORK)
 
     subtensor = bt.subtensor(network=NETWORK)
     try:
@@ -224,16 +258,44 @@ def fetch_top_subnets() -> Dict[str, object]:
         print('⚠️ No neuron data available to compute emissions', file=sys.stderr)
         return {'generated_at': datetime.now(timezone.utc).isoformat(), 'top_subnets': []}
 
-    # Compute estimated emission per subnet proportional to neuron share
+    # Compute estimated emission per subnet. Prefer Taostats if available.
     for entry in results:
-        share = (entry['neurons'] / total_neurons) if total_neurons > 0 else 0.0
-        est = share * DAILY_EMISSION
-        entry['estimated_emission_daily'] = round(float(est), 6)
-        # also include emission share percent of assumed daily emission
+        netuid_i = entry.get('netuid')
+        taodata = None
         try:
-            entry['emission_share_percent'] = round((entry['estimated_emission_daily'] / DAILY_EMISSION) * 100.0, 4)
+            taodata = taostats_map.get(int(netuid_i)) if taostats_map else None
         except Exception:
-            entry['emission_share_percent'] = 0.0
+            taodata = None
+
+        if taodata:
+            # Taostats provides emission_share as a fractional value (e.g. 0.0318 -> 3.18%)
+            try:
+                ts_share = float(taodata.get('emission_share', 0.0))
+            except Exception:
+                ts_share = 0.0
+            est = ts_share * DAILY_EMISSION
+            entry['estimated_emission_daily'] = round(float(est), 6)
+            try:
+                entry['emission_share_percent'] = round(float(ts_share) * 100.0, 4)
+            except Exception:
+                entry['emission_share_percent'] = 0.0
+            # keep source metadata so consumers know where the value came from
+            entry['ema_source'] = 'taostats'
+            # copy some helpful fields from Taostats if present
+            entry['taostats_name'] = taodata.get('name') if isinstance(taodata, dict) else None
+            entry['taostats_tempo'] = taodata.get('tempo') if isinstance(taodata, dict) else None
+            entry['taostats_total_stake'] = taodata.get('total_stake') if isinstance(taodata, dict) else None
+            entry['taostats_raw'] = taodata
+        else:
+            # fallback: proportional to neuron counts
+            share = (entry['neurons'] / total_neurons) if total_neurons > 0 else 0.0
+            est = share * DAILY_EMISSION
+            entry['estimated_emission_daily'] = round(float(est), 6)
+            try:
+                entry['emission_share_percent'] = round((entry['estimated_emission_daily'] / DAILY_EMISSION) * 100.0, 4)
+            except Exception:
+                entry['emission_share_percent'] = 0.0
+            entry['ema_source'] = 'neurons'
 
     # Sort and take top N (default 10)
     sorted_subnets = sorted(results, key=lambda x: x.get('estimated_emission_daily', 0.0), reverse=True)
