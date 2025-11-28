@@ -609,6 +609,36 @@ def fetch_top_subnets() -> Dict[str, object]:
     missing_from_us = sorted(list(tao_top_uids - our_top_uids))
 
     # Build the final output and include 'all_subnets' as requested
+    # Compute discrepancy stats for entries where both our estimate and taostats exist
+    discrepancies = []
+    for e in results:
+        try:
+            our = float(e.get('estimated_emission_daily', 0.0))
+            tao = e.get('taostats_estimated_emission_daily')
+            if tao is not None:
+                tao = float(tao)
+                absd = abs(our - tao)
+                pct = (absd / tao * 100.0) if tao != 0 else 0.0
+                discrepancies.append({'netuid': int(e.get('netuid')), 'our': our, 'tao': tao, 'abs_delta': round(absd,6), 'pct_delta': round(pct,4)})
+        except Exception:
+            continue
+
+    def _mean(xs):
+        return float(sum(xs)/len(xs)) if xs else 0.0
+
+    if discrepancies:
+        abs_vals = [d['abs_delta'] for d in discrepancies]
+        pct_vals = [d['pct_delta'] for d in discrepancies]
+        discrepancy_stats = {
+            'count': len(discrepancies),
+            'avg_abs_delta': round(_mean(abs_vals),6),
+            'max_abs_delta': round(max(abs_vals),6) if abs_vals else None,
+            'avg_pct_delta': round(_mean(pct_vals),4),
+            'max_pct_delta': round(max(pct_vals),4) if pct_vals else None
+        }
+    else:
+        discrepancy_stats = {'count': 0, 'avg_abs_delta': 0.0, 'max_abs_delta': None, 'avg_pct_delta': 0.0, 'max_pct_delta': None}
+
     out = {
         'generated_at': datetime.now(timezone.utc).isoformat(),
         'network': NETWORK,
@@ -621,7 +651,8 @@ def fetch_top_subnets() -> Dict[str, object]:
         'top_subnets_discrepancies': {
             'our_top_not_in_taostats_top': added_by_us,
             'taostats_top_not_in_our_top': missing_from_us
-        }
+        },
+        'top_subnets_discrepancy_stats': discrepancy_stats
     }
     return out
 
