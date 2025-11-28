@@ -86,6 +86,19 @@ def fetch_top_subnets() -> Dict[str, object]:
         return out
 
     taostats_map = _fetch_taostats(NETWORK)
+    # Debug: report Taostats map size and a tiny sample so CI logs show whether Taostats responded
+    try:
+        if taostats_map is None:
+            print('DEBUG: taostats_map is None')
+        else:
+            try:
+                size = len(taostats_map)
+            except Exception:
+                size = 0
+            sample_keys = list(taostats_map.keys())[:5]
+            print(f"DEBUG: taostats_map_size={size}, sample_keys={sample_keys}")
+    except Exception:
+        pass
 
     subtensor = bt.subtensor(network=NETWORK)
     try:
