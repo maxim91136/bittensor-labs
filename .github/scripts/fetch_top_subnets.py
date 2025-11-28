@@ -55,34 +55,71 @@ def fetch_top_subnets() -> Dict[str, object]:
         raise
     # Try to fetch Taostats data (preferred source for emission_share if available)
     def _fetch_taostats(network: str, limit: int = 500) -> Dict[int, Dict]:
-        out = {}
-        url = f"https://api.taostats.io/subnets/?network={network}&limit={limit}"
-        try:
-            # taostats uses HTTPS; ignore cert issues in CI if they appear
-            ctx = ssl.create_default_context()
-            req = urllib.request.Request(url, method='GET')
-            with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
-                data = resp.read()
+        """Fetch Taostats subnet records and return a mapping netuid->item.
+
+        This tries a small set of plausible Taostats endpoints and performs a
+        few retries with backoff. If Taostats cannot be reached or returns no
+        usable data we return an empty dict.
+        """
+        out: Dict[int, Dict] = {}
+        # Try a few plausible endpoint variants. If Taostats has changed its
+        # URL shape, these variants increase the chance we still find the API.
+        variants = [
+            f"https://api.taostats.io/subnets/?network={network}&limit={limit}",
+            f"https://api.taostats.io/subnets?network={network}&limit={limit}",
+            f"https://taostats.io/api/subnets?network={network}&limit={limit}",
+            f"https://taostats.io/subnets?network={network}&limit={limit}",
+        ]
+
+        # Basic retry/backoff
+        for url in variants:
+            attempt = 0
+            while attempt < 3:
                 try:
-                    j = json.loads(data)
-                except Exception:
-                    return out
-                # taostats returns an object with "data" key or a list
-                items = j.get('data') if isinstance(j, dict) and 'data' in j else j
-                if not items:
-                    return out
-                for item in items:
+                    ctx = ssl.create_default_context()
+                    req = urllib.request.Request(url, method='GET')
+                    with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
+                        if resp.status and int(resp.status) >= 400:
+                            raise Exception(f"HTTP {resp.status}")
+                        data = resp.read()
+                        try:
+                            j = json.loads(data)
+                        except Exception:
+                            # not JSON — try next attempt/variant
+                            break
+                        # taostats typically returns an object with a 'data' key
+                        items = j.get('data') if isinstance(j, dict) and 'data' in j else j
+                        if not items:
+                            break
+                        for item in items:
+                            try:
+                                # prefer explicit 'netuid' field, but numeric keys may exist
+                                netuid = item.get('netuid') if isinstance(item, dict) else None
+                                if netuid is None:
+                                    # some APIs use 'id' or numeric-keyed dicts
+                                    if isinstance(item, dict) and 'id' in item:
+                                        netuid = item.get('id')
+                                if netuid is None:
+                                    continue
+                                out[int(netuid)] = item
+                            except Exception:
+                                continue
+                        # Successfully parsed something — return it
+                        if len(out) > 0:
+                            return out
+                except Exception as e:
+                    # wait a bit and retry this variant
+                    backoff = 0.5 * (2 ** attempt)
                     try:
-                        netuid = item.get('netuid')
-                        if netuid is None:
-                            # some items may use numeric keys
-                            continue
-                        out[int(netuid)] = item
+                        import time
+
+                        time.sleep(backoff)
                     except Exception:
-                        continue
-        except Exception:
-            # silent fail — we'll fall back to on-chain calculations
-            return {}
+                        pass
+                    attempt += 1
+                    continue
+                # break out of attempts loop if we reached here without continue
+                break
         return out
 
     taostats_map = _fetch_taostats(NETWORK)
@@ -279,44 +316,49 @@ def fetch_top_subnets() -> Dict[str, object]:
     except Exception:
         pass
 
-    # Compute estimated emission per subnet. Prefer Taostats if available.
-    for entry in results:
-        netuid_i = entry.get('netuid')
-        taodata = None
-        try:
-            taodata = taostats_map.get(int(netuid_i)) if taostats_map else None
-        except Exception:
-            taodata = None
+    # Compute estimated emission per subnet using Taostats ONLY.
+    # Build a quick set of netuids present in Taostats to filter results.
+    taostats_netuids = set()
+    try:
+        taostats_netuids = set(int(k) for k in taostats_map.keys()) if taostats_map else set()
+    except Exception:
+        taostats_netuids = set()
 
-        if taodata:
-            # Taostats provides emission_share as a fractional value (e.g. 0.0318 -> 3.18%)
-            try:
-                ts_share = float(taodata.get('emission_share', 0.0))
-            except Exception:
-                ts_share = 0.0
-            est = ts_share * DAILY_EMISSION
-            entry['estimated_emission_daily'] = round(float(est), 6)
-            try:
-                entry['emission_share_percent'] = round(float(ts_share) * 100.0, 4)
-            except Exception:
-                entry['emission_share_percent'] = 0.0
-            # keep source metadata so consumers know where the value came from
-            entry['ema_source'] = 'taostats'
-            # copy some helpful fields from Taostats if present
-            entry['taostats_name'] = taodata.get('name') if isinstance(taodata, dict) else None
-            entry['taostats_tempo'] = taodata.get('tempo') if isinstance(taodata, dict) else None
-            entry['taostats_total_stake'] = taodata.get('total_stake') if isinstance(taodata, dict) else None
-            entry['taostats_raw'] = taodata
-        else:
-            # fallback: proportional to neuron counts
-            share = (entry['neurons'] / total_neurons) if total_neurons > 0 else 0.0
-            est = share * DAILY_EMISSION
-            entry['estimated_emission_daily'] = round(float(est), 6)
-            try:
-                entry['emission_share_percent'] = round((entry['estimated_emission_daily'] / DAILY_EMISSION) * 100.0, 4)
-            except Exception:
-                entry['emission_share_percent'] = 0.0
-            entry['ema_source'] = 'neurons'
+    if not taostats_netuids:
+        print('❌ Taostats data not available — aborting Top-Subnets emission computation (Taostats-only mode).', file=sys.stderr)
+        return {'generated_at': datetime.now(timezone.utc).isoformat(), 'network': NETWORK, 'daily_emission_assumed': DAILY_EMISSION, 'total_neurons': total_neurons, 'top_n': 0, 'top_subnets': []}
+
+    # Only keep entries that have Taostats data. This ensures we don't fall back
+    # to neuron-proportional estimates and strictly follow Taostats as the source.
+    filtered_results = []
+    for entry in results:
+        try:
+            netuid_i = int(entry.get('netuid'))
+        except Exception:
+            continue
+        taodata = taostats_map.get(netuid_i)
+        if not taodata:
+            # skip entries that Taostats doesn't report
+            continue
+        try:
+            ts_share = float(taodata.get('emission_share', 0.0))
+        except Exception:
+            ts_share = 0.0
+        est = ts_share * DAILY_EMISSION
+        entry['estimated_emission_daily'] = round(float(est), 6)
+        try:
+            entry['emission_share_percent'] = round(float(ts_share) * 100.0, 4)
+        except Exception:
+            entry['emission_share_percent'] = None
+        entry['ema_source'] = 'taostats'
+        entry['taostats_name'] = taodata.get('name') if isinstance(taodata, dict) else None
+        entry['taostats_tempo'] = taodata.get('tempo') if isinstance(taodata, dict) else None
+        entry['taostats_total_stake'] = taodata.get('total_stake') if isinstance(taodata, dict) else None
+        entry['taostats_raw'] = taodata
+        filtered_results.append(entry)
+
+    # Replace results with filtered_results for downstream sorting
+    results = filtered_results
 
     # Sort and take top N (default 10)
     sorted_subnets = sorted(results, key=lambda x: x.get('estimated_emission_daily', 0.0), reverse=True)
