@@ -10,7 +10,7 @@ Designed to be run from a GitHub Actions runner (mirrors other fetch_*.py).
 import os
 import json
 import sys
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from datetime import datetime, timezone
 import urllib.request
 import urllib.error
@@ -55,7 +55,7 @@ def fetch_top_subnets() -> Dict[str, object]:
         print('❌ bittensor import failed:', e, file=sys.stderr)
         raise
     # Try to fetch Taostats data (preferred source for emission_share if available)
-    def _fetch_taostats(network: str, limit: int = 500) -> Dict[int, Dict]:
+    def _fetch_taostats(network: str, limit: int = 500) -> Tuple[Dict[int, Dict], str]:
         """Fetch Taostats subnet records and return a mapping netuid->item.
 
         This tries a small set of plausible Taostats endpoints and performs a
@@ -63,6 +63,7 @@ def fetch_top_subnets() -> Dict[str, object]:
         usable data we return an empty dict.
         """
         out: Dict[int, Dict] = {}
+        last_error = ''
         # Prefer the documented API path per https://docs.taostats.io
         variants = [
             f"https://api.taostats.io/api/v1/subnets?network={network}&limit={limit}",
@@ -91,8 +92,13 @@ def fetch_top_subnets() -> Dict[str, object]:
                         data = resp.read()
                         try:
                             j = json.loads(data)
-                        except Exception:
-                            # not JSON — try next attempt/variant
+                        except Exception as e:
+                            # not JSON — capture snippet & continue
+                            try:
+                                snippet = data[:240].decode('utf-8', errors='replace') if isinstance(data, (bytes, bytearray)) else str(data)
+                            except Exception:
+                                snippet = '<unreadable response>'
+                            last_error = f'Non-JSON response from {url}: {snippet[:240]}'
                             break
                         # taostats typically returns an object with a 'data' key
                         items = j.get('data') if isinstance(j, dict) and 'data' in j else j
@@ -151,6 +157,11 @@ def fetch_top_subnets() -> Dict[str, object]:
                     # wait a bit and retry this variant
                     backoff = 0.5 * (2 ** attempt)
                     try:
+                        # record the last error (HTTP status or exception repr)
+                        last_error = getattr(e, 'reason', None) or getattr(e, 'code', None) or str(e)
+                    except Exception:
+                        last_error = str(e)
+                    try:
                         import time
 
                         time.sleep(backoff)
@@ -160,12 +171,13 @@ def fetch_top_subnets() -> Dict[str, object]:
                     continue
                 # break out of attempts loop if we reached here without continue
                 break
-        return out
+        return out, last_error
 
     # First, try to read Taostats data from Cloudflare KV if credentials
     # are provided in the environment (this helps CI jobs reuse an existing
     # `taostats_latest` KV entry instead of hitting protected Taostats APIs).
     taostats_map = {}
+    taostats_error = None
     try:
         cf_acc = os.getenv('CF_ACCOUNT_ID')
         cf_token = os.getenv('CF_API_TOKEN')
@@ -215,7 +227,7 @@ def fetch_top_subnets() -> Dict[str, object]:
         taostats_map = {}
     # If KV didn't produce anything, fall back to direct HTTP fetches
     if not taostats_map:
-        taostats_map = _fetch_taostats(NETWORK)
+        taostats_map, taostats_error = _fetch_taostats(NETWORK)
     # Debug: report Taostats map size and a tiny sample so CI logs show whether Taostats responded
     try:
         if taostats_map is None:
@@ -229,6 +241,8 @@ def fetch_top_subnets() -> Dict[str, object]:
             print(f"DEBUG: taostats_map_size={size}, sample_keys={sample_keys}")
     except Exception:
         pass
+    if taostats_error:
+        print(f'DEBUG: taostats_last_error={taostats_error}')
 
     subtensor = bt.subtensor(network=NETWORK)
     try:
