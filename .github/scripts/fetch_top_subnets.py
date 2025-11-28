@@ -432,14 +432,15 @@ def fetch_top_subnets() -> Dict[str, object]:
         taostats_netuids = set()
 
     if not taostats_netuids:
-        # If caller provided an API key we expected authenticated Taostats data
-        # and should fail fast to avoid publishing inaccurate estimates.
+        # Taostats subnet data was not available. Fall back to neuron-proportional
+        # emission estimates so we still produce a usable `top_subnets` payload
+        # instead of an empty one. Log diagnostic details if present.
+        log_msg = '⚠️ Taostats subnets not available — falling back to neuron-proportional estimates.'
         if TAOSTATS_API_KEY:
-            print('❌ Taostats data not available — aborting Top-Subnets emission computation (Taostats-only mode and API key present).', file=sys.stderr)
-            return {'generated_at': datetime.now(timezone.utc).isoformat(), 'network': NETWORK, 'daily_emission_assumed': DAILY_EMISSION, 'total_neurons': total_neurons, 'top_n': 0, 'top_subnets': []}
-        # Otherwise, fall back to neuron-proportional estimates so we still
-        # produce a usable `top_subnets` payload instead of an empty one.
-        print('⚠️ Taostats data not available and no TAOSTATS_API_KEY — falling back to neuron-proportional estimates', file=sys.stderr)
+            log_msg += ' TAOSTATS_API_KEY present but no subnet data returned.'
+        if taostats_error:
+            log_msg += f' Last error: {taostats_error}'
+        print(log_msg, file=sys.stderr)
         for entry in results:
             try:
                 est = (entry.get('neuron_share', 0.0) * DAILY_EMISSION) if total_neurons > 0 else 0.0
