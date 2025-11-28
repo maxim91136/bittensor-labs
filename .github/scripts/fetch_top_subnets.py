@@ -467,6 +467,9 @@ def fetch_top_subnets() -> Dict[str, object]:
                 if not weight or weight <= 0:
                     weight = 1.0
                 entry['_fallback_weight'] = weight
+                # mark whether the weight came from stake or neurons so we can
+                # derive `ema_source` robustly later without ambiguous truth checks
+                entry['_fallback_source'] = 'stake' if (stake is not None and stake > 0) else 'neurons'
                 total_weight += weight
             except Exception:
                 entry['_fallback_weight'] = 1.0
@@ -484,7 +487,8 @@ def fetch_top_subnets() -> Dict[str, object]:
                 entry['emission_share_percent'] = round(float(entry.get('estimated_emission_daily', 0.0) / DAILY_EMISSION) * 100.0, 4)
             except Exception:
                 entry['emission_share_percent'] = None
-            entry['ema_source'] = 'stake' if any((entry.get('_fallback_weight', 0) and isinstance(entry.get('taostats_total_stake'), (int, float, str))) ) else 'neurons'
+            # Use the `_fallback_source` set above to determine the EMA source
+            entry['ema_source'] = entry.get('_fallback_source', 'neurons')
         # proceed with the neuron-proportional `results`
 
     # Now build final results, mixing taostats entries with weighted fallbacks
@@ -529,21 +533,8 @@ def fetch_top_subnets() -> Dict[str, object]:
                 except Exception:
                     entry['emission_share_percent'] = None
             entry['ema_source'] = entry.get('ema_source', 'stake')
-        try:
-            ts_share = float(taodata.get('emission_share', 0.0))
-        except Exception:
-            ts_share = 0.0
-        est = ts_share * DAILY_EMISSION
-        entry['estimated_emission_daily'] = round(float(est), 6)
-        try:
-            entry['emission_share_percent'] = round(float(ts_share) * 100.0, 4)
-        except Exception:
-            entry['emission_share_percent'] = None
-        entry['ema_source'] = 'taostats'
-        entry['taostats_name'] = taodata.get('name') if isinstance(taodata, dict) else None
-        entry['taostats_tempo'] = taodata.get('tempo') if isinstance(taodata, dict) else None
-        entry['taostats_total_stake'] = taodata.get('total_stake') if isinstance(taodata, dict) else None
-        entry['taostats_raw'] = taodata
+        # If taodata exists, the above block already set the values for that
+        # entry. Do not overwrite fallback values if we don't have taodata.
         filtered_results.append(entry)
 
     # Replace results with filtered_results for downstream sorting
