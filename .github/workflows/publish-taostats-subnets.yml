@@ -24,7 +24,7 @@ jobs:
       - name: Fetch Taostats subnets
         env:
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
-          NETWORK: ${{ env.NETWORK }}
+          NETWORK: 'finney'
         run: |
           python .github/scripts/fetch_taostats_subnets.py
 
