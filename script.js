@@ -52,18 +52,18 @@ function animateValue(element, start, end, duration = 1000) {
 function formatNumber(num) {
   if (num >= 1000000) return (num / 1000000).toFixed(2) + 'M';
   if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-  return Number(num).toLocaleString('en-US');
+  return Number(num).toLocaleString(navigator.language || 'en-US');
 }
 
 function formatFull(num) {
   if (num === null || num === undefined || isNaN(num)) return '—';
-  return Math.round(Number(num)).toLocaleString('en-US');
+  return Math.round(Number(num)).toLocaleString(navigator.language || 'en-US');
 }
 
 // Exact formatting with thousands separators and two decimals
 function formatExact(num) {
   if (num === null || num === undefined || isNaN(Number(num))) return '—';
-  return Number(num).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return Number(num).toLocaleString(navigator.language || 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 // Compact display for large numbers (e.g. 1.23M, 4.56B)
@@ -71,12 +71,38 @@ function formatCompact(num) {
   num = Number(num);
   if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(2) + 'B';
   if (num >= 1_000_000) return (num / 1_000_000).toFixed(2) + 'M';
-  return num.toLocaleString('en-US');
+  return num.toLocaleString(navigator.language || 'en-US');
+}
+
+// Utility: set compact formatted number with a non-translatable unit span
+function setCompactWithUnit(el, prefix, compactStr) {
+  // compactStr like "1.23B" or "456.00" or "12.3K"
+  el.textContent = ''; // clear
+  if (prefix) el.appendChild(document.createTextNode(prefix));
+  const m = String(compactStr).match(/^([0-9.,]+)([KMB])?$/);
+  if (m) {
+    el.appendChild(document.createTextNode(m[1]));
+    if (m[2]) {
+      const lang = (navigator && navigator.language) ? navigator.language.toLowerCase() : 'en';
+      const mapping = {
+        'de': { 'K': 'Tsd', 'M': 'Mio', 'B': 'Mrd' },
+      };
+      const map = mapping[lang.split('-')[0]] || null;
+      const unitText = map && map[m[2]] ? map[m[2]] : m[2];
+      const unit = document.createElement('span');
+      unit.className = 'stat-unit';
+      unit.setAttribute('translate', 'no');
+      unit.textContent = unitText;
+      el.appendChild(unit);
+    }
+  } else {
+    el.appendChild(document.createTextNode(String(compactStr)));
+  }
 }
 
 function formatPrice(price) {
   if (price === null || price === undefined || Number.isNaN(Number(price))) return 'N/A';
-  return `$${Number(price).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `$${Number(price).toLocaleString(navigator.language || 'en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
 // Round up to 2 decimal places (ceiling)
@@ -311,8 +337,8 @@ function updateMarketCapAndFDV(price, circulatingSupply) {
   if (marketCapEl && price && circulatingSupply) {
   const marketCap = price * circulatingSupply;
   const fdv = price * maxSupply;
-  marketCapEl.textContent = `$${formatCompact(marketCap)}`;
-  fdvEl.textContent = `$${formatCompact(fdv)}`;
+  setCompactWithUnit(marketCapEl, '$', formatCompact(marketCap));
+  setCompactWithUnit(fdvEl, '$', formatCompact(fdv));
   }
 }
 
@@ -820,7 +846,7 @@ async function refreshDashboard() {
   // Get volume from taostats!
   const volumeEl = document.getElementById('volume24h');
   if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
-  volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
+  setCompactWithUnit(volumeEl, '$', formatCompact(taostats.volume_24h));
   }
 
   // Set API status
@@ -1057,7 +1083,7 @@ async function initDashboard() {
   window._taostats = taostats ?? null;
   const volumeEl = document.getElementById('volume24h');
   if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
-    volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
+    setCompactWithUnit(volumeEl, '$', formatCompact(taostats.volume_24h));
   }
 
   // Fill initial API status
@@ -1179,10 +1205,10 @@ async function updateAthAtlPills() {
     const athDate = document.getElementById('athDate');
     const atlValue = document.getElementById('atlValue');
     const atlDate = document.getElementById('atlDate');
-    if (athValue && data.ath) athValue.textContent = `$${Number(data.ath).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    if (athDate && data.ath_date) athDate.textContent = new Date(data.ath_date).toLocaleDateString('en-US');
-    if (atlValue && data.atl) atlValue.textContent = `$${Number(data.atl).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    if (atlDate && data.atl_date) atlDate.textContent = new Date(data.atl_date).toLocaleDateString('en-US');
+    if (athValue && data.ath) athValue.textContent = `$${Number(data.ath).toLocaleString(navigator.language || 'en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if (athDate && data.ath_date) athDate.textContent = new Date(data.ath_date).toLocaleDateString(navigator.language || 'en-US');
+    if (atlValue && data.atl) atlValue.textContent = `$${Number(data.atl).toLocaleString(navigator.language || 'en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if (atlDate && data.atl_date) atlDate.textContent = new Date(data.atl_date).toLocaleDateString(navigator.language || 'en-US');
   } catch (err) {
     console.error('❌ updateAthAtlPills:', err);
   }

@@ -484,6 +484,14 @@ body {
   line-height: 1.2;
 }
 
+/* Unit suffix used in compact number display for K/M/B etc. */
+.stat-unit {
+  margin-left: 0.18em;
+  font-size: 0.75em;
+  opacity: 0.85;
+  vertical-align: baseline;
+}
+
 /* ---- Dynamic Tooltip (Improved for desktop) ---- */
 .dynamic-tooltip {
   position: fixed;
