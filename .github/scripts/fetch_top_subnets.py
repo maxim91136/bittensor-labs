@@ -506,6 +506,11 @@ def fetch_top_subnets() -> Dict[str, object]:
             except Exception:
                 ts_share = 0.0
             est = ts_share * DAILY_EMISSION
+            # Set both our estimate and taostats-based estimate fields so
+            # downstream diagnostics can compare them easily.
+            entry['taostats_emission_share'] = round(float(ts_share), 8)
+            entry['taostats_estimated_emission_daily'] = round(float(est), 6)
+            # Keep the 'estimated_emission_daily' consistent with taostats
             entry['estimated_emission_daily'] = round(float(est), 6)
             try:
                 entry['emission_share_percent'] = round(float(ts_share) * 100.0, 4)
@@ -516,6 +521,15 @@ def fetch_top_subnets() -> Dict[str, object]:
             entry['taostats_tempo'] = taodata.get('tempo') if isinstance(taodata, dict) else None
             entry['taostats_total_stake'] = taodata.get('total_stake') if isinstance(taodata, dict) else None
             entry['taostats_raw'] = taodata
+            # If we also have our fallback estimate, compute delta fields
+            try:
+                our_est = float(entry.get('estimated_emission_daily', 0.0))
+                taostar_est = float(entry.get('taostats_estimated_emission_daily', our_est))
+                entry['emission_delta_abs'] = round(our_est - taostar_est, 6)
+                entry['emission_delta_pct'] = round(((our_est - taostar_est) / taostar_est * 100.0) if taostar_est != 0 else 0.0, 4)
+            except Exception:
+                entry['emission_delta_abs'] = None
+                entry['emission_delta_pct'] = None
         else:
             # We did not have taostats data for this entry; keep the fallback estimate
             # (estimated_emission_daily already computed by the fallback logic above)
@@ -533,6 +547,11 @@ def fetch_top_subnets() -> Dict[str, object]:
                 except Exception:
                     entry['emission_share_percent'] = None
             entry['ema_source'] = entry.get('ema_source', 'stake')
+            # If we don't have taostats for this entry, emit a taostats_emission_share: None
+            entry.setdefault('taostats_emission_share', None)
+            entry.setdefault('taostats_estimated_emission_daily', None)
+            entry.setdefault('emission_delta_abs', None)
+            entry.setdefault('emission_delta_pct', None)
         # If taodata exists, the above block already set the values for that
         # entry. Do not overwrite fallback values if we don't have taodata.
         filtered_results.append(entry)
@@ -540,7 +559,8 @@ def fetch_top_subnets() -> Dict[str, object]:
     # Replace results with filtered_results for downstream sorting
     results = filtered_results
 
-    # Sort and take top N (default 10)
+    # Sort and take top N (default 10). Also keep a full-list of all subnets
+    # so we can include the entire set of subnets in the JSON for debugging
     sorted_subnets = sorted(results, key=lambda x: x.get('estimated_emission_daily', 0.0), reverse=True)
     try:
         top_n = int(os.getenv('TOP_N', '10'))
@@ -549,13 +569,59 @@ def fetch_top_subnets() -> Dict[str, object]:
     top_n = max(1, top_n)
     top_list = sorted_subnets[:top_n]
 
+    # Build a taostats-based top-N list (if taostats data available) to allow
+    # comparison with our local estimates. This helps diagnose differences
+    # between on-chain estimates and Taostats authoritative data.
+    taostats_top_list = []
+    if taostats_map:
+        # taostats entries are keyed by netuid in taostats_map
+        taodata_items = []
+        for k, v in taostats_map.items():
+            try:
+                uid = int(k)
+                # emission_share is expected to be fractional (0..1)
+                share = float(v.get('emission_share', 0.0)) if isinstance(v, dict) and v.get('emission_share') is not None else 0.0
+                taodata_items.append((uid, share, v))
+            except Exception:
+                continue
+        taodata_items = sorted(taodata_items, key=lambda x: x[1], reverse=True)
+        for uid, share, v in taodata_items[:top_n]:
+            try:
+                taostats_top_list.append({
+                    'netuid': uid,
+                    'emission_share': round(share, 8),
+                    'estimated_emission_daily': round(share * DAILY_EMISSION, 6),
+                    'taostats_raw': v
+                })
+            except Exception:
+                continue
+
+    # Create a simple comparison between our top_list and taostats_top_list
+    def _uid_set(l):
+        try:
+            return set([int(x.get('netuid')) for x in l if x and 'netuid' in x])
+        except Exception:
+            return set()
+
+    our_top_uids = _uid_set(top_list)
+    tao_top_uids = _uid_set(taostats_top_list)
+    added_by_us = sorted(list(our_top_uids - tao_top_uids))
+    missing_from_us = sorted(list(tao_top_uids - our_top_uids))
+
+    # Build the final output and include 'all_subnets' as requested
     out = {
         'generated_at': datetime.now(timezone.utc).isoformat(),
         'network': NETWORK,
         'daily_emission_assumed': DAILY_EMISSION,
         'total_neurons': total_neurons,
         'top_n': top_n,
-        'top_subnets': top_list
+        'top_subnets': top_list,
+        'all_subnets': sorted_subnets,
+        'taostats_top_subnets': taostats_top_list,
+        'top_subnets_discrepancies': {
+            'our_top_not_in_taostats_top': added_by_us,
+            'taostats_top_not_in_our_top': missing_from_us
+        }
     }
     return out
 
