@@ -35,8 +35,8 @@ jobs:
           CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
         run: |
           if [ ! -f taostats_subnets.json ]; then
-            echo "No taostats_subnets.json found"
-            exit 1
+            echo "No taostats_subnets.json found — skipping KV PUT"
+            exit 0
           fi
           URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/taostats_subnets"
           curl -fsSL -X PUT \
