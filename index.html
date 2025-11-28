@@ -75,15 +75,17 @@
     
   <!-- Pills grouped in a single row -->
     <div class="pills-row">
-      <div class="halving-pill" translate="no" data-tooltip="Next halving: —">
+      <div class="halving-pill" translate="no" data-tooltip="Next halving: —" aria-describedby="halving-desc">
     <span class="halving-icon" style="font-size:1.7em; font-family:'Segoe UI',Arial,sans-serif; font-weight:bold; animation: halving-pulse 2.5s infinite; display:flex; align-items:center; justify-content:center;">½&nbsp;</span>
     <span class="halving-text" aria-hidden="true" style="margin-right:6px; opacity:0.85; font-size:0.9em;">≈</span>
       <span id="halvingCountdown" class="pill-value">Calculating...</span>
+         <span id="halving-desc" class="sr-only">Next halving: —</span>
       </div>
-      <div class="price-pill" id="taoPricePill" translate="no">
+      <div class="price-pill" id="taoPricePill" translate="no" aria-describedby="price-desc">
         <span class="price-icon">τ</span>
         <span id="taoPrice" class="pill-value skeleton-text"></span>
         <span id="priceChange" class="price-change" style="display: none;"></span>
+         <span id="price-desc" class="sr-only">Current price of TAO and 24h change</span>
       </div>
     </div>
   </div>
@@ -91,9 +93,10 @@
 
 <main class="dashboard">
   <div class="stats-grid">
-  <a class="stat-card" href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; cursor: pointer; position: relative;">
+  <a class="stat-card" href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; cursor: pointer; position: relative;" aria-describedby="subnets-info-desc">
   <!-- Info-badge is not part of link -->
   <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Number of active subnets in the network">i</span>
+  <span id="subnets-info-desc" class="sr-only">Number of active subnets in the network</span>
   <div class="stat-icon" aria-hidden="true">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <title>Subnets</title>
@@ -110,8 +113,9 @@
   <div class="stat-value" id="subnets">—</div>
   </div>
   </a>
-  <a class="stat-card" href="https://taostats.io/validators" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; cursor: pointer;">
+  <a class="stat-card" href="https://taostats.io/validators" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; cursor: pointer;" aria-describedby="validators-info-desc">
     <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Number of active validators securing the network">i</span>
+    <span id="validators-info-desc" class="sr-only">Number of active validators securing the network</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <title>User Icon</title>
@@ -124,8 +128,9 @@
   <div class="stat-value" id="validators">—</div>
     </div>
   </a>
-     <div class="stat-card">
+    <div class="stat-card" aria-describedby="volume-info-desc">
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="TAO trading volume in the last 24 hours across all tracked exchanges">i</span>
+        <span id="volume-info-desc" class="sr-only">TAO trading volume in the last 24 hours across all tracked exchanges</span>
         <div class="stat-icon" aria-hidden="true">
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <title>Volume 24h</title>
@@ -140,8 +145,9 @@
     <div class="stat-value" id="volume24h">—</div>
         </div>
       </div>
-  <div class="stat-card">
+  <div class="stat-card" aria-describedby="circ-supply-info-desc">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Current circulating supply of TAO tokens">i</span>
+      <span id="circ-supply-info-desc" class="sr-only">Current circulating supply of TAO tokens</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <title>Circulating Supply</title>
@@ -155,8 +161,9 @@
   <div class="stat-value" id="circulatingSupply">—</div>
       </div>
    </div>
-    <div class="stat-card">
+    <div class="stat-card" aria-describedby="marketcap-info-desc">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Market capitalization = price × circulating supply">i</span>
+      <span id="marketcap-info-desc" class="sr-only">Market capitalization = price × circulating supply</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <title translate="no">Market Cap</title>
@@ -170,8 +177,9 @@
   <div class="stat-value" id="marketCap">—</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" aria-describedby="fdv-info-desc">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Fully Diluted Valuation = price × max supply">i</span>
+      <span id="fdv-info-desc" class="sr-only">Fully Diluted Valuation = price × max supply</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <title translate="no">FDV</title>
@@ -185,8 +193,9 @@
   <div class="stat-value" id="fdv">—</div>
       </div>
     </div>
-    <div class="stat-card">
+    <div class="stat-card" aria-describedby="emission-info-desc">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Current emission rate of TAO per day">i</span>
+      <span id="emission-info-desc" class="sr-only">Current emission rate of TAO per day</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <title>Emission</title>
@@ -199,8 +208,9 @@
       </div>
     </div>
     <!-- Next Halving stat-card: removed per user preference. Keep only dynamic halving pill -->
-    <div class="stat-card">
+    <div class="stat-card" aria-describedby="total-neurons-info-desc">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Total number of neurons in the network">i</span>
+      <span id="total-neurons-info-desc" class="sr-only">Total number of neurons in the network</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <title>Neurons</title>
@@ -234,12 +244,13 @@
       </div>
 
   <!-- API Status Card -->
-    <div class="stat-card" id="apiStatusCard">
+    <div class="stat-card" id="apiStatusCard" aria-describedby="api-status-desc">
       <span 
         class="info-badge" translate="no" aria-hidden="true"
         data-tooltip="Status of all data sources powering the dashboard&#10;Taostats: OK&#10;CoinGecko: OK&#10;Bittensor SDK: OK">
         i
       </span>
+      <span id="api-status-desc" class="sr-only">Status of all data sources powering the dashboard. Taostats: OK. CoinGecko: OK. Bittensor SDK: OK</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <title>API Status</title>
@@ -322,10 +333,11 @@
         </div>
       </div>
       <!-- Map Preview Card (Option A) -->
-      <section class="dashboard-card map-preview-card" aria-labelledby="map-preview-heading">
+      <section class="dashboard-card map-preview-card" aria-labelledby="map-preview-heading" aria-describedby="map-info-desc">
         <div class="card-header">
           <h2 id="map-preview-heading">Miner Map</h2>
           <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Distribution of miners; click to open the interactive map">i</span>
+          <span id="map-info-desc" class="sr-only">Distribution of miners; click to open the interactive map</span>
         </div>
         <div class="map-preview-body">
           <!-- Place your provided map thumbnail at assets/miner-map-thumb.png to use a custom image here -->

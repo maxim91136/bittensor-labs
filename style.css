@@ -484,6 +484,16 @@ body {
   line-height: 1.2;
 }
 
+/* Screen reader only (accessible text hidden visually) */
+.sr-only { 
+  position: absolute !important; 
+  height: 1px; 
+  width: 1px; 
+  overflow: hidden; 
+  clip: rect(1px, 1px, 1px, 1px); 
+  white-space: nowrap; 
+}
+
 /* Unit suffix used in compact number display for K/M/B etc. */
 /* .stat-unit removed to revert previous local unit suffix styling. */
 
