@@ -62,12 +62,12 @@ def fetch_top_subnets() -> Dict[str, object]:
         usable data we return an empty dict.
         """
         out: Dict[int, Dict] = {}
-        # Try a few plausible endpoint variants. If Taostats has changed its
-        # URL shape, these variants increase the chance we still find the API.
+        # Prefer the documented API path per https://docs.taostats.io
         variants = [
-            f"https://api.taostats.io/subnets/?network={network}&limit={limit}",
+            f"https://api.taostats.io/api/v1/subnets?network={network}&limit={limit}",
             f"https://api.taostats.io/subnets?network={network}&limit={limit}",
-            f"https://taostats.io/api/subnets?network={network}&limit={limit}",
+            f"https://api.taostats.io/api/subnets?network={network}&limit={limit}",
+            f"https://taostats.io/api/v1/subnets?network={network}&limit={limit}",
             f"https://taostats.io/subnets?network={network}&limit={limit}",
         ]
 
@@ -77,7 +77,11 @@ def fetch_top_subnets() -> Dict[str, object]:
             while attempt < 3:
                 try:
                     ctx = ssl.create_default_context()
-                    req = urllib.request.Request(url, method='GET')
+                    hdrs = {
+                        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                        'Accept': 'application/json',
+                    }
+                    req = urllib.request.Request(url, method='GET', headers=hdrs)
                     with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
                         if resp.status and int(resp.status) >= 400:
                             raise Exception(f"HTTP {resp.status}")
@@ -101,6 +105,37 @@ def fetch_top_subnets() -> Dict[str, object]:
                                         netuid = item.get('id')
                                 if netuid is None:
                                     continue
+                                # Ensure emission_share exists; if not, try documented per-subnet endpoint
+                                if isinstance(item, dict) and ('emission_share' not in item or item.get('emission_share') in (None, 0)):
+                                    # try per-subnet emission endpoint
+                                    for per_endpoint in (
+                                        f"https://api.taostats.io/api/v1/subnets/{int(netuid)}/emission",
+                                        f"https://api.taostats.io/subnets/{int(netuid)}/emission",
+                                        f"https://taostats.io/api/v1/subnets/{int(netuid)}/emission",
+                                    ):
+                                        try:
+                                            hdrs = {
+                                                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                                                'Accept': 'application/json',
+                                            }
+                                            preq = urllib.request.Request(per_endpoint, method='GET', headers=hdrs)
+                                            with urllib.request.urlopen(preq, timeout=6, context=ssl.create_default_context()) as presp:
+                                                pdata = presp.read()
+                                                try:
+                                                    pj = json.loads(pdata)
+                                                    # documented response may embed emission_share directly
+                                                    if isinstance(pj, dict):
+                                                        if 'emission_share' in pj and pj.get('emission_share') is not None:
+                                                            item['emission_share'] = pj.get('emission_share')
+                                                            break
+                                                        # some endpoints wrap data
+                                                        if 'data' in pj and isinstance(pj.get('data'), dict) and 'emission_share' in pj.get('data'):
+                                                            item['emission_share'] = pj.get('data').get('emission_share')
+                                                            break
+                                                except Exception:
+                                                    pass
+                                        except Exception:
+                                            continue
                                 out[int(netuid)] = item
                             except Exception:
                                 continue
