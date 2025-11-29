@@ -52,13 +52,11 @@
 /* Also support pulsing when the site uses `.stat-card` wrappers (legacy layout) */
 .stat-card.pulse-up { 
   border: 2px solid rgba(16,185,129,0.40) !important; 
-  animation: halving-pulse 7s ease-in-out infinite !important; 
-  box-shadow: 0 8px 32px rgba(16,185,129,0.12) !important; 
+  background-color: rgba(16,185,129,0.08) !important;
 }
 .stat-card.pulse-down { 
   border: 2px solid rgba(239,68,68,0.40) !important; 
-  animation: halving-pulse 7s ease-in-out infinite !important; 
-  box-shadow: 0 8px 32px rgba(239,68,68,0.12) !important; 
+  background-color: rgba(239,68,68,0.08) !important;
 }
 
 /* Respect reduced motion by keeping animation but removing transitions only */
@@ -68,12 +66,10 @@
 
 /* Glow on the stat-icon for better visibility when pulsing */
 .stat-card .stat-icon.pulse-up { 
-  filter: drop-shadow(0 0 16px rgba(16,185,129,0.28)) !important; 
-  animation: halving-pulse 7s ease-in-out infinite !important; 
+  filter: none !important; 
 }
 .stat-card .stat-icon.pulse-down { 
-  filter: drop-shadow(0 0 16px rgba(239,68,68,0.28)) !important; 
-  animation: halving-pulse 7s ease-in-out infinite !important; 
+  filter: none !important; 
 }
 
 /* Respect reduced motion by keeping animation but removing filter effects only */
