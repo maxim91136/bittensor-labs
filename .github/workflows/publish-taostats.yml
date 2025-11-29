@@ -80,5 +80,5 @@ jobs:
           TS=$(date -u +"%Y%m%dT%H%M%SZ")
           NEW_FILE="taostats_entry-${TS}.json"
           cp taostats_latest.json "$NEW_FILE"
-          python .github/scripts/backup_issuance_history.py "$NEW_FILE"
+          python .github/scripts/backup-issuance-history-r2.py "$NEW_FILE"
             # Note: no manifest is written; per-run archival is handled by R2 uploads only

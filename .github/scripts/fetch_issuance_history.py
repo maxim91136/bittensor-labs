@@ -2,14 +2,14 @@
 """
 Fetch the `issuance_history` value from Cloudflare Workers KV and write a
 timestamped file locally. Optionally upload it to R2 by invoking
-`backup_issuance_history.py` (the upload script is opt-in and controlled by
+`backup-issuance-history-r2.py` (the upload script is opt-in and controlled by
 `ENABLE_R2`).
 
 Environment variables used (all optional; script will skip if required CF vars missing):
   CF_ACCOUNT_ID            Cloudflare account id
   CF_API_TOKEN             Cloudflare API token (with KV read scope)
   CF_KV_NAMESPACE_ID       KV namespace id that stores `issuance_history`
-    ENABLE_R2                If 'true', upload to R2 using backup_issuance_history.py
+    ENABLE_R2                If 'true', upload to R2 using backup-issuance-history-r2.py
 
 Usage:
   python .github/scripts/fetch_issuance_history.py
@@ -62,7 +62,7 @@ except Exception as e:
 # Optionally upload to R2 using the upload script (it will check ENABLE_R2 itself)
 try:
     import subprocess
-    subprocess.run(['python', '.github/scripts/backup_issuance_history.py', filename], check=False)
+    subprocess.run(['python', '.github/scripts/backup-issuance-history-r2.py', filename], check=False)
 except Exception as e:
     print('Error invoking upload script:', e)
 
