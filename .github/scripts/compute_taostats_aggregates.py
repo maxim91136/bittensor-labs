@@ -121,22 +121,30 @@ def compute_aggregates(history):
     else:
         confidence = 'high'
 
-    # Determine trend_direction using dual-MA confirmation strategy
-    # Short-term (100 min): ±3% threshold filters intraday noise
-    # Medium-term (1 day): ±1% threshold confirms the trend is real
-    # Both must agree to avoid false signals
+    # Determine trend_direction using priority-weighted MA strategy
+    # Medium-term (1 day) is primary indicator: structural volume trends are more important than noise
+    # Short-term (100 min) is secondary: confirms or refutes the medium-term signal
+    # Thresholds:
+    #   - If 1-day ≤ -3%: DOWN (structural volume loss, alarming)
+    #   - If 1-day ≥ +3%: UP (structural volume gain, positive)
+    #   - Otherwise: require short-term confirmation (±3%) to reduce false signals
     short_threshold = 0.03
-    med_threshold = 0.01
+    med_primary_threshold = 0.03  # Primary alarm threshold for 1-day MA
+    med_secondary_threshold = 0.01  # Secondary confirmation threshold when short agrees
 
     trend_direction = 'neutral'
     try:
         if pct_change_vs_ma_short is not None and pct_change_vs_ma_med is not None:
-            # UP: both positive and meet thresholds
-            if pct_change_vs_ma_short >= short_threshold and pct_change_vs_ma_med >= med_threshold:
-                trend_direction = 'up'
-            # DOWN: both negative and meet thresholds
-            elif pct_change_vs_ma_short <= -short_threshold and pct_change_vs_ma_med <= -med_threshold:
+            # Primary: 1-day MA is strong indicator on its own
+            if pct_change_vs_ma_med <= -med_primary_threshold:
+                trend_direction = 'down'  # Structural volume loss
+            elif pct_change_vs_ma_med >= med_primary_threshold:
+                trend_direction = 'up'    # Structural volume gain
+            # Secondary: if 1-day is weak, require short-term confirmation
+            elif pct_change_vs_ma_short <= -short_threshold and pct_change_vs_ma_med <= -med_secondary_threshold:
                 trend_direction = 'down'
+            elif pct_change_vs_ma_short >= short_threshold and pct_change_vs_ma_med >= med_secondary_threshold:
+                trend_direction = 'up'
             else:
                 trend_direction = 'neutral'
     except Exception:
