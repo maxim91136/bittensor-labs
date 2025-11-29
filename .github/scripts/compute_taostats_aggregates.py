@@ -98,13 +98,15 @@ def compute_aggregates(history):
     # windows (10-min samples)
     last_3 = only_vols[-3:] if N >= 1 else []        # ~30 min
     last_10 = only_vols[-10:] if N >= 1 else only_vols  # ~100 min (1 day)
-    last_18 = only_vols[-18:] if N >= 18 else only_vols  # ~180 min (3 days)
-    last_144 = only_vols[-144:] if N >= 144 else only_vols  # ~1440 min (7 days)
+    last_432 = only_vols[-432:] if N >= 432 else only_vols  # ~4320 min (3 days)
+    last_1008 = only_vols[-1008:] if N >= 1008 else only_vols  # ~10080 min (7 days)
 
     ma_short = mean(last_3) if last_3 else mean(only_vols[-1:])
     ma_med = mean(last_10)
-    ma_3d = mean(last_18) if len(last_18) >= 18 else None
-    ma_7d = mean(last_144) if len(last_144) >= 144 else None
+    # Only calculate 3-day MA if we have at least 1 day of data (144 samples)
+    ma_3d = mean(last_432) if N >= 144 else None
+    # Only calculate 7-day MA if we have at least 3 days of data (432 samples)
+    ma_7d = mean(last_1008) if N >= 432 else None
     sd_med = stddev(last_10)
 
     last_volume = only_vols[-1]
