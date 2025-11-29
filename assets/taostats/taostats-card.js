@@ -51,6 +51,17 @@
       badgeEl.setAttribute('data-confidence', data.confidence || 'low');
     }
 
+    // Put percent change and confidence into the card tooltip (no visible percent badge)
+    try {
+      const disp = pctMed ?? pctShort;
+      const pctText = (typeof disp === 'number') ? ((disp>0?'+':'') + (disp*100).toFixed(2) + '%') : '—';
+      const confidence = data.confidence || 'low';
+      const tt = `Δ vs MA10: ${pctText} — confidence: ${confidence}`;
+      try { cardEl.title = tt; cardEl.setAttribute('data-tooltip', tt); } catch (e) { /* ignore */ }
+    } catch (e) {
+      // ignore
+    }
+
     lastState.direction = candidate;
     lastState.last = data.last_volume;
   }

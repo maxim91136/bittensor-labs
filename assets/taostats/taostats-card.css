@@ -30,8 +30,23 @@
 }
 
 /* Pulse classes */
-.tao-volume-card.pulse-up { box-shadow: 0 6px 24px rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.06); }
-.tao-volume-card.pulse-down { box-shadow: 0 6px 24px rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.06); }
+.tao-volume-card.pulse-up { border: 1px solid rgba(16,185,129,0.06); }
+.tao-volume-card.pulse-down { border: 1px solid rgba(239,68,68,0.06); }
+
+/* Slow breathing pulse to match halving pill tempo */
+.tao-volume-card.pulse-up {
+  animation: halving-pulse 7s ease-in-out infinite;
+  box-shadow: 0 8px 28px rgba(16,185,129,0.06);
+}
+.tao-volume-card.pulse-down {
+  animation: halving-pulse 7s ease-in-out infinite;
+  box-shadow: 0 8px 28px rgba(239,68,68,0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tao-volume-card.pulse-up,
+  .tao-volume-card.pulse-down { animation: none; }
+}
 
 /* small screens */
 @media (max-width: 420px) {
