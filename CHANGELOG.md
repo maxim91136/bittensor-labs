@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.8.1 (Release Candidate)
+### Added
+- **Network History Collection**: Automated data gathering from Bittensor SDK (15 min intervals)
+- **`GET /api/network/history`**: New API endpoint returning timestamped network snapshots
+- **Dedicated R2 Backup Workflow**: `backup-network-history-r2.yml` (every 3 hours) for long-term storage
+- **Python Merge Script**: `merge-network-history.py` for robust KV history updates
+- **Monitoring Tools**: Interactive dashboard (`monitor-network-history.sh`) for collection tracking
+- **Documentation**: Complete guide (`docs/NETWORK_HISTORY_MONITORING.md`)
+
+### Changed
+- `publish-network.yml`: Now includes network history merge step (KV append logic)
+- `fetch_network.py`: Generates `network_latest.json` for history tracking
+- R2 archival moved to separate `backup-network-history-r2.yml` workflow
+
+### Fixed
+- Network history merging: Replaced bash/jq with Python for reliable JSON handling
+- Eliminated jq type mismatch errors ("object and array cannot be added")
+- Workflow name cleanup: Removed "(fixed)" suffix
+
 ## v1.0.0-rc.8 (Release Candidate)
 ### Added
 - **Multi-Timeframe Volume Analysis**: 3-day and 7-day moving averages with independent alerts
