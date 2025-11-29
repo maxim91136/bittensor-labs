@@ -5,9 +5,22 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.7.1 (Release Candidate)
+### Changed
+- **Priority-Weighted MA Strategy**: 1-day MA is now primary trend indicator
+  - 1-day ≤ -3% triggers DOWN immediately (structural volume loss)
+  - 1-day ≥ +3% triggers UP immediately (structural volume gain)
+  - Short-term MA only needed for confirmation when 1-day is weak (±1-3%)
+- Refined thresholds to better catch real trends (e.g., 250M → 80M volume shifts)
+
+### Fixed
+- Volume Card now correctly alerts on structural trends (-3.41% 1-day)
+- No longer requires short-term MA to confirm what 1-day MA already shows
+- Better balance: sensitive to real trends, resistant to intraday noise
+
 ## v1.0.0-rc.7 (Release Candidate)
 ### Added
-- **Dual-MA Confirmation Logic**: Volume alerts now require both short-term and medium-term moving averages to agree
+- **Dual-MA Confirmation Logic**: Volume alerts require both short-term and medium-term moving averages to agree
 - **Enhanced Tooltips**: Display both MA values (100min and 1day) plus confidence level
 - **Improved Confidence Tiers**: Based on actual time windows (Low <1d, Medium 1-3d, High ≥3d)
 
