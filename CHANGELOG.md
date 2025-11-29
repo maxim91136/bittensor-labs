@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.7 (Release Candidate)
+### Added
+- **Dual-MA Confirmation Logic**: Volume alerts now require both short-term and medium-term moving averages to agree
+- **Enhanced Tooltips**: Display both MA values (100min and 1day) plus confidence level
+- **Improved Confidence Tiers**: Based on actual time windows (Low <1d, Medium 1-3d, High ≥3d)
+
+### Changed
+- Volume alert thresholds refined to ±3% short-term (100min) + ±1% medium-term (1day)
+- Eliminated short-term noise filtering by requiring dual-MA confirmation
+- Backend now computes `trend_direction`; frontend consumes it directly
+- Confidence calculation now reflects data accumulation time, not sample count
+- Tooltip format now shows: "Δ vs MA (100min): X%", "Δ vs MA (1day): Y%", "confidence: Z"
+
+### Fixed
+- "Whiplash effect" where card color changed rapidly on small volume fluctuations
+- False positives from single-MA logic that triggered on minor intraday movements
+- Confidence appearing "high" too early when data was still fresh
+
 ## v1.0.0-rc.6 (Release Candidate)
 ### Added
 - **Volume 24h Card Alert System**: Static color-based visual feedback

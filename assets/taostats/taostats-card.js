@@ -32,16 +32,8 @@
     if (!legacyEl) return;
     const parentCard = legacyEl.closest('.stat-card') || legacyEl.parentElement;
 
-    const pctShort = typeof data.pct_change_vs_ma_short === 'number' ? data.pct_change_vs_ma_short : null;
-    const pctMed = typeof data.pct_change_vs_ma_med === 'number' ? data.pct_change_vs_ma_med : null;
-
-    // Simple rule: positive = up, negative = down, zero/null = neutral
-    const pctVal = pctShort ?? pctMed;
-    let candidate = 'neutral';
-    if (pctVal !== null) {
-      if (pctVal > 0) candidate = 'up';
-      else if (pctVal < 0) candidate = 'down';
-    }
+    // Use trend_direction from backend (dual-MA confirmation)
+    const candidate = data.trend_direction || 'neutral';
 
     if (parentCard) {
       parentCard.classList.remove('pulse-up','pulse-down','neutral');
@@ -88,10 +80,13 @@
 
     legacyEl.textContent = formatCompact(data.last_volume);
 
-    const disp = pctMed ?? pctShort;
-    const pctText = (typeof disp === 'number') ? ((disp>0?'+':'') + (disp*100).toFixed(2) + '%') : '—';
+    // Build tooltip with both MA values and confidence
+    const pctShort = typeof data.pct_change_vs_ma_short === 'number' ? data.pct_change_vs_ma_short : null;
+    const pctMed = typeof data.pct_change_vs_ma_med === 'number' ? data.pct_change_vs_ma_med : null;
+    const shortText = (pctShort !== null) ? ((pctShort>0?'+':'') + (pctShort*100).toFixed(2) + '%') : '—';
+    const medText = (pctMed !== null) ? ((pctMed>0?'+':'') + (pctMed*100).toFixed(2) + '%') : '—';
     const confidence = data.confidence || 'low';
-    const tt = `Δ vs MA10: ${pctText}\nconfidence: ${confidence}`;
+    const tt = `Δ vs MA (100min): ${shortText}\nΔ vs MA (1day): ${medText}\nconfidence: ${confidence}`;
     try {
       const info = parentCard && parentCard.querySelector && parentCard.querySelector('.info-badge');
       if (info) {
@@ -107,16 +102,8 @@
     const valueEl = cardEl.querySelector('[data-tao-volume-last]');
     const badgeEl = cardEl.querySelector('[data-tao-volume-delta]');
 
-    const pctShort = typeof data.pct_change_vs_ma_short === 'number' ? data.pct_change_vs_ma_short : null;
-    const pctMed = typeof data.pct_change_vs_ma_med === 'number' ? data.pct_change_vs_ma_med : null;
-
-    // Simple rule: positive = up, negative = down, zero/null = neutral
-    const pctVal = pctShort ?? pctMed;
-    let candidate = 'neutral';
-    if (pctVal !== null) {
-      if (pctVal > 0) candidate = 'up';
-      else if (pctVal < 0) candidate = 'down';
-    }
+    // Use trend_direction from backend (dual-MA confirmation)
+    const candidate = data.trend_direction || 'neutral';
 
     cardEl.classList.remove('pulse-up','pulse-down','neutral');
     if (candidate === 'up') {
@@ -153,12 +140,14 @@
     try { badgeEl && badgeEl.removeAttribute && badgeEl.removeAttribute('title'); } catch (e) {}
     try { valueEl && valueEl.removeAttribute && valueEl.removeAttribute('title'); } catch (e) {}
 
-    // Put percent change and confidence into the card tooltip (no visible percent badge)
+    // Build tooltip with both MA values and confidence
     try {
-      const disp = pctMed ?? pctShort;
-      const pctText = (typeof disp === 'number') ? ((disp>0?'+':'') + (disp*100).toFixed(2) + '%') : '—';
+      const pctShort = typeof data.pct_change_vs_ma_short === 'number' ? data.pct_change_vs_ma_short : null;
+      const pctMed = typeof data.pct_change_vs_ma_med === 'number' ? data.pct_change_vs_ma_med : null;
+      const shortText = (pctShort !== null) ? ((pctShort>0?'+':'') + (pctShort*100).toFixed(2) + '%') : '—';
+      const medText = (pctMed !== null) ? ((pctMed>0?'+':'') + (pctMed*100).toFixed(2) + '%') : '—';
       const confidence = data.confidence || 'low';
-      const tt = `Δ vs MA10: ${pctText}\nconfidence: ${confidence}`;
+      const tt = `Δ vs MA (100min): ${shortText}\nΔ vs MA (1day): ${medText}\nconfidence: ${confidence}`;
       try {
         const info = cardEl.querySelector && cardEl.querySelector('.info-badge');
         if (info) { info.title = tt; info.setAttribute('data-tooltip', tt); }

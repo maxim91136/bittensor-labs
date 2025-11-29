@@ -112,31 +112,30 @@ def compute_aggregates(history):
     if ma_short and ma_short != 0:
         pct_change_vs_ma_short = (last_volume - ma_short) / ma_short
 
-    # confidence: low <5, medium 5-9, high >=10
-    if N < 5:
+    # confidence: based on time-window (10-min samples)
+    # low: <1 day (~144 samples), medium: 1-3 days (~144-432 samples), high: >=3 days (~432+ samples)
+    if N < 144:
         confidence = 'low'
-    elif N < 10:
+    elif N < 432:
         confidence = 'medium'
     else:
         confidence = 'high'
 
-    # Determine trend_direction using short and medium MA percent changes with confidence-scaled thresholds
-    # Base thresholds (enter/exit) — enter at 5%, exit at 3% (used here as simplified rule)
-    base_enter = 0.05
-    if confidence == 'low':
-        scaled_enter = base_enter * 1.5
-    elif confidence == 'high':
-        scaled_enter = base_enter * 0.7
-    else:
-        scaled_enter = base_enter
+    # Determine trend_direction using dual-MA confirmation strategy
+    # Short-term (100 min): ±3% threshold filters intraday noise
+    # Medium-term (1 day): ±1% threshold confirms the trend is real
+    # Both must agree to avoid false signals
+    short_threshold = 0.03
+    med_threshold = 0.01
 
     trend_direction = 'neutral'
     try:
         if pct_change_vs_ma_short is not None and pct_change_vs_ma_med is not None:
-            # require short-term move to be stronger, and medium to support it
-            if pct_change_vs_ma_short >= scaled_enter and pct_change_vs_ma_med >= (scaled_enter / 2):
+            # UP: both positive and meet thresholds
+            if pct_change_vs_ma_short >= short_threshold and pct_change_vs_ma_med >= med_threshold:
                 trend_direction = 'up'
-            elif pct_change_vs_ma_short <= -scaled_enter and pct_change_vs_ma_med <= -(scaled_enter / 2):
+            # DOWN: both negative and meet thresholds
+            elif pct_change_vs_ma_short <= -short_threshold and pct_change_vs_ma_med <= -med_threshold:
                 trend_direction = 'down'
             else:
                 trend_direction = 'neutral'
