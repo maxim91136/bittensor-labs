@@ -95,22 +95,34 @@ def compute_aggregates(history):
     only_vols = [v for (_, v) in vols]
     N = len(only_vols)
 
-    # windows
-    last_3 = only_vols[-3:] if N >= 1 else []
-    last_10 = only_vols[-10:] if N >= 1 else only_vols
+    # windows (10-min samples)
+    last_3 = only_vols[-3:] if N >= 1 else []        # ~30 min
+    last_10 = only_vols[-10:] if N >= 1 else only_vols  # ~100 min (1 day)
+    last_18 = only_vols[-18:] if N >= 18 else only_vols  # ~180 min (3 days)
+    last_144 = only_vols[-144:] if N >= 144 else only_vols  # ~1440 min (7 days)
 
     ma_short = mean(last_3) if last_3 else mean(only_vols[-1:])
     ma_med = mean(last_10)
+    ma_3d = mean(last_18) if len(last_18) >= 18 else None
+    ma_7d = mean(last_144) if len(last_144) >= 144 else None
     sd_med = stddev(last_10)
 
     last_volume = only_vols[-1]
+    pct_change_vs_ma_short = None
+    if ma_short and ma_short != 0:
+        pct_change_vs_ma_short = (last_volume - ma_short) / ma_short
+
     pct_change_vs_ma_med = None
     if ma_med and ma_med != 0:
         pct_change_vs_ma_med = (last_volume - ma_med) / ma_med
 
-    pct_change_vs_ma_short = None
-    if ma_short and ma_short != 0:
-        pct_change_vs_ma_short = (last_volume - ma_short) / ma_short
+    pct_change_vs_ma_3d = None
+    if ma_3d and ma_3d != 0:
+        pct_change_vs_ma_3d = (last_volume - ma_3d) / ma_3d
+
+    pct_change_vs_ma_7d = None
+    if ma_7d and ma_7d != 0:
+        pct_change_vs_ma_7d = (last_volume - ma_7d) / ma_7d
 
     # confidence: based on time-window (10-min samples)
     # low: <1 day (~144 samples), medium: 1-3 days (~144-432 samples), high: >=3 days (~432+ samples)
@@ -121,32 +133,42 @@ def compute_aggregates(history):
     else:
         confidence = 'high'
 
-    # Determine trend_direction using priority-weighted MA strategy
-    # Medium-term (1 day) is primary indicator: structural volume trends are more important than noise
-    # Short-term (100 min) is secondary: confirms or refutes the medium-term signal
-    # Thresholds:
-    #   - If 1-day ≤ -3%: DOWN (structural volume loss, alarming)
-    #   - If 1-day ≥ +3%: UP (structural volume gain, positive)
-    #   - Otherwise: require short-term confirmation (±3%) to reduce false signals
+    # Determine trend_direction using hierarchical MA strategy
+    # Priority hierarchy: 7-day > 3-day > 1-day > short-term
+    # Each level can independently trigger alerts, higher priority overrides lower
     short_threshold = 0.03
-    med_primary_threshold = 0.03  # Primary alarm threshold for 1-day MA
-    med_secondary_threshold = 0.01  # Secondary confirmation threshold when short agrees
+    med_threshold = 0.03  # 1-day threshold
+    long_threshold = 0.03  # 3-day & 7-day threshold
 
     trend_direction = 'neutral'
     try:
-        if pct_change_vs_ma_short is not None and pct_change_vs_ma_med is not None:
-            # Primary: 1-day MA is strong indicator on its own
-            if pct_change_vs_ma_med <= -med_primary_threshold:
-                trend_direction = 'down'  # Structural volume loss
-            elif pct_change_vs_ma_med >= med_primary_threshold:
-                trend_direction = 'up'    # Structural volume gain
-            # Secondary: if 1-day is weak, require short-term confirmation
-            elif pct_change_vs_ma_short <= -short_threshold and pct_change_vs_ma_med <= -med_secondary_threshold:
+        # Highest priority: 7-day MA (most structural)
+        if pct_change_vs_ma_7d is not None:
+            if pct_change_vs_ma_7d <= -long_threshold:
                 trend_direction = 'down'
-            elif pct_change_vs_ma_short >= short_threshold and pct_change_vs_ma_med >= med_secondary_threshold:
+            elif pct_change_vs_ma_7d >= long_threshold:
                 trend_direction = 'up'
-            else:
-                trend_direction = 'neutral'
+        
+        # If 7-day didn't trigger, check 3-day
+        if trend_direction == 'neutral' and pct_change_vs_ma_3d is not None:
+            if pct_change_vs_ma_3d <= -long_threshold:
+                trend_direction = 'down'
+            elif pct_change_vs_ma_3d >= long_threshold:
+                trend_direction = 'up'
+        
+        # If 3-day didn't trigger, check 1-day
+        if trend_direction == 'neutral' and pct_change_vs_ma_med is not None:
+            if pct_change_vs_ma_med <= -med_threshold:
+                trend_direction = 'down'
+            elif pct_change_vs_ma_med >= med_threshold:
+                trend_direction = 'up'
+        
+        # If 1-day didn't trigger, check short-term confirmation
+        if trend_direction == 'neutral' and pct_change_vs_ma_short is not None and pct_change_vs_ma_med is not None:
+            if pct_change_vs_ma_short <= -short_threshold and pct_change_vs_ma_med <= -0.01:
+                trend_direction = 'down'
+            elif pct_change_vs_ma_short >= short_threshold and pct_change_vs_ma_med >= 0.01:
+                trend_direction = 'up'
     except Exception:
         trend_direction = 'neutral'
 
@@ -156,9 +178,13 @@ def compute_aggregates(history):
         'last_volume': last_volume,
         'ma_short': ma_short,
         'ma_med': ma_med,
+        'ma_3d': ma_3d,
+        'ma_7d': ma_7d,
         'sd_med': sd_med,
-        'pct_change_vs_ma_med': pct_change_vs_ma_med,
         'pct_change_vs_ma_short': pct_change_vs_ma_short,
+        'pct_change_vs_ma_med': pct_change_vs_ma_med,
+        'pct_change_vs_ma_3d': pct_change_vs_ma_3d,
+        'pct_change_vs_ma_7d': pct_change_vs_ma_7d,
         'trend_direction': trend_direction,
         'confidence': confidence,
         'sample_timestamps': [t for (t, _) in vols[-10:]],
