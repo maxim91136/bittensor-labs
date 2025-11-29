@@ -36,8 +36,8 @@
 }
 
 @keyframes halving-pulse {
-  0%, 100% { opacity: 1; filter: drop-shadow(0 0 0px #ff6b35); }
-  50% { opacity: 0.7; filter: drop-shadow(0 0 10px #ff6b35); }
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
 }
 /* Socials & Useful Links Table: More padding for cells */
 table.socials-useful-table td, table.socials-useful-table th {

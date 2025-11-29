@@ -35,33 +35,50 @@
 
 /* Slow breathing pulse to match halving pill tempo */
 .tao-volume-card.pulse-up {
-  animation: halving-pulse 7s ease-in-out infinite;
-  box-shadow: 0 8px 28px rgba(16,185,129,0.06);
+  animation: halving-pulse 7s ease-in-out infinite !important;
+  box-shadow: 0 8px 28px rgba(16,185,129,0.08) !important;
 }
 .tao-volume-card.pulse-down {
-  animation: halving-pulse 7s ease-in-out infinite;
-  box-shadow: 0 8px 28px rgba(239,68,68,0.06);
+  animation: halving-pulse 7s ease-in-out infinite !important;
+  box-shadow: 0 8px 28px rgba(239,68,68,0.08) !important;
 }
 
+/* Respect reduced motion by keeping animation but removing transitions only */
 @media (prefers-reduced-motion: reduce) {
   .tao-volume-card.pulse-up,
-  .tao-volume-card.pulse-down { animation: none; }
+  .tao-volume-card.pulse-down { transition: none; }
 }
 
 /* Also support pulsing when the site uses `.stat-card` wrappers (legacy layout) */
-.stat-card.pulse-up { border: 1px solid rgba(16,185,129,0.06); animation: halving-pulse 7s ease-in-out infinite; box-shadow: 0 8px 28px rgba(16,185,129,0.06); }
-.stat-card.pulse-down { border: 1px solid rgba(239,68,68,0.06); animation: halving-pulse 7s ease-in-out infinite; box-shadow: 0 8px 28px rgba(239,68,68,0.06); }
+.stat-card.pulse-up { 
+  border: 1px solid rgba(16,185,129,0.12) !important; 
+  animation: halving-pulse 7s ease-in-out infinite !important; 
+  box-shadow: 0 8px 32px rgba(16,185,129,0.12) !important; 
+}
+.stat-card.pulse-down { 
+  border: 1px solid rgba(239,68,68,0.12) !important; 
+  animation: halving-pulse 7s ease-in-out infinite !important; 
+  box-shadow: 0 8px 32px rgba(239,68,68,0.12) !important; 
+}
 
+/* Respect reduced motion by keeping animation but removing transitions only */
 @media (prefers-reduced-motion: reduce) {
-  .stat-card.pulse-up, .stat-card.pulse-down { animation: none; }
+  .stat-card.pulse-up, .stat-card.pulse-down { transition: none; }
 }
 
 /* Glow on the stat-icon for better visibility when pulsing */
-.stat-card .stat-icon.pulse-up { filter: drop-shadow(0 0 12px rgba(16,185,129,0.18)); animation: halving-pulse 7s ease-in-out infinite; }
-.stat-card .stat-icon.pulse-down { filter: drop-shadow(0 0 12px rgba(239,68,68,0.18)); animation: halving-pulse 7s ease-in-out infinite; }
+.stat-card .stat-icon.pulse-up { 
+  filter: drop-shadow(0 0 16px rgba(16,185,129,0.28)) !important; 
+  animation: halving-pulse 7s ease-in-out infinite !important; 
+}
+.stat-card .stat-icon.pulse-down { 
+  filter: drop-shadow(0 0 16px rgba(239,68,68,0.28)) !important; 
+  animation: halving-pulse 7s ease-in-out infinite !important; 
+}
 
+/* Respect reduced motion by keeping animation but removing filter effects only */
 @media (prefers-reduced-motion: reduce) {
-  .stat-card .stat-icon.pulse-up, .stat-card .stat-icon.pulse-down { animation: none; filter: none; }
+  .stat-card .stat-icon.pulse-up, .stat-card .stat-icon.pulse-down { filter: none; }
 }
 
 /* small screens */
@@ -71,7 +88,7 @@
   .tao-volume-card__icon { width:44px; height:44px }
 }
 
-/* Respect reduced motion */
+/* Respect reduced motion: only disable transitions, keep visual feedback */
 @media (prefers-reduced-motion: reduce) {
-  .tao-volume-card, .tao-volume-card.pulse-up, .tao-volume-card.pulse-down { transition: none; box-shadow: none }
+  .tao-volume-card, .tao-volume-card.pulse-up, .tao-volume-card.pulse-down { transition: none; }
 }
