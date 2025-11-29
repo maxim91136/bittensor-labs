@@ -48,6 +48,14 @@
   .tao-volume-card.pulse-down { animation: none; }
 }
 
+/* Also support pulsing when the site uses `.stat-card` wrappers (legacy layout) */
+.stat-card.pulse-up { border: 1px solid rgba(16,185,129,0.06); animation: halving-pulse 7s ease-in-out infinite; box-shadow: 0 8px 28px rgba(16,185,129,0.06); }
+.stat-card.pulse-down { border: 1px solid rgba(239,68,68,0.06); animation: halving-pulse 7s ease-in-out infinite; box-shadow: 0 8px 28px rgba(239,68,68,0.06); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-card.pulse-up, .stat-card.pulse-down { animation: none; }
+}
+
 /* small screens */
 @media (max-width: 420px) {
   .tao-volume-card { padding:12px; gap:10px }
