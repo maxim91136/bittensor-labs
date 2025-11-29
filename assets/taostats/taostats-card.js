@@ -47,18 +47,24 @@
       parentCard.classList.remove('pulse-up','pulse-down','neutral');
       if (candidate === 'up') {
         parentCard.classList.add('pulse-up');
-        // Force animation with inline style to override any global rules
-        parentCard.style.animation = 'halving-pulse 7s ease-in-out infinite';
-        parentCard.style.boxShadow = '0 8px 32px rgba(16,185,129,0.12)';
+        // Green tint for positive change
+        parentCard.style.animation = '';
+        parentCard.style.boxShadow = '';
+        parentCard.style.border = '2px solid rgba(16,185,129,0.40)';
+        parentCard.style.backgroundColor = 'rgba(16,185,129,0.08)';
       } else if (candidate === 'down') {
         parentCard.classList.add('pulse-down');
-        // Force animation with inline style to override any global rules
-        parentCard.style.animation = 'halving-pulse 7s ease-in-out infinite';
-        parentCard.style.boxShadow = '0 0 48px rgba(239,68,68,0.35), 0 8px 32px rgba(239,68,68,0.20)';
+        // Red tint for negative change
+        parentCard.style.animation = '';
+        parentCard.style.boxShadow = '';
+        parentCard.style.border = '2px solid rgba(239,68,68,0.40)';
+        parentCard.style.backgroundColor = 'rgba(239,68,68,0.08)';
       } else {
         parentCard.classList.add('neutral');
         parentCard.style.animation = '';
         parentCard.style.boxShadow = '';
+        parentCard.style.border = '';
+        parentCard.style.backgroundColor = '';
       }
       
       // Also set inline styles on stat-icon for glow effect
@@ -67,12 +73,12 @@
         icon.classList.remove('pulse-up', 'pulse-down');
         if (candidate === 'up') {
           icon.classList.add('pulse-up');
-          icon.style.animation = 'halving-pulse 7s ease-in-out infinite';
-          icon.style.filter = 'drop-shadow(0 0 16px rgba(16,185,129,0.28))';
+          icon.style.animation = '';
+          icon.style.filter = '';
         } else if (candidate === 'down') {
           icon.classList.add('pulse-down');
-          icon.style.animation = 'halving-pulse 7s ease-in-out infinite';
-          icon.style.filter = 'drop-shadow(0 0 28px rgba(239,68,68,0.50)) drop-shadow(0 0 14px rgba(239,68,68,0.35))';
+          icon.style.animation = '';
+          icon.style.filter = '';
         } else {
           icon.style.animation = '';
           icon.style.filter = '';
@@ -119,18 +125,24 @@
     cardEl.classList.remove('pulse-up','pulse-down','neutral');
     if (candidate === 'up') {
       cardEl.classList.add('pulse-up');
-      // Force animation with inline style to override any global rules
-      cardEl.style.animation = 'halving-pulse 7s ease-in-out infinite';
-      cardEl.style.boxShadow = '0 8px 32px rgba(16,185,129,0.12)';
+      // Green tint for positive change
+      cardEl.style.animation = '';
+      cardEl.style.boxShadow = '';
+      cardEl.style.border = '2px solid rgba(16,185,129,0.40)';
+      cardEl.style.backgroundColor = 'rgba(16,185,129,0.08)';
     } else if (candidate === 'down') {
       cardEl.classList.add('pulse-down');
-      // Force animation with inline style to override any global rules
-      cardEl.style.animation = 'halving-pulse 7s ease-in-out infinite';
-      cardEl.style.boxShadow = '0 0 48px rgba(239,68,68,0.35), 0 8px 32px rgba(239,68,68,0.20)';
+      // Red tint for negative change
+      cardEl.style.animation = '';
+      cardEl.style.boxShadow = '';
+      cardEl.style.border = '2px solid rgba(239,68,68,0.40)';
+      cardEl.style.backgroundColor = 'rgba(239,68,68,0.08)';
     } else {
       cardEl.classList.add('neutral');
       cardEl.style.animation = '';
       cardEl.style.boxShadow = '';
+      cardEl.style.border = '';
+      cardEl.style.backgroundColor = '';
     }
 
     if (valueEl) valueEl.textContent = formatCompact(data.last_volume);
