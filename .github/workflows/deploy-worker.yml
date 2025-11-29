@@ -33,7 +33,7 @@ jobs:
           CF_WORKER_ROUTE: ${{ secrets.CF_WORKER_ROUTE }}
         run: |
           cat > wrangler.toml <<TOML
-          name = "bittensor-ath-atl"
+          name = "bittensor-taostats"
           main = "./worker-entry.js"
           compatibility_date = "2025-11-25"
 

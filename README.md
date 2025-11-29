@@ -111,8 +111,9 @@ Brief: A small GitHub Actions workflow publishes the Cloudflare Worker that serv
 Quick smoke checks after a deploy:
 
 ```bash
-curl -sS https://<your-worker>.workers.dev/api/ath-atl | jq .
-curl -sS https://<your-worker>.workers.dev/api/ath-atl/health | jq .
+curl -sS https://<your-worker>.workers.dev/api/taostats | jq .
+curl -sS https://<your-worker>.workers.dev/api/taostats_history | jq .
+curl -sS https://<your-worker>.workers.dev/api/taostats_history/health | jq .
 ```
 
 If you prefer fully manual deploys only, run the workflow from the Actions UI; if you want assistance changing triggers, I can update the workflow.
@@ -155,7 +156,8 @@ If you want me to also back up additional KV keys or other datasets, I can add m
 ### Taostats (price & volume) history backup
 
 - We now collect price and `volume_24h` snapshots into a separate `taostats_history` JSON and store it in Cloudflare Workers KV under the key `taostats_history`.
-- The `publish-taostats` workflow appends to `taostats_history.json` and writes it to KV on every run (defaults to every 10 minutes).
+ - The `publish-taostats` workflow appends to `taostats_history.json` and writes it to KV on every run (defaults to every 10 minutes).
+ - Note: The workflow now writes `taostats_history` directly to Cloudflare KV (PUT), so a dedicated write-appending Worker is optional; if you prefer server-side appends, you can deploy the `taostats_history` Worker and configure `CF_WORKER_URL` in secrets.
 - A new scheduled workflow `backup-taostats-r2` runs every 3 hours and will fetch `taostats_history` from KV and upload a timestamped copy to R2. To enable the R2 upload set `ENABLE_R2=true` and the R2 credentials mentioned above.
  - A new per-run archival step in the `publish-taostats` workflow optionally uploads a timestamped entry to R2 for each fetch (if `ENABLE_R2=true`), so we can retain as much history as possible in R2 while keeping the recent history compact in KV. This ensures the dashboard can display long-term history later even if KV has size limits.
  - (Previously) A daily consolidation job aggregated `taostats_entry-` files into daily files. Consolidation has now been removed.
