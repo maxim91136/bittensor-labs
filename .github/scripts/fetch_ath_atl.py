@@ -5,7 +5,20 @@ from datetime import datetime
 
 COINGECKO_API = 'https://api.coingecko.com/api/v3/coins/bittensor'
 
-KEEP_BACKUPS = int(os.environ.get('KEEP_ATH_ATL_BACKUPS', '30'))
+def _int_env(name, default):
+    v = os.environ.get(name)
+    if v is None:
+        return default
+    v2 = v.strip()
+    if v2 == '':
+        return default
+    try:
+        return int(v2)
+    except Exception:
+        print(f"Warning: environment variable {name} is invalid ({v!r}), using default {default}")
+        return default
+
+KEEP_BACKUPS = _int_env('KEEP_ATH_ATL_BACKUPS', 30)
 
 
 def rotate_backups(pattern='tao_ath_atl-', keep=KEEP_BACKUPS):

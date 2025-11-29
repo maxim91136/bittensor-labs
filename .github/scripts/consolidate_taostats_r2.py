@@ -20,7 +20,22 @@ CF_API_TOKEN = os.environ.get('CF_API_TOKEN')
 CF_ACCOUNT_ID = os.environ.get('CF_ACCOUNT_ID')
 R2_BUCKET = os.environ.get('R2_BUCKET')
 R2_PREFIX = os.environ.get('R2_PREFIX', '').strip().strip('/')
-RETENTION_DAYS = int(os.environ.get('RETENTION_DAYS', '90'))
+
+def _int_env(name, default):
+    v = os.environ.get(name)
+    if v is None:
+        return default
+    v2 = v.strip()
+    if v2 == '':
+        return default
+    try:
+        return int(v2)
+    except Exception:
+        print(f"Warning: environment variable {name} is invalid ({v!r}), using default {default}")
+        return default
+
+RETENTION_DAYS = _int_env('RETENTION_DAYS', 90)
+print(f"Using RETENTION_DAYS={RETENTION_DAYS}")
 
 if not (CF_API_TOKEN and CF_ACCOUNT_ID and R2_BUCKET):
     print('CF_API_TOKEN, CF_ACCOUNT_ID and R2_BUCKET are required to run this script.', file=sys.stderr)

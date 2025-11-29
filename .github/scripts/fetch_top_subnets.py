@@ -23,7 +23,20 @@ TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
 USE_ONCHAIN_STAKE_FALLBACK = os.getenv('USE_ONCHAIN_STAKE_FALLBACK', '0') == '1'
 # cap how many per-uid queries we'll perform per subnet to avoid heavy CI workloads.
 # Default is a reasonable 50 UID-sample per subnet for the Free Plan
-MAX_UID_STAKE_QUERIES_PER_SUBNET = int(os.getenv('MAX_UID_STAKE_QUERIES_PER_SUBNET', '50'))
+def _int_env(name, default):
+    v = os.getenv(name)
+    if v is None:
+        return default
+    v2 = v.strip()
+    if v2 == '':
+        return default
+    try:
+        return int(v2)
+    except Exception:
+        print(f"Warning: environment variable {name} is invalid ({v!r}), using default {default}")
+        return default
+
+MAX_UID_STAKE_QUERIES_PER_SUBNET = _int_env('MAX_UID_STAKE_QUERIES_PER_SUBNET', 50)
 
 
 def write_local(path: str, data: Dict[str, object]):
@@ -684,10 +697,7 @@ def fetch_top_subnets() -> Dict[str, object]:
     # Sort and take top N (default 10). Also keep a full-list of all subnets
     # so we can include the entire set of subnets in the JSON for debugging
     sorted_subnets = sorted(results, key=lambda x: x.get('estimated_emission_daily', 0.0), reverse=True)
-    try:
-        top_n = int(os.getenv('TOP_N', '10'))
-    except Exception:
-        top_n = 10
+    top_n = _int_env('TOP_N', 10)
     top_n = max(1, top_n)
     top_list = sorted_subnets[:top_n]
 

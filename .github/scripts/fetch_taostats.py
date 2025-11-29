@@ -8,6 +8,19 @@ import pathlib
 TAOSTATS_API_KEY = os.getenv("TAOSTATS_API_KEY")
 TAOSTATS_URL = os.getenv("TAOSTATS_URL", "https://api.taostats.io/api/price/latest/v1?asset=tao")
 
+def _int_env(name, default):
+    v = os.getenv(name)
+    if v is None:
+        return default
+    v2 = v.strip()
+    if v2 == '':
+        return default
+    try:
+        return int(v2)
+    except Exception:
+        print(f"Warning: environment variable {name} is invalid ({v!r}), using default {default}")
+        return default
+
 def fetch_taostats():
     if not TAOSTATS_API_KEY:
         print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
@@ -59,7 +72,7 @@ if __name__ == "__main__":
         try:
             HIST_FILE = pathlib.Path("taostats_history.json")
             # Keep history size reasonably bounded to avoid KV size issues
-            MAX_ENTRIES = int(os.getenv('HISTORY_MAX_ENTRIES', '10000'))
+            MAX_ENTRIES = _int_env('HISTORY_MAX_ENTRIES', 10000)
             entry = {
                 "_timestamp": result.get("_timestamp"),
                 "price": result.get("price"),
