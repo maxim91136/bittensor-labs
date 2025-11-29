@@ -54,7 +54,8 @@
   .tao-volume-card__icon { width:44px; height:44px }
   /* Mobile: place percent under the dollar value to guarantee visibility */
   .stat-value { flex-direction: column; align-items:flex-start; gap:6px }
-  .stat-value-main { font-size:var(--text-base); flex:0 0 auto; min-width:0; white-space:normal; overflow:visible; text-overflow:unset }
+  /* Make the main value significantly smaller on very small screens so it matches other cards */
+  .tao-volume-card .stat-value-main { font-size: var(--text-sm) !important; font-weight: 600 !important; flex:0 0 auto; min-width:0; white-space:normal; overflow:visible; text-overflow:unset; line-height:1.1 }
   .stat-value-sep { display:none }
   .stat-value-ma { padding:3px 6px; font-size:13px; display:none }
   .stat-value-pct { display:inline-block; padding:4px 8px; font-size:12px; flex:0 0 auto; max-width:120px; margin-top:2px }
