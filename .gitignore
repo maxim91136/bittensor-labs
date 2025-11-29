@@ -143,3 +143,8 @@ vite.config.ts.timestamp-*
 
 # Ignore generated issuance history snapshots
 issuance_history.json
+
+# Ignore taostats local snapshots created by CI or test runs
+taostats_latest.json
+taostats_history.json
+taostats_history-*.json
