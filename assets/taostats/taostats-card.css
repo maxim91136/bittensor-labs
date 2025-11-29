@@ -47,10 +47,10 @@
 .tao-volume-card.pulse-up { box-shadow: 0 6px 24px rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.06); }
 .tao-volume-card.pulse-down { box-shadow: 0 6px 24px rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.06); }
 
-/* small screens */
-@media (max-width: 420px) {
+/* small screens (expanded breakpoint to include larger phones) */
+@media (max-width: 480px) {
   .tao-volume-card { padding:12px; gap:10px }
-  .tao-volume-card__value { font-size:18px }
+  .tao-volume-card__value { font-size: var(--text-base) !important }
   .tao-volume-card__icon { width:44px; height:44px }
   /* Mobile: place percent under the dollar value to guarantee visibility */
   .stat-value { flex-direction: column; align-items:flex-start; gap:6px }
