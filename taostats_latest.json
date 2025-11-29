@@ -1,0 +1,19 @@
+{
+  "created_at": "2025-11-29T07:15:00Z",
+  "last_updated": "2025-11-29T07:13:00Z",
+  "name": "Bittensor",
+  "symbol": "TAO",
+  "price": 297.585018677478,
+  "circulating_supply": 10398237.439073,
+  "max_supply": 21000000.0,
+  "total_supply": 21000000.0,
+  "market_cap": 3094359682.5194,
+  "fully_diluted_market_cap": 6249285392.23,
+  "volume_24h": 119021146.207426,
+  "percent_change_1h": 0.5,
+  "percent_change_24h": -1.2,
+  "percent_change_7d": 4.23,
+  "percent_change_30d": 2.1,
+  "_source": "taostats",
+  "_timestamp": "2025-11-29T09:11:54.753572+00:00"
+}
