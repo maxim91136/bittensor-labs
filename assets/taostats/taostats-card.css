@@ -52,12 +52,12 @@
   .tao-volume-card { padding:12px; gap:10px }
   .tao-volume-card__value { font-size:18px }
   .tao-volume-card__icon { width:44px; height:44px }
-  /* Mobile: keep percent inline but reduce sizes and allow main value to shrink */
-  .stat-value { flex-direction: row; align-items:baseline; gap:6px }
-  .stat-value-main { font-size:15px; flex:1 1 0; min-width:0 }
+  /* Mobile: place percent under the dollar value to guarantee visibility */
+  .stat-value { flex-direction: column; align-items:flex-start; gap:6px }
+  .stat-value-main { font-size:14px; flex:0 0 auto; min-width:0; white-space:normal; overflow:visible; text-overflow:unset }
   .stat-value-sep { display:none }
   .stat-value-ma { padding:3px 6px; font-size:13px; display:none }
-  .stat-value-pct { display:inline-block; padding:3px 6px; font-size:12px; flex:0 0 auto; max-width:72px }
+  .stat-value-pct { display:inline-block; padding:4px 8px; font-size:12px; flex:0 0 auto; max-width:120px; margin-top:2px }
 }
 
 /* Respect reduced motion */
