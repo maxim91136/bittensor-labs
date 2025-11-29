@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.8 (Release Candidate)
+### Added
+- **Multi-Timeframe Volume Analysis**: 3-day and 7-day moving averages with independent alerts
+- **Hierarchical Trend Detection**: Priority system (7d > 3d > 1d > short) for intelligent alerts
+- **Progressive MA Display**: Tooltips automatically show longer timeframes as data accumulates
+- **Accurate Data Gating**: MAs only calculated when full data window exists (no fake calculations)
+
+### Changed
+- 3-day MA: Appears in tooltip after 3 days of data (N ≥ 432)
+- 7-day MA: Appears in tooltip after 7 days of data (N ≥ 1008)
+- Trend direction evaluates longest available MA first (more structural = higher priority)
+- API response includes all MA fields (returns `null` when insufficient data)
+
+### Fixed
+- Eliminated false "3-day MA" calculations with only 1-2 days of data
+- Prevented misleading long-term trend signals from insufficient datasets
+- Improved tooltip accuracy: only displays MAs backed by full data window
+
 ## v1.0.0-rc.7.1 (Release Candidate)
 ### Changed
 - **Priority-Weighted MA Strategy**: 1-day MA is now primary trend indicator
