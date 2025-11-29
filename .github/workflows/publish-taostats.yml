@@ -81,26 +81,4 @@ jobs:
           NEW_FILE="taostats_entry-${TS}.json"
           cp taostats_latest.json "$NEW_FILE"
           python .github/scripts/backup_issuance_history.py "$NEW_FILE"
-          # Append per-run file name to a manifest KV key for later consolidation
-          MANIFEST_KEY="taostats_r2_manifest"
-          URL_MANIFEST="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/${MANIFEST_KEY}"
-          STATUS=$(curl -s -o manifest.json -w "%{http_code}" -H "Authorization: Bearer $CF_API_TOKEN" "$URL_MANIFEST") || true
-          if [ "$STATUS" -eq 404 ]; then
-            echo '[]' > manifest.json
-          fi
-          # Append the new file to manifest
-          export TS NEW_FILE
-          python - <<'PY'
-          import json, os
-          mf='manifest.json'
-          m=[]
-          try:
-              with open(mf) as f:
-                  m=json.load(f)
-          except Exception:
-              m=[]
-          m.append({"name": os.environ.get('NEW_FILE'), "ts": os.environ.get('TS')})
-          with open('manifest2.json','w') as f:
-              json.dump(m, f)
-          PY
-          curl -fsSL -X PUT "$URL_MANIFEST" -H "Authorization: Bearer $CF_API_TOKEN" -H "Content-Type: application/json" --data-binary @manifest2.json || true
+            # Note: no manifest is written; per-run archival is handled by R2 uploads only
