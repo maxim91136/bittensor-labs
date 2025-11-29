@@ -18,6 +18,7 @@ import requests
 
 CF_API_TOKEN = os.environ.get('CF_API_TOKEN')
 CF_ACCOUNT_ID = os.environ.get('CF_ACCOUNT_ID')
+CF_KV_NAMESPACE_ID = os.environ.get('CF_KV_NAMESPACE_ID')
 R2_BUCKET = os.environ.get('R2_BUCKET')
 R2_PREFIX = os.environ.get('R2_PREFIX', '').strip().strip('/')
 R2_ENDPOINT = os.environ.get('R2_ENDPOINT')
@@ -87,6 +88,31 @@ def _list_objects(prefix=None, cursor=None):
             raise
         return resp.json()
 
+
+def _get_manifest(manifest_key='taostats_r2_manifest'):
+    """Read a small manifest stored in Cloudflare KV that lists per-run R2 objects.
+    Manifest entries are expected to be an array of dicts: [{"name": "taostats_entry-...json", "ts": "..."}, ...]
+    Returns list (may be empty)"""
+    if not (CF_KV_NAMESPACE_ID and CF_API_TOKEN and CF_ACCOUNT_ID):
+        return []
+    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/storage/kv/namespaces/{CF_KV_NAMESPACE_ID}/values/{manifest_key}"
+    headers = {'Authorization': f'Bearer {CF_API_TOKEN}'}
+    try:
+        r = requests.get(url, headers=headers, timeout=20)
+        if r.status_code == 404:
+            return []
+        r.raise_for_status()
+        try:
+            return r.json()
+        except Exception:
+            try:
+                return json.loads(r.text)
+            except Exception:
+                return []
+    except Exception as e:
+        print('Warning: failed to fetch manifest from KV', e)
+        return []
+
 def _download_object(key):
     # GET /r2/buckets/{bucket}/objects/{key}
     if have_s3_keys:
@@ -151,13 +177,15 @@ def aggregate_previous_day():
     today = datetime.now(timezone.utc).date()
     prev_day = today - timedelta(days=1)
     prefix = f"taostats_entry-{prev_day.strftime('%Y%m%d')}"
-    print('Listing objects with prefix', prefix)
+    print('Attempting to read per-run manifest KV for prefix', prefix)
     entries = []
-    cursor = None
-    while True:
-        j = _list_objects(prefix=prefix, cursor=cursor)
-        for obj in j.get('objects', []):
-            key = obj.get('name')
+    manifest = _get_manifest()
+    if manifest:
+        print('Manifest contains', len(manifest), 'entries; filtering for prefix', prefix)
+        for m in manifest:
+            key = m.get('name') if isinstance(m, dict) else None
+            if not key or not key.startswith(prefix):
+                continue
             try:
                 raw = _download_object(key)
                 jdata = json.loads(raw)
@@ -168,10 +196,27 @@ def aggregate_previous_day():
                 })
             except Exception as e:
                 print('Warning: failed to fetch or parse', key, e)
-        if j.get('cursor'):
-            cursor = j.get('cursor')
-        else:
-            break
+    else:
+        print('Manifest not present or empty; falling back to listing R2 keys')
+        cursor = None
+        while True:
+            j = _list_objects(prefix=prefix, cursor=cursor)
+            for obj in j.get('objects', []):
+                key = obj.get('name')
+                try:
+                    raw = _download_object(key)
+                    jdata = json.loads(raw)
+                    entries.append({
+                        '_timestamp': jdata.get('_timestamp') or jdata.get('last_updated') or jdata.get('created_at'),
+                        'price': jdata.get('price'),
+                        'volume_24h': jdata.get('volume_24h')
+                    })
+                except Exception as e:
+                    print('Warning: failed to fetch or parse', key, e)
+            if j.get('cursor'):
+                cursor = j.get('cursor')
+            else:
+                break
 
     # Sort entries by _timestamp
     def _ts_val(x):
