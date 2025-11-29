@@ -54,7 +54,12 @@ export async function onRequest(context) {
       if (raw) {
         try {
           const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed)) current = parsed;
+          if (Array.isArray(parsed)) {
+            current = parsed;
+          } else if (parsed && typeof parsed === 'object') {
+            // Support older/legacy buckets that stored a single object
+            current = [parsed];
+          }
         } catch (e) {
           // ignore parse error and start fresh
         }
