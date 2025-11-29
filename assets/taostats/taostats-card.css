@@ -21,7 +21,8 @@
 .tao-volume-card__body { flex:1; min-width:0 }
 .tao-volume-card__label { font-size:11px; letter-spacing:1px; color:#9fb0c8; }
 .tao-volume-card__value { font-size:20px; font-weight:700; color:#ffffff; margin-top:4px }
-.tao-volume-card__meta { margin-left:auto; color:#7f98b0; font-size:12px }
+.tao-volume-card__meta { margin-left:auto; color:#7f98b0; font-size:12px; display:flex; align-items:center; gap:10px }
+.tao-volume-card__delta { min-width:56px; text-align:center }
 
 /* delta badge */
 .tao-volume-card__delta {
