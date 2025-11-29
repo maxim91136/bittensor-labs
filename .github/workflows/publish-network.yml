@@ -1,4 +1,4 @@
-name: Fetch and Push Bittensor network data to Cloudflare KV (fixed)
+name: Fetch and Push Bittensor network data to Cloudflare KV
 
 on:
   schedule:
