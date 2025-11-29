@@ -161,3 +161,50 @@ If you want me to also back up additional KV keys or other datasets, I can add m
  - (Previously) A daily consolidation job aggregated `taostats_entry-` files into daily files. Consolidation has now been removed.
 - The history file stores a compact array of entries: `{ _timestamp, price, volume_24h }`. The collector keeps a bounded number of entries (default 10,000) which can be adjusted with `HISTORY_MAX_ENTRIES` environment variable.
 
+### Cloudflare Worker & KV setup (if starting from scratch)
+
+If you don't have a Cloudflare Worker or KV namespace set up, follow these steps to create one and enable the `taostats_history` endpoint used by the workflows:
+
+1. Create a KV namespace (via the dashboard or Wrangler):
+
+	 Using Wrangler:
+	 ```bash
+	 wrangler login
+	 wrangler kv:namespace create "metrics_kv" --binding METRICS_KV
+	 ```
+
+	 Or via the API (requires `CF_API_TOKEN` and `CF_ACCOUNT_ID`):
+	 ```bash
+	 curl -s -X POST "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces" \
+		 -H "Authorization: Bearer ${CF_API_TOKEN}" \
+		 -H "Content-Type: application/json" \
+		 --data '{"title":"metrics_kv"}'
+	 ```
+
+	 The response will include an `id` — set that as `CF_METRICS_NAMESPACE_ID` (or `CF_KV_NAMESPACE_ID`) in your repository secrets.
+
+2. Deploy or add a Worker to serve the `taostats_history` endpoint. A simple Worker can be implemented using the KV binding from step 1 and exposing this route:
+
+	 - GET `/api/taostats_history` -> return `TAO_STATS_KV.get("taostats_history")`
+	 - PUT `/api/taostats_history` -> `TAO_STATS_KV.put("taostats_history", body)` (if you want writes through a Worker)
+
+	 Bind the KV namespace in `wrangler.toml` or the dashboard for the Worker to use (avoid naming collision).
+
+3. Validate KV access & API setup (manual quick test):
+
+	 - Check account id is correct:
+		 ```bash
+		 curl -s -H "Authorization: Bearer ${CF_API_TOKEN}" "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}" | jq .
+		 ```
+	 - Check KV namespace exists:
+		 ```bash
+		 curl -s -H "Authorization: Bearer ${CF_API_TOKEN}" "https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}" | jq .
+		 ```
+		 If this returns `404` or `No route for that URI`, verify your `CF_ACCOUNT_ID` / `CF_KV_NAMESPACE_ID` are correct and that the `CF_API_TOKEN` was created under the same Cloudflare account.
+
+4. Set these as repository secrets: `CF_API_TOKEN`, `CF_ACCOUNT_ID`, `CF_METRICS_NAMESPACE_ID` (or `CF_KV_NAMESPACE_ID`). The workflows use those to write to KV.
+
+Notes:
+ - If you expect historical data already present in KV, we can implement a merge strategy (fetch and merge arrays) before overwriting the `taostats_history` key. Currently the `publish-taostats` workflow POSTs the latest entry to the Worker (worker appends server-side) and then downloads the merged history back. The workflow performs a pre/post GET check when `CF_WORKER_URL` is set, and will fail if the history count does not increase after the POST — this helps detect route/permission issues before any direct PUT would run.
+ - If you are starting from scratch (no existing KV entries), the current workflow will create new `taostats_history` payloads and write them to the KV key on the first run.
+
