@@ -22,7 +22,7 @@
       const valueEl = cardEl.querySelector('[data-tao-volume-last]');
       const inlinePctEl = cardEl.querySelector('[data-tao-volume-delta-inline]') || cardEl.querySelector('#volume24h_pct');
 
-    const pctShort = typeof data.pct_change_vs_ma_short === 'number' ? data.pct_change_vs_ma_short : null;
+      const pctShort = typeof data.pct_change_vs_ma_short === 'number' ? data.pct_change_vs_ma_short : null;
     const pctMed = typeof data.pct_change_vs_ma_med === 'number' ? data.pct_change_vs_ma_med : null;
 
     let candidate = 'neutral';
@@ -47,8 +47,6 @@
     if (valueEl) valueEl.textContent = formatCompact(data.last_volume);
     // Populate MA10 dollar value into the MA element
     const maEl = cardEl.querySelector('[data-tao-volume-ma]') || cardEl.querySelector('#volume24h_ma');
-    // Percent element (shown on mobile)
-    const pctEl = cardEl.querySelector('[data-tao-volume-pct]') || cardEl.querySelector('#volume24h_pct');
     if (maEl) {
       const maVal = (typeof data.ma_med === 'number') ? data.ma_med : null;
       maEl.textContent = maVal ? formatCompact(maVal) : '—';
@@ -77,48 +75,9 @@
       } catch (e) {
         // ignore
       }
-      // Populate percent element as well (used on mobile)
-      if (pctEl) {
-        try {
-          pctEl.textContent = pctText;
-          pctEl.setAttribute('data-tooltip', `Δ vs MA10 — confidence: ${confidence}`);
-          pctEl.title = `Δ vs MA10 — confidence: ${confidence}`;
-          pctEl.classList.remove('positive','negative','neutral');
-          if (typeof disp === 'number') {
-            if (disp > 0) pctEl.classList.add('positive');
-            else if (disp < 0) pctEl.classList.add('negative');
-            else pctEl.classList.add('neutral');
-          } else {
-            pctEl.classList.add('neutral');
-          }
-        } catch (e) {
-          // ignore
-        }
-      }
+      // Percent display removed — we keep MA tooltip only
     }
-
-    // Ensure percent element is populated and visible regardless of MA element presence
-    try {
-      const disp = pctMed ?? pctShort;
-      const pctText = (typeof disp === 'number') ? ((disp>0?'+':'') + (disp*100).toFixed(2) + '%') : '—';
-      const confidence = data.confidence || 'low';
-      if (pctEl) {
-        pctEl.textContent = pctText;
-        pctEl.setAttribute('data-tooltip', `Δ vs MA10 — confidence: ${confidence}`);
-        pctEl.title = `Δ vs MA10 — confidence: ${confidence}`;
-        pctEl.classList.remove('positive','negative','neutral');
-        if (typeof disp === 'number') {
-          if (disp > 0) pctEl.classList.add('positive');
-          else if (disp < 0) pctEl.classList.add('negative');
-          else pctEl.classList.add('neutral');
-        } else {
-          pctEl.classList.add('neutral');
-        }
-        pctEl.style.display = 'inline-block';
-      }
-    } catch (e) {
-      // ignore
-    }
+    
 
     lastState.direction = candidate;
     lastState.last = data.last_volume;

@@ -32,10 +32,7 @@
 .stat-value-ma.higher { color: #10b981; background: rgba(16,185,129,0.04); }
 .stat-value-ma.lower { color: #ef4444; background: rgba(239,68,68,0.04); }
 .stat-value-ma.neutral { color: #9fb0c8; background: rgba(255,255,255,0.02); }
-.stat-value-pct { display:inline-block; font-size:14px; font-weight:700; padding:4px 8px; border-radius:8px; max-width:96px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.stat-value-pct.positive { color:#10b981; background: rgba(16,185,129,0.06); }
-.stat-value-pct.negative { color:#ef4444; background: rgba(239,68,68,0.06); }
-.stat-value-pct.neutral { color:#9fb0c8; background: rgba(255,255,255,0.02); }
+.stat-value-pct { display:none !important }
 
 /* delta badge */
 .tao-volume-card__delta {
@@ -58,7 +55,7 @@
   .tao-volume-card .stat-value-main { font-size: var(--text-sm) !important; font-weight: 600 !important; flex:0 0 auto; min-width:0; white-space:normal; overflow:visible; text-overflow:unset; line-height:1.1 }
   .stat-value-sep { display:none }
   .stat-value-ma { padding:3px 6px; font-size:13px; display:none }
-  .stat-value-pct { display:inline-block; padding:4px 8px; font-size:12px; flex:0 0 auto; max-width:120px; margin-top:2px }
+  .stat-value-pct { display:none !important }
 }
 
 /* Respect reduced motion */
