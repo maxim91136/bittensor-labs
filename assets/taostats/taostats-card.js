@@ -35,18 +35,13 @@
     const pctShort = typeof data.pct_change_vs_ma_short === 'number' ? data.pct_change_vs_ma_short : null;
     const pctMed = typeof data.pct_change_vs_ma_med === 'number' ? data.pct_change_vs_ma_med : null;
 
+    // Simple rule: positive = up, negative = down, zero/null = neutral
+    const pctVal = pctShort ?? pctMed;
     let candidate = 'neutral';
-    if (pctShort !== null) {
-      if (pctShort >= ENTER) candidate = 'up';
-      else if (pctShort <= -ENTER) candidate = 'down';
-    } else if (pctMed !== null) {
-      if (pctMed >= ENTER) candidate = 'up';
-      else if (pctMed <= -ENTER) candidate = 'down';
+    if (pctVal !== null) {
+      if (pctVal > 0) candidate = 'up';
+      else if (pctVal < 0) candidate = 'down';
     }
-
-    const cur = lastState.direction || 'neutral';
-    if (cur === 'up') { if (pctShort !== null && pctShort < EXIT) candidate = 'neutral'; }
-    if (cur === 'down') { if (pctShort !== null && pctShort > -EXIT) candidate = 'neutral'; }
 
     if (parentCard) {
       parentCard.classList.remove('pulse-up','pulse-down','neutral');
@@ -113,19 +108,13 @@
     const pctShort = typeof data.pct_change_vs_ma_short === 'number' ? data.pct_change_vs_ma_short : null;
     const pctMed = typeof data.pct_change_vs_ma_med === 'number' ? data.pct_change_vs_ma_med : null;
 
+    // Simple rule: positive = up, negative = down, zero/null = neutral
+    const pctVal = pctShort ?? pctMed;
     let candidate = 'neutral';
-    if (pctShort !== null) {
-      if (pctShort >= ENTER) candidate = 'up';
-      else if (pctShort <= -ENTER) candidate = 'down';
-    } else if (pctMed !== null) {
-      if (pctMed >= ENTER) candidate = 'up';
-      else if (pctMed <= -ENTER) candidate = 'down';
+    if (pctVal !== null) {
+      if (pctVal > 0) candidate = 'up';
+      else if (pctVal < 0) candidate = 'down';
     }
-
-    // hysteresis
-    const cur = lastState.direction || 'neutral';
-    if (cur === 'up') { if (pctShort !== null && pctShort < EXIT) candidate = 'neutral'; }
-    if (cur === 'down') { if (pctShort !== null && pctShort > -EXIT) candidate = 'neutral'; }
 
     cardEl.classList.remove('pulse-up','pulse-down','neutral');
     if (candidate === 'up') {
