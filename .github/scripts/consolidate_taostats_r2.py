@@ -32,6 +32,10 @@ if have_s3_keys:
     except Exception as e:
         print('Warning: boto3 import or client init failed; will fallback to Cloudflare API if available:', e)
         have_s3_keys = False
+if have_s3_keys:
+    print('Using R2 S3 API (boto3) for listing/download/delete')
+else:
+    print('Using Cloudflare HTTP API for listing/download/delete')
 
 def _int_env(name, default):
     v = os.environ.get(name)
