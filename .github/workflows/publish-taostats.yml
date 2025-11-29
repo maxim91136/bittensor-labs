@@ -77,7 +77,7 @@ jobs:
             exit 0
           fi
           # Prefer writing through the Worker endpoint which supports append/merge semantics.
-          WORKER_URL="${CF_WORKER_URL:-https://bittensor-labs.com}/api/taostats_history"
+          WORKER_URL="${CF_WORKER_URL:-https://bittensor-ath-atl.csrxfxzp6f.workers.dev}/api/taostats_history"
           # inspect the current history size (GET) when possible
           PRE_COUNT=0
           if [ -n "${CF_WORKER_URL:-}" ]; then
