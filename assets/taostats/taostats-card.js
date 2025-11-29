@@ -49,7 +49,14 @@
       const disp = pctMed ?? pctShort;
       const text = (disp === null || disp === undefined) ? '—' : ((disp>0?'+':'') + (disp*100).toFixed(2) + '%');
       inlinePctEl.textContent = text;
-      inlinePctEl.setAttribute('data-confidence', data.confidence || 'low');
+      const confidence = data.confidence || 'low';
+      inlinePctEl.setAttribute('data-confidence', confidence);
+      // Set tooltip to clarify reference and confidence
+      try {
+        inlinePctEl.title = `Δ = last value vs MA10 (10-sample moving average). Confidence: ${confidence}`;
+      } catch (e) {
+        // ignore DOM errors
+      }
       inlinePctEl.classList.remove('positive','negative','neutral');
       if (typeof disp === 'number') {
         if (disp > 0) inlinePctEl.classList.add('positive');
