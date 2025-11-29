@@ -53,11 +53,11 @@
   .tao-volume-card__value { font-size:18px }
   .tao-volume-card__icon { width:44px; height:44px }
   /* Mobile: keep percent inline but reduce sizes and allow main value to shrink */
-  .stat-value { flex-direction: row; align-items:baseline; gap:8px }
-  .stat-value-main { font-size:16px; flex:0 1 auto; min-width:0 }
+  .stat-value { flex-direction: row; align-items:baseline; gap:6px }
+  .stat-value-main { font-size:15px; flex:1 1 0; min-width:0 }
   .stat-value-sep { display:none }
   .stat-value-ma { padding:3px 6px; font-size:13px; display:none }
-  .stat-value-pct { display:inline-block; padding:3px 6px; font-size:13px; flex:0 0 auto; max-width:78px }
+  .stat-value-pct { display:inline-block; padding:3px 6px; font-size:12px; flex:0 0 auto; max-width:72px }
 }
 
 /* Respect reduced motion */
