@@ -8,6 +8,11 @@
   const ENTER = 0.05;
   const EXIT = 0.03;
 
+  // Diagnostic flag — set to true to emit verbose logs to console
+  const DEBUG = true;
+
+  if (DEBUG) console.info('taostats-card: init', { URL, POLL_MS, ENTER, EXIT });
+
   function formatCompact(num) {
     if (num === null || num === undefined) return '—';
     // Millions with 2 decimals
@@ -112,11 +117,17 @@
 
   async function fetchAggregates() {
     try {
+      if (DEBUG) console.debug('taostats-card: fetching aggregates', URL);
       const r = await fetch(URL, { cache: 'no-store' });
-      if (!r.ok) throw new Error('Fetch failed: ' + r.status);
-      return await r.json();
+      if (!r.ok) {
+        console.warn('taostats-card: fetch non-ok', r.status, r.statusText);
+        return null;
+      }
+      const json = await r.json();
+      if (DEBUG) console.debug('taostats-card: fetched aggregates', json);
+      return json;
     } catch (e) {
-      console.warn('taostats fetch error', e);
+      console.error('taostats-card: fetch exception', e);
       return null;
     }
   }
