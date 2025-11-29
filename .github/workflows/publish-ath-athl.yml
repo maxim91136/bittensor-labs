@@ -2,7 +2,7 @@ name: Fetch and Push ATH/ATL from Coingecko to Cloudflare KV
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 */3 * * *' # Every 3 hours
+    - cron: '33 */3 * * *' # Every 3 hours at :33
 
 jobs:
   fetch-ath-atl:
