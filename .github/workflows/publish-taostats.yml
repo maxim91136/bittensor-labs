@@ -1,7 +1,7 @@
 name: Fetch and Push Taostats metrics to Cloudflare KV
 on:
   schedule:
-    - cron: '*/10 * * * *'  # every 10 minutes
+    - cron: '3,13,23,33,43,53 * * * *'  # every 10 minutes at odd minutes
   workflow_dispatch: {}
 
 jobs:

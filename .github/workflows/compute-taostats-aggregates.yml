@@ -2,7 +2,7 @@ name: Compute Taostats Aggregates
 
 on:
   schedule:
-    - cron: '*/10 * * * *' # every 10 minutes
+    - cron: '7,17,27,37,47,57 * * * *' # every 10 minutes at odd minutes
   workflow_dispatch: {}
 
 jobs:
