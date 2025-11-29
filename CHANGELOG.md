@@ -5,6 +5,44 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.6 (Release Candidate)
+### Added
+- **Volume 24h Card Alert System**: Static color-based visual feedback
+  - 🟢 Green background when volume change is positive
+  - 🔴 Red background when volume change is negative
+  - Strong 2px borders with 40% opacity for clear visibility
+  - Tooltip with percentage change and confidence level (info-badge only)
+
+### Changed
+- Removed pulsing animation from Volume Card in favor of static color alerts
+- Simplified threshold logic: any positive % → green, any negative % → red (removed ENTER/EXIT hysteresis)
+- Link styling: Subnets & Validators links now only on text values with underline, not entire card
+- Links inherit stat-value color (white in dark mode, black in light mode)
+- Tooltip formatting: newline instead of em-dash for better readability
+
+### Fixed
+- Fixed animation blockade from `@media (prefers-reduced-motion: reduce)`
+- Removed duplicate browser tooltips from Volume Card
+- Fixed `.stat-card` animation not applying due to CSS specificity issues
+- Resolved pulsing effect persisting despite CSS removal
+- Inline styles in JS now bypass CSS override issues
+
+## v1.0.0-rc.5 (Release Candidate)
+### Added
+- Volume 24h card with hysteresis-based pulse animation
+- Tooltip integration with percentage change and confidence metadata
+- Support for legacy `.stat-card` markup alongside new `.tao-volume-card`
+
+### Changed
+- Animation: halving pulse with 7s duration for breathing effect
+- CSS: strong glow effects with drop-shadow filters
+- JS: applyToLegacy() and applyToCard() functions for flexible card rendering
+
+### Fixed
+- CSS animation rule conflicts resolved with !important flags
+- Tooltip positioning and content structure improved
+- Reduced-motion media query handling
+
 ## v1.0.0-rc.4 (Release Candidate)
 ### Added
 - Opt-in R2 uploader with Cloudflare API fallback; uploader now prefers S3-compatible credentials when present.
