@@ -46,3 +46,64 @@ jobs:
           FORCE_ISSUANCE_ON_KV_FAIL: '0'
         run: |
           bash .github/scripts/push_issuance_history.sh
+
+      - name: Push Network history to Cloudflare KV
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+        run: |
+          if [ ! -f network_latest.json ]; then
+            echo "No network_latest.json found - skipping network history"
+            exit 0
+          fi
+          
+          KV_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}"
+          KV_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${CF_API_TOKEN}" "$KV_URL" || true)
+          if [ "$KV_STATUS" -ne 200 ]; then
+            echo "KV namespace not accessible (status=$KV_STATUS) - skipping network history write"
+            exit 0
+          fi
+          
+          # Fetch existing network_history from KV (if any)
+          HIST_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/network_history"
+          EXISTING_JSON=$(curl -s -H "Authorization: Bearer ${CF_API_TOKEN}" "$HIST_URL" || echo '')
+          
+          if [ -n "$EXISTING_JSON" ]; then
+            echo "$EXISTING_JSON" | jq . > /tmp/network_history_existing.json || true
+            # Merge: append new entry and deduplicate by _timestamp
+            jq -s '.[0] as $new | (.[1] // []) + ($new | if type=="array" then . else [.] end) | unique_by(._timestamp) | sort_by(._timestamp)' network_latest.json /tmp/network_history_existing.json > /tmp/network_history_merged.json || cat network_latest.json > /tmp/network_history_merged.json
+          else
+            # No existing history, start new
+            jq -s 'if type=="array" then . else [.] end' network_latest.json > /tmp/network_history_merged.json
+          fi
+          
+          # Write merged history to KV
+          CURL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$HIST_URL" -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" --data-binary @/tmp/network_history_merged.json || true)
+          if [ "$CURL_STATUS" -ne 200 ] && [ "$CURL_STATUS" -ne 204 ]; then
+            echo "Failed to write network_history to KV (status=$CURL_STATUS)"
+            exit 1
+          fi
+          echo "✅ Network history pushed to KV"
+
+      - name: Archive network entry to R2 (per-run)
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          ENABLE_R2: ${{ secrets.ENABLE_R2 }}
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_PREFIX: ${{ secrets.R2_PREFIX }}
+        run: |
+          if [ ! -f network_latest.json ]; then
+            echo "No network_latest.json found - skipping R2 archive"
+            exit 0
+          fi
+          TS=$(date -u +"%Y%m%dT%H%M%SZ")
+          NEW_FILE="network_entry-${TS}.json"
+          cp network_latest.json "$NEW_FILE"
+          python .github/scripts/backup-issuance-history-r2.py "$NEW_FILE"
+

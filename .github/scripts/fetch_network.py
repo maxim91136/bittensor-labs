@@ -401,10 +401,19 @@ def fetch_metrics() -> Dict[str, Any]:
 if __name__ == "__main__":
     try:
         network_data = fetch_metrics()
+        
+        # Write network.json (current format)
         output_path = os.path.join(os.getcwd(), "network.json")
         with open(output_path, "w") as f:
             json.dump(network_data, f, indent=2)
         print(f"✅ Network data written to {output_path}", file=sys.stderr)
+        
+        # Write network_latest.json (for history tracking, like taostats_latest.json)
+        latest_path = os.path.join(os.getcwd(), "network_latest.json")
+        with open(latest_path, "w") as f:
+            json.dump(network_data, f, indent=2)
+        print(f"✅ Network latest written to {latest_path}", file=sys.stderr)
+        
         print(json.dumps(network_data, indent=2))
     except Exception as e:
         print(f"❌ Error: {e}", file=sys.stderr)
