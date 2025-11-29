@@ -93,7 +93,7 @@
 
 <main class="dashboard">
   <div class="stats-grid">
-  <a class="stat-card" href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; cursor: pointer; position: relative;">
+  <div class="stat-card">
   <!-- Info-badge is not part of link -->
   <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Number of active subnets in the network">i</span>
   <div class="stat-icon" aria-hidden="true">
@@ -109,10 +109,12 @@
   </div>
   <div class="stat-content">
     <div class="stat-label">Subnets</div>
-  <div class="stat-value" id="subnets">—</div>
+    <div class="stat-value"><a href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">
+      <span id="subnets">—</span>
+    </a></div>
   </div>
-  </a>
-  <a class="stat-card" href="https://taostats.io/validators" target="_blank" rel="noopener noreferrer" style="text-decoration: none; color: inherit; cursor: pointer;">
+  </div>
+  <div class="stat-card">
     <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Number of active validators securing the network">i</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -123,9 +125,11 @@
       </div>
     <div class="stat-content">
       <div class="stat-label">Validators</div>
-  <div class="stat-value" id="validators">—</div>
+      <div class="stat-value"><a href="https://taostats.io/validators" target="_blank" rel="noopener noreferrer" style="text-decoration: underline;">
+        <span id="validators">—</span>
+      </a></div>
     </div>
-  </a>
+  </div>
      <div class="stat-card">
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="TAO trading volume in the last 24 hours across all tracked exchanges">i</span>
         <div class="stat-icon" aria-hidden="true">
