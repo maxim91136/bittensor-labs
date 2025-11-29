@@ -109,6 +109,11 @@
       badgeEl.setAttribute('data-confidence', data.confidence || 'low');
     }
 
+    // Remove stray titles to avoid duplicate small browser tooltips
+    try { cardEl.removeAttribute && cardEl.removeAttribute('title'); } catch (e) {}
+    try { badgeEl && badgeEl.removeAttribute && badgeEl.removeAttribute('title'); } catch (e) {}
+    try { valueEl && valueEl.removeAttribute && valueEl.removeAttribute('title'); } catch (e) {}
+
     // Put percent change and confidence into the card tooltip (no visible percent badge)
     try {
       const disp = pctMed ?? pctShort;
@@ -123,6 +128,16 @@
     } catch (e) {
       // ignore
     }
+
+    // Also add glow to stat-icon for visibility
+    try {
+      const icon = cardEl && cardEl.querySelector && cardEl.querySelector('.stat-icon');
+      if (icon) {
+        icon.classList.remove('pulse-up','pulse-down');
+        if (candidate === 'up') icon.classList.add('pulse-up');
+        else if (candidate === 'down') icon.classList.add('pulse-down');
+      }
+    } catch (e) {}
 
     lastState.direction = candidate;
     lastState.last = data.last_volume;

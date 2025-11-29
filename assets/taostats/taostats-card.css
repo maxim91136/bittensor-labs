@@ -56,6 +56,14 @@
   .stat-card.pulse-up, .stat-card.pulse-down { animation: none; }
 }
 
+/* Glow on the stat-icon for better visibility when pulsing */
+.stat-card .stat-icon.pulse-up { filter: drop-shadow(0 0 12px rgba(16,185,129,0.18)); animation: halving-pulse 7s ease-in-out infinite; }
+.stat-card .stat-icon.pulse-down { filter: drop-shadow(0 0 12px rgba(239,68,68,0.18)); animation: halving-pulse 7s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-card .stat-icon.pulse-up, .stat-card .stat-icon.pulse-down { animation: none; filter: none; }
+}
+
 /* small screens */
 @media (max-width: 420px) {
   .tao-volume-card { padding:12px; gap:10px }
