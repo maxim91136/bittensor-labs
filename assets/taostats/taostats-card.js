@@ -54,6 +54,8 @@
       // Set tooltip to clarify reference and confidence
       try {
         inlinePctEl.title = `vs MA10 — confidence: ${confidence}`;
+        // also set data-tooltip so the site's tooltip system (touch/mobile) shows the short text
+        inlinePctEl.setAttribute('data-tooltip', `vs MA10 — confidence: ${confidence}`);
       } catch (e) {
         // ignore DOM errors
       }
