@@ -79,13 +79,14 @@ def _list_objects(prefix=None, cursor=None):
             params['cursor'] = cursor
         headers = {'Authorization': f'Bearer {CF_API_TOKEN}'}
         resp = requests.get(url, headers=headers, params=params, timeout=60)
-        try:
-            resp.raise_for_status()
-        except Exception as e:
-            # Friendly message for common permission/bucket issues
-            if resp.status_code == 404:
-                print('Error: Cloudflare API returned 404 when listing R2 keys. This usually indicates a mismatch in CF_ACCOUNT_ID or R2_BUCKET, or your API token lacks R2 permissions. Consider using R2 S3 keys (R2_ENDPOINT/R2_ACCESS_KEY_ID/R2_SECRET_ACCESS_KEY) instead.', file=sys.stderr)
-            raise
+        # Handle common permission/bucket issues gracefully: 404 or 403 return empty list
+        if resp.status_code == 404:
+            print('Notice: Cloudflare R2 keys listing returned 404; no objects found or token lacks permissions. Skipping consolidation (you can provide R2 S3 keys or a manifest in KV).', file=sys.stderr)
+            return {'objects': [], 'cursor': None}
+        if resp.status_code == 403:
+            print('Warning: Cloudflare R2 keys listing returned 403 Forbidden; your token may lack the required R2 read/list permissions. Skipping consolidation (use R2 S3 keys or provide manifest).', file=sys.stderr)
+            return {'objects': [], 'cursor': None}
+        resp.raise_for_status()
         return resp.json()
 
 
