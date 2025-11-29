@@ -28,11 +28,11 @@
 .stat-value { display:flex; align-items:baseline; gap:8px }
 .stat-value-sep { color: #9fb0c8; font-size:14px }
 .stat-value-main { font-size:20px; font-weight:700 }
-.stat-value-ma { font-size:14px; color:#9fb0c8; font-weight:600; padding:4px 8px; border-radius:8px; background: rgba(255,255,255,0.02); }
+.stat-value-ma { font-size:14px; color:#9fb0c8; font-weight:600; padding:4px 8px; border-radius:8px; background: rgba(255,255,255,0.02); display:none; }
 .stat-value-ma.higher { color: #10b981; background: rgba(16,185,129,0.04); }
 .stat-value-ma.lower { color: #ef4444; background: rgba(239,68,68,0.04); }
 .stat-value-ma.neutral { color: #9fb0c8; background: rgba(255,255,255,0.02); }
-.stat-value-pct { display:none; font-size:14px; font-weight:700; padding:4px 8px; border-radius:8px; }
+.stat-value-pct { display:inline-block; font-size:14px; font-weight:700; padding:4px 8px; border-radius:8px; }
 .stat-value-pct.positive { color:#10b981; background: rgba(16,185,129,0.06); }
 .stat-value-pct.negative { color:#ef4444; background: rgba(239,68,68,0.06); }
 .stat-value-pct.neutral { color:#9fb0c8; background: rgba(255,255,255,0.02); }

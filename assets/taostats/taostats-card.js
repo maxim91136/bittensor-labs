@@ -97,6 +97,29 @@
       }
     }
 
+    // Ensure percent element is populated and visible regardless of MA element presence
+    try {
+      const disp = pctMed ?? pctShort;
+      const pctText = (typeof disp === 'number') ? ((disp>0?'+':'') + (disp*100).toFixed(2) + '%') : '—';
+      const confidence = data.confidence || 'low';
+      if (pctEl) {
+        pctEl.textContent = pctText;
+        pctEl.setAttribute('data-tooltip', `Δ vs MA10 — confidence: ${confidence}`);
+        pctEl.title = `Δ vs MA10 — confidence: ${confidence}`;
+        pctEl.classList.remove('positive','negative','neutral');
+        if (typeof disp === 'number') {
+          if (disp > 0) pctEl.classList.add('positive');
+          else if (disp < 0) pctEl.classList.add('negative');
+          else pctEl.classList.add('neutral');
+        } else {
+          pctEl.classList.add('neutral');
+        }
+        pctEl.style.display = 'inline-block';
+      }
+    } catch (e) {
+      // ignore
+    }
+
     lastState.direction = candidate;
     lastState.last = data.last_volume;
   }
