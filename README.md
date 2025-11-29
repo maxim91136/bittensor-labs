@@ -141,10 +141,10 @@ How to test (manual run)
 
 ```bash
 # trigger a manual run
-gh workflow run backup_issuance_history.yml --ref main
+gh workflow run backup-issuance-history-r2.yml --ref main
 
 # then stream logs
-gh run list --workflow backup_issuance_history.yml --limit 5
+gh run list --workflow backup-issuance-history-r2.yml --limit 5
 gh run view <run-id> --log
 ```
 
@@ -157,7 +157,6 @@ If you want me to also back up additional KV keys or other datasets, I can add m
 - We now collect price and `volume_24h` snapshots into a separate `taostats_history` JSON and store it in Cloudflare Workers KV under the key `taostats_history`.
 - The `publish-taostats` workflow appends to `taostats_history.json` and writes it to KV on every run (defaults to every 10 minutes).
 - A new scheduled workflow `backup-taostats-r2` runs every 3 hours and will fetch `taostats_history` from KV and upload a timestamped copy to R2. To enable the R2 upload set `ENABLE_R2=true` and the R2 credentials mentioned above.
- - A new per-run archival step in the `publish-taostats` workflow optionally uploads a timestamped entry to R2 for each fetch (if `ENABLE_R2=true`), so we can retain as much history as possible in R2 while keeping the recent history compact in KV. This ensures the dashboard can display long-term history later even if KV has size limits.
  - A new per-run archival step in the `publish-taostats` workflow optionally uploads a timestamped entry to R2 for each fetch (if `ENABLE_R2=true`), so we can retain as much history as possible in R2 while keeping the recent history compact in KV. This ensures the dashboard can display long-term history later even if KV has size limits.
  - (Previously) A daily consolidation job aggregated `taostats_entry-` files into daily files. Consolidation has now been removed.
 - The history file stores a compact array of entries: `{ _timestamp, price, volume_24h }`. The collector keeps a bounded number of entries (default 10,000) which can be adjusted with `HISTORY_MAX_ENTRIES` environment variable.
