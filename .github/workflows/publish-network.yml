@@ -58,30 +58,21 @@ jobs:
             exit 0
           fi
           
-          KV_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}"
-          KV_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer ${CF_API_TOKEN}" "$KV_URL" || true)
-          if [ "$KV_STATUS" -ne 200 ]; then
-            echo "KV namespace not accessible (status=$KV_STATUS) - skipping network history write"
-            exit 0
+          # Merge network_latest with existing history from KV
+          python .github/scripts/merge-network-history.py
+          
+          # Check if merge was successful
+          if [ ! -f /tmp/network_history_merged.json ]; then
+            echo "❌ Failed to create merged history file"
+            exit 1
           fi
           
-          # Fetch existing network_history from KV (if any)
-          HIST_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/network_history"
-          EXISTING_JSON=$(curl -s -H "Authorization: Bearer ${CF_API_TOKEN}" "$HIST_URL" || echo '')
+          # Push merged history to KV
+          KV_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/network_history"
+          CURL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$KV_URL" -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" --data-binary @/tmp/network_history_merged.json || true)
           
-          if [ -n "$EXISTING_JSON" ]; then
-            echo "$EXISTING_JSON" | jq . > /tmp/network_history_existing.json || true
-            # Merge: append new entry and deduplicate by _timestamp
-            jq -s '.[0] as $new | (.[1] // []) + ($new | if type=="array" then . else [.] end) | unique_by(._timestamp) | sort_by(._timestamp)' network_latest.json /tmp/network_history_existing.json > /tmp/network_history_merged.json || cat network_latest.json > /tmp/network_history_merged.json
-          else
-            # No existing history, start new
-            jq -s 'if type=="array" then . else [.] end' network_latest.json > /tmp/network_history_merged.json
-          fi
-          
-          # Write merged history to KV
-          CURL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$HIST_URL" -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" --data-binary @/tmp/network_history_merged.json || true)
           if [ "$CURL_STATUS" -ne 200 ] && [ "$CURL_STATUS" -ne 204 ]; then
-            echo "Failed to write network_history to KV (status=$CURL_STATUS)"
+            echo "❌ Failed to write network_history to KV (status=$CURL_STATUS)"
             exit 1
           fi
           echo "✅ Network history pushed to KV"
