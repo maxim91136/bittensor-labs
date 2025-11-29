@@ -50,3 +50,25 @@ jobs:
           echo "Publishing worker using wrangler..."
           # wrangler v4 uses `deploy` and reads credentials from CLOUDFLARE_API_TOKEN or wrangler.toml
           wrangler deploy
+
+      - name: Post-deploy: validate worker route
+        env:
+          CF_WORKER_URL: ${{ secrets.CF_WORKER_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CF_WORKER_URL:-}" ]; then
+            echo "CF_WORKER_URL not set; skipping post-deploy validation"
+            exit 0
+          fi
+          URL="${CF_WORKER_URL%/}/api/taostats_history"
+          echo "Checking worker URL: $URL"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || true)
+          echo "Worker GET returned status: $STATUS"
+          if [ "$STATUS" = "000" ]; then
+            echo "Network failure; check CF_WORKER_URL and DNS."
+            exit 1
+          fi
+          if [ "$STATUS" -ne 200 -a "$STATUS" -ne 404 ]; then
+            echo "Unexpected worker status: $STATUS -- check routes and bindings.";
+            exit 1
+          fi
