@@ -103,10 +103,10 @@ def compute_aggregates(history):
 
     ma_short = mean(last_3) if last_3 else mean(only_vols[-1:])
     ma_med = mean(last_10)
-    # Only calculate 3-day MA if we have at least 1 day of data (144 samples)
-    ma_3d = mean(last_432) if N >= 144 else None
-    # Only calculate 7-day MA if we have at least 3 days of data (432 samples)
-    ma_7d = mean(last_1008) if N >= 432 else None
+    # Only calculate 3-day MA if we have at least 3 days of data (432 samples)
+    ma_3d = mean(last_432) if N >= 432 else None
+    # Only calculate 7-day MA if we have at least 7 days of data (1008 samples)
+    ma_7d = mean(last_1008) if N >= 1008 else None
     sd_med = stddev(last_10)
 
     last_volume = only_vols[-1]
