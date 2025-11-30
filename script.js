@@ -1414,41 +1414,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!infoBadge || !tooltip) return;
 
-  // Position tooltip: centered but ensure it's fully visible
+  // Position tooltip - CSS handles centering, no JS needed
   function positionTooltip() {
-    if (tooltip.style.display === 'none') return;
-    
-    const tooltipRect = tooltip.getBoundingClientRect();
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    // Center horizontally
-    let left = (viewportWidth - tooltipRect.width) / 2;
-    
-    // Center vertically, but adjust if it goes off screen
-    let top = (viewportHeight - tooltipRect.height) / 2;
-    
-    // If top goes negative (off top), push it down
-    if (top < 8) {
-      top = 8;
-    }
-    
-    // If bottom goes off screen, push it up
-    if (top + tooltipRect.height > viewportHeight - 8) {
-      top = viewportHeight - tooltipRect.height - 8;
-    }
-    
-    // Ensure left is in bounds
-    if (left < 8) left = 8;
-    if (left + tooltipRect.width > viewportWidth - 8) {
-      left = viewportWidth - tooltipRect.width - 8;
-    }
-    
-    tooltip.style.left = left + 'px';
-    tooltip.style.top = top + 'px';
+    // CSS fixed positioning with transform handles all centering
+    // No dynamic positioning needed
   }
 
-  // Load and display top subnets
+  // Load and display top subnets (TOP 5 only)
   async function loadTopSubnets() {
     try {
       const response = await fetch('/api/top_subnets');
@@ -1461,8 +1433,8 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
       }
 
-      // Build table rows
-      const rows = topSubnets.map((subnet, idx) => {
+      // Build table rows for TOP 5 only
+      const rows = topSubnets.slice(0, 5).map((subnet, idx) => {
         const rank = idx + 1;
         const name = subnet.subnet_name || `SN${subnet.netuid}`;
         const share = ((subnet.taostats_emission_share || 0) * 100).toFixed(4);
@@ -1487,19 +1459,11 @@ document.addEventListener('DOMContentLoaded', function() {
   function showSubnetsTooltip() {
     loadTopSubnets();
     tooltip.style.display = 'block';
-    // Use requestAnimationFrame to ensure reflow before positioning
-    requestAnimationFrame(() => {
-      positionTooltip();
-      window.addEventListener('scroll', positionTooltip);
-      window.addEventListener('resize', positionTooltip);
-    });
   }
 
   // Hide tooltip
   function hideSubnetsTooltip() {
     tooltip.style.display = 'none';
-    window.removeEventListener('scroll', positionTooltip);
-    window.removeEventListener('resize', positionTooltip);
   }
 
   // Info-badge click handler

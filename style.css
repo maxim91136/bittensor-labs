@@ -1679,9 +1679,12 @@ body.light-bg .map-preview-card .map-attribution {
   z-index: 10;
 }
 
-/* Top Subnets Tooltip - Centered modal with dynamic positioning */
+/* Top Subnets Tooltip - Simple centered modal */
 .top-subnets-tooltip {
   position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: #222;
   color: #fff;
   border-radius: 10px;
@@ -1690,7 +1693,7 @@ body.light-bg .map-preview-card .map-attribution {
   z-index: 999999;
   pointer-events: auto;
   max-width: 520px;
-  max-height: 500px;
+  max-height: 400px;
   overflow: hidden;
   display: none;
 }
