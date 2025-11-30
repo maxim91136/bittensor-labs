@@ -290,11 +290,14 @@ def fetch_metrics() -> Dict[str, Any]:
                 break
     
     # 30-day emission (will work better once we have more history)
-    rate_30d, _, samples_30d, days_30d = compute_emission_for_period(history, 30)
-    if rate_30d is not None and days_30d >= 7 and 5000 <= rate_30d <= 9000:
+    # For now, with only ~7 days of data, we should use emission_7d as fallback
+    # Only use 30d calculation when we have >= 14 days of clean data
+    rate_30d, sd_30d, samples_30d, days_30d = compute_emission_for_period(history, 30)
+    # Require at least 14 days AND low variance (same SD threshold as 7d)
+    if rate_30d is not None and days_30d >= 14 and 5000 <= rate_30d <= 9000 and (sd_30d is None or sd_30d < sd_threshold):
         emission_30d = rate_30d
     else:
-        # Use 7d as fallback for 30d
+        # Use 7d as fallback for 30d until we have enough clean history
         emission_30d = emission_7d
 
     # Attach emission values to result (history is saved separately)
