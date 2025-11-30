@@ -41,43 +41,49 @@ def fetch_staking_apy(num_validators=50):
         
         print(f"✅ Fetched {len(validators)} validators", file=sys.stderr)
         
-        # Debug: print first validator's fields
+        # Debug: print first validator's ALL fields
         if validators:
             v0 = validators[0]
-            print(f"  First validator fields: {list(v0.keys())[:15]}...", file=sys.stderr)
-            print(f"  Sample apr fields: apr={v0.get('apr')}, apr_7d={v0.get('apr_7_day_average')}", file=sys.stderr)
+            print(f"  All fields: {list(v0.keys())}", file=sys.stderr)
         
-        # Collect APR values
+        # Collect APR values - dTao API uses different field names
         aprs = []
         apr_7d = []
         apr_30d = []
         
         for v in validators:
-            # Current APR
-            apr = v.get("apr")
+            # Try multiple field names for APR
+            apr = v.get("apr") or v.get("nominator_return_per_k") or v.get("apy")
             if apr:
                 try:
                     apr_val = float(apr)
-                    if 0 < apr_val < 1000:  # Sanity check (0-1000% - Bittensor can have high APRs)
+                    # nominator_return_per_k is daily return, convert to annual: * 365
+                    if v.get("nominator_return_per_k") and not v.get("apr"):
+                        apr_val = apr_val * 365 / 10  # per 1k TAO, annualized, as %
+                    if 0 < apr_val < 1000:  # Sanity check (0-1000%)
                         aprs.append(apr_val)
                 except (ValueError, TypeError):
                     pass
             
             # 7-day average
-            apr_7 = v.get("apr_7_day_average")
+            apr_7 = v.get("apr_7_day_average") or v.get("nominator_return_per_k_7_day_average")
             if apr_7:
                 try:
                     apr_7_val = float(apr_7)
+                    if v.get("nominator_return_per_k_7_day_average") and not v.get("apr_7_day_average"):
+                        apr_7_val = apr_7_val * 365 / 10
                     if 0 < apr_7_val < 1000:
                         apr_7d.append(apr_7_val)
                 except (ValueError, TypeError):
                     pass
             
             # 30-day average
-            apr_30 = v.get("apr_30_day_average")
+            apr_30 = v.get("apr_30_day_average") or v.get("nominator_return_per_k_30_day_average")
             if apr_30:
                 try:
                     apr_30_val = float(apr_30)
+                    if v.get("nominator_return_per_k_30_day_average") and not v.get("apr_30_day_average"):
+                        apr_30_val = apr_30_val * 365 / 10
                     if 0 < apr_30_val < 1000:
                         apr_30d.append(apr_30_val)
                 except (ValueError, TypeError):
