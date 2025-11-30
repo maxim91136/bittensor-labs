@@ -1411,6 +1411,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!subnetsCard || !tooltip) return;
 
+  // Position tooltip near the card
+  function positionTooltip() {
+    if (tooltip.style.display === 'none') return;
+    
+    const rect = subnetsCard.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    
+    let left = rect.left + window.scrollX;
+    let top = rect.bottom + window.scrollY + 8;
+    
+    // Adjust if tooltip goes off screen
+    if (left + tooltipRect.width > window.innerWidth) {
+      left = window.innerWidth - tooltipRect.width - 16;
+    }
+    
+    tooltip.style.left = Math.max(8, left) + 'px';
+    tooltip.style.top = top + 'px';
+  }
+
   // Load and display top subnets
   async function loadTopSubnets() {
     try {
@@ -1454,8 +1473,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tooltip.style.display === 'none') {
       loadTopSubnets();
       tooltip.style.display = 'block';
+      setTimeout(positionTooltip, 0);
+      window.addEventListener('scroll', positionTooltip);
+      window.addEventListener('resize', positionTooltip);
     } else {
       tooltip.style.display = 'none';
+      window.removeEventListener('scroll', positionTooltip);
+      window.removeEventListener('resize', positionTooltip);
     }
   });
 
@@ -1463,12 +1487,16 @@ document.addEventListener('DOMContentLoaded', function() {
   closeBtn.addEventListener('click', function(e) {
     e.stopPropagation();
     tooltip.style.display = 'none';
+    window.removeEventListener('scroll', positionTooltip);
+    window.removeEventListener('resize', positionTooltip);
   });
 
   // Close tooltip when clicking outside
   document.addEventListener('click', function(e) {
-    if (!subnetsCard.contains(e.target) && tooltip.style.display !== 'none') {
+    if (!subnetsCard.contains(e.target) && !tooltip.contains(e.target) && tooltip.style.display !== 'none') {
       tooltip.style.display = 'none';
+      window.removeEventListener('scroll', positionTooltip);
+      window.removeEventListener('resize', positionTooltip);
     }
   });
 

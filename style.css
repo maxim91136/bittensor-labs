@@ -1674,20 +1674,26 @@ body.light-bg .map-preview-card .map-attribution {
   border: 1px solid #c0c0c0 !important;
 }
 
+#subnetsCard {
+  position: relative;
+  z-index: 10;
+}
+
 /* Top Subnets Tooltip Styles */
 .top-subnets-tooltip {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 8px;
+  position: fixed;
+  top: auto;
+  left: auto;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-  z-index: 1000;
-  min-width: 320px;
-  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  z-index: 9999;
+  min-width: 340px;
+  max-width: 460px;
+  max-height: 480px;
+  pointer-events: auto;
 }
 
 .top-subnets-tooltip.light-bg {
