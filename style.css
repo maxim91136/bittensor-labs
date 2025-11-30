@@ -1966,13 +1966,14 @@ body.light-bg .map-preview-card .map-attribution {
 }
 
 .subnets-display-table .rank-col {
-  text-align: center;
+  text-align: left;
   font-weight: 700;
   color: var(--accent);
   font-size: 1.0em;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
   padding: 12px 4px;
+  width: 12%;
 }
 
 .subnets-display-table tbody tr:hover .rank-col {
@@ -1986,23 +1987,26 @@ body.light-bg .map-preview-card .map-attribution {
   white-space: normal;
   letter-spacing: -0.005em;
   padding-left: 12px;
+  width: 40%;
 }
 
 .subnets-display-table .share-col {
-  text-align: right;
+  text-align: left;
   color: var(--accent);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   font-size: 0.98em;
   padding-right: 8px;
+  width: 24%;
 }
 
 .subnets-display-table .daily-col {
-  text-align: right;
+  text-align: left;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   font-size: 0.93em;
   padding-right: 8px;
+  width: 24%;
 }
 
 /* Gold highlight for first-place subnet */
