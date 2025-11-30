@@ -150,8 +150,8 @@ def parse_timestamp(ts_str):
 
 
 def main():
-    # Fetch block time data
-    result = fetch_block_time(500)
+    # Fetch block time data (200 blocks = ~40 min of chain data)
+    result = fetch_block_time(200)
     
     if not result:
         print("❌ Failed to fetch block time data", file=sys.stderr)
