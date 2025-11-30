@@ -94,7 +94,7 @@
 <main class="dashboard">
   <div class="stats-grid">
   <div class="stat-card" id="subnetsCard">
-  <span class="info-badge" id="subnetsInfoBadge" translate="no" aria-hidden="true" style="cursor: pointer;">i</span>
+  <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Total active subnets in the Bittensor network">i</span>
   <div class="stat-icon" aria-hidden="true">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
       <title>Subnets</title>
@@ -111,28 +111,6 @@
     <div class="stat-value"><a href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; color: inherit;">
       <span id="subnets">—</span>
     </a></div>
-  </div>
-  <!-- Top Subnets Tooltip -->
-  <div class="top-subnets-tooltip" id="topSubnetsTooltip" style="display:none;">
-    <div class="tooltip-header">
-      <span class="tooltip-title">Top 10 Subnets by Emissions</span>
-      <button class="tooltip-close" id="topSubnetsClose" aria-label="Close tooltip">✕</button>
-    </div>
-    <div class="tooltip-content">
-      <table class="top-subnets-table" id="topSubnetsTable">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Subnet</th>
-            <th>Share %</th>
-            <th>Daily TAO</th>
-          </tr>
-        </thead>
-        <tbody id="topSubnetsList">
-          <tr><td colspan="4" style="text-align:center;padding:12px;">Loading...</td></tr>
-        </tbody>
-      </table>
-    </div>
   </div>
   </div>
   <div class="stat-card">
@@ -286,7 +264,7 @@
     <section class="dashboard-card top-subnets-card" aria-labelledby="top-subnets-card-heading">
       <div class="card-header">
         <h2 id="top-subnets-card-heading">Top 10 Subnets by Emissions</h2>
-        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Shows the 10 subnets with highest emission share in the network">i</span>
+        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Shows the 10 subnets with highest emission share. Source: taostats.io">i</span>
       </div>
       <div class="subnets-table-wrapper">
         <table class="subnets-display-table" id="topSubnetsDisplayTable">
