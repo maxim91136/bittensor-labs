@@ -98,7 +98,7 @@ def fetch_top_subnets() -> Dict[str, object]:
                         'Accept': 'application/json',
                     }
                     if TAOSTATS_API_KEY:
-                        hdrs['Authorization'] = f'Bearer {TAOSTATS_API_KEY}'
+                        hdrs['Authorization'] = TAOSTATS_API_KEY
                     req = urllib.request.Request(url, method='GET', headers=hdrs)
                     with urllib.request.urlopen(req, timeout=10, context=ctx) as resp:
                         if resp.status and int(resp.status) >= 400:
@@ -182,7 +182,7 @@ def fetch_top_subnets() -> Dict[str, object]:
                                                 'Accept': 'application/json',
                                             }
                                             if TAOSTATS_API_KEY:
-                                                hdrs2['Authorization'] = f'Bearer {TAOSTATS_API_KEY}'
+                                                hdrs2['Authorization'] = TAOSTATS_API_KEY
                                             preq = urllib.request.Request(per_endpoint, method='GET', headers=hdrs2)
                                             with urllib.request.urlopen(preq, timeout=6, context=ssl.create_default_context()) as presp:
                                                 pdata = presp.read()
