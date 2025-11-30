@@ -1907,19 +1907,19 @@ body.light-bg .map-preview-card .map-attribution {
 }
 
 .subnets-display-table th:nth-child(1) {
-  width: 8%;
+  width: 10%;
 }
 
 .subnets-display-table th:nth-child(2) {
-  width: 35%;
+  width: 25%;
 }
 
 .subnets-display-table th:nth-child(3) {
-  width: 28%;
+  width: 32%;
 }
 
 .subnets-display-table th:nth-child(4) {
-  width: 29%;
+  width: 33%;
 }
 
 .subnets-display-table tbody tr {
@@ -1941,22 +1941,22 @@ body.light-bg .map-preview-card .map-attribution {
 }
 
 .subnets-display-table td:nth-child(1) {
-  width: 8%;
+  width: 10%;
   white-space: nowrap;
 }
 
 .subnets-display-table td:nth-child(2) {
-  width: 35%;
+  width: 25%;
   white-space: normal;
 }
 
 .subnets-display-table td:nth-child(3) {
-  width: 28%;
+  width: 32%;
   white-space: nowrap;
 }
 
 .subnets-display-table td:nth-child(4) {
-  width: 29%;
+  width: 33%;
   white-space: nowrap;
 }
 
