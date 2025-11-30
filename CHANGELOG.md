@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.12 (Release Candidate)
+### Added
+- **Top 10 Wallets by Balance Card**: New dashboard section displaying the 10 addresses with highest total balance
+  - Five-column layout: Rank, Identity/Address, Balance, Dominance %, Staked %
+  - Identity resolution from two sources:
+    - Taostats Exchanges API (`/api/exchange/v1`) for known exchanges (Binance, MEXC, Bitget, Kraken, etc.)
+    - On-chain Identity API (`/api/identity/latest/v1`) for self-registered wallet names
+  - Shows identity name + short address, or just address if no identity known
+  - Real-time data from `/api/top_wallets` endpoint
+  - Beautiful gradient headers, hover effects, full light/dark mode support
+- **Backend Infrastructure**:
+  - `fetch_top_wallets.py`: Python script fetching from Taostats Account API
+  - `fetch-top-wallets.yml`: GitHub workflow running hourly at :39
+  - `/api/top_wallets`: Cloudflare Pages function serving wallet data from KV
+
+### Fixed
+- **Light Mode Colors**: All wallet table text now properly black in light mode
+  - Identity names, addresses, dominance %, and staked % all use #1a1a1a
+  - Sub-addresses use #555 for visual hierarchy
+
 ## v1.0.0-rc.11.1 (Release Candidate)
 ### Fixed
 - **Smart Chart Labels**: X-axis now shows appropriate time formats per timeframe

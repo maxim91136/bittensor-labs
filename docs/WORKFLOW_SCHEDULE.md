@@ -11,6 +11,7 @@ Every 15 min:    ✓ publish-network.yml
 Hourly:          ✓ fetch-price-history.yml (:05)
                  ✓ fetch-top-subnets.yml (:19)
                  ✓ fetch-top-validators.yml (:29)
+                 ✓ fetch-top-wallets.yml (:39)
 
 Every 3 hours:   ✓ backup-taostats-r2.yml
                  ✓ backup-network-history-r2.yml
@@ -31,6 +32,7 @@ Manual only:     • deploy-worker.yml
 | **fetch-price-history.yml** | Hourly (:05) | Fetch chart data (1D-90D) | Data Collection |
 | **fetch-top-subnets.yml** | Hourly (:19) | Fetch top 10 subnets by emission | Data Collection |
 | **fetch-top-validators.yml** | Hourly (:29) | Fetch top 10 validators by stake | Data Collection |
+| **fetch-top-wallets.yml** | Hourly (:39) | Fetch top 10 wallets by balance | Data Collection |
 | **publish-ath-athl.yml** | 3 hours | Fetch ATH/ATL data | Data Collection |
 | **backup-taostats-r2.yml** | 3 hours | Archive taostats history | Archival |
 | **backup-network-history-r2.yml** | 3 hours | Archive network history | Archival |
@@ -58,6 +60,11 @@ Manual only:     • deploy-worker.yml
       compute-taostats-aggregates.yml
 
 :29 - fetch-top-validators.yml (hourly)
+
+:30 - publish-taostats.yml
+      compute-taostats-aggregates.yml
+
+:39 - fetch-top-wallets.yml (hourly)
 
 :30 - publish-taostats.yml
       compute-taostats-aggregates.yml
