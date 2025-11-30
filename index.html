@@ -233,7 +233,7 @@
           </svg>
         </div>
         <div class="stat-content">
-          <div class="stat-label">Block</div>
+          <div class="stat-label">Block Height</div>
           <div class="stat-value" id="blockHeight">—</div>
         </div>
       </div>
@@ -255,6 +255,37 @@
       <div class="stat-content">
         <div class="stat-label">API Status</div>
         <div class="stat-value" id="apiStatus">Checking…</div>
+      </div>
+    </div>
+
+  <!-- Block Time Card -->
+    <div class="stat-card" id="blockTimeCard">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Average time between blocks (last 200 blocks).&#10;Target: 12.0s&#10;&#10;Calculation: (newest_timestamp - oldest_timestamp) / (blocks - 1)&#10;Source: Taostats Block API">i</span>
+      <div class="stat-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <title>Block Time</title>
+          <circle cx="12" cy="12" r="9" stroke="#22c55e" stroke-width="1.5" fill="none"/>
+          <polyline points="12,6 12,12 16,14" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Block Time</div>
+        <div class="stat-value" id="blockTime">—</div>
+      </div>
+    </div>
+
+  <!-- Staking APR Card -->
+    <div class="stat-card" id="stakingAprCard">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Stake-weighted average APR across top 50 validators.&#10;&#10;Calculation: Σ(APR × stake) / Σ(stake)&#10;APR per validator: (daily_return × 365 / stake) × 100&#10;&#10;Simple Avg: —&#10;Range: — to —&#10;Source: Taostats dTao Validator API">i</span>
+      <div class="stat-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <title>Staking APR</title>
+          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#22c55e" stroke="#16a34a" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Avg. Staking APR</div>
+        <div class="stat-value" id="stakingApr">—</div>
       </div>
     </div>
   </div>

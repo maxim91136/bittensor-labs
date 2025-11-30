@@ -187,6 +187,30 @@ async function fetchTaostats() {
   }
 }
 
+// Fetch Block Time data from our API
+async function fetchBlockTime() {
+  try {
+    const res = await fetch(`${API_BASE}/block_time`);
+    if (!res.ok) throw new Error(`Block Time API error: ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('⚠️ Block Time fetch failed:', err);
+    return null;
+  }
+}
+
+// Fetch Staking APR data from our API
+async function fetchStakingApr() {
+  try {
+    const res = await fetch(`${API_BASE}/staking_apy`);
+    if (!res.ok) throw new Error(`Staking APR API error: ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn('⚠️ Staking APR fetch failed:', err);
+    return null;
+  }
+}
+
 async function fetchTaoPrice() {
   const taostats = await fetchTaostats();
   if (taostats && taostats.price) {
@@ -873,6 +897,10 @@ async function refreshDashboard() {
     const polyline = apiStatusIcon.querySelector('polyline');
     if (polyline) polyline.setAttribute('stroke', color);
   }
+
+  // Update Block Time and Staking APR cards
+  await updateBlockTime();
+  await updateStakingApr();
 }
 
 // ===== Auto-refresh with countdown circle =====
@@ -1229,10 +1257,83 @@ async function updateAthAtlPills() {
   }
 }
 
+// Update Block Time card
+async function updateBlockTime() {
+  const data = await fetchBlockTime();
+  const el = document.getElementById('blockTime');
+  const badge = document.querySelector('#blockTimeCard .info-badge');
+  
+  if (!el) return;
+  
+  if (data && data.avg_block_time !== undefined) {
+    const avgTime = Number(data.avg_block_time).toFixed(1);
+    const status = data.status || 'unknown';
+    el.textContent = `${avgTime}s`;
+    el.classList.remove('skeleton-text');
+    
+    // Update tooltip with live data
+    if (badge) {
+      const deviation = data.deviation !== undefined ? data.deviation.toFixed(2) : '—';
+      const blocksAnalyzed = data.blocks_analyzed || 200;
+      const tooltipLines = [
+        `Average time between blocks (last ${blocksAnalyzed} blocks).`,
+        `Target: 12.0s`,
+        `Current: ${avgTime}s`,
+        `Deviation: ${deviation}s`,
+        `Status: ${status}`,
+        '',
+        `Calculation: (newest_ts - oldest_ts) / (blocks - 1)`,
+        `Source: Taostats Block API`
+      ];
+      badge.setAttribute('data-tooltip', tooltipLines.join('\n'));
+    }
+  } else {
+    el.textContent = '—';
+  }
+}
+
+// Update Staking APR card
+async function updateStakingApr() {
+  const data = await fetchStakingApr();
+  const el = document.getElementById('stakingApr');
+  const badge = document.querySelector('#stakingAprCard .info-badge');
+  
+  if (!el) return;
+  
+  if (data && data.avg_apr !== undefined) {
+    const avgApr = Number(data.avg_apr).toFixed(2);
+    el.textContent = `${avgApr}%`;
+    el.classList.remove('skeleton-text');
+    
+    // Update tooltip with live data
+    if (badge) {
+      const simpleAvg = data.simple_avg_apr !== undefined ? `${Number(data.simple_avg_apr).toFixed(2)}%` : '—';
+      const minApr = data.min_apr !== undefined ? `${Number(data.min_apr).toFixed(2)}%` : '—';
+      const maxApr = data.max_apr !== undefined ? `${Number(data.max_apr).toFixed(2)}%` : '—';
+      const validators = data.validators_analyzed || 50;
+      const tooltipLines = [
+        `Stake-weighted average APR across top ${validators} validators.`,
+        '',
+        `Calculation: Σ(APR × stake) / Σ(stake)`,
+        `APR per validator: (daily_return × 365 / stake) × 100`,
+        '',
+        `Simple Avg: ${simpleAvg}`,
+        `Range: ${minApr} to ${maxApr}`,
+        `Source: Taostats dTao Validator API`
+      ];
+      badge.setAttribute('data-tooltip', tooltipLines.join('\n'));
+    }
+  } else {
+    el.textContent = '—';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   (async () => {
     await initDashboard();
     await updateAthAtlPills();
+    await updateBlockTime();
+    await updateStakingApr();
 
     // Prevent link clicks on info-badge controls
     document.querySelectorAll('.stat-card .info-badge').forEach(badge => {
