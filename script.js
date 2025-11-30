@@ -1414,43 +1414,45 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!infoBadge || !tooltip) return;
 
-  // Position tooltip next to the info-badge (right side, at badge level)
+  // Position tooltip next to the info-badge
   function positionTooltip() {
     if (tooltip.style.display === 'none') return;
     
-    // Get badge position in viewport
+    // Force reflow to get actual dimensions
     const badgeRect = infoBadge.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
     
-    // Position to the RIGHT of the badge, aligned to badge top
-    let left = badgeRect.right + window.scrollX + 12;
-    let top = badgeRect.top + window.scrollY - 6; // Slightly above badge vertical center
+    // Calculate position in viewport coordinates first
+    let viewportLeft = badgeRect.right + 12; // Right of badge + gap
+    let viewportTop = badgeRect.top; // Align to badge top
     
-    // If tooltip would go off right side, move to LEFT of badge
-    if (left + tooltipRect.width > window.innerWidth - 8) {
-      left = badgeRect.left + window.scrollX - tooltipRect.width - 12;
+    // Check if tooltip goes off right edge
+    if (viewportLeft + tooltipRect.width > window.innerWidth - 8) {
+      // Move to left of badge
+      viewportLeft = badgeRect.left - tooltipRect.width - 12;
     }
     
-    // If still off screen horizontally, center it on screen
-    if (left < 8) {
-      left = 8;
-    }
-    if (left + tooltipRect.width > window.innerWidth - 8) {
-      left = window.innerWidth - tooltipRect.width - 8;
+    // Check if still off left edge
+    if (viewportLeft < 8) {
+      viewportLeft = 8;
     }
     
-    // Adjust vertical position if goes off bottom
-    if (top + tooltipRect.height > window.innerHeight + window.scrollY - 20) {
-      top = window.innerHeight + window.scrollY - tooltipRect.height - 20;
+    // Check if tooltip goes off bottom
+    if (viewportTop + tooltipRect.height > window.innerHeight - 20) {
+      viewportTop = window.innerHeight - tooltipRect.height - 20;
     }
     
-    // Don't go above viewport
-    if (top < window.scrollY + 8) {
-      top = window.scrollY + 8;
+    // Check if goes off top
+    if (viewportTop < 8) {
+      viewportTop = 8;
     }
     
-    tooltip.style.left = left + 'px';
-    tooltip.style.top = top + 'px';
+    // Convert viewport coordinates to document coordinates
+    const docLeft = viewportLeft + window.scrollX;
+    const docTop = viewportTop + window.scrollY;
+    
+    tooltip.style.left = docLeft + 'px';
+    tooltip.style.top = docTop + 'px';
   }
 
   // Load and display top subnets
