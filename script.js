@@ -684,6 +684,8 @@ function setupDynamicTooltips() {
   document.querySelectorAll('.info-badge').forEach(badge => {
     // Skip any info-badge that lives in the TAO Tensor Law card (we removed it)
     if (badge.closest && badge.closest('.taotensor-card')) return;
+    // Skip subnets info-badge (has its own handler)
+    if (badge.id === 'subnetsInfoBadge') return;
     // Only initialize tooltips for badges that actually have tooltip text
     // Read the attribute at event time so updates to `data-tooltip` later are respected.
     badge.addEventListener('mouseenter', e => {
@@ -1405,34 +1407,41 @@ document.addEventListener('DOMContentLoaded', () => {
 // ===== Top Subnets Tooltip =====
 document.addEventListener('DOMContentLoaded', function() {
   const subnetsCard = document.getElementById('subnetsCard');
+  const infoBadge = document.getElementById('subnetsInfoBadge');
   const tooltip = document.getElementById('topSubnetsTooltip');
   const closeBtn = document.getElementById('topSubnetsClose');
   const subnetsTable = document.getElementById('topSubnetsList');
-  const infoBadge = subnetsCard ? subnetsCard.querySelector('.info-badge') : null;
 
-  if (!subnetsCard || !tooltip) return;
+  if (!infoBadge || !tooltip) return;
 
-  // Position tooltip near the card
+  // Position tooltip next to the info-badge (or below if more space)
   function positionTooltip() {
     if (tooltip.style.display === 'none') return;
     
-    const rect = subnetsCard.getBoundingClientRect();
+    // Get badge position
+    const badgeRect = infoBadge.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
     
-    let left = rect.left + window.scrollX + (rect.width - tooltipRect.width) / 2;
-    let top = rect.bottom + window.scrollY + 12;
+    // Try to position to the right of badge first
+    let left = badgeRect.right + window.scrollX + 12;
+    let top = badgeRect.top + window.scrollY;
     
-    // If tooltip would go off bottom, position above card instead
-    if (top + tooltipRect.height > window.innerHeight + window.scrollY - 20) {
-      top = rect.top + window.scrollY - tooltipRect.height - 12;
+    // If too far right, move to left
+    if (left + tooltipRect.width > window.innerWidth - 8) {
+      left = badgeRect.left + window.scrollX - tooltipRect.width - 12;
     }
     
-    // Keep tooltip horizontally centered if possible
+    // If still off screen horizontally, center it
     if (left < 8) {
       left = 8;
     }
     if (left + tooltipRect.width > window.innerWidth - 8) {
       left = window.innerWidth - tooltipRect.width - 8;
+    }
+    
+    // Adjust vertical position if needed
+    if (top + tooltipRect.height > window.innerHeight + window.scrollY - 20) {
+      top = badgeRect.top + window.scrollY - tooltipRect.height - 8;
     }
     
     tooltip.style.left = left + 'px';
@@ -1474,49 +1483,66 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Show tooltip on card click or info-badge click
-  function toggleTooltip() {
-    if (tooltip.style.display === 'none') {
-      loadTopSubnets();
-      tooltip.style.display = 'block';
-      setTimeout(positionTooltip, 0);
-      window.addEventListener('scroll', positionTooltip);
-      window.addEventListener('resize', positionTooltip);
-    } else {
-      tooltip.style.display = 'none';
-      window.removeEventListener('scroll', positionTooltip);
-      window.removeEventListener('resize', positionTooltip);
-    }
+  // Show tooltip
+  function showSubnetsTooltip() {
+    loadTopSubnets();
+    tooltip.style.display = 'block';
+    setTimeout(positionTooltip, 0);
+    window.addEventListener('scroll', positionTooltip);
+    window.addEventListener('resize', positionTooltip);
   }
 
-  subnetsCard.addEventListener('click', function(e) {
-    // Don't show tooltip if clicking on the link or info-badge (they handle it separately)
-    if (e.target.tagName === 'A' || e.target.closest('a') || e.target === infoBadge) return;
-    toggleTooltip();
-  });
+  // Hide tooltip
+  function hideSubnetsTooltip() {
+    tooltip.style.display = 'none';
+    window.removeEventListener('scroll', positionTooltip);
+    window.removeEventListener('resize', positionTooltip);
+  }
 
   // Info-badge click handler
-  if (infoBadge) {
-    infoBadge.addEventListener('click', function(e) {
-      e.stopPropagation();
-      toggleTooltip();
-    });
-  }
+  infoBadge.addEventListener('click', function(e) {
+    e.stopPropagation();
+    if (tooltip.style.display === 'none') {
+      showSubnetsTooltip();
+    } else {
+      hideSubnetsTooltip();
+    }
+  });
+
+  // Info-badge hover on desktop
+  infoBadge.addEventListener('mouseenter', function(e) {
+    if (!('ontouchstart' in window)) {
+      showSubnetsTooltip();
+    }
+  });
+
+  infoBadge.addEventListener('mouseleave', function(e) {
+    if (!('ontouchstart' in window) && !tooltip.contains(e.relatedTarget)) {
+      hideSubnetsTooltip();
+    }
+  });
 
   // Close tooltip with X button
   closeBtn.addEventListener('click', function(e) {
     e.stopPropagation();
-    tooltip.style.display = 'none';
-    window.removeEventListener('scroll', positionTooltip);
-    window.removeEventListener('resize', positionTooltip);
+    hideSubnetsTooltip();
+  });
+
+  // Keep tooltip visible on hover
+  tooltip.addEventListener('mouseenter', function() {
+    // Don't hide while hovering tooltip
+  });
+
+  tooltip.addEventListener('mouseleave', function(e) {
+    if (!infoBadge.contains(e.relatedTarget)) {
+      hideSubnetsTooltip();
+    }
   });
 
   // Close tooltip when clicking outside
   document.addEventListener('click', function(e) {
-    if (!subnetsCard.contains(e.target) && !tooltip.contains(e.target) && tooltip.style.display !== 'none') {
-      tooltip.style.display = 'none';
-      window.removeEventListener('scroll', positionTooltip);
-      window.removeEventListener('resize', positionTooltip);
+    if (!infoBadge.contains(e.target) && !tooltip.contains(e.target) && tooltip.style.display !== 'none') {
+      hideSubnetsTooltip();
     }
   });
 
