@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """
 Fetch Top 10 Wallets by Total Balance from Taostats API.
-Includes identity lookup for known addresses (exchanges, etc.)
+Includes identity lookup from:
+1. Exchange list (Binance, Kraken, etc.)
+2. On-chain identities set by wallet owners
 """
 
 import os
@@ -12,7 +14,48 @@ from datetime import datetime, timezone
 
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
 ACCOUNT_URL = "https://api.taostats.io/api/account/latest/v1"
-IDENTITY_URL = "https://api.taostats.io/api/identity/v1"
+IDENTITY_URL = "https://api.taostats.io/api/identity/latest/v1"
+EXCHANGE_URL = "https://api.taostats.io/api/exchange/v1"
+
+
+def fetch_exchanges():
+    """Fetch known exchange addresses from Taostats."""
+    if not TAOSTATS_API_KEY:
+        return {}
+    
+    headers = {
+        "accept": "application/json",
+        "Authorization": TAOSTATS_API_KEY
+    }
+    
+    exchanges = {}
+    
+    try:
+        print("🏦 Fetching known exchanges...", file=sys.stderr)
+        resp = requests.get(EXCHANGE_URL, headers=headers, timeout=30)
+        resp.raise_for_status()
+        data = resp.json()
+        
+        if data.get("data"):
+            for ex in data["data"]:
+                coldkey = ex.get("coldkey", {})
+                ss58 = coldkey.get("ss58", "")
+                name = ex.get("name", "")
+                if ss58 and name:
+                    exchanges[ss58] = name
+            print(f"✅ Loaded {len(exchanges)} exchange addresses", file=sys.stderr)
+        
+    except Exception as e:
+        print(f"⚠️ Failed to fetch exchanges: {e}", file=sys.stderr)
+        # Fallback to known addresses
+        exchanges = {
+            "5Hd2ze5ug8n1bo3UCAcQsf66VNjKqGos8u6apNfzcU86pg4N": "Binance",
+            "5FZiuxCBt8p6PFDisJ9ZEbBaKNVKy6TeemVJd1Z6jscsdjib": "Kucoin",
+            "5C5FQQSfuxgJc5sHjjAL9RKAzR98qqCV2YN5xAm2wVf1ctGR": "Kraken Cold",
+        }
+        print(f"⚠️ Using {len(exchanges)} hardcoded exchanges as fallback", file=sys.stderr)
+    
+    return exchanges
 
 def fetch_top_wallets(limit=10):
     """Fetch top wallets by total balance."""
@@ -71,8 +114,8 @@ def fetch_top_wallets(limit=10):
         return None
 
 
-def fetch_identities(addresses):
-    """Fetch on-chain identities for addresses."""
+def fetch_identities(addresses, exchanges):
+    """Fetch identities for addresses from exchanges and on-chain."""
     if not TAOSTATS_API_KEY or not addresses:
         return {}
     
@@ -83,17 +126,11 @@ def fetch_identities(addresses):
     
     identities = {}
     
-    # Known exchange addresses (fallback if no on-chain identity)
-    known_addresses = {
-        "5Hd2ze5ug8n1bo3UCAcQsf66VNjKqGos8u6apNfzcU86pg4N": "Binance",
-        "5FZiuxCBt8p6PFDisJ9ZEbBaKNVKy6TeemVJd1Z6jscsdjib": "Kucoin",
-        # Add more known addresses as needed
-    }
-    
     for addr in addresses:
-        # Check known addresses first
-        if addr in known_addresses:
-            identities[addr] = known_addresses[addr]
+        # Check exchanges first (most reliable)
+        if addr in exchanges:
+            identities[addr] = exchanges[addr]
+            print(f"  🏦 {addr[:10]}... = {exchanges[addr]} (exchange)", file=sys.stderr)
             continue
         
         # Try to fetch on-chain identity
@@ -104,11 +141,13 @@ def fetch_identities(addresses):
                 data = resp.json()
                 if data.get("data") and len(data["data"]) > 0:
                     identity = data["data"][0]
-                    name = identity.get("display") or identity.get("name")
+                    # Try different identity fields
+                    name = identity.get("display") or identity.get("name") or identity.get("legal")
                     if name:
                         identities[addr] = name
+                        print(f"  🔗 {addr[:10]}... = {name} (on-chain)", file=sys.stderr)
         except Exception as e:
-            print(f"⚠️ Identity lookup failed for {addr[:10]}...: {e}", file=sys.stderr)
+            print(f"  ⚠️ Identity lookup failed for {addr[:10]}...: {e}", file=sys.stderr)
     
     return identities
 
@@ -131,6 +170,9 @@ def calculate_dominance(wallets, circulating_supply=None):
 
 
 def main():
+    # Fetch known exchanges first
+    exchanges = fetch_exchanges()
+    
     # Fetch top 10 wallets
     wallets = fetch_top_wallets(10)
     
@@ -138,9 +180,10 @@ def main():
         print("❌ No wallet data fetched", file=sys.stderr)
         sys.exit(1)
     
-    # Fetch identities for all addresses
+    # Fetch identities for all addresses (using exchanges + on-chain)
+    print("\n🔍 Looking up identities...", file=sys.stderr)
     addresses = [w["address"] for w in wallets]
-    identities = fetch_identities(addresses)
+    identities = fetch_identities(addresses, exchanges)
     
     # Apply identities to wallets
     for wallet in wallets:
