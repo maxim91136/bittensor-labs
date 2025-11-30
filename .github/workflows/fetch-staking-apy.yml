@@ -2,8 +2,8 @@ name: Fetch Staking APY
 
 on:
   schedule:
-    # Every hour at :59
-    - cron: '59 * * * *'
+    # Every hour at :19
+    - cron: '19 * * * *'
   workflow_dispatch:
 
 jobs:
