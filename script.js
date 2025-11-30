@@ -1412,23 +1412,36 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!subnetsCard || !tooltip) return;
 
-  // Position tooltip near the card
+  // Position tooltip near the card with better logic
   function positionTooltip() {
     if (tooltip.style.display === 'none') return;
+    
+    // Force reflow to get accurate dimensions
+    tooltip.style.visibility = 'hidden';
+    tooltip.style.display = 'block';
     
     const rect = subnetsCard.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
     
-    let left = rect.left + window.scrollX;
-    let top = rect.bottom + window.scrollY + 8;
+    let left = rect.left + window.scrollX + (rect.width - tooltipRect.width) / 2;
+    let top = rect.bottom + window.scrollY + 12;
     
-    // Adjust if tooltip goes off screen
-    if (left + tooltipRect.width > window.innerWidth) {
-      left = window.innerWidth - tooltipRect.width - 16;
+    // If tooltip would go off bottom, position above card instead
+    if (top + tooltipRect.height > window.innerHeight + window.scrollY - 20) {
+      top = rect.top + window.scrollY - tooltipRect.height - 12;
     }
     
-    tooltip.style.left = Math.max(8, left) + 'px';
+    // Keep tooltip horizontally centered if possible
+    if (left < 8) {
+      left = 8;
+    }
+    if (left + tooltipRect.width > window.innerWidth - 8) {
+      left = window.innerWidth - tooltipRect.width - 8;
+    }
+    
+    tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
+    tooltip.style.visibility = 'visible';
   }
 
   // Load and display top subnets
@@ -1471,9 +1484,12 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tooltip.style.display === 'none') {
       loadTopSubnets();
       tooltip.style.display = 'block';
-      setTimeout(positionTooltip, 0);
-      window.addEventListener('scroll', positionTooltip);
-      window.addEventListener('resize', positionTooltip);
+      // Use requestAnimationFrame to ensure reflow happens after display:block
+      requestAnimationFrame(() => {
+        positionTooltip();
+        window.addEventListener('scroll', positionTooltip);
+        window.addEventListener('resize', positionTooltip);
+      });
     } else {
       tooltip.style.display = 'none';
       window.removeEventListener('scroll', positionTooltip);
