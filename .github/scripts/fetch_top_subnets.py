@@ -168,8 +168,8 @@ def fetch_top_subnets() -> Dict[str, object]:
                                         netuid = item.get('id')
                                 if netuid is None:
                                     continue
-                                # Ensure emission_share exists; if not, try documented per-subnet endpoint
-                                if isinstance(item, dict) and ('emission_share' not in item or item.get('emission_share') in (None, 0)):
+                                # Ensure emission or emission_share exists; if not, try documented per-subnet endpoint
+                                if isinstance(item, dict) and ('emission_share' not in item and 'emission' not in item or item.get('emission_share') in (None, 0) and item.get('emission') in (None, 0)):
                                     # try per-subnet emission endpoint
                                     for per_endpoint in (
                                         f"https://api.taostats.io/api/v1/subnets/{int(netuid)}/emission",
@@ -188,14 +188,20 @@ def fetch_top_subnets() -> Dict[str, object]:
                                                 pdata = presp.read()
                                                 try:
                                                     pj = json.loads(pdata)
-                                                    # documented response may embed emission_share directly
+                                                    # documented response may embed emission_share or emission directly
                                                     if isinstance(pj, dict):
                                                         if 'emission_share' in pj and pj.get('emission_share') is not None:
                                                             item['emission_share'] = pj.get('emission_share')
                                                             break
+                                                        if 'emission' in pj and pj.get('emission') is not None:
+                                                            item['emission'] = pj.get('emission')
+                                                            break
                                                         # some endpoints wrap data
                                                         if 'data' in pj and isinstance(pj.get('data'), dict) and 'emission_share' in pj.get('data'):
                                                             item['emission_share'] = pj.get('data').get('emission_share')
+                                                            break
+                                                        if 'data' in pj and isinstance(pj.get('data'), dict) and 'emission' in pj.get('data'):
+                                                            item['emission'] = pj.get('data').get('emission')
                                                             break
                                                 except Exception:
                                                     pass
@@ -626,7 +632,12 @@ def fetch_top_subnets() -> Dict[str, object]:
         if taodata:
             # Use Taostats share for these
             try:
-                ts_share = float(taodata.get('emission_share', 0.0))
+                # The API returns 'emission' field which represents the subnet's emission value
+                # We need to normalize it to a share (0.0-1.0) based on total emissions
+                ts_emission = float(taodata.get('emission', 0.0))
+                # If emission is a percentage-like value (0-100), convert to share
+                # Otherwise treat as raw emission value that will be normalized
+                ts_share = ts_emission / 100.0 if ts_emission > 1.0 else ts_emission
             except Exception:
                 ts_share = 0.0
             est = ts_share * DAILY_EMISSION
