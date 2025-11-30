@@ -643,19 +643,17 @@ def fetch_top_subnets() -> Dict[str, object]:
         if taodata:
             # Use Taostats data for these
             try:
-                # The Taostats API returns 'emission' field in RAO (1 TAO = 1,000,000,000 RAO)
-                # NOT a share (0.0-1.0), but the actual daily emission amount in RAO
-                ts_emission_rao = float(taodata.get('emission', 0.0))
-                # Convert from RAO to TAO
-                RAO_PER_TAO = 1_000_000_000
-                ts_emission = ts_emission_rao / RAO_PER_TAO
-                # Use it as the daily emission in TAO
-                if ts_emission > 0:
-                    # Calculate share as: daily_emission / total_daily_emission
-                    ts_share = ts_emission / DAILY_EMISSION
-                    est = ts_emission
+                # The Taostats API returns 'emission' field which is already a percentage share
+                # E.g., 86447949 from API becomes 0.086447949 (which is 8.6447949% when * 100)
+                # This is the subnet's emission share as a decimal (0.0-1.0 range)
+                ts_emission_raw = float(taodata.get('emission', 0.0))
+                # The value needs to be treated as a share directly
+                # Convert from the raw API format to share (it appears to be * 10^9, so divide by 10^9)
+                ts_share = ts_emission_raw / 1_000_000_000.0
+                # Calculate daily emission: share * total_daily_emission
+                if ts_share > 0:
+                    est = ts_share * DAILY_EMISSION
                 else:
-                    ts_share = 0.0
                     est = 0.0
             except Exception:
                 ts_share = 0.0
