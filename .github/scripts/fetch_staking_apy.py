@@ -41,8 +41,11 @@ def fetch_staking_apy(num_validators=50):
         
         print(f"✅ Fetched {len(validators)} validators", file=sys.stderr)
         
-        # Collect APR values - calculate from nominator_return_per_day and stake
+        # Collect APR values with stake weights for weighted average
+        # Weighted average = sum(APR * stake) / sum(stake)
         aprs = []
+        weighted_sum = 0.0
+        total_stake = 0.0
         
         for v in validators:
             # Get daily return and stake (both in rao)
@@ -60,6 +63,9 @@ def fetch_staking_apy(num_validators=50):
                         
                         if 0 < apr_val < 1000:  # Sanity check
                             aprs.append(apr_val)
+                            # Add to weighted calculation
+                            weighted_sum += apr_val * stake_val
+                            total_stake += stake_val
                             
                 except (ValueError, TypeError):
                     pass
@@ -68,20 +74,26 @@ def fetch_staking_apy(num_validators=50):
         if aprs:
             print(f"  Sample APRs: {[round(a, 2) for a in aprs[:5]]}", file=sys.stderr)
         
-        if not aprs:
+        if not aprs or total_stake == 0:
             print("❌ No valid APR values found", file=sys.stderr)
             return None
         
-        # Calculate averages
-        avg_apr = sum(aprs) / len(aprs)
+        # Calculate weighted average (realistic network APR)
+        weighted_avg_apr = weighted_sum / total_stake
+        # Simple average for comparison
+        simple_avg_apr = sum(aprs) / len(aprs)
         min_apr = min(aprs)
         max_apr = max(aprs)
+        
+        print(f"  Weighted Avg APR: {weighted_avg_apr:.2f}%", file=sys.stderr)
+        print(f"  Simple Avg APR: {simple_avg_apr:.2f}%", file=sys.stderr)
         
         # Get top validator info
         top_validator = validators[0] if validators else None
         
         result = {
-            "avg_apr": round(avg_apr, 2),
+            "avg_apr": round(weighted_avg_apr, 2),
+            "simple_avg_apr": round(simple_avg_apr, 2),
             "min_apr": round(min_apr, 2),
             "max_apr": round(max_apr, 2),
             "validators_analyzed": len(aprs),
@@ -117,7 +129,8 @@ def main():
     
     # Print summary
     print(f"\n📊 Staking APY Summary:", file=sys.stderr)
-    print(f"  Average APR: {result['avg_apr']}%", file=sys.stderr)
+    print(f"  Weighted Avg APR: {result['avg_apr']}%", file=sys.stderr)
+    print(f"  Simple Avg APR: {result['simple_avg_apr']}%", file=sys.stderr)
     print(f"  Range: {result['min_apr']}% - {result['max_apr']}%", file=sys.stderr)
     print(f"  Validators: {result['validators_analyzed']}", file=sys.stderr)
     
