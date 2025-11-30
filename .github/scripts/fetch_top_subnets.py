@@ -82,13 +82,9 @@ def fetch_top_subnets() -> Dict[str, object]:
         """
         out: Dict[int, Dict] = {}
         last_error = ''
-        # Prefer the documented API path per https://docs.taostats.io
+        # Prefer the documented API path per https://docs.taostats.io/reference/get-subnets-1
         variants = [
-            f"https://api.taostats.io/api/v1/subnets?network={network}&limit={limit}",
-            f"https://api.taostats.io/subnets?network={network}&limit={limit}",
-            f"https://api.taostats.io/api/subnets?network={network}&limit={limit}",
-            f"https://taostats.io/api/v1/subnets?network={network}&limit={limit}",
-            f"https://taostats.io/subnets?network={network}&limit={limit}",
+            f"https://api.taostats.io/api/subnet/latest/v1?network={network}&limit={limit}",
         ]
 
         # Basic retry/backoff
