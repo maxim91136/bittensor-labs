@@ -3,7 +3,19 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
-- Top Validators Display (planned for RC10)
+- 
+
+## v1.0.0-rc.10 (Release Candidate)
+### Added
+- **Top 10 Validators Card**: New dashboard section displaying the 10 validators with highest stake
+  - Five-column layout: Rank, Validator Name, Stake, Dominance %, Nominators
+  - Real-time data from `/api/top_validators` endpoint (dTao API)
+  - Smart fallback: Truncated hotkey shown for unnamed validators
+  - Beautiful gradient headers, hover effects, full light mode support
+- **Backend Infrastructure**:
+  - `fetch_top_validators.py`: Python script fetching from Taostats dTao API
+  - `fetch-top-validators.yml`: GitHub workflow running hourly at :29
+  - `/api/top_validators`: Cloudflare Pages function serving validator data
 
 ## v1.0.0-rc.9 (Release Candidate)
 ### Added
