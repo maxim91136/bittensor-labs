@@ -1,0 +1,57 @@
+name: Fetch Top Validators to Cloudflare KV
+
+on:
+  schedule:
+    - cron: '29 * * * *'    # every hour at :29 (offset from subnets at :59)
+  workflow_dispatch: {}
+  workflow_call: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          # No bittensor needed - using Taostats API only
+
+      - name: Run top validators script
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
+        run: |
+          python .github/scripts/fetch_top_validators.py
+
+      - name: Validate top_validators output
+        run: |
+          python3 - <<'PY'
+          import os, json, sys
+          path = '.github/data/top_validators.json'
+          if not os.path.exists(path):
+            print('⚠️ top_validators.json missing')
+            sys.exit(0)
+          with open(path) as f:
+            j = json.load(f)
+          top = j.get('top_validators') if isinstance(j, dict) else None
+          count = len(top) if isinstance(top, list) else 0
+          print('DEBUG: top_validators count =', count)
+          if count > 0:
+            print(f"✅ Top validator: {top[0].get('name')} - {top[0].get('stake_formatted')}")
+          print('✅ Validation OK')
+          PY
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: top-validators-json
+          path: .github/data/top_validators.json
