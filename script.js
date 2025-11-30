@@ -1426,13 +1426,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
       // Display TOP 10 (all of them)
       const rows = topSubnets.slice(0, 10).map((subnet, idx) => {
-        const rank = idx + 1;
+        const netuid = subnet.netuid || idx;
         const name = subnet.subnet_name || `SN${subnet.netuid}`;
         const share = ((subnet.taostats_emission_share || 0) * 100).toFixed(4);
         const daily = (subnet.estimated_emission_daily || 0).toFixed(4);
 
         return `<tr>
-          <td class="rank-col">${rank}</td>
+          <td class="rank-col">${netuid}</td>
           <td class="subnet-col">${name}</td>
           <td class="share-col">${share}%</td>
           <td class="daily-col">${daily} τ</td>
