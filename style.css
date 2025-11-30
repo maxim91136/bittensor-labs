@@ -1679,42 +1679,35 @@ body.light-bg .map-preview-card .map-attribution {
   z-index: 10;
 }
 
-/* Top Subnets Tooltip Styles - Magic Pill Style */
+/* Top Subnets Tooltip Styles - Same as dynamic-tooltip (Halving Pill style) */
 .top-subnets-tooltip {
   position: fixed;
   top: 0;
   left: 0;
-  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(34, 197, 94, 0.05));
-  border: 1px solid rgba(34, 197, 94, 0.35);
-  border-left: 4px solid #0ea5ff;
-  border-radius: 12px;
-  padding: 16px 18px;
-  box-shadow: inset 0 0 24px rgba(34, 197, 94, 0.04), 0 12px 40px rgba(0, 0, 0, 0.5);
-  z-index: 9999;
-  min-width: 360px;
+  background: #222;
+  color: #fff;
+  border-radius: 10px;
+  padding: 12px 20px;
+  box-shadow: 0 4px 24px #000a;
+  z-index: 99999;
+  pointer-events: auto;
+  opacity: 0;
+  transition: opacity 0.18s;
   max-width: 520px;
   max-height: 500px;
-  pointer-events: auto;
-  animation: slideIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  overflow: hidden;
   visibility: hidden;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateY(-12px) scale(0.96);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+.top-subnets-tooltip[style*="display: block"] {
+  opacity: 1;
+  visibility: visible;
 }
 
 .top-subnets-tooltip.light-bg {
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.92));
-  border-color: #e0e0e0;
-  border-left-color: #0ea5ff;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  background: #f5f5f5;
+  color: #222;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
 }
 
 .tooltip-header {
@@ -1723,62 +1716,44 @@ body.light-bg .map-preview-card .map-attribution {
   align-items: center;
   margin-bottom: 12px;
   padding-bottom: 10px;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.15);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .top-subnets-tooltip.light-bg .tooltip-header {
-  border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .tooltip-title {
   font-weight: 700;
-  font-size: 1.05em;
-  color: #22c55e;
+  font-size: 1em;
   letter-spacing: -0.02em;
 }
 
-.top-subnets-tooltip.light-bg .tooltip-title {
-  color: #15803d;
-}
-
 .tooltip-close {
-  background: rgba(34, 197, 94, 0.1);
+  background: transparent;
   border: none;
   cursor: pointer;
-  font-size: 1.3em;
-  color: var(--text-muted);
-  padding: 4px 8px;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  border-radius: 8px;
-  font-weight: 500;
+  font-size: 18px;
+  color: #fff;
+  padding: 4px 6px;
+  line-height: 1;
+  transition: opacity 0.2s;
+  font-weight: 600;
 }
 
 .tooltip-close:hover {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-  transform: scale(1.1);
+  opacity: 0.8;
 }
 
 .top-subnets-tooltip.light-bg .tooltip-close {
-  background: rgba(34, 197, 94, 0.08);
-  color: #555;
-}
-
-.top-subnets-tooltip.light-bg .tooltip-close:hover {
-  background: rgba(34, 197, 94, 0.15);
-  color: #15803d;
+  color: #222;
 }
 
 .tooltip-content {
   max-height: 400px;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: rgba(34, 197, 94, 0.3) transparent;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 .tooltip-content::-webkit-scrollbar {
@@ -1790,18 +1765,31 @@ body.light-bg .map-preview-card .map-attribution {
 }
 
 .tooltip-content::-webkit-scrollbar-thumb {
-  background: rgba(34, 197, 94, 0.3);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 3px;
 }
 
 .tooltip-content::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 197, 94, 0.5);
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.top-subnets-tooltip.light-bg .tooltip-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.top-subnets-tooltip.light-bg .tooltip-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.4);
 }
 
 .top-subnets-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.88em;
+  color: #fff;
+}
+
+.top-subnets-table.light-bg {
+  color: #222;
 }
 
 .top-subnets-table thead {
@@ -1817,7 +1805,7 @@ body.light-bg .map-preview-card .map-attribution {
   text-align: left;
   font-weight: 700;
   color: #22c55e;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   letter-spacing: 0.02em;
   font-size: 0.85em;
   text-transform: uppercase;
@@ -1825,16 +1813,16 @@ body.light-bg .map-preview-card .map-attribution {
 
 .top-subnets-table.light-bg th {
   color: #15803d;
-  border-bottom-color: rgba(34, 197, 94, 0.15);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
 }
 
 .top-subnets-table td {
   padding: 10px 8px;
-  border-bottom: 1px solid rgba(34, 197, 94, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .top-subnets-table.light-bg td {
-  border-bottom-color: rgba(34, 197, 94, 0.06);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
 }
 
 .top-subnets-table tbody tr {
@@ -1842,7 +1830,7 @@ body.light-bg .map-preview-card .map-attribution {
 }
 
 .top-subnets-table tbody tr:hover {
-  background: rgba(34, 197, 94, 0.08);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .top-subnets-table.light-bg tbody tr:hover {
@@ -1861,11 +1849,6 @@ body.light-bg .map-preview-card .map-attribution {
 
 .top-subnets-table .subnet-name {
   font-weight: 600;
-  color: var(--text);
-}
-
-.top-subnets-table.light-bg .subnet-name {
-  color: #222;
 }
 
 .top-subnets-table .share {
@@ -1878,7 +1861,7 @@ body.light-bg .map-preview-card .map-attribution {
 }
 
 .top-subnets-table .daily-tao {
-  color: var(--text-muted);
+  color: #bbb;
   font-size: 0.92em;
 }
 

@@ -1412,13 +1412,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!subnetsCard || !tooltip) return;
 
-  // Position tooltip near the card with better logic
+  // Position tooltip near the card
   function positionTooltip() {
     if (tooltip.style.display === 'none') return;
-    
-    // Force reflow to get accurate dimensions
-    tooltip.style.visibility = 'hidden';
-    tooltip.style.display = 'block';
     
     const rect = subnetsCard.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
@@ -1441,7 +1437,6 @@ document.addEventListener('DOMContentLoaded', function() {
     
     tooltip.style.left = left + 'px';
     tooltip.style.top = top + 'px';
-    tooltip.style.visibility = 'visible';
   }
 
   // Load and display top subnets
@@ -1484,12 +1479,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tooltip.style.display === 'none') {
       loadTopSubnets();
       tooltip.style.display = 'block';
-      // Use requestAnimationFrame to ensure reflow happens after display:block
-      requestAnimationFrame(() => {
-        positionTooltip();
-        window.addEventListener('scroll', positionTooltip);
-        window.addEventListener('resize', positionTooltip);
-      });
+      setTimeout(positionTooltip, 0);
+      window.addEventListener('scroll', positionTooltip);
+      window.addEventListener('resize', positionTooltip);
     } else {
       tooltip.style.display = 'none';
       window.removeEventListener('scroll', positionTooltip);
