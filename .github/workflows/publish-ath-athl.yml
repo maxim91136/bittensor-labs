@@ -1,4 +1,4 @@
-name: Fetch and Push ATH/ATL from Coingecko to Cloudflare KV
+name: Fetch ATH/ATL
 on:
   workflow_dispatch:
   schedule:

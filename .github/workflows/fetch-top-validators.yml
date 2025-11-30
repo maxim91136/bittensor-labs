@@ -1,4 +1,4 @@
-name: Fetch Top Validators to Cloudflare KV
+name: Fetch Top Validators
 
 on:
   schedule:

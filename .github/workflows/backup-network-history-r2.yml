@@ -1,4 +1,4 @@
-name: Backup Network history to R2
+name: Backup Network History to R2
 
 on:
   schedule:
