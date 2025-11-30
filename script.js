@@ -234,14 +234,12 @@ async function fetchPriceHistory(range = '7') {
     if (window._debug) console.debug('Taostats price history failed, trying CoinGecko:', e);
   }
   
-  // Fallback to CoinGecko for 7d, 30d, 365d only
-  if (['7', '30', '365'].includes(key)) {
-    const endpoint =
-      key === '365'
-        ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=365&interval=daily`
-        : key === '30'
-        ? `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=30&interval=daily`
-        : `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=7`;
+  // Fallback to CoinGecko for ranges it supports
+  // CoinGecko supports: any days value, we use it for 1, 3, 7, 30, 60, 90, 365
+  const cgDays = parseInt(key, 10);
+  if (cgDays && cgDays > 0) {
+    const interval = cgDays <= 7 ? '' : '&interval=daily';
+    const endpoint = `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=${cgDays}${interval}`;
     try {
       const res = await fetch(endpoint, { cache: 'no-store' });
       if (!res.ok) return null;
