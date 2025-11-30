@@ -306,11 +306,12 @@ def fetch_top_subnets() -> Dict[str, object]:
             if size > 0:
                 first_item = next(iter(taostats_map.values()))
                 if isinstance(first_item, dict):
-                    print(f"DEBUG: first_subnet_keys={list(first_item.keys())[:10]}")
+                    print(f"DEBUG: first_subnet_keys={list(first_item.keys())[:15]}")
+                    print(f"DEBUG: first_subnet_full={json.dumps(first_item, indent=2, default=str)[:500]}")
                     print(f"DEBUG: first_subnet_emission={first_item.get('emission')}")
                     print(f"DEBUG: first_subnet_emission_share={first_item.get('emission_share')}")
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"DEBUG: error in taostats reporting: {e}")
     if taostats_error:
         print(f'DEBUG: taostats_last_error={taostats_error}')
 
