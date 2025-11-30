@@ -26,8 +26,8 @@ def fetch_staking_apy(num_validators=50):
     }
     
     try:
-        # Fetch top validators ordered by stake
-        url = f"{VALIDATOR_URL}?limit={num_validators}&order=stake_desc"
+        # Fetch top validators ordered by stake (descending)
+        url = f"{VALIDATOR_URL}?limit={num_validators}"
         print(f"📊 Fetching top {num_validators} validators for APY calculation...", file=sys.stderr)
         
         resp = requests.get(url, headers=headers, timeout=30)
