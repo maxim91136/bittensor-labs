@@ -11,7 +11,7 @@ import requests
 from datetime import datetime, timezone
 
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
-BLOCK_URL = "https://api.taostats.io/api/block/latest/v1"
+BLOCK_URL = "https://api.taostats.io/api/block/v1"
 
 # Target block time in seconds
 TARGET_BLOCK_TIME = 12.0
