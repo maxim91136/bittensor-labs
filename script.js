@@ -1414,45 +1414,20 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!infoBadge || !tooltip) return;
 
-  // Position tooltip next to the info-badge
+  // Position tooltip in CENTER of screen (like dynamic-tooltip)
   function positionTooltip() {
     if (tooltip.style.display === 'none') return;
     
-    // Force reflow to get actual dimensions
-    const badgeRect = infoBadge.getBoundingClientRect();
+    // Center the tooltip on screen
     const tooltipRect = tooltip.getBoundingClientRect();
+    const viewportCenterX = window.innerWidth / 2;
+    const viewportCenterY = window.innerHeight / 2;
     
-    // Calculate position in viewport coordinates first
-    let viewportLeft = badgeRect.right + 12; // Right of badge + gap
-    let viewportTop = badgeRect.top; // Align to badge top
+    const left = viewportCenterX - (tooltipRect.width / 2);
+    const top = viewportCenterY - (tooltipRect.height / 2);
     
-    // Check if tooltip goes off right edge
-    if (viewportLeft + tooltipRect.width > window.innerWidth - 8) {
-      // Move to left of badge
-      viewportLeft = badgeRect.left - tooltipRect.width - 12;
-    }
-    
-    // Check if still off left edge
-    if (viewportLeft < 8) {
-      viewportLeft = 8;
-    }
-    
-    // Check if tooltip goes off bottom
-    if (viewportTop + tooltipRect.height > window.innerHeight - 20) {
-      viewportTop = window.innerHeight - tooltipRect.height - 20;
-    }
-    
-    // Check if goes off top
-    if (viewportTop < 8) {
-      viewportTop = 8;
-    }
-    
-    // Convert viewport coordinates to document coordinates
-    const docLeft = viewportLeft + window.scrollX;
-    const docTop = viewportTop + window.scrollY;
-    
-    tooltip.style.left = docLeft + 'px';
-    tooltip.style.top = docTop + 'px';
+    tooltip.style.left = Math.max(8, left) + 'px';
+    tooltip.style.top = Math.max(8, top) + 'px';
   }
 
   // Load and display top subnets

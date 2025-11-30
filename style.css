@@ -1679,29 +1679,45 @@ body.light-bg .map-preview-card .map-attribution {
   z-index: 10;
 }
 
-/* Top Subnets Tooltip Styles - Same as dynamic-tooltip (Halving Pill style) */
+/* Top Subnets Tooltip - Centered Modal Style */
 .top-subnets-tooltip {
   position: fixed;
-  top: 0;
-  left: 0;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   background: #222;
   color: #fff;
   border-radius: 10px;
   padding: 12px 20px;
-  box-shadow: 0 4px 24px #000a;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
   z-index: 999999;
   pointer-events: auto;
-  opacity: 0;
-  transition: opacity 0.18s;
   max-width: 520px;
   max-height: 500px;
   overflow: hidden;
-  visibility: hidden;
+  animation: tooltipFadeIn 0.2s ease-out;
+}
+
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
 }
 
 .top-subnets-tooltip[style*="display: block"] {
   opacity: 1;
-  visibility: visible;
+  pointer-events: auto;
+}
+
+.top-subnets-tooltip.light-bg {
+  background: #f5f5f5;
+  color: #222;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .top-subnets-tooltip.light-bg {
