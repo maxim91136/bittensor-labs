@@ -3,7 +3,25 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
-- 
+- Top Validators Display (planned for RC10)
+
+## v1.0.0-rc.9 (Release Candidate)
+### Added
+- **Top 10 Subnets Card**: New dashboard section displaying the 10 subnets with highest emission share
+  - Four-column layout: SN (netuid), Subnet Name, Emission %, Daily TAO
+  - Real-time data from `/api/top_subnets` endpoint (taostats.io source)
+  - Beautiful gradient headers, hover effects, full light mode support
+- **Source Attribution**: Tooltip now shows "Source: taostats.io"
+
+### Changed
+- **Column Layout Optimization**: Symmetrical widths (10% | 25% | 32% | 33%) for balanced display
+- **Simplified Tooltips**: Subnets info-badge now uses standard CSS text tooltip
+- **Code Cleanup**: Removed ~135 lines of legacy tooltip handler code
+
+### Fixed
+- **Column Alignment**: Removed `::before` pseudo-elements that shifted table columns
+- **Header Alignment**: All table headers now properly left-aligned
+- **Width Consistency**: Fixed `table-layout: fixed` conflicts with nth-child selectors
 
 ## v1.0.0-rc.8.2 (Release Candidate)
 ### Changed
