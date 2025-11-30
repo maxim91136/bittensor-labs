@@ -2454,8 +2454,12 @@ body.light-bg .map-preview-card .map-attribution {
   color: #1a1a1a;
 }
 
+.top-wallets-card.light-bg .wallets-display-table .wallet-col .wallet-identity {
+  color: #1a1a1a;
+}
+
 .top-wallets-card.light-bg .wallets-display-table .wallet-col .wallet-address {
-  color: rgba(0, 0, 0, 0.5);
+  color: #555;
 }
 
 .top-wallets-card.light-bg .wallets-display-table .wallet-col .wallet-address-only {
@@ -2467,11 +2471,11 @@ body.light-bg .map-preview-card .map-attribution {
 }
 
 .top-wallets-card.light-bg .wallets-display-table .dominance-col {
-  color: #444;
+  color: #1a1a1a;
 }
 
 .top-wallets-card.light-bg .wallets-display-table .staked-col {
-  color: #666;
+  color: #1a1a1a;
 }
 
 /* Responsive */
