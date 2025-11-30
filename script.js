@@ -1414,24 +1414,24 @@ document.addEventListener('DOMContentLoaded', function() {
 
   if (!infoBadge || !tooltip) return;
 
-  // Position tooltip next to the info-badge (or below if more space)
+  // Position tooltip next to the info-badge (right side, at badge level)
   function positionTooltip() {
     if (tooltip.style.display === 'none') return;
     
-    // Get badge position
+    // Get badge position in viewport
     const badgeRect = infoBadge.getBoundingClientRect();
     const tooltipRect = tooltip.getBoundingClientRect();
     
-    // Try to position to the right of badge first
+    // Position to the RIGHT of the badge, aligned to badge top
     let left = badgeRect.right + window.scrollX + 12;
-    let top = badgeRect.top + window.scrollY;
+    let top = badgeRect.top + window.scrollY - 6; // Slightly above badge vertical center
     
-    // If too far right, move to left
+    // If tooltip would go off right side, move to LEFT of badge
     if (left + tooltipRect.width > window.innerWidth - 8) {
       left = badgeRect.left + window.scrollX - tooltipRect.width - 12;
     }
     
-    // If still off screen horizontally, center it
+    // If still off screen horizontally, center it on screen
     if (left < 8) {
       left = 8;
     }
@@ -1439,9 +1439,14 @@ document.addEventListener('DOMContentLoaded', function() {
       left = window.innerWidth - tooltipRect.width - 8;
     }
     
-    // Adjust vertical position if needed
+    // Adjust vertical position if goes off bottom
     if (top + tooltipRect.height > window.innerHeight + window.scrollY - 20) {
-      top = badgeRect.top + window.scrollY - tooltipRect.height - 8;
+      top = window.innerHeight + window.scrollY - tooltipRect.height - 20;
+    }
+    
+    // Don't go above viewport
+    if (top < window.scrollY + 8) {
+      top = window.scrollY + 8;
     }
     
     tooltip.style.left = left + 'px';

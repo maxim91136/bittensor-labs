@@ -1689,7 +1689,7 @@ body.light-bg .map-preview-card .map-attribution {
   border-radius: 10px;
   padding: 12px 20px;
   box-shadow: 0 4px 24px #000a;
-  z-index: 99999;
+  z-index: 999999;
   pointer-events: auto;
   opacity: 0;
   transition: opacity 0.18s;
