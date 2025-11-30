@@ -1408,6 +1408,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const tooltip = document.getElementById('topSubnetsTooltip');
   const closeBtn = document.getElementById('topSubnetsClose');
   const subnetsTable = document.getElementById('topSubnetsList');
+  const infoBadge = subnetsCard ? subnetsCard.querySelector('.info-badge') : null;
 
   if (!subnetsCard || !tooltip) return;
 
@@ -1465,11 +1466,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Show tooltip on card click
-  subnetsCard.addEventListener('click', function(e) {
-    // Don't show tooltip if clicking on the link
-    if (e.target.tagName === 'A' || e.target.closest('a')) return;
-    
+  // Show tooltip on card click or info-badge click
+  function toggleTooltip() {
     if (tooltip.style.display === 'none') {
       loadTopSubnets();
       tooltip.style.display = 'block';
@@ -1481,7 +1479,21 @@ document.addEventListener('DOMContentLoaded', function() {
       window.removeEventListener('scroll', positionTooltip);
       window.removeEventListener('resize', positionTooltip);
     }
+  }
+
+  subnetsCard.addEventListener('click', function(e) {
+    // Don't show tooltip if clicking on the link or info-badge (they handle it separately)
+    if (e.target.tagName === 'A' || e.target.closest('a') || e.target === infoBadge) return;
+    toggleTooltip();
   });
+
+  // Info-badge click handler
+  if (infoBadge) {
+    infoBadge.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleTooltip();
+    });
+  }
 
   // Close tooltip with X button
   closeBtn.addEventListener('click', function(e) {
