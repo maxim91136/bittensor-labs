@@ -4,30 +4,43 @@
  */
 
 export async function onRequest(context) {
-  const { env } = context;
-
-  const headers = {
-    'Content-Type': 'application/json',
+  const cors = {
     'Access-Control-Allow-Origin': '*',
-    'Cache-Control': 'public, max-age=300'
+    'Access-Control-Allow-Methods': 'GET, OPTIONS',
+    'Access-Control-Allow-Headers': '*',
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'public, max-age=300, s-maxage=600'
   };
 
+  if (context.request.method === 'OPTIONS') {
+    return new Response(null, { status: 204, headers: cors });
+  }
+
+  const KV = context.env?.METRICS_KV;
+  if (!KV) {
+    return new Response(JSON.stringify({ error: 'KV not bound' }), { status: 500, headers: cors });
+  }
+
   try {
-    // Fetch from KV
-    const data = await env.BITTENSOR_METRICS.get('block_time', 'json');
-
-    if (!data) {
-      return new Response(
-        JSON.stringify({ error: 'No block time data available' }),
-        { status: 404, headers }
-      );
+    const raw = await KV.get('block_time');
+    if (!raw) {
+      return new Response(JSON.stringify({ 
+        error: 'No block time data found', 
+        _source: 'taostats', 
+        _status: 'empty' 
+      }), {
+        status: 404,
+        headers: cors
+      });
     }
-
-    return new Response(JSON.stringify(data), { status: 200, headers });
-  } catch (err) {
-    return new Response(
-      JSON.stringify({ error: 'Failed to fetch block time data', details: err.message }),
-      { status: 500, headers }
-    );
+    return new Response(raw, { status: 200, headers: cors });
+  } catch (e) {
+    return new Response(JSON.stringify({ 
+      error: 'Failed to fetch block time', 
+      details: e.message 
+    }), {
+      status: 500,
+      headers: cors
+    });
   }
 }
