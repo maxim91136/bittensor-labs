@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.18 (2025-12-01)
+### Improved
+- **Halving Pill Palette**: Base gradient and default border now use brighter corals, and the light-mode accent stripe is softened so the pill remains readable on pale backgrounds.
+
+### Fixed
+- **Light-Mode Price Pill Stripe**: Enforced neutral borders on three sides so only the right-edge stripe stays visible; it now defaults to the brand accent and flips green/red according to the 24h change without rendering a second stripe.
+
 ## v1.0.0-rc.17.1 (2025-12-01)
 ### Improved
 - **Price Pill Visuals**: Default pill now mirrors the halving pill with a cool blue shell plus slim right-edge stripe that turns green (price up) or red (price down).
