@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.16.8 (2025-12-01)
+### Improved
+- **Signal Glow Intensity**: Increased glow opacity and radius for better visibility in dark mode
+- Double-layer box-shadow effect (inner + outer glow) for premium "Apple-style" animation
+- All signal colors (green, red, yellow, orange) now more vibrant and noticeable
+
 ## v1.0.0-rc.16.7 (2025-12-01)
 ### Fixed
 - **CSS Isolation**: Properly exclude signal cards from default green hover styling
