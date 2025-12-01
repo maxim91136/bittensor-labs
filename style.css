@@ -224,13 +224,13 @@ body {
 
 /* Price pill confidence-style accent based on 24h change */
 .price-pill.price-up {
-  border-right: 4px solid #10b981;
-  box-shadow: inset 0 0 20px rgba(16,185,129,0.05);
+  border-right: 4px solid #f43f5e;
+  box-shadow: inset 0 0 20px rgba(244,63,94,0.05);
 }
 
 .price-pill.price-down {
-  border-right: 4px solid #f43f5e;
-  box-shadow: inset 0 0 20px rgba(244,63,94,0.05);
+  border-right: 4px solid #10b981;
+  box-shadow: inset 0 0 20px rgba(16,185,129,0.05);
 }
 
 .price-change {
