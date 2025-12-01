@@ -501,6 +501,8 @@ async function fetchCirculatingSupply() {
 function updateTaoPrice(priceData) {
   const priceEl = document.getElementById('taoPrice');
   const changeEl = document.getElementById('priceChange');
+  const pricePill = document.getElementById('taoPricePill');
+  
   if (!priceEl) return;
     if (priceData.price) {
       priceEl.textContent = formatPrice(priceData.price);
@@ -510,10 +512,19 @@ function updateTaoPrice(priceData) {
         changeEl.textContent = `${change > 0 ? '↑' : '↓'}${formatPercent(change)} (24h)`;
         changeEl.style.display = 'inline';
         changeEl.className = `price-change ${change >= 0 ? 'positive' : 'negative'}`;
+        
+        // Apply subtle pulse animation to price pill based on 24h change
+        if (pricePill) {
+          pricePill.classList.remove('price-up', 'price-down');
+          if (Math.abs(change) > 0.5) { // Only pulse if change > 0.5%
+            pricePill.classList.add(change > 0 ? 'price-up' : 'price-down');
+          }
+        }
       }
     } else {
       priceEl.textContent = 'N/A';
       if (changeEl) changeEl.style.display = 'none';
+      if (pricePill) pricePill.classList.remove('price-up', 'price-down');
     }
   lastPrice = priceData.price;
   tryUpdateMarketCapAndFDV();
