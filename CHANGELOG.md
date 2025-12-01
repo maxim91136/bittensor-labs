@@ -5,6 +5,47 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.16.6 (2025-12-01)
+### Debug
+- Added console.log output to track signal calculation during auto-refresh
+- Logs volume change %, price change %, and resulting signal color
+
+## v1.0.0-rc.16.5 (2025-12-01)
+### Fixed
+- **Signal Persistence**: Colored signals now persist until a DIFFERENT color is detected
+- Neutral states are ignored when a color is already active
+- Prevents signal loss during auto-refresh when market conditions temporarily fall within ±3% threshold
+
+## v1.0.0-rc.16.4 (2025-12-01)
+### Fixed
+- **CSS Signal Persistence**: Added `!important` flag to all volume signal animations to prevent style override by generic `.stat-card:hover` rules
+- Signal colors (red, green, yellow, orange) now persist correctly during hover and after auto-refresh cycles
+
+## v1.0.0-rc.16.3 (2025-12-01)
+### Fixed
+- **Volume Signal**: Preserve last valid signal when API returns neutral/insufficient data
+- **Animation Flash**: Add new class before removing old ones to prevent flash to default state
+
+## v1.0.0-rc.16.2 (2025-12-01)
+### Fixed
+- **Hover Override**: Signal animation color no longer resets to green on hover
+- Added explicit hover border-color rules for each signal state
+
+## v1.0.0-rc.16.1 (2025-12-01)
+### Fixed
+- **Animation Visibility**: Changed signal animation from background to border-only
+- Increased animation duration to 6s for smooth "breathing" effect
+
+## v1.0.0-rc.16 (2025-12-01)
+### Added
+- **Volume Signal System (Ampelsystem)**: Traffic light indicator for Volume-Card
+  - 🟢 Green: Volume ↑ + Price ↑ = Bullish (strong demand)
+  - 🔴 Red: Volume ↑ + Price ↓ = Bearish (distribution/selling)
+  - 🟡 Yellow: Volume ↓ = Consolidation/weak momentum
+  - 🟠 Orange: Volume ↑ + Price stable = Potential breakout
+  - Smooth 6s border animation ("breathing" effect)
+  - Tooltip shows volume/price change percentages and interpretation
+
 ## v1.0.0-rc.14 (Release Candidate)
 ### Added
 - **Block Time Kachel**: Real-time average block interval metric

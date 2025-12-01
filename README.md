@@ -10,7 +10,7 @@ This project provides a compact dashboard for visualizing and monitoring key Bit
 First it was just a learning and hobby project, but now it is passion.
 PS: This is my first ever GitHub and website project, with many headaches but also much fun.
 
-**Latest release:** `v1.0.0-rc.11.1` — see `RELEASE_NOTES/v1.0.0-rc.11.md` and `CHANGELOG.md` for details.
+**Latest release:** `v1.0.0-rc.16.6` — see `RELEASE_NOTES/v1.0.0-rc.16.6.md` and `CHANGELOG.md` for details.
 
 ## Features
 

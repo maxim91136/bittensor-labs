@@ -293,62 +293,78 @@ body {
   }
 }
 
-/* Volume Signal Blink Animations */
+/* Volume Signal Glow Animations - uses outline for clean glow effect */
+.stat-card.blink-green,
+.stat-card.blink-red,
+.stat-card.blink-yellow,
+.stat-card.blink-orange {
+  outline: none;
+  outline-offset: 0px;
+  /* Force default border - same as other stat-cards */
+  border: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+/* Light mode: keep gray border */
+.stat-card.blink-green.light-bg,
+.stat-card.blink-red.light-bg,
+.stat-card.blink-yellow.light-bg,
+.stat-card.blink-orange.light-bg {
+  border: 1px solid #c0c0c0 !important;
+}
+
 .stat-card.blink-green {
-  animation: blink-green 6s ease-in-out infinite !important;
-  border-color: rgba(34, 197, 94, 0.5) !important;
+  animation: glow-green 6s ease-in-out infinite;
 }
 
 .stat-card.blink-red {
-  animation: blink-red 6s ease-in-out infinite !important;
-  border-color: rgba(239, 68, 68, 0.5) !important;
+  animation: glow-red 6s ease-in-out infinite;
 }
 
 .stat-card.blink-yellow {
-  animation: blink-yellow 6s ease-in-out infinite !important;
-  border-color: rgba(234, 179, 8, 0.5) !important;
+  animation: glow-yellow 6s ease-in-out infinite;
 }
 
 .stat-card.blink-orange {
-  animation: blink-orange 6s ease-in-out infinite !important;
-  border-color: rgba(249, 115, 22, 0.5) !important;
+  animation: glow-orange 6s ease-in-out infinite;
 }
 
-@keyframes blink-green {
-  0%, 100% { border-color: rgba(34, 197, 94, 0.2); }
-  50% { border-color: rgba(34, 197, 94, 0.9); }
+@keyframes glow-green {
+  0%, 100% { box-shadow: 0 0 10px rgba(34, 197, 94, 0.15), 0 4px 12px rgba(0,0,0,0.2); }
+  50% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.4), 0 4px 12px rgba(0,0,0,0.2); }
 }
 
-@keyframes blink-red {
-  0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
-  50% { border-color: rgba(239, 68, 68, 0.9); }
+@keyframes glow-red {
+  0%, 100% { box-shadow: 0 0 10px rgba(239, 68, 68, 0.15), 0 4px 12px rgba(0,0,0,0.2); }
+  50% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.4), 0 4px 12px rgba(0,0,0,0.2); }
 }
 
-@keyframes blink-yellow {
-  0%, 100% { border-color: rgba(234, 179, 8, 0.2); }
-  50% { border-color: rgba(234, 179, 8, 0.9); }
+@keyframes glow-yellow {
+  0%, 100% { box-shadow: 0 0 10px rgba(234, 179, 8, 0.15), 0 4px 12px rgba(0,0,0,0.2); }
+  50% { box-shadow: 0 0 20px rgba(234, 179, 8, 0.4), 0 4px 12px rgba(0,0,0,0.2); }
 }
 
-@keyframes blink-orange {
-  0%, 100% { border-color: rgba(249, 115, 22, 0.2); }
-  50% { border-color: rgba(249, 115, 22, 0.9); }
+@keyframes glow-orange {
+  0%, 100% { box-shadow: 0 0 10px rgba(249, 115, 22, 0.15), 0 4px 12px rgba(0,0,0,0.2); }
+  50% { box-shadow: 0 0 20px rgba(249, 115, 22, 0.4), 0 4px 12px rgba(0,0,0,0.2); }
 }
 
-/* Override hover styles for blinking cards */
+/* Ensure signal cards keep normal border on hover (no green tint) */
+/* The animation handles the glow via box-shadow, so don't override it here */
 .stat-card.blink-green:hover,
 .stat-card.blink-red:hover,
 .stat-card.blink-yellow:hover,
 .stat-card.blink-orange:hover {
-  /* Keep transform and other hover effects, but not border-color */
-  background: rgba(17, 19, 24, 0.8);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+  border-color: rgba(255,255,255,0.1) !important;
+  /* Don't set box-shadow here - let the animation control it */
 }
 
-.stat-card.blink-green:hover { border-color: rgba(34, 197, 94, 0.5) !important; }
-.stat-card.blink-red:hover { border-color: rgba(239, 68, 68, 0.5) !important; }
-.stat-card.blink-yellow:hover { border-color: rgba(234, 179, 8, 0.5) !important; }
-.stat-card.blink-orange:hover { border-color: rgba(249, 115, 22, 0.5) !important; }
+/* Also disable the green ::before gradient on signal cards */
+.stat-card.blink-green::before,
+.stat-card.blink-red::before,
+.stat-card.blink-yellow::before,
+.stat-card.blink-orange::before {
+  display: none !important;
+}
 
 /* ---- Halving Pill ---- */
 .halving-pill {
@@ -467,14 +483,14 @@ body {
   transition: opacity 0.3s ease;
 }
 
-.stat-card:hover {
+.stat-card:hover:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange) {
   border-color: rgba(34,197,94,0.3);
   background: rgba(17, 19, 24, 0.8);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,197,94,0.1);
 }
 
-.stat-card:hover::before {
+.stat-card:hover:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange)::before {
   opacity: 1;
 }
 
@@ -2594,4 +2610,39 @@ body.light-bg .map-preview-card .map-attribution {
   .validators-display-table td {
     padding: 8px 3px;
   }
+}
+
+/* ============================================
+   VOLUME SIGNAL CARDS - FINAL OVERRIDES
+   These rules MUST be at the end to override all other styles
+   ============================================ */
+
+/* Base state for all signal cards - force gray border like other cards */
+.stat-card.blink-green,
+.stat-card.blink-red,
+.stat-card.blink-yellow,
+.stat-card.blink-orange {
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  /* Don't transition border at all - prevent green bleed */
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease !important;
+}
+
+/* Hover state - keep gray border, let animation handle box-shadow glow */
+.stat-card.blink-green:hover,
+.stat-card.blink-red:hover,
+.stat-card.blink-yellow:hover,
+.stat-card.blink-orange:hover {
+  border: 1px solid rgba(255,255,255,0.1) !important;
+  transform: translateY(-2px);
+  background: rgba(17, 19, 24, 0.8);
+  /* DO NOT set box-shadow here - let the animation control the glow */
+}
+
+/* Hide the green gradient line completely on signal cards */
+.stat-card.blink-green::before,
+.stat-card.blink-red::before,
+.stat-card.blink-yellow::before,
+.stat-card.blink-orange::before {
+  display: none !important;
+  content: none !important;
 }
