@@ -302,13 +302,13 @@ body {
 }
 
 @keyframes blink-green {
-  0%, 100% { border-color: rgba(34, 197, 94, 0.2); }
-  50% { border-color: rgba(34, 197, 94, 0.9); }
+  0%, 100% { border-color: rgba(34, 197, 94, 0.2) !important; }
+  50% { border-color: rgba(34, 197, 94, 0.9) !important; }
 }
 
 @keyframes blink-red {
-  0%, 100% { border-color: rgba(239, 68, 68, 0.2); }
-  50% { border-color: rgba(239, 68, 68, 0.9); }
+  0%, 100% { border-color: rgba(239, 68, 68, 0.2) !important; }
+  50% { border-color: rgba(239, 68, 68, 0.9) !important; }
 }
 
 /* Volume Signal: Yellow (Caution) */
@@ -317,8 +317,8 @@ body {
 }
 
 @keyframes blink-yellow {
-  0%, 100% { border-color: rgba(234, 179, 8, 0.2); }
-  50% { border-color: rgba(234, 179, 8, 0.9); }
+  0%, 100% { border-color: rgba(234, 179, 8, 0.2) !important; }
+  50% { border-color: rgba(234, 179, 8, 0.9) !important; }
 }
 
 /* Volume Signal: Orange (Warning - potential breakout) */
@@ -327,32 +327,43 @@ body {
 }
 
 @keyframes blink-orange {
-  0%, 100% { border-color: rgba(249, 115, 22, 0.2); }
-  50% { border-color: rgba(249, 115, 22, 0.9); }
+  0%, 100% { border-color: rgba(249, 115, 22, 0.2) !important; }
+  50% { border-color: rgba(249, 115, 22, 0.9) !important; }
 }
 
-/* Ensure blink animations persist on hover */
+/* Ensure blink animations persist - override default hover and transitions */
+.stat-card.blink-green,
+.stat-card.blink-red,
+.stat-card.blink-yellow,
+.stat-card.blink-orange {
+  transition: transform 0.3s, background 0.3s, box-shadow 0.3s; /* exclude border-color from transition */
+}
+
 .stat-card.blink-green:hover,
 .stat-card.blink-red:hover,
 .stat-card.blink-yellow:hover,
 .stat-card.blink-orange:hover {
-  animation: inherit;
+  border-color: inherit !important; /* don't override animation border-color */
 }
 
+.stat-card.blink-green,
 .stat-card.blink-green:hover {
-  animation: blink-green 6s ease-in-out infinite;
+  animation: blink-green 6s ease-in-out infinite !important;
 }
 
+.stat-card.blink-red,
 .stat-card.blink-red:hover {
-  animation: blink-red 6s ease-in-out infinite;
+  animation: blink-red 6s ease-in-out infinite !important;
 }
 
+.stat-card.blink-yellow,
 .stat-card.blink-yellow:hover {
-  animation: blink-yellow 6s ease-in-out infinite;
+  animation: blink-yellow 6s ease-in-out infinite !important;
 }
 
+.stat-card.blink-orange,
 .stat-card.blink-orange:hover {
-  animation: blink-orange 6s ease-in-out infinite;
+  animation: blink-orange 6s ease-in-out infinite !important;
 }
 
 /* ---- Halving Pill ---- */
