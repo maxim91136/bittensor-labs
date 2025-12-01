@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.16.5 (2025-12-01)
+### Fixed
+- **Signal Persistence**: Colored signals now persist until a DIFFERENT color is detected
+- Neutral states are ignored when a color is already active
+- Prevents signal loss during auto-refresh when market conditions temporarily fall within ±3% threshold
+
 ## v1.0.0-rc.16.4 (2025-12-01)
 ### Fixed
 - **CSS Signal Persistence**: Added `!important` flag to all volume signal animations to prevent style override by generic `.stat-card:hover` rules
