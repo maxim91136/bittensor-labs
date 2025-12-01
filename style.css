@@ -40,14 +40,30 @@
   50% { opacity: 0.6; }
 }
 
-@keyframes price-pill-pulse-up {
-  0%, 100% { box-shadow: inset 0 0 16px rgba(16,185,129,0.08); }
-  50% { box-shadow: inset 0 0 26px rgba(16,185,129,0.15); }
+@keyframes price-stripe-pulse-up {
+  0%, 100% {
+    transform: scaleY(0.85);
+    box-shadow: 0 0 10px rgba(16,185,129,0.35);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scaleY(1.05);
+    box-shadow: 0 0 24px rgba(16,185,129,0.65);
+    opacity: 1;
+  }
 }
 
-@keyframes price-pill-pulse-down {
-  0%, 100% { box-shadow: inset 0 0 16px rgba(244,63,94,0.08); }
-  50% { box-shadow: inset 0 0 26px rgba(244,63,94,0.15); }
+@keyframes price-stripe-pulse-down {
+  0%, 100% {
+    transform: scaleY(0.85);
+    box-shadow: 0 0 10px rgba(244,63,94,0.35);
+    opacity: 0.75;
+  }
+  50% {
+    transform: scaleY(1.05);
+    box-shadow: 0 0 24px rgba(244,63,94,0.65);
+    opacity: 1;
+  }
 }
 
 /* Socials & Useful Links Table: More padding for cells */
@@ -218,6 +234,8 @@ body {
   background: linear-gradient(135deg, rgba(14,165,255,0.08), rgba(14,165,255,0.02));
   border: 1px solid rgba(14,165,255,0.45);
   border-radius: 22px;
+  position: relative;
+  overflow: hidden;
   /* Moderately larger than cards but not excessive */
   font-size: clamp(0.8rem, 2vw, 0.95rem);
   font-weight: 800;
@@ -233,22 +251,40 @@ body {
 }
 
 /* Price pill confidence-style accent based on 24h change */
-.price-pill.price-up {
-  box-shadow: inset 0 0 18px rgba(16,185,129,0.09);
-  animation: price-pill-pulse-up 7s ease-in-out 0.6s infinite;
-}
-
-.price-pill.price-down {
-  box-shadow: inset 0 0 18px rgba(244,63,94,0.09);
-  animation: price-pill-pulse-down 7s ease-in-out 0.6s infinite;
-}
-
 #taoPricePill.price-up {
+  box-shadow: inset 0 0 18px rgba(16,185,129,0.2);
   border-right: 4px solid #10b981;
 }
 
 #taoPricePill.price-down {
+  box-shadow: inset 0 0 18px rgba(244,63,94,0.2);
   border-right: 4px solid #f43f5e;
+}
+
+#taoPricePill::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  right: 6px;
+  width: 10px;
+  border-radius: 999px;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transform-origin: center right;
+}
+
+#taoPricePill.price-up::after {
+  background: linear-gradient(180deg, rgba(34,197,94,0.95), rgba(34,197,94,0.55));
+  opacity: 1;
+  animation: price-stripe-pulse-up 6.5s ease-in-out infinite;
+}
+
+#taoPricePill.price-down::after {
+  background: linear-gradient(180deg, rgba(244,63,94,0.95), rgba(244,63,94,0.55));
+  opacity: 1;
+  animation: price-stripe-pulse-down 6.5s ease-in-out infinite;
 }
 
 .price-change {
