@@ -180,17 +180,30 @@ function applyVolumeSignal(signal, tooltip) {
     return; // Don't change anything, keep current animation
   }
   
-  // Remove all blink classes first
-  volumeCard.classList.remove('blink-green', 'blink-red', 'blink-yellow', 'blink-orange');
+  // If same signal as before, don't touch the classes (keeps animation smooth)
+  if (signal === _lastVolumeSignal) {
+    // Just update tooltip if needed
+    const infoBadge = volumeCard.querySelector('.info-badge');
+    if (infoBadge && tooltip) {
+      const baseTooltip = 'TAO trading volume in the last 24 hours';
+      infoBadge.setAttribute('data-tooltip', `${baseTooltip}\n\n${tooltip}`);
+    }
+    if (window._debug) console.log(`📊 Volume Signal: unchanged (${signal})`);
+    return;
+  }
   
-  // Apply signal blink (only if not neutral) - runs infinite until next update
+  // Signal changed - update classes
+  const allBlinkClasses = ['blink-green', 'blink-red', 'blink-yellow', 'blink-orange'];
+  
   if (signal !== 'neutral') {
-    // Force reflow to restart animation
-    void volumeCard.offsetWidth;
+    // Add new class first, then remove others (prevents flash to default)
     volumeCard.classList.add(`blink-${signal}`);
-    _lastVolumeSignal = signal; // Remember this valid signal
+    allBlinkClasses.filter(c => c !== `blink-${signal}`).forEach(c => volumeCard.classList.remove(c));
+    _lastVolumeSignal = signal;
   } else {
-    _lastVolumeSignal = null; // Clear if truly neutral
+    // Truly neutral - remove all
+    allBlinkClasses.forEach(c => volumeCard.classList.remove(c));
+    _lastVolumeSignal = null;
   }
   
   // Update tooltip on the info badge
