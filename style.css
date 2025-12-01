@@ -300,8 +300,9 @@ body {
 .stat-card.blink-orange {
   outline: none;
   outline-offset: 0px;
-  /* Force default border - same as other stat-cards */
+  /* Force default border - same as other stat-cards - GRAY not green! */
   border: 1px solid rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.1) !important;
 }
 
 /* Light mode: keep gray border */
@@ -2623,6 +2624,7 @@ body.light-bg .map-preview-card .map-attribution {
 .stat-card.blink-yellow,
 .stat-card.blink-orange {
   border: 1px solid rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.1) !important;
   /* Don't transition border at all - prevent green bleed */
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background 0.3s ease !important;
 }
@@ -2633,6 +2635,7 @@ body.light-bg .map-preview-card .map-attribution {
 .stat-card.blink-yellow:hover,
 .stat-card.blink-orange:hover {
   border: 1px solid rgba(255,255,255,0.1) !important;
+  border-color: rgba(255,255,255,0.1) !important;
   transform: translateY(-2px);
   background: rgba(17, 19, 24, 0.8);
   /* DO NOT set box-shadow here - let the animation control the glow */
