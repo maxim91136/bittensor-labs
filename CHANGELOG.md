@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
+## v1.0.0-rc.16.7 (2025-12-01)
+### Fixed
+- **CSS Isolation**: Properly exclude signal cards from default green hover styling
+- Signal cards now maintain gray border like all other cards
+- Green hover effect only applies to non-signal stat-cards via `:not()` selectors
+- Works correctly in both dark and light mode
+
 ## v1.0.0-rc.16.6 (2025-12-01)
 ### Debug
 - Added console.log output to track signal calculation during auto-refresh
