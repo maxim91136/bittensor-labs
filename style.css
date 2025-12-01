@@ -203,7 +203,7 @@ body {
   align-items: center;
   gap: clamp(8px, 2vw, 10px);
   /* EIGENSTÄNDIG: Komplett getrennt von stat-card CSS-Variablen */
-  padding: clamp(10px, 2.5vw, 14px) clamp(20px, 5vw, 28px);
+  padding: clamp(6px, 1.5vw, 8px) clamp(14px, 3.5vw, 18px);
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 22px;
@@ -376,7 +376,7 @@ body {
   justify-content: center;
   /* EIGENSTÄNDIG: Event-Pill etwas größer als Price */
   font-size: clamp(0.95rem, 2.4vw, 1.15rem);
-  padding: clamp(10px, 2.5vw, 14px) clamp(20px, 5vw, 28px);
+  padding: clamp(6px, 1.5vw, 8px) clamp(14px, 3.5vw, 18px);
   animation: halving-pulse 7s infinite;
   font-family: 'Segoe UI', Arial, sans-serif;
   font-weight: 800;
