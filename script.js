@@ -174,15 +174,11 @@ function applyVolumeSignal(signal, tooltip) {
   // Remove all blink classes first
   volumeCard.classList.remove('blink-green', 'blink-red', 'blink-yellow', 'blink-orange');
   
-  // Apply signal blink (only if not neutral)
+  // Apply signal blink (only if not neutral) - runs infinite until next update
   if (signal !== 'neutral') {
     // Force reflow to restart animation
     void volumeCard.offsetWidth;
     volumeCard.classList.add(`blink-${signal}`);
-    // Remove blink class after animation completes (3 cycles × 1s = 3s)
-    setTimeout(() => {
-      volumeCard.classList.remove(`blink-${signal}`);
-    }, 3000);
   }
   
   // Update tooltip on the info badge
