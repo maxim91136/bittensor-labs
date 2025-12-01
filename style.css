@@ -208,7 +208,7 @@ body {
   border: 1px solid var(--border);
   border-radius: 22px;
   /* AGGRESSIV: 3.5vw wächst viel schneller als Cards (2vw) */
-  font-size: clamp(1.4rem, 3.5vw, 2.5rem);
+  font-size: clamp(1.1rem, 3.5vw, 2.5rem);
   font-weight: 800;
   color: var(--text);
   transition: box-shadow 0.3s ease;
@@ -376,7 +376,7 @@ body {
   justify-content: center;
   /* EIGENSTÄNDIG: Event-Pill muss klar dominieren */
   /* AGGRESSIV: 4vw vs Cards 2vw = doppelt so schnelles Wachstum! */
-  font-size: clamp(1.6rem, 4vw, 3rem);
+  font-size: clamp(1.25rem, 4vw, 3rem);
   padding: clamp(12px, 3vw, 16px) clamp(24px, 6vw, 32px);
   animation: halving-pulse 7s infinite;
   font-family: 'Segoe UI', Arial, sans-serif;
