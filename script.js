@@ -169,14 +169,16 @@ let _lastVolumeSignal = null;
 
 /**
  * Apply volume signal to the Volume card
+ * Once a colored signal is set, it persists until a DIFFERENT colored signal is detected.
+ * Neutral signals never override an existing colored signal.
  */
 function applyVolumeSignal(signal, tooltip) {
   const volumeCard = document.getElementById('volume24h')?.closest('.stat-card');
   if (!volumeCard) return;
   
-  // If signal is neutral due to missing data, keep the last valid signal
+  // If new signal is neutral, ALWAYS keep the last colored signal (if any)
   if (signal === 'neutral' && _lastVolumeSignal && _lastVolumeSignal !== 'neutral') {
-    if (window._debug) console.log(`📊 Volume Signal: keeping previous signal (${_lastVolumeSignal}) - current data insufficient`);
+    if (window._debug) console.log(`📊 Volume Signal: keeping previous signal (${_lastVolumeSignal}) - neutral ignored`);
     return; // Don't change anything, keep current animation
   }
   
@@ -192,7 +194,7 @@ function applyVolumeSignal(signal, tooltip) {
     return;
   }
   
-  // Signal changed - update classes
+  // Signal changed to a new COLOR - update classes
   const allBlinkClasses = ['blink-green', 'blink-red', 'blink-yellow', 'blink-orange'];
   
   if (signal !== 'neutral') {
@@ -200,11 +202,9 @@ function applyVolumeSignal(signal, tooltip) {
     volumeCard.classList.add(`blink-${signal}`);
     allBlinkClasses.filter(c => c !== `blink-${signal}`).forEach(c => volumeCard.classList.remove(c));
     _lastVolumeSignal = signal;
-  } else {
-    // Truly neutral - remove all
-    allBlinkClasses.forEach(c => volumeCard.classList.remove(c));
-    _lastVolumeSignal = null;
+    if (window._debug) console.log(`📊 Volume Signal: changed to ${signal}`, tooltip);
   }
+  // Note: We never remove all classes anymore - once colored, stays colored until different color
   
   // Update tooltip on the info badge
   const infoBadge = volumeCard.querySelector('.info-badge');
@@ -212,8 +212,6 @@ function applyVolumeSignal(signal, tooltip) {
     const baseTooltip = 'TAO trading volume in the last 24 hours';
     infoBadge.setAttribute('data-tooltip', `${baseTooltip}\n\n${tooltip}`);
   }
-  
-  if (window._debug) console.log(`📊 Volume Signal: ${signal}`, tooltip);
 }
 
 /**
