@@ -311,6 +311,26 @@ body {
   50% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.6); }
 }
 
+/* Volume Signal: Yellow (Caution) */
+.blink-yellow {
+  animation: blink-yellow 0.6s ease-out;
+}
+
+@keyframes blink-yellow {
+  0%, 100% { box-shadow: 0 0 0 rgba(234, 179, 8, 0); }
+  50% { box-shadow: 0 0 16px rgba(234, 179, 8, 0.6); }
+}
+
+/* Volume Signal: Orange (Warning - potential breakout) */
+.blink-orange {
+  animation: blink-orange 0.6s ease-out;
+}
+
+@keyframes blink-orange {
+  0%, 100% { box-shadow: 0 0 0 rgba(249, 115, 22, 0); }
+  50% { box-shadow: 0 0 16px rgba(249, 115, 22, 0.6); }
+}
+
 /* ---- Halving Pill ---- */
 .halving-pill {
   color: var(--brand);

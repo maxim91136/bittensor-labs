@@ -26,6 +26,183 @@ window._debug = false;
 // Tooltip auto-hide duration (ms). Increased to double the previous default (2.5s -> 5s)
 const TOOLTIP_AUTO_HIDE_MS = 5000;
 
+// ===== Volume Signal (Ampelsystem) State =====
+let _volumeHistory = null;
+let _volumeHistoryTs = 0;
+const VOLUME_HISTORY_TTL = 60000; // Cache history for 1 minute
+const VOLUME_SIGNAL_THRESHOLD = 3; // ±3% threshold for "significant" change
+
+/**
+ * Fetch taostats history for volume change calculation
+ */
+async function fetchVolumeHistory() {
+  // Use cached history if fresh
+  if (_volumeHistory && (Date.now() - _volumeHistoryTs) < VOLUME_HISTORY_TTL) {
+    return _volumeHistory;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/taostats_history`);
+    if (!res.ok) throw new Error(`History API error: ${res.status}`);
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      _volumeHistory = data;
+      _volumeHistoryTs = Date.now();
+      return data;
+    }
+    return null;
+  } catch (err) {
+    if (window._debug) console.warn('⚠️ Volume history fetch failed:', err);
+    return null;
+  }
+}
+
+/**
+ * Calculate volume change percentage from history
+ * Compares current volume with volume from ~24h ago (or oldest available)
+ */
+function calculateVolumeChange(history, currentVolume) {
+  if (!Array.isArray(history) || history.length < 2 || !currentVolume) return null;
+  
+  // Find entry from ~24h ago (or use oldest available)
+  const now = Date.now();
+  const targetTime = now - 24 * 60 * 60 * 1000; // 24h ago
+  
+  // Sort by timestamp ascending
+  const sorted = [...history].sort((a, b) => 
+    new Date(a._timestamp).getTime() - new Date(b._timestamp).getTime()
+  );
+  
+  // Find the entry closest to 24h ago
+  let oldEntry = sorted[0]; // fallback to oldest
+  for (const entry of sorted) {
+    const entryTime = new Date(entry._timestamp).getTime();
+    if (entryTime <= targetTime) {
+      oldEntry = entry;
+    } else {
+      break;
+    }
+  }
+  
+  const oldVolume = oldEntry?.volume_24h;
+  if (!oldVolume || oldVolume <= 0) return null;
+  
+  return ((currentVolume - oldVolume) / oldVolume) * 100;
+}
+
+/**
+ * Volume Signal (Ampelsystem) Logic
+ * Returns: { signal: 'green'|'red'|'yellow'|'orange'|'neutral', tooltip: string }
+ * 
+ * Signals:
+ * 🟢 GREEN:  Volume ↑ + Price ↑ = Bullish (strong demand, healthy uptrend)
+ * 🔴 RED:    Volume ↑ + Price ↓ = Bearish/Distribution (panic selling)
+ * 🟡 YELLOW: Volume ↓ + Price ↑ = Weak uptrend (losing momentum)
+ *            Volume ↓ + Price ↓ = Consolidation (low interest)
+ * 🟠 ORANGE: Volume ↑ + Price stable = Potential breakout incoming
+ * ⚪ NEUTRAL: No significant change
+ */
+function getVolumeSignal(volumeChange, priceChange) {
+  // Handle missing data
+  if (volumeChange === null || priceChange === null) {
+    return { signal: 'neutral', tooltip: 'Insufficient data for signal' };
+  }
+  
+  const threshold = VOLUME_SIGNAL_THRESHOLD;
+  const volUp = volumeChange > threshold;
+  const volDown = volumeChange < -threshold;
+  const priceUp = priceChange > threshold;
+  const priceDown = priceChange < -threshold;
+  const priceStable = !priceUp && !priceDown;
+  
+  const volStr = volumeChange >= 0 ? `+${volumeChange.toFixed(1)}%` : `${volumeChange.toFixed(1)}%`;
+  const priceStr = priceChange >= 0 ? `+${priceChange.toFixed(1)}%` : `${priceChange.toFixed(1)}%`;
+  
+  // 🟢 GREEN: Volume up + Price up = Strong buying pressure
+  if (volUp && priceUp) {
+    return {
+      signal: 'green',
+      tooltip: `🟢 Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nStrong demand, healthy uptrend`
+    };
+  }
+  
+  // 🔴 RED: Volume up + Price down = Distribution/Panic selling
+  if (volUp && priceDown) {
+    return {
+      signal: 'red',
+      tooltip: `🔴 Bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nDistribution phase, selling pressure`
+    };
+  }
+  
+  // 🟠 ORANGE: Volume up + Price stable = Potential breakout
+  if (volUp && priceStable) {
+    return {
+      signal: 'orange',
+      tooltip: `🟠 Watch\nVolume: ${volStr}\nPrice: ${priceStr}\nHigh activity, potential breakout`
+    };
+  }
+  
+  // 🟡 YELLOW: Volume down + Price up = Weak uptrend
+  if (volDown && priceUp) {
+    return {
+      signal: 'yellow',
+      tooltip: `🟡 Caution\nVolume: ${volStr}\nPrice: ${priceStr}\nUptrend losing momentum`
+    };
+  }
+  
+  // 🟡 YELLOW: Volume down + Price down = Consolidation
+  if (volDown && priceDown) {
+    return {
+      signal: 'yellow',
+      tooltip: `🟡 Consolidation\nVolume: ${volStr}\nPrice: ${priceStr}\nLow interest, sideways market`
+    };
+  }
+  
+  // ⚪ NEUTRAL: No significant movement
+  return {
+    signal: 'neutral',
+    tooltip: `Volume: ${volStr}\nPrice: ${priceStr}\nStable market conditions`
+  };
+}
+
+/**
+ * Apply volume signal to the Volume card
+ */
+function applyVolumeSignal(signal, tooltip) {
+  const volumeCard = document.getElementById('volume24h')?.closest('.stat-card');
+  if (!volumeCard) return;
+  
+  // Remove all blink classes first
+  volumeCard.classList.remove('blink-green', 'blink-red', 'blink-yellow', 'blink-orange');
+  
+  // Apply signal blink (only if not neutral)
+  if (signal !== 'neutral') {
+    volumeCard.classList.add(`blink-${signal}`);
+    // Remove blink class after animation
+    setTimeout(() => {
+      volumeCard.classList.remove(`blink-${signal}`);
+    }, 600);
+  }
+  
+  // Update tooltip on the info badge
+  const infoBadge = volumeCard.querySelector('.info-badge');
+  if (infoBadge && tooltip) {
+    const baseTooltip = 'TAO trading volume in the last 24 hours';
+    infoBadge.setAttribute('data-tooltip', `${baseTooltip}\n\n${tooltip}`);
+  }
+  
+  if (window._debug) console.log(`📊 Volume Signal: ${signal}`, tooltip);
+}
+
+/**
+ * Update volume signal - call this when refreshing data
+ */
+async function updateVolumeSignal(currentVolume, priceChange24h) {
+  const history = await fetchVolumeHistory();
+  const volumeChange = calculateVolumeChange(history, currentVolume);
+  const { signal, tooltip } = getVolumeSignal(volumeChange, priceChange24h);
+  applyVolumeSignal(signal, tooltip);
+}
+
 // ===== Utility Functions =====
 function animateValue(element, start, end, duration = 1000) {
   const startTime = performance.now();
@@ -875,6 +1052,12 @@ async function refreshDashboard() {
   volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
   }
 
+  // Update Volume Signal (Ampelsystem)
+  const priceChange24h = taostats?.percent_change_24h ?? taoPrice?.change24h ?? null;
+  if (taostats?.volume_24h) {
+    updateVolumeSignal(taostats.volume_24h, priceChange24h);
+  }
+
   // Set API status
   const apiStatusEl = document.getElementById('apiStatus');
   const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
@@ -1127,6 +1310,12 @@ async function initDashboard() {
   const volumeEl = document.getElementById('volume24h');
   if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
     volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
+  }
+
+  // Initial Volume Signal (Ampelsystem) update
+  const initPriceChange24h = taostats?.percent_change_24h ?? null;
+  if (taostats?.volume_24h) {
+    updateVolumeSignal(taostats.volume_24h, initPriceChange24h);
   }
 
   // Fill initial API status
