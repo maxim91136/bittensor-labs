@@ -2159,3 +2159,61 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Old Top Subnets Tooltip handler removed - now uses standard data-tooltip
+
+// ===== Taobubbles Modal Wiring =====
+document.addEventListener('DOMContentLoaded', function() {
+  const card = document.getElementById('taobubblesCard');
+  const modal = document.getElementById('taobubblesModal');
+  const backdrop = document.getElementById('taobubblesModalBackdrop');
+  const closeBtn = document.getElementById('taobubblesModalClose');
+  const iframe = document.getElementById('taobubblesIframe');
+
+  if (!card || !modal || !backdrop || !closeBtn || !iframe) return;
+
+  const TAO_BUBBLES_URL = 'https://taobubbles.xyz';
+  let fallbackTimer = null;
+  let iframeLoaded = false;
+
+  function openTaobubbles() {
+    iframeLoaded = false;
+    // assign src just before showing modal so blocked-iframes are detectable
+    iframe.src = TAO_BUBBLES_URL;
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    // focus the close button for accessibility
+    try { closeBtn.focus(); } catch (_) {}
+
+    clearTimeout(fallbackTimer);
+    // If iframe doesn't fire load within 1200ms, assume it's blocked and open in a new tab instead
+    fallbackTimer = setTimeout(() => {
+      if (!iframeLoaded) {
+        closeTaobubbles();
+        window.open(TAO_BUBBLES_URL, '_blank', 'noopener');
+      }
+    }, 1200);
+  }
+
+  function closeTaobubbles() {
+    clearTimeout(fallbackTimer);
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    // remove src so next open will reload and re-trigger load event
+    try { iframe.src = ''; } catch (_) {}
+  }
+
+  iframe.addEventListener('load', function() {
+    iframeLoaded = true;
+    clearTimeout(fallbackTimer);
+  });
+
+  card.addEventListener('click', openTaobubbles);
+  card.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTaobubbles(); }
+  });
+
+  closeBtn.addEventListener('click', closeTaobubbles);
+  backdrop.addEventListener('click', closeTaobubbles);
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeTaobubbles();
+  });
+});
