@@ -30,6 +30,11 @@
           overlay.classList.add('fade-out');
           setTimeout(() => {
             overlay.classList.add('hidden');
+            // Notify that terminal boot finished so UI/data can re-verify
+            try {
+              const ev = new CustomEvent('terminalBootDone');
+              document.dispatchEvent(ev);
+            } catch (e) { /* ignore */ }
           }, fadeDelay);
         }, 800);
       }
@@ -45,6 +50,24 @@
   }
 })();
 
+// If the terminal boot hides or races with our dashboard init, ensure we re-run init
+document.addEventListener('terminalBootDone', async () => {
+  try {
+    // If dashboard already initialized, do nothing
+    if (window._dashboardInitialized) return;
+    // If an init is in progress, wait a bit and return
+    if (window._dashboardInitInProgress) return;
+    // Try to initialize dashboard now that terminal overlay is gone
+    await initDashboard();
+    // Also ensure other key UI pieces are refreshed in case they failed earlier
+    try { await updateAthAtlPills(); } catch (e) {}
+    try { await updateBlockTime(); } catch (e) {}
+    try { await updateStakingApr(); } catch (e) {}
+  } catch (err) {
+    if (window._debug) console.warn('terminalBootDone handler error', err);
+  }
+});
+
 // ===== API Configuration =====
 const API_BASE = '/api';
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
@@ -57,6 +80,10 @@ let priceChart = null;
 let lastPrice = null;
 let currentPriceRange = '7';
 let isLoadingPrice = false;
+// Track whether main dashboard init has completed
+window._dashboardInitialized = false;
+// Guard to prevent concurrent init runs
+window._dashboardInitInProgress = false;
 
 // Halving State
 window.halvingDate = null;
@@ -1365,6 +1392,9 @@ function createPriceChart(priceHistory, range) {
 
 // ===== Initialization =====
 async function initDashboard() {
+  if (window._dashboardInitialized) return;
+  if (window._dashboardInitInProgress) return;
+  window._dashboardInitInProgress = true;
   const [networkData, taoPrice, taostats] = await Promise.all([
     fetchNetworkData(),
     fetchTaoPrice(),
@@ -1525,6 +1555,9 @@ async function initDashboard() {
   }
   startHalvingCountdown();
   startAutoRefresh();
+  // Mark initialization completed and clear in-progress
+  window._dashboardInitialized = true;
+  window._dashboardInitInProgress = false;
 }
 
 // ===== Halving Countdown =====
