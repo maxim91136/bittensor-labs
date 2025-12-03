@@ -34,7 +34,7 @@ Smart volume-price correlation indicator:
 | 🟠 **Watch** | Volume ↑ + Price stable — Potential breakout |
 | 🟡 **Caution** | Volume ↓ + Price ↑ — Momentum loss |
 | 🟡 **Consolidation** | Volume ↓ + Price ↓ — Sideways market |
-| ⚪ **Neutral** | Quiet market conditions |
+| ⚪ **Stable** | Quiet market conditions |
 
 ### 📈 Moving Averages
 - **MA-2h, MA-4h, MA-3d, MA-7d** for volume trend analysis
