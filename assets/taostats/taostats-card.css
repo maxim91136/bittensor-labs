@@ -49,16 +49,8 @@
   .tao-volume-card.pulse-down { transition: none; }
 }
 
-/* Also support pulsing when the site uses `.stat-card` wrappers (legacy layout) */
-/* BUT: Don't override signal cards that have blink-* classes */
-.stat-card.pulse-up:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange) { 
-  border: 2px solid rgba(16,185,129,0.40) !important; 
-  background-color: rgba(16,185,129,0.08) !important;
-}
-.stat-card.pulse-down:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange) { 
-  border: 2px solid rgba(239,68,68,0.40) !important; 
-  background-color: rgba(239,68,68,0.08) !important;
-}
+/* Border/background for stat-card is handled exclusively by Ampelsystem (blink-* classes) in script.js */
+/* pulse-up/pulse-down classes are only used for icon glow effects, not card styling */
 
 /* Respect reduced motion by keeping animation but removing transitions only */
 @media (prefers-reduced-motion: reduce) {
