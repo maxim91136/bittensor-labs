@@ -14,10 +14,51 @@ PS: This is my first ever GitHub and website project, with many headaches but al
 
 ## Features
 
-- Clear display of network statistics
-- Node status and performance overview
-- Real-time updates of important metrics / price
-- Easily extendable and customizable
+### 📊 Live Network Metrics
+- **Real-time TAO price** with 24h change indicator and breathing animation
+- **Circulating Supply** tracking against the 21M cap
+- **Total Issuance** with live on-chain data via Bittensor SDK
+- **Active Neurons** count across all subnets
+
+### ⚡ Emission & Halving
+- **AVG. Emission/Day** calculated from on-chain issuance history
+- **Halving Countdown** with live block-based projection
+- **Emission curve visualization** showing TAO distribution over time
+
+### 🚦 Volume Signal (Ampelsystem)
+Smart volume-price correlation indicator with 5 signal states:
+| Signal | Meaning |
+|--------|---------|
+| 🟢 **Bullish** | Volume ↑ + Price ↑ — Strong demand |
+| 🔴 **Bearish** | Volume ↑ + Price ↓ — Selling pressure |
+| 🟠 **Watch** | Volume ↑ + Price stable — Potential breakout |
+| 🟡 **Caution** | Volume ↓ + Price moving — Momentum shift |
+| ⚪ **Neutral** | Quiet market conditions |
+
+### 📈 Moving Averages
+- **MA-2h, MA-4h, MA-3d, MA-7d** for volume trend analysis
+- Percentage deviation from each MA in tooltip
+- Confidence indicator based on data availability
+
+### 🏆 Leaderboards
+- **Top Validators** by stake with delegation info
+- **Top Wallets** by TAO holdings
+- **Top Subnets** by emission allocation
+
+### 🌗 Dark/Light Mode
+- Auto-detects system preference
+- Manual toggle with smooth transitions
+- Optimized color palettes for both modes
+
+### 📱 Responsive Design
+- Mobile-first layout
+- Touch-friendly tooltips
+- Optimized for all screen sizes
+
+### ♿ Accessibility
+- `prefers-reduced-motion` support
+- High contrast text
+- Semantic HTML structure
 
 ## Installation
 
