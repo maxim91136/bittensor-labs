@@ -209,8 +209,7 @@ let _lastVolumeSignal = null;
 
 /**
  * Apply volume signal to the Volume card
- * Once a colored signal is set, it persists until a DIFFERENT colored signal is detected.
- * Neutral signals never override an existing colored signal.
+ * All signals (including neutral/white) get their own glow animation.
  */
 function applyVolumeSignal(signal, tooltip) {
   const volumeCard = document.getElementById('volume24h')?.closest('.stat-card');
@@ -219,15 +218,9 @@ function applyVolumeSignal(signal, tooltip) {
   const infoBadge = volumeCard.querySelector('.info-badge');
   const baseTooltip = 'TAO trading volume in the last 24 hours';
   
-  // Always update tooltip (even when keeping old signal)
+  // Always update tooltip
   if (infoBadge && tooltip) {
     infoBadge.setAttribute('data-tooltip', `${baseTooltip}\n\n${tooltip}`);
-  }
-  
-  // If new signal is neutral, ALWAYS keep the last colored signal (if any)
-  if (signal === 'neutral' && _lastVolumeSignal && _lastVolumeSignal !== 'neutral') {
-    if (window._debug) console.log(`📊 Volume Signal: keeping previous signal (${_lastVolumeSignal}) - neutral ignored`);
-    return; // Don't change animation, but tooltip was already updated above
   }
   
   // If same signal as before, don't touch the classes (keeps animation smooth)
@@ -236,17 +229,17 @@ function applyVolumeSignal(signal, tooltip) {
     return;
   }
   
-  // Signal changed to a new COLOR - update classes
-  const allBlinkClasses = ['blink-green', 'blink-red', 'blink-yellow', 'blink-orange'];
+  // Signal changed - update classes
+  const allBlinkClasses = ['blink-green', 'blink-red', 'blink-yellow', 'blink-orange', 'blink-white'];
   
-  if (signal !== 'neutral') {
-    // Add new class first, then remove others (prevents flash to default)
-    volumeCard.classList.add(`blink-${signal}`);
-    allBlinkClasses.filter(c => c !== `blink-${signal}`).forEach(c => volumeCard.classList.remove(c));
-    _lastVolumeSignal = signal;
-    if (window._debug) console.log(`📊 Volume Signal: changed to ${signal}`, tooltip);
-  }
-  // Note: We never remove all classes anymore - once colored, stays colored until different color
+  // Map neutral to white for CSS class
+  const cssSignal = signal === 'neutral' ? 'white' : signal;
+  
+  // Add new class first, then remove others (prevents flash to default)
+  volumeCard.classList.add(`blink-${cssSignal}`);
+  allBlinkClasses.filter(c => c !== `blink-${cssSignal}`).forEach(c => volumeCard.classList.remove(c));
+  _lastVolumeSignal = signal;
+  if (window._debug) console.log(`📊 Volume Signal: changed to ${signal}`, tooltip);
 }
 
 /**

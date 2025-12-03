@@ -364,7 +364,8 @@ body.light-bg #maxSupplyScribble {
 .stat-card.blink-green,
 .stat-card.blink-red,
 .stat-card.blink-yellow,
-.stat-card.blink-orange {
+.stat-card.blink-orange,
+.stat-card.blink-white {
   outline: none;
   outline-offset: 0px;
   /* Force default border - same as other stat-cards - GRAY not green! */
@@ -376,7 +377,8 @@ body.light-bg #maxSupplyScribble {
 .stat-card.blink-green.light-bg,
 .stat-card.blink-red.light-bg,
 .stat-card.blink-yellow.light-bg,
-.stat-card.blink-orange.light-bg {
+.stat-card.blink-orange.light-bg,
+.stat-card.blink-white.light-bg {
   border: 1px solid #c0c0c0 !important;
 }
 
@@ -394,6 +396,10 @@ body.light-bg #maxSupplyScribble {
 
 .stat-card.blink-orange {
   animation: glow-orange 6s ease-in-out infinite;
+}
+
+.stat-card.blink-white {
+  animation: glow-white 6s ease-in-out infinite;
 }
 
 @keyframes glow-green {
@@ -416,12 +422,18 @@ body.light-bg #maxSupplyScribble {
   50% { box-shadow: 0 0 30px rgba(249, 115, 22, 0.6), 0 0 50px rgba(249, 115, 22, 0.25), 0 4px 12px rgba(0,0,0,0.2); }
 }
 
+@keyframes glow-white {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 255, 255, 0.12), 0 0 20px rgba(255, 255, 255, 0.05), 0 4px 12px rgba(0,0,0,0.2); }
+  50% { box-shadow: 0 0 20px rgba(255, 255, 255, 0.25), 0 0 35px rgba(255, 255, 255, 0.1), 0 4px 12px rgba(0,0,0,0.2); }
+}
+
 /* Ensure signal cards keep normal border on hover (no green tint) */
 /* The animation handles the glow via box-shadow, so don't override it here */
 .stat-card.blink-green:hover,
 .stat-card.blink-red:hover,
 .stat-card.blink-yellow:hover,
-.stat-card.blink-orange:hover {
+.stat-card.blink-orange:hover,
+.stat-card.blink-white:hover {
   border-color: rgba(255,255,255,0.1) !important;
   /* Don't set box-shadow here - let the animation control it */
 }
@@ -430,7 +442,8 @@ body.light-bg #maxSupplyScribble {
 .stat-card.blink-green::before,
 .stat-card.blink-red::before,
 .stat-card.blink-yellow::before,
-.stat-card.blink-orange::before {
+.stat-card.blink-orange::before,
+.stat-card.blink-white::before {
   display: none !important;
 }
 
@@ -550,14 +563,14 @@ body.light-bg #maxSupplyScribble {
   transition: opacity 0.3s ease;
 }
 
-.stat-card:hover:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange) {
+.stat-card:hover:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange):not(.blink-white) {
   border-color: rgba(34,197,94,0.3);
   background: rgba(17, 19, 24, 0.8);
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px rgba(34,197,94,0.1);
 }
 
-.stat-card:hover:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange)::before {
+.stat-card:hover:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange):not(.blink-white)::before {
   opacity: 1;
 }
 
@@ -575,7 +588,7 @@ body.light-bg #maxSupplyScribble {
   position: relative;
 }
 
-.stat-card:hover:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange) .stat-icon {
+.stat-card:hover:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange):not(.blink-white) .stat-icon {
   background: linear-gradient(135deg, rgba(34,197,94,0.25), rgba(34,197,94,0.1));
   box-shadow: 0 0 20px rgba(34,197,94,0.3);
 }
@@ -1699,6 +1712,7 @@ body.light-bg .embed-overlay-mobile {
   .stat-card.blink-red,
   .stat-card.blink-yellow,
   .stat-card.blink-orange,
+  .stat-card.blink-white,
   .skeleton-text,
   .chart-skeleton {
     animation: none !important;
