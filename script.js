@@ -1395,11 +1395,13 @@ async function initDashboard() {
   if (window._dashboardInitialized) return;
   if (window._dashboardInitInProgress) return;
   window._dashboardInitInProgress = true;
-  const [networkData, taoPrice, taostats] = await Promise.all([
-    fetchNetworkData(),
-    fetchTaoPrice(),
-    fetchTaostats()
-  ]);
+  let initSucceeded = false;
+  try {
+    const [networkData, taoPrice, taostats] = await Promise.all([
+      fetchNetworkData(),
+      fetchTaoPrice(),
+      fetchTaostats()
+    ]);
   // Expose taostats globally and update UI after available
   window._taostats = taostats ?? null;
   await updateNetworkStats(networkData);
@@ -1553,11 +1555,17 @@ async function initDashboard() {
   if (priceHistory) {
     createPriceChart(priceHistory, currentPriceRange);
   }
-  startHalvingCountdown();
-  startAutoRefresh();
-  // Mark initialization completed and clear in-progress
-  window._dashboardInitialized = true;
-  window._dashboardInitInProgress = false;
+    startHalvingCountdown();
+    startAutoRefresh();
+    // Mark initialization completed
+    initSucceeded = true;
+  } catch (err) {
+    console.error('initDashboard failed:', err);
+  } finally {
+    // Always clear the in-progress flag
+    window._dashboardInitInProgress = false;
+    if (initSucceeded) window._dashboardInitialized = true;
+  }
 }
 
 // ===== Halving Countdown =====
