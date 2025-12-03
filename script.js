@@ -1,47 +1,27 @@
-// ===== Matrix Terminal Boot Sequence =====
+// ===== Simple Short Loader =====
 (function() {
-  const lines = [
-    '> connecting to bittensor...',
-    '> decrypting network data...',
-    '> [pill me]'
-  ];
-  const delays = [800, 800, 600]; // ms per line
-  const fadeDelay = 400;
-  
+  const SHOW_MS = 800; // minimal visible time
+  const FADE_MS = 200;
+
   function runTerminalBoot() {
     const overlay = document.getElementById('terminalBoot');
     if (!overlay) return;
-    
-    const line1 = document.getElementById('termLine1');
-    const line2 = document.getElementById('termLine2');
-    const line3 = document.getElementById('termLine3');
-    const lineEls = [line1, line2, line3];
-    
-    let i = 0;
-    function showNext() {
-      if (i < lines.length) {
-        lineEls[i].textContent = lines[i];
-        lineEls[i].classList.add('visible');
-        i++;
-        setTimeout(showNext, delays[i - 1]);
-      } else {
-        // All lines shown, wait then fade out
-        setTimeout(() => {
-          overlay.classList.add('fade-out');
-          setTimeout(() => {
-            overlay.classList.add('hidden');
-            // Notify that terminal boot finished so UI/data can re-verify
-            try {
-              const ev = new CustomEvent('terminalBootDone');
-              document.dispatchEvent(ev);
-            } catch (e) { /* ignore */ }
-          }, fadeDelay);
-        }, 800);
-      }
-    }
-    showNext();
+    overlay.classList.remove('hidden');
+    overlay.classList.add('visible');
+    // Ensure it's accessible as 'loading' while visible
+    overlay.setAttribute('aria-hidden', 'false');
+
+    setTimeout(() => {
+      overlay.classList.add('fade-out');
+      setTimeout(() => {
+        overlay.classList.remove('visible');
+        overlay.classList.add('hidden');
+        overlay.setAttribute('aria-hidden', 'true');
+        try { document.dispatchEvent(new CustomEvent('terminalBootDone')); } catch (e) {}
+      }, FADE_MS);
+    }, SHOW_MS);
   }
-  
+
   // Run on DOM ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', runTerminalBoot);
