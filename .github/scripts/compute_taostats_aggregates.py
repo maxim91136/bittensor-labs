@@ -92,22 +92,36 @@ def compute_aggregates(history):
         vols = sorted(vols, key=lambda x: x[0])
     except Exception:
         pass
+    
+    # Calculate actual time span in hours
+    hours_of_data = 0
+    try:
+        first_ts = vols[0][0]
+        last_ts = vols[-1][0]
+        first_dt = datetime.fromisoformat(first_ts.replace('Z', '+00:00'))
+        last_dt = datetime.fromisoformat(last_ts.replace('Z', '+00:00'))
+        hours_of_data = (last_dt - first_dt).total_seconds() / 3600
+    except Exception:
+        pass
+    
     only_vols = [v for (_, v) in vols]
     N = len(only_vols)
 
-    # windows (10-min samples)
-    last_3 = only_vols[-3:] if N >= 1 else []        # ~30 min
-    last_10 = only_vols[-10:] if N >= 1 else only_vols  # ~100 min (1 day)
-    last_432 = only_vols[-432:] if N >= 432 else only_vols  # ~4320 min (3 days)
-    last_1008 = only_vols[-1008:] if N >= 1008 else only_vols  # ~10080 min (7 days)
-
-    ma_short = mean(last_3) if last_3 else mean(only_vols[-1:])
-    ma_med = mean(last_10)
-    # Only calculate 3-day MA if we have at least 3 days of data (432 samples)
-    ma_3d = mean(last_432) if N >= 432 else None
-    # Only calculate 7-day MA if we have at least 7 days of data (1008 samples)
-    ma_7d = mean(last_1008) if N >= 1008 else None
-    sd_med = stddev(last_10)
+    # Calculate MAs using available data
+    # Use time-based logic: show MA if we have enough time coverage
+    last_3 = only_vols[-3:] if N >= 3 else only_vols
+    last_10 = only_vols[-10:] if N >= 10 else only_vols
+    
+    ma_short = mean(last_3) if last_3 else None
+    ma_med = mean(last_10) if last_10 else None
+    
+    # 3-day MA: use all data if we have >= 48h, otherwise None
+    ma_3d = mean(only_vols) if hours_of_data >= 48 else None
+    
+    # 7-day MA: use all data if we have >= 120h (5 days), otherwise None  
+    ma_7d = mean(only_vols) if hours_of_data >= 120 else None
+    
+    sd_med = stddev(last_10) if len(last_10) >= 2 else None
 
     last_volume = only_vols[-1]
     pct_change_vs_ma_short = None
@@ -126,11 +140,11 @@ def compute_aggregates(history):
     if ma_7d and ma_7d != 0:
         pct_change_vs_ma_7d = (last_volume - ma_7d) / ma_7d
 
-    # confidence: based on time-window (10-min samples)
-    # low: <1 day (~144 samples), medium: 1-3 days (~144-432 samples), high: >=3 days (~432+ samples)
-    if N < 144:
+    # confidence: based on actual time span
+    # low: <24h, medium: 24-72h, high: >=72h
+    if hours_of_data < 24:
         confidence = 'low'
-    elif N < 432:
+    elif hours_of_data < 72:
         confidence = 'medium'
     else:
         confidence = 'high'
