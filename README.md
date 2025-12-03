@@ -26,13 +26,14 @@ PS: This is my first ever GitHub and website project, with many headaches but al
 - **Emission curve visualization** showing TAO distribution over time
 
 ### 🚦 Volume Signal (Ampelsystem)
-Smart volume-price correlation indicator with 5 signal states:
+Smart volume-price correlation indicator:
 | Signal | Meaning |
 |--------|---------|
 | 🟢 **Bullish** | Volume ↑ + Price ↑ — Strong demand |
 | 🔴 **Bearish** | Volume ↑ + Price ↓ — Selling pressure |
 | 🟠 **Watch** | Volume ↑ + Price stable — Potential breakout |
-| 🟡 **Caution** | Volume ↓ + Price moving — Momentum shift |
+| 🟡 **Caution** | Volume ↓ + Price ↑ — Momentum loss |
+| 🟡 **Consolidation** | Volume ↓ + Price ↓ — Sideways market |
 | ⚪ **Neutral** | Quiet market conditions |
 
 ### 📈 Moving Averages

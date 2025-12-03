@@ -189,18 +189,10 @@ function getVolumeSignal(volumeData, priceChange) {
     };
   }
   
-  // ⚪ NEUTRAL: Volume down + Price stable = Truly stable, no alert needed
-  if (volDown && priceStable) {
-    return {
-      signal: 'neutral',
-      tooltip: `⚪ Stable\nVolume: ${volStr}\nPrice: ${priceStr}\nQuiet market, no significant activity${confidenceLine}`
-    };
-  }
-  
-  // ⚪ NEUTRAL: No significant movement
+  // ⚪ NEUTRAL: No significant movement (includes vol↓ + price stable)
   return {
     signal: 'neutral',
-    tooltip: `⚪ Neutral\nVolume: ${volStr}\nPrice: ${priceStr}\nStable market conditions${confidenceLine}`
+    tooltip: `⚪ Neutral\nVolume: ${volStr}\nPrice: ${priceStr}\nQuiet market conditions${confidenceLine}`
   };
 }
 
