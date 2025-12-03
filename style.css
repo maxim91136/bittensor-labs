@@ -1263,7 +1263,6 @@ body.light-bg #maxSupplyScribble {
 }
 
 /* ---- TAO Tensor Law Embed Card ---- */
-.taotensor-card { }
 .taotensor-card .card-header h2 { display:flex; align-items:center; gap:8px; }
 .taotensor-card .card-header { align-items: center; }
 .taotensor-card .card-header > div { display:flex; align-items:center; gap:8px; flex: 0 0 auto; }
