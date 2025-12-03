@@ -22,7 +22,7 @@ PS: This is my first ever GitHub and website project, with many headaches but al
 
 ### ⚡ Emission & Halving
 - **AVG. Emission/Day** calculated from on-chain issuance history
-- **Halving Countdown** with block-based projection
+- **Halving Countdown** based on issuance reaching 10.5M TAO threshold
 - **Emission curve visualization** showing TAO distribution over time
 
 ### 🚦 Volume Signal (Ampelsystem)
