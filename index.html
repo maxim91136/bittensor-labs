@@ -334,6 +334,24 @@
       </div>
     </section>
 
+    <!-- Taobubbles Integration Card -->
+    <div class="stat-card taobubbles-card" id="taobubblesCard" role="button" tabindex="0" aria-label="Open Taobubbles visualizer" title="Open Taobubbles">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Interactive Taobubbles visualizer">i</span>
+      <div class="stat-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <title>Taobubbles</title>
+          <circle cx="7" cy="12" r="3" fill="#22c55e"/>
+          <circle cx="12" cy="7" r="2" fill="#16a34a"/>
+          <circle cx="17" cy="12" r="3" fill="#22c55e"/>
+          <circle cx="12" cy="17" r="2" fill="#16a34a"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">Taobubbles</div>
+        <div class="stat-value">Interactive visualizer</div>
+      </div>
+    </div>
+
   <!-- Top Validators Card -->
     <section class="dashboard-card top-validators-card" aria-labelledby="top-validators-card-heading">
       <div class="card-header">
@@ -547,6 +565,15 @@
     </section>
   </div>
 </main>
+
+<!-- Taobubbles Modal (hidden by default) -->
+<div id="taobubblesModal" class="modal hidden" aria-hidden="true">
+  <div id="taobubblesModalBackdrop" class="modal-backdrop"></div>
+  <div class="modal-content" role="dialog" aria-modal="true" aria-label="Taobubbles visualizer">
+    <button id="taobubblesModalClose" class="modal-close" aria-label="Close">✕</button>
+    <iframe id="taobubblesIframe" src="" frameborder="0" allowfullscreen></iframe>
+  </div>
+</div>
 
 <footer class="site-footer">
   <p>© 2025 Bittensor-Labs.com · Built with ❤️ · <span id="siteVersion"></span> · by maxim91136<br></p>
