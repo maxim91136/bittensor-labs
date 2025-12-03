@@ -2,7 +2,7 @@ name: Publish Top History
 
 on:
   schedule:
-    - cron: '13 */6 * * *' # every 6 hours at :13 (after backups at :01/:04/:07/:10)
+    - cron: '13 * * * *' # every hour at :13
   workflow_dispatch: {}
 
 jobs:
