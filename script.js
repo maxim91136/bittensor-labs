@@ -1775,6 +1775,19 @@ document.addEventListener('DOMContentLoaded', () => {
     await updateBlockTime();
     await updateStakingApr();
 
+    // Debug overlay logic
+    if (window._debug) {
+      const overlay = document.getElementById('debugOverlay');
+      if (overlay) overlay.style.display = 'block';
+      updateDebugStatus();
+      const btn = document.getElementById('debugRetryBtn');
+      if (btn) btn.onclick = () => {
+        if (window._debug) console.log('Debug: manual retry triggered');
+        refreshDashboard();
+        setTimeout(updateDebugStatus, 1200);
+      };
+    }
+
     // Prevent link clicks on info-badge controls
     document.querySelectorAll('.stat-card .info-badge').forEach(badge => {
       badge.addEventListener('click', function(e) {
@@ -1799,6 +1812,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Show chart skeleton (optional)
         const priceCard = btn.closest('.dashboard-card');
+        // Debug overlay status updater
+        function updateDebugStatus() {
+          const priceEl = document.getElementById('taoPrice');
+          const changeEl = document.getElementById('priceChange');
+          const halvingEl = document.getElementById('halvingCountdown');
+          let status = '';
+          status += 'Price: ' + (priceEl ? priceEl.textContent.trim() : '[missing]') + '<br>';
+          status += 'Change: ' + (changeEl ? changeEl.textContent.trim() : '[missing]') + '<br>';
+          status += 'Halving: ' + (halvingEl ? halvingEl.textContent.trim() : '[missing]') + '<br>';
+          const debugStatusEl = document.getElementById('debugStatus');
+          if (debugStatusEl) debugStatusEl.innerHTML = status;
+        }
+
+        document.addEventListener('dashboardRefreshed', () => {
+          if (window._debug) updateDebugStatus();
+        });
         if (priceCard) priceCard.classList.add('loading');
 
         // Load data and redraw chart

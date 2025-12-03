@@ -25,6 +25,7 @@
   <script src="assets/taostats/taostats-card.js" defer></script>
 </head>
 <body>
+
 <!-- Matrix Terminal Boot Overlay -->
 <div id="terminalBoot" class="terminal-boot">
   <div class="terminal-content">
@@ -33,6 +34,12 @@
     <div class="terminal-line" id="termLine3"></div>
     <span class="terminal-cursor">_</span>
   </div>
+</div>
+
+<!-- Debug overlay (only visible in debug mode) -->
+<div id="debugOverlay" style="display:none; position:fixed; top:12px; right:12px; z-index:9999; background:rgba(0,0,0,0.85); color:#fff; padding:16px 20px; border-radius:8px; font-size:13px; box-shadow:0 2px 8px #0008;">
+  <div id="debugStatus"></div>
+  <button id="debugRetryBtn" style="margin-top:8px; padding:4px 12px; font-size:13px; border-radius:4px; border:none; background:#2d8cff; color:#fff; cursor:pointer;">Retry now</button>
 </div>
 
 <header class="site-header">

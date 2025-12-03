@@ -1,3 +1,15 @@
+/* Debug overlay styles */
+#debugOverlay {
+  max-width: 260px;
+  word-break: break-word;
+  font-family: monospace, Menlo, Consolas, 'Courier New', monospace;
+}
+#debugOverlay button {
+  transition: background 0.2s;
+}
+#debugOverlay button:hover {
+  background: #1a6ed8;
+}
 /* Matrix Terminal Boot Overlay */
 .terminal-boot {
   position: fixed;
