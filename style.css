@@ -712,6 +712,26 @@ body.light-bg #maxSupplyScribble {
   overflow: visible;
 }
 
+/* Taobubbles inline preview inside the stat-card */
+.taobubbles-card .taobubbles-preview {
+  margin-top: 10px;
+  width: 100%;
+  height: 140px;
+  border-radius: 10px;
+  overflow: hidden;
+  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border: 1px solid rgba(255,255,255,0.04);
+}
+.taobubbles-card .taobubbles-preview iframe {
+  width: 100%;
+  height: 100%;
+  border: 0;
+  display: block;
+}
+
+/* If the inline iframe is blocked by browser or X-Frame-Options, keep the card compact
+   and rely on the modal fallback (JS opens a new tab if iframe doesn't load). */
+
 .stat-card::before {
   content: '';
   position: absolute;
