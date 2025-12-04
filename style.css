@@ -29,7 +29,8 @@
 }
 .matrix-glitch-code {
   font-family: 'Fira Mono', 'Courier New', monospace;
-  font-size: clamp(14px, 2.2vw, 26px);
+  /* Slightly smaller by default for less visual dominance */
+  font-size: clamp(12px, 1.8vw, 22px);
   line-height: 1.08;
   letter-spacing: 0.08em;
   text-shadow: 0 0 8px #22c55e, 0 0 2px #fff;

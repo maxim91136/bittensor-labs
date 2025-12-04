@@ -24,7 +24,8 @@
     code.className = 'matrix-glitch-code';
     // default style can be overridden by CSS in style.css
     code.style.fontFamily = "'Fira Mono', monospace";
-    code.style.fontSize = '2.2vw';
+    // Slightly smaller font to reduce visual dominance on smaller screens
+    code.style.fontSize = '1.8vw';
     code.style.lineHeight = '1.1';
     code.style.letterSpacing = '0.08em';
     code.style.textShadow = '0 0 8px #22c55e, 0 0 2px #fff';
