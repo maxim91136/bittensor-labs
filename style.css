@@ -289,8 +289,13 @@ body {
 /* Improve visibility in light mode: use a subtle darker snow glyph */
 @media (prefers-color-scheme: light) {
   .snowflake {
-    color: rgba(24,24,27,0.92);
-    text-shadow: 0 0 6px rgba(255,255,255,0.6);
+    /* Bluer snowflakes for light mode for better contrast */
+    color: rgba(173,216,255,0.95); /* lightblue */
+    text-shadow: 0 0 8px rgba(173,216,255,0.45), 0 0 2px rgba(255,255,255,0.6);
+  }
+  .snowflake.large {
+    color: rgba(180,220,255,0.95);
+    text-shadow: 0 0 10px rgba(180,220,255,0.48), 0 0 2px rgba(255,255,255,0.64);
   }
   .snowflake::before { filter: drop-shadow(0 1px 0 rgba(255,255,255,0.6)); }
   .snowflake.large { color: rgba(18,18,20,0.95); text-shadow: 0 0 8px rgba(255,255,255,0.7); }
