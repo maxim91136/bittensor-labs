@@ -440,22 +440,12 @@ function applyVolumeSignal(signal, tooltip) {
   _lastVolumeSignal = signal;
   if (window._debug) console.log(`📊 Volume Signal: changed to ${signal}`, tooltip);
 
-  // Update a small subtitle element under the value for quick visible hint
+  // Ensure we don't inject a subtitle that shifts layout; remove any existing `.stat-sub`
   try {
-    let sub = volumeCard.querySelector('.stat-sub');
-    if (!sub) {
-      sub = document.createElement('div');
-      sub.className = 'stat-sub';
-      // place it after the stat-value element if present
-      const val = volumeCard.querySelector('.stat-value');
-      if (val && val.parentNode) val.parentNode.insertBefore(sub, val.nextSibling);
-      else volumeCard.appendChild(sub);
-    }
-    // Keep subtitle short
-    const short = (signal === 'green') ? 'Sustained buying' : (signal === 'yellow') ? 'Low-volume move' : (signal === 'red') ? 'Distribution' : (signal === 'orange') ? 'High activity' : 'Quiet';
-    sub.textContent = short;
+    const existingSub = volumeCard.querySelector('.stat-sub');
+    if (existingSub) existingSub.remove();
   } catch (e) {
-    if (window._debug) console.debug('Failed to update volume subtitle', e);
+    if (window._debug) console.debug('Failed to cleanup volume subtitle', e);
   }
 }
 
