@@ -1,0 +1,75 @@
+name: Post-Deploy Smoke Test
+
+on:
+  workflow_run:
+    workflows: ["Deploy Cloudflare Worker"]
+    types: ["completed"]
+
+jobs:
+  smoke-test:
+    name: Post Deploy Smoke Test
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show context
+        run: |
+          echo "Trigger workflow: ${{ github.event.workflow_run.name }}"
+          echo "Trigger conclusion: ${{ github.event.workflow_run.conclusion }}"
+
+      - name: Get expected version (from repo)
+        id: expected
+        run: |
+          EXPECTED=$(cat VERSION)
+          echo "EXPECTED_VERSION=$EXPECTED" >> $GITHUB_ENV
+          echo "Expected version: $EXPECTED"
+
+      - name: Fetch deployed site version
+        id: fetch
+        env:
+          CF_WORKER_URL: ${{ secrets.CF_WORKER_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CF_WORKER_URL:-}" ]; then
+            echo "CF_WORKER_URL not set; skipping smoke tests"
+            exit 0
+          fi
+          URL="${CF_WORKER_URL%/}/VERSION"
+          echo "Checking $URL"
+          ACTUAL=$(curl -fsS "$URL" || echo "")
+          echo "ACTUAL_VERSION=$ACTUAL" >> $GITHUB_ENV
+          echo "Actual deployed version: $ACTUAL"
+
+      - name: Assert version matches
+        run: |
+          if [ -z "${ACTUAL_VERSION:-}" ]; then
+            echo "Failed to fetch deployed version"; exit 1
+          fi
+          if [ "${ACTUAL_VERSION}" != "${EXPECTED_VERSION}" ]; then
+            echo "Version mismatch: expected ${EXPECTED_VERSION}, got ${ACTUAL_VERSION}"; exit 1
+          fi
+          echo "Version matches: ${EXPECTED_VERSION}";
+
+      - name: Basic endpoint checks
+        env:
+          CF_WORKER_URL: ${{ secrets.CF_WORKER_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CF_WORKER_URL:-}" ]; then
+            echo "CF_WORKER_URL not set; skipping endpoint checks"
+            exit 0
+          fi
+
+          for endpoint in "/api/top_subnets" "/api/top_validators" "/api/network"; do
+            URL="${CF_WORKER_URL%/}$endpoint"
+            echo "Checking ${URL}"
+            STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$URL" || echo 000)
+            if [ "$STATUS" != "200" ]; then
+              echo "Endpoint ${URL} returned ${STATUS}"; exit 1
+            fi
+          done
+
+      - name: Completed
+        run: echo "Smoke tests complete; production site looks good." 
