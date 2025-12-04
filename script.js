@@ -138,6 +138,9 @@ let _volumeHistory = null;
 let _volumeHistoryTs = 0;
 const VOLUME_HISTORY_TTL = 60000; // Cache history for 1 minute
 const VOLUME_SIGNAL_THRESHOLD = 3; // ±3% threshold for "significant" change
+// Price spike detection thresholds (conservative defaults)
+const PRICE_SPIKE_PCT = 10; // if price moves >= 10% in 24h consider spike
+const LOW_VOL_PCT = 5;     // if volume change < 5% treat as low-volume move
 
 /**
  * Fetch taostats history for volume change calculation
@@ -228,7 +231,7 @@ function calculateVolumeChange(history, currentVolume) {
  * 🟠 ORANGE: Volume ↑ + Price stable = Potential breakout incoming
  * ⚪ NEUTRAL: No significant change
  */
-function getVolumeSignal(volumeData, priceChange) {
+function getVolumeSignal(volumeData, priceChange, currentVolume = null) {
   // Handle missing data
   if (volumeData === null || priceChange === null) {
     return { signal: 'neutral', tooltip: 'Insufficient data for signal' };
@@ -282,6 +285,19 @@ function getVolumeSignal(volumeData, priceChange) {
   
   // 🟡 YELLOW: Volume down + Price up = Weak uptrend
   if (volDown && priceUp) {
+    // Special-case: if price moved strongly but volume change is small, mark as low-volume price spike
+    if (priceChange >= PRICE_SPIKE_PCT && Math.abs(volumeChange) < LOW_VOL_PCT) {
+      // compute percent of circ supply traded if we have currentVolume and circulatingSupply
+      let pctTraded = null;
+      if (currentVolume && window.circulatingSupply) {
+        pctTraded = (currentVolume / window.circulatingSupply) * 100;
+      }
+      const spikeLines = [`🟡 Price spike (low volume)`,`Volume: ${volStr}`,`Price: ${priceStr}`];
+      if (pctTraded !== null) spikeLines.push(`Traded: ${pctTraded.toFixed(4)}% of circ supply`);
+      spikeLines.push('Likely thin liquidity or exchange-limited move', confidenceLine);
+      return { signal: 'yellow', tooltip: spikeLines.join('\n') };
+    }
+
     return {
       signal: 'yellow',
       tooltip: `🟡 Caution\nVolume: ${volStr}\nPrice: ${priceStr}\nUptrend losing momentum${confidenceLine}`
@@ -381,7 +397,7 @@ async function fetchTaostatsAggregates() {
 async function updateVolumeSignal(currentVolume, priceChange24h) {
   const history = await fetchVolumeHistory();
   const volumeData = calculateVolumeChange(history, currentVolume);
-  let { signal, tooltip } = getVolumeSignal(volumeData, priceChange24h);
+  let { signal, tooltip } = getVolumeSignal(volumeData, priceChange24h, currentVolume);
   
   // Fetch MA data and append to tooltip
   const aggregates = await fetchTaostatsAggregates();
