@@ -158,7 +158,8 @@ const VOLUME_SIGNAL_THRESHOLD = 3; // ±3% threshold for "significant" change
 const PRICE_SPIKE_PCT = 10; // if price moves >= 10% in 24h consider spike
 const LOW_VOL_PCT = 5;     // if volume change < 5% treat as low-volume move
 const SUSTAIN_VOL_PCT = 6; // sustained volume increase threshold (24h)
-const TRADED_SHARE_MIN = 0.02; // percent of circ supply traded to consider move meaningful (0.02%)
+const TRADED_SHARE_MIN = 0.1; // percent of circ supply traded to consider move meaningful (0.1%)
+const SUSTAIN_PRICE_PCT = 8; // lower price pct that can indicate sustained move when combined with other signals
 const HYSTERESIS_REQUIRED = 2; // require 2 consecutive checks to mark sustained
 
 /**
@@ -285,10 +286,27 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
     const ma3dPct = aggregates?.pct_change_vs_ma_3d ?? null;
     const maShortUp = (maShortPct !== null && maShortPct > 0);
     const ma3dUp = (ma3dPct !== null && ma3dPct > 0);
-    // traded share (percent) if data available
+    // traded share (percent) if data available — convert USD volume to TAO using lastPrice when possible
     let tradedSharePct = null;
-    if (currentVolume && window.circulatingSupply) tradedSharePct = (currentVolume / window.circulatingSupply) * 100;
-    const sustainCondition = maShortUp && ma3dUp && (volumeChange >= SUSTAIN_VOL_PCT || (tradedSharePct !== null && tradedSharePct >= TRADED_SHARE_MIN));
+    if (currentVolume && window.circulatingSupply) {
+      try {
+        if (typeof lastPrice === 'number' && lastPrice > 0) {
+          const volumeInTao = Number(currentVolume) / Number(lastPrice);
+          tradedSharePct = (volumeInTao / window.circulatingSupply) * 100;
+        } else {
+          // fallback: approximate by USD / circSupply (not ideal); keep null to avoid false triggers
+          tradedSharePct = null;
+        }
+      } catch (e) {
+        tradedSharePct = null;
+      }
+    }
+    // sustain if MAs aligned AND (volume up OR traded share large OR strong price move)
+    const sustainCondition = maShortUp && ma3dUp && (
+      volumeChange >= SUSTAIN_VOL_PCT ||
+      (tradedSharePct !== null && tradedSharePct >= TRADED_SHARE_MIN) ||
+      (priceChange >= SUSTAIN_PRICE_PCT)
+    );
     if (sustainCondition) {
       // hysteresis: require consecutive confirmations to avoid flapping
       window._sustainedBullishCount = (window._sustainedBullishCount || 0) + 1;
