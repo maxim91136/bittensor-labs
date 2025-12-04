@@ -1,138 +1,3 @@
-// ===== RESTORED & GLOBALIZED DASHBOARD UPDATE FUNCTIONS =====
-window.updateTopSubnets = async function updateTopSubnets() {
-  try {
-    const res = await fetch('/api/top_subnets');
-    const data = await res.json();
-    console.log('updateTopSubnets response:', data);
-    const tbody = document.getElementById('topSubnetsDisplayList');
-    if (!Array.isArray(data) || !tbody) {
-      console.warn('updateTopSubnets: data not array or tbody missing', data, tbody);
-      return;
-    }
-    tbody.innerHTML = '';
-    data.forEach((row, i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${i+1}</td><td>${row.subnet}</td><td>${row.emission_pct}</td><td>${row.daily_tao}</td>`;
-      tbody.appendChild(tr);
-    });
-  } catch (e) { console.error('updateTopSubnets error', e); }
-};
-
-window.updateTopValidators = async function updateTopValidators() {
-  try {
-    const res = await fetch('/api/top_validators');
-    const data = await res.json();
-    console.log('updateTopValidators response:', data);
-    const tbody = document.getElementById('topValidatorsDisplayList');
-    if (!Array.isArray(data) || !tbody) {
-      console.warn('updateTopValidators: data not array or tbody missing', data, tbody);
-      return;
-    }
-    tbody.innerHTML = '';
-    data.forEach((row, i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${i+1}</td><td>${row.validator}</td><td>${row.stake}</td><td>${row.dom_pct}</td><td>${row.noms}</td>`;
-      tbody.appendChild(tr);
-    });
-  } catch (e) { console.error('updateTopValidators error', e); }
-};
-
-window.updateTopWallets = async function updateTopWallets() {
-  try {
-    const res = await fetch('/api/top_wallets');
-    const data = await res.json();
-    console.log('updateTopWallets response:', data);
-    const tbody = document.getElementById('topWalletsDisplayList');
-    if (!Array.isArray(data) || !tbody) {
-      console.warn('updateTopWallets: data not array or tbody missing', data, tbody);
-      return;
-    }
-    tbody.innerHTML = '';
-    data.forEach((row, i) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${i+1}</td><td>${row.wallet}</td><td>${row.balance}</td><td>${row.dom_pct}</td><td>${row.staked}</td>`;
-      tbody.appendChild(tr);
-    });
-  } catch (e) { console.error('updateTopWallets error', e); }
-};
-
-window.updateApiStatus = async function updateApiStatus() {
-  try {
-    const res = await fetch('/api/network');
-    const data = await res.json();
-    console.log('updateApiStatus response:', data);
-    const el = document.getElementById('apiStatus');
-    if (el && data) {
-      // Display a summary or a key field, e.g. totalNeurons
-      el.textContent = `Total Neurons: ${data.totalNeurons ?? 'N/A'}`;
-    } else {
-      console.warn('updateApiStatus: missing data or element', data, el);
-    }
-  } catch (e) { console.error('updateApiStatus error', e); }
-};
-
-window.updatePrice = async function updatePrice() {
-  try {
-    const res = await fetch('/api/price_history');
-    const data = await res.json();
-    console.log('updatePrice response:', data);
-    const el = document.getElementById('taoPrice');
-    if (el && data && data.length > 0) {
-      el.textContent = data[data.length-1].price;
-      el.classList.remove('skeleton-text');
-    } else {
-      console.warn('updatePrice: no data or element', data, el);
-    }
-  } catch (e) { console.error('updatePrice error', e); }
-};
-
-window.updateHalvingInfo = async function updateHalvingInfo() {
-  try {
-    const res = await fetch('/api/issuance_history');
-    const data = await res.json();
-    console.log('updateHalvingInfo response:', data);
-    const el = document.getElementById('halvingCountdown');
-    if (el && data && data.next_halving) {
-      el.textContent = data.next_halving;
-    } else {
-      console.warn('updateHalvingInfo: missing next_halving', data, el);
-    }
-  } catch (e) { console.error('updateHalvingInfo error', e); }
-};
-// ===== Dashboard Initialization (restored, global) =====
-window.initDashboard = async function initDashboard() {
-  window._dashboardInitInProgress = true;
-  try {
-    // Example: fetch and update all main dashboard data
-    await Promise.all([
-      typeof updatePrice === 'function' ? updatePrice() : null,
-      typeof updateHalvingInfo === 'function' ? updateHalvingInfo() : null,
-      typeof updateVolumeSignal === 'function' ? updateVolumeSignal() : null,
-      typeof updateTopSubnets === 'function' ? updateTopSubnets() : null,
-      typeof updateTopValidators === 'function' ? updateTopValidators() : null,
-      typeof updateTopWallets === 'function' ? updateTopWallets() : null,
-      typeof updateBlockTime === 'function' ? updateBlockTime() : null,
-      typeof updateStakingApr === 'function' ? updateStakingApr() : null,
-      typeof updateApiStatus === 'function' ? updateApiStatus() : null
-    ]);
-    window._dashboardInitialized = true;
-  } catch (e) {
-    if (window._debug) console.error('initDashboard error', e);
-    window._dashboardInitialized = false;
-  } finally {
-    window._dashboardInitInProgress = false;
-  }
-};
-
-// Make all key state variables global for debugging and modular access
-window._lastVolumeSignal = _lastVolumeSignal;
-window.priceChart = priceChart;
-window.lastPrice = lastPrice;
-window.currentPriceRange = currentPriceRange;
-window.isLoadingPrice = isLoadingPrice;
-window._volumeHistory = _volumeHistory;
-window._volumeHistoryTs = _volumeHistoryTs;
-window._sustainedBullishCount = window._sustainedBullishCount || 0;
 // ===== Matrix Terminal Boot Sequence =====
 (function() {
   const lines = [
@@ -1234,77 +1099,1481 @@ async function updateNetworkStats(data) {
   }
   // fallback: estimate emission from previous supply snapshot
   // Use previous halving supply snapshot when available so we estimate emission for the same supply basis.
-  // Use previous halving snapshot if present for a consistent delta estimate
-  let emissionFallback = null;
-  if (prevHalvingSupply && prevHalvingTs) {
-    const ageHours = (nowTs - prevHalvingTs) / (1000 * 60 * 60);
-    // Estimate emission based on time elapsed since last halving (linear decay)
-    emissionFallback = (prevHalvingSupply - currentSupplyForHalving) / (ageHours + 1);
-    if (window._debug) console.debug('Emission fallback estimate:', emissionFallback, 'TAO/day');
-  }
-  // Use fallback emission if no other source is available
-  if (emissionFallback !== null) {
-    emissionPerDay = emissionPerDay ?? emissionFallback;
-    emissionSource = emissionSource === 'unknown' ? 'fallback_emission' : emissionSource;
-  }
-  // Clamp to reasonable range (prevent extreme outliers from breaking UI)
-  const EMISSION_CLAMP_MIN = 0.01;
-  const EMISSION_CLAMP_MAX = 1000;
-  emissionPerDay = Math.max(EMISSION_CLAMP_MIN, Math.min(EMISSION_CLAMP_MAX, emissionPerDay));
-  window.emissionPerDay = emissionPerDay;
-
-  // Halving projection: estimate next halving date based on current supply and emission rate
-  // We project the next halving date by estimating when the total supply will reach the next halving threshold.
-  // This is a rough estimate and will be refined as more data becomes available.
-  try {
-    const nextThreshold = thresholds[window._halvingIndex + 1] ?? null;
-    if (nextThreshold && emissionPerDay > 0) {
-      const blocksToNextHalving = (nextThreshold - currentSupplyForHalving) / emissionPerDay;
-      const secondsToNextHalving = blocksToNextHalving * 12; // ~12 seconds per block (average)
-      const nextHalvingDate = new Date(Date.now() + secondsToNextHalving * 1000);
-      window.nextHalvingDate = nextHalvingDate;
-      if (window._debug) console.debug('Projected next halving date:', nextHalvingDate);
-    } else {
-      window.nextHalvingDate = null;
+  // Use previous halving snapshot if present for a consistent emission estimate.
+  // Use the previous snapshot for the same selected source for consistent delta estimates
+  const basePrevSupply = (window._prevSupplyForHalving !== undefined && window._prevSupplyForHalving !== null)
+    ? window._prevSupplyForHalving
+    : (prevHalvingSupply ?? (window._prevCircSupply ?? null));
+  const basePrevTs = prevHalvingSupply !== null ? prevHalvingTs : prevSupplyTs;
+  if ((!emissionPerDay || !Number.isFinite(emissionPerDay) || emissionPerDay <= 0) && basePrevSupply !== null && basePrevTs) {
+    const supplyDelta = Number((supplyForHalving ?? window.circulatingSupply)) - Number(basePrevSupply);
+    const msDelta = nowTs - basePrevTs;
+    if (msDelta > 0) {
+      const daysDelta = msDelta / (24 * 60 * 60 * 1000);
+      const estimate = supplyDelta / daysDelta;
+      if (Number.isFinite(estimate) && estimate > 0) {
+        emissionPerDay = estimate;
+        if (window._debug) console.debug('Emission fallback estimate from supply delta:', emissionPerDay, 'TAO/day');
+      }
     }
-  } catch (e) {
-    window.nextHalvingDate = null;
-    if (window._debug) console.debug('Halving projection error', e);
+  }
+  // If we couldn't infer emission and there was no previous snapshot to compare, log for debugging
+  if ((!emissionPerDay || !Number.isFinite(emissionPerDay) || emissionPerDay <= 0) && (!basePrevSupply || !basePrevTs)) {
+    if (window._debug) console.debug('Emission estimate unavailable: no /api/network emission and no previous halving snapshot to estimate from');
   }
 
-  // Update halving info display (pill and countdown)
-  updateHalvingInfo();
+  // Compute halving date simply by remaining supply / emission per day
+  const remaining = (supplyForHalving !== null && supplyForHalving !== undefined) ? (HALVING_SUPPLY - supplyForHalving) : null;
+  // halvingThresholds already generated above
+  // detect crossing: previous < threshold <= current
+  const prevHalvingSupplyForCrossing = (window._prevSupplyForHalving !== undefined && window._prevSupplyForHalving !== null)
+    ? window._prevSupplyForHalving
+    : ((window._prevHalvingSupply !== undefined) ? window._prevHalvingSupply : (window._prevCircSupply ?? null));
+  const crossing = prevHalvingSupplyForCrossing !== null && prevHalvingSupplyForCrossing < HALVING_SUPPLY && supplyForHalving >= HALVING_SUPPLY;
+  if (crossing) {
+    // record last halving with timestamp (ms)
+    window._lastHalving = { threshold: HALVING_SUPPLY, at: Date.now() };
+    window.halvingJustHappened = { threshold: HALVING_SUPPLY, at: new Date() };
+    window.halvingDate = new Date();
+    // UI: quick animation on pill, if present
+    const pill = document.querySelector('.halving-pill');
+    if (pill) {
+      pill.classList.add('just-halved');
+      setTimeout(() => pill.classList.remove('just-halved'), 8000);
+    }
+  } else if (remaining !== null && emissionPerDay && emissionPerDay > 0 && remaining > 0) {
+    // Calculate the halving date for the currently active threshold
+    window.halvingDate = rotateToThreshold(thresholds, window._halvingIndex, currentSupplyForHalving, emissionPerDay);
+  } else {
+    window.halvingDate = null;
+  }
+
+  // update pill tooltip and include projection metadata (method, confidence, sample)
+  // Precompute avg emission (if available) so tooltip logic can reference it safely
+  const avg = (data && (data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null))
+    ? Number(data.avg_emission_for_projection)
+    : (data && (data.emission !== undefined && data.emission !== null) ? Number(data.emission) : null);
+  const halvingPill = document.querySelector('.halving-pill');
+  if (halvingPill) {
+    const remainingSafe = Math.max(0, remaining || 0);
+    const halvingSourceLabel = (window._halvingSupplySource === 'on-chain') ? 'On-chain (TotalIssuance)' : 'Taostats (circulating_supply)';
+    const halvingLines = [
+      `Next threshold: ${formatExact(HALVING_SUPPLY)} TAO`,
+      `Remaining: ${formatExact(remainingSafe)} TAO`,
+      `Source: ${halvingSourceLabel}`
+    ];
+    if (window._lastHalving) {
+      const dt = new Date(window._lastHalving.at);
+      // If avg emission is known, show Threshold -> Date -> Avg emission on one line
+      if (avg !== null) {
+        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} → ${dt.toLocaleString()} → Avg emission used: ${formatExact(avg)} TAO/day`);
+      } else {
+        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} @ ${dt.toLocaleString()}`);
+      }
+    }
+
+    // Add projection metadata from /api/network if available
+    if (data) {
+      const method = data.projection_method ?? (data.avg_emission_for_projection ? 'projection' : 'unknown');
+      const confidence = data.projection_confidence ?? 'unknown';
+      halvingLines.push(`Halving projection method: ${method}`);
+      halvingLines.push(`Halving projection confidence: ${confidence}`);
+      if (avg !== null) halvingLines.push(`Avg emission used: ${formatExact(avg)} TAO/day`);
+
+      // Include short list of upcoming halving estimates (step, threshold, eta, emission_used)
+      if (Array.isArray(data.halving_estimates) && data.halving_estimates.length) {
+        halvingLines.push('Halving projections:');
+          data.halving_estimates.slice(0, 3).forEach(h => {
+          const step = h.step !== undefined ? `#${h.step}` : '';
+          const t = formatNumber(h.threshold);
+          const eta = h.eta ? new Date(h.eta).toLocaleDateString() : 'N/A';
+          const used = h.emission_used !== undefined ? `${formatExact(h.emission_used)} TAO/day` : 'N/A';
+          halvingLines.push(`${step} ${t} → ${eta} → ${used}`);
+        });
+      }
+    }
+
+    halvingPill.setAttribute('data-tooltip', halvingLines.join('\n'));
+    // Apply a confidence CSS class to the halving pill so UX can visually
+    // indicate projection confidence. Keep classes additive and remove
+    // previous ones to avoid class leakage between updates.
+    try {
+      const conf = (data && data.projection_confidence) ? String(data.projection_confidence).toLowerCase() : null;
+      halvingPill.classList.remove('confidence-low', 'confidence-medium', 'confidence-high');
+      if (conf === 'low') halvingPill.classList.add('confidence-low');
+      else if (conf === 'medium') halvingPill.classList.add('confidence-medium');
+      else if (conf === 'high') halvingPill.classList.add('confidence-high');
+    } catch (e) {
+      if (window._debug) console.debug('Failed to apply halving pill confidence class', e);
+    }
+  }
+  // We intentionally don't add a new stat-card for the halving; keep the pill-only UI.
+  // store previous circulating and halving-supply snapshots for next refresh
+  window._prevCircSupply = window.circulatingSupply;
+  if (supplyForHalving !== null && supplyForHalving !== undefined) {
+    window._prevSupplyForHalving = supplyForHalving; // persist the chosen snapshot
+    window._prevHalvingSupply = supplyForHalving; // keep legacy var used elsewhere
+    window._prevHalvingTs = nowTs;
+  }
+
+  // Map preview only contains a thumbnail + button to open interactive map (no KPIs)
+
+  startHalvingCountdown();
 }
 
-// ===== Matrix Glitch Overlay: global trigger =====
-window.showMatrixGlitch = function() {
-  const glitch = document.getElementById('matrixGlitch');
-  if (glitch) {
-    const codeEl = glitch.querySelector('.matrix-glitch-code');
-    if (codeEl) {
-      const palette = [
-        '#22c55e', '#16a34a', '#14532d', '#a3a3a3', '#525252', '#eaff00', '#b3b300', '#d1fae5', '#d4d4d4'
-      ];
-      const glyphs = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz░▒▓█▲◆◀▶◼︎◻︎※☰☲☷☯☢☣☠♠♣♥♦♤♧♡♢';
-      let code = '';
-      for (let i = 0; i < 10; i++) {
-        let str = '';
-        for (let j = 0; j < 8; j++) {
-          const ch = glyphs[Math.floor(Math.random()*glyphs.length)];
-          const color = palette[Math.floor(Math.random()*palette.length)];
-          str += `<span style=\"color:${color};\">${ch.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`;
-        }
-        code += `<span>${str}</span>`;
+// ===== Dynamic Tooltip System =====
+function setupDynamicTooltips() {
+  let tooltip = document.createElement('div');
+  tooltip.className = 'dynamic-tooltip';
+  document.body.appendChild(tooltip);
+  let tooltipClose = null;
+  let tooltipPersistent = false;
+  let tooltipOwner = null;
+
+  function showTooltip(e, text, opts = {}) {
+    // opts.persistent -> keep tooltip visible until explicitly closed/tapped again
+    const persistent = !!opts.persistent;
+    const wide = !!opts.wide;
+    const html = !!opts.html;
+    tooltipOwner = e.target;
+    tooltipPersistent = persistent;
+    tooltip.dataset.persistent = persistent ? 'true' : 'false';
+    // Build content (preserve newlines)
+    tooltip.innerHTML = '';
+    const body = document.createElement('div');
+    body.className = 'tooltip-body';
+    if (html) body.innerHTML = text; else body.textContent = text;
+    tooltip.appendChild(body);
+    if (persistent) {
+      // add close control
+      if (!tooltipClose) {
+        tooltipClose = document.createElement('button');
+        tooltipClose.className = 'tooltip-close';
+        tooltipClose.setAttribute('aria-label', 'Close');
+        tooltipClose.textContent = '×';
+        tooltipClose.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          hideTooltip();
+        });
       }
-      codeEl.innerHTML = code;
+      tooltip.appendChild(tooltipClose);
+      tooltip.classList.add('persistent');
+    } else {
+      if (tooltipClose && tooltip.contains(tooltipClose)) tooltip.removeChild(tooltipClose);
+      tooltip.classList.remove('persistent');
     }
-    glitch.style.display = 'flex';
-    glitch.classList.add('active');
-    setTimeout(() => {
-      glitch.classList.remove('active');
-      setTimeout(() => {
-        glitch.style.display = 'none';
-      }, 180);
-    }, 360);
+    // wide option: allow wider tooltip for desktop halving pill
+    if (wide) tooltip.classList.add('wide'); else tooltip.classList.remove('wide');
+    tooltip.classList.add('visible');
+    const rect = e.target.getBoundingClientRect();
+    const tooltipRect = tooltip.getBoundingClientRect();
+    let top = rect.bottom + 8;
+    let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+    if (left + tooltipRect.width > window.innerWidth - 8) {
+      left = window.innerWidth - tooltipRect.width - 8;
+    }
+    if (left < 8) left = 8;
+    if (top + tooltipRect.height > window.innerHeight - 8) {
+      top = rect.top - tooltipRect.height - 8;
+    }
+    tooltip.style.top = `${top}px`;
+    tooltip.style.left = `${left}px`;
   }
-};
+
+  function hideTooltip() {
+    tooltip.classList.remove('visible');
+    tooltipPersistent = false;
+    tooltipOwner = null;
+    tooltip.dataset.persistent = 'false';
+    if (tooltipClose && tooltip.contains(tooltipClose)) tooltip.removeChild(tooltipClose);
+    tooltip.classList.remove('persistent');
+  }
+
+  document.querySelectorAll('.info-badge').forEach(badge => {
+    // Skip any info-badge that lives in the TAO Tensor Law card (we removed it)
+    if (badge.closest && badge.closest('.taotensor-card')) return;
+    // Only initialize tooltips for badges that actually have tooltip text
+    // Read the attribute at event time so updates to `data-tooltip` later are respected.
+    badge.addEventListener('mouseenter', e => {
+      const txt = badge.getAttribute('data-tooltip');
+      const htmlFlag = badge.getAttribute('data-tooltip-html') === 'true';
+      if (txt) showTooltip(e, txt, { persistent: false, html: htmlFlag });
+    });
+    badge.addEventListener('mouseleave', hideTooltip);
+    badge.addEventListener('focus', e => {
+      const txt = badge.getAttribute('data-tooltip');
+      const htmlFlag = badge.getAttribute('data-tooltip-html') === 'true';
+      if (txt) showTooltip(e, txt, { persistent: false, html: htmlFlag });
+    });
+    badge.addEventListener('blur', hideTooltip);
+    badge.addEventListener('click', e => {
+      e.stopPropagation();
+      const txt = badge.getAttribute('data-tooltip');
+      const htmlFlag = badge.getAttribute('data-tooltip-html') === 'true';
+      if (txt) {
+        showTooltip(e, txt, { persistent: false, html: htmlFlag });
+        setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
+      }
+    });
+    // No theme-dependent behavior here; map swap is handled centrally in setLightMode().
+  });
+
+  const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
+  document.querySelectorAll('.halving-pill').forEach(pill => {
+    // Use a wider tooltip on desktop so the halving projection content can breathe
+    pill.addEventListener('mouseenter', e => {
+      if (!isTouch) {
+        const txt = pill.getAttribute('data-tooltip') || '';
+        const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+        showTooltip(e, txt, { wide: true, html: htmlFlag });
+      }
+    });
+    pill.addEventListener('mouseleave', e => { if (!isTouch) hideTooltip(); });
+    pill.addEventListener('focus', e => {
+      if (!isTouch) {
+        const txt = pill.getAttribute('data-tooltip') || '';
+        const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+        showTooltip(e, txt, { wide: true, html: htmlFlag });
+      }
+    });
+    pill.addEventListener('blur', e => { if (!isTouch) hideTooltip(); });
+    pill.addEventListener('click', e => {
+      e.stopPropagation();
+      const text = pill.getAttribute('data-tooltip') || '';
+      const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+      if (isTouch) {
+        // Toggle persistent tooltip on touch devices
+        if (tooltipPersistent && tooltipOwner === pill) {
+          hideTooltip();
+        } else {
+          showTooltip(e, text, { persistent: true, html: htmlFlag });
+        }
+      } else {
+        // On desktop clicking the pill should show the same wide variant as hover
+        showTooltip(e, text, { persistent: false, wide: true, html: htmlFlag });
+        setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
+      }
+    });
+  });
+
+  document.querySelectorAll('.price-pill').forEach(pill => {
+    pill.addEventListener('mouseenter', e => {
+      const txt = pill.getAttribute('data-tooltip') || '';
+      const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+      showTooltip(e, txt, { html: htmlFlag });
+    });
+    pill.addEventListener('mouseleave', hideTooltip);
+    pill.addEventListener('focus', e => {
+      const txt = pill.getAttribute('data-tooltip') || '';
+      const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+      showTooltip(e, txt, { html: htmlFlag });
+    });
+    pill.addEventListener('blur', hideTooltip);
+    pill.addEventListener('click', e => {
+      e.stopPropagation();
+      const txt = pill.getAttribute('data-tooltip') || '';
+      const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+      showTooltip(e, txt, { html: htmlFlag });
+      setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
+    });
+  });
+
+  // document click should hide tooltip only when not persistent
+  document.addEventListener('click', (e) => {
+    if (tooltipPersistent) return;
+    hideTooltip();
+  });
+}
+
+// ===== Version fetch and apply =====
+async function fetchAndApplyVersion() {
+  try {
+    const res = await fetch('/VERSION', { cache: 'no-store' });
+    if (!res.ok) return;
+    let text = await res.text();
+    if (!text) return;
+    text = text.trim();
+    if (!text) return;
+    // Normalize: remove leading 'v' for processing, then re-add a single 'v' prefix.
+    let raw = text.replace(/^v/i, '');
+    // Normalize prerelease labels that use the `label.number` format to `labelnumber` (e.g. rc.1 -> rc1)
+    raw = raw.replace(/-(rc|alpha|beta)\.(\d+)/i, (m, label, num) => `-${label}${num}`);
+    // Keep other semver dots intact (e.g., 1.0.0). Ensure final display uses a single leading 'v'.
+    text = `v${raw}`;
+    const el = document.getElementById('siteVersion');
+    if (el) el.textContent = text;
+    // Optionally expose globally for other scripts
+    window._siteVersion = text;
+  } catch (err) {
+    // Silent fallback — keep embedded version
+    console.warn('⚠️ Could not fetch version:', err?.message || err);
+  }
+}
+
+// Ensure the version is applied on page load
+try {
+  // Script is loaded with `defer`, but ensure DOM available
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', fetchAndApplyVersion);
+  } else {
+    fetchAndApplyVersion();
+  }
+} catch (err) {
+  console.warn('⚠️ Version loader failed to run:', err && err.message);
+}
+setupDynamicTooltips();
+
+// ===== Data Refresh =====
+async function refreshDashboard() {
+  const [networkData, taoPrice, taostats] = await Promise.all([
+    fetchNetworkData(),
+    fetchTaoPrice(),
+    fetchTaostats()
+  ]);
+  // Expose taostats globally for tooltips and other UI pieces
+  window._taostats = taostats ?? null;
+  updateNetworkStats(networkData);
+  updateTaoPrice(taoPrice);
+
+  // LAST UPDATE from Taostats, otherwise fallback
+  const lastUpdateEl = document.getElementById('lastUpdate');
+  let lastUpdated = null;
+  if (taoPrice && taoPrice._source === 'taostats' && taoPrice.last_updated) {
+    lastUpdated = taoPrice.last_updated;
+  } else if (taoPrice && taoPrice._source === 'taostats' && taoPrice._timestamp) {
+    lastUpdated = taoPrice._timestamp;
+  }
+  let lastUpdateStr = '--:--';
+  if (lastUpdated) {
+    const d = new Date(lastUpdated);
+    const hh = d.getHours().toString().padStart(2, '0');
+    const mm = d.getMinutes().toString().padStart(2, '0');
+    lastUpdateStr = `${hh}:${mm}`;
+    if (lastUpdateEl) lastUpdateEl.textContent = `Updated: ${lastUpdateStr}`;
+  } else {
+    if (lastUpdateEl) lastUpdateEl.textContent = `Updated: --:--`;
+  }
+
+  // Get volume from taostats!
+  const volumeEl = document.getElementById('volume24h');
+  if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
+  volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
+  }
+
+  // Update Volume Signal (Ampelsystem)
+  const priceChange24h = taostats?.percent_change_24h ?? taoPrice?.change24h ?? null;
+  if (taostats?.volume_24h) {
+    updateVolumeSignal(taostats.volume_24h, priceChange24h);
+  }
+
+  // Set API status
+  const apiStatusEl = document.getElementById('apiStatus');
+  const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
+  let statusText = 'All systems ok';
+  let color = '#22c55e'; // green
+  if (!networkData || !taostats) {
+    statusText = 'API error';
+    color = '#ef4444'; // red
+  } else if (!taostats.price || !taostats.volume_24h) {
+    statusText = 'Partial data';
+    color = '#eab308'; // yellow
+  }
+  if (apiStatusEl) {
+    // Show only a single status chip in the card (larger + centered on small screens)
+    const isOk = (color === '#22c55e');
+    let badgeText = 'Error';
+    let badgeClass = 'error';
+    if (isOk) {
+      badgeText = 'OK';
+      badgeClass = 'ok';
+    } else if (statusText === 'Partial data') {
+      badgeText = 'Partial';
+      badgeClass = 'partial';
+    }
+    apiStatusEl.innerHTML = `<span class="api-status-badge ${badgeClass} api-status-large">${badgeText}</span>`;
+  }
+  // Dynamically update SVG colors
+  if (apiStatusIcon) {
+    // Update circle color
+    const circle = apiStatusIcon.querySelector('circle');
+    if (circle) circle.setAttribute('stroke', color);
+    // Update heartbeat line color
+    const polyline = apiStatusIcon.querySelector('polyline');
+    if (polyline) polyline.setAttribute('stroke', color);
+  }
+
+  // Update Block Time and Staking APR cards
+  await updateBlockTime();
+  await updateStakingApr();
+
+  // Update API status tooltip with per-source live chips
+  try {
+    const infoBadge = document.querySelector('#apiStatusCard .info-badge');
+    if (infoBadge) {
+      const html = buildApiStatusHtml({ networkData, taostats, taoPrice });
+      infoBadge.setAttribute('data-tooltip', html);
+      infoBadge.setAttribute('data-tooltip-html', 'true');
+    }
+  } catch (e) {
+    if (window._debug) console.debug('Failed to update api status tooltip html', e);
+  }
+}
+
+// ===== Auto-refresh with countdown circle =====
+const REFRESH_SECONDS = 60;
+let refreshCountdown = REFRESH_SECONDS;
+let refreshTimer = null;
+
+function renderRefreshIndicator() {
+  const el = document.getElementById('refresh-indicator');
+  if (!el) return;
+  const radius = 7;
+  const stroke = 2.2;
+  const circ = 2 * Math.PI * radius;
+  const progress = (refreshCountdown / REFRESH_SECONDS);
+  el.innerHTML = `
+    <svg viewBox="0 0 20 20">
+      <circle cx="10" cy="10" r="8" stroke="#222" stroke-width="2.2" fill="none"/>
+      <circle cx="10" cy="10" r="8" stroke="#22c55e" stroke-width="2.2" fill="none"
+        stroke-dasharray="${2 * Math.PI * 8}" stroke-dashoffset="${2 * Math.PI * 8 * (1 - progress)}"
+        style="transition: stroke-dashoffset 0.5s;"/>
+    </svg>
+    <span class="refresh-label">${refreshCountdown}</span>
+  `;
+  el.title = `Auto-refresh in ${refreshCountdown}s`;
+  el.style.pointerEvents = "none";
+}
+
+function startAutoRefresh() {
+  renderRefreshIndicator();
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(() => {
+    refreshCountdown--;
+    if (refreshCountdown <= 0) {
+      refreshCountdown = REFRESH_SECONDS;
+      refreshDashboard();
+    }
+    renderRefreshIndicator();
+  }, 1000);
+  const el = document.getElementById('refresh-indicator');
+  if (el) {
+    el.onclick = () => {
+      refreshCountdown = REFRESH_SECONDS;
+      refreshDashboard();
+      renderRefreshIndicator();
+    };
+  }
+}
+
+// ===== Initialization of Price Chart =====
+function createPriceChart(priceHistory, range) {
+  const canvas = document.getElementById('priceChart');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  
+  // Format labels based on timeframe
+  const rangeNum = parseInt(range, 10) || 7;
+  const labels = priceHistory.map(([timestamp]) => {
+    const date = new Date(timestamp);
+    if (rangeNum <= 1) {
+      // 1D: Show hours only (e.g., "14:00")
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    } else if (rangeNum <= 3) {
+      // 3D: Show day + time (e.g., "Nov 29 14:00")
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + 
+             date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    } else {
+      // 7D+: Show month/day (e.g., "11/29")
+      return `${date.getMonth()+1}/${date.getDate()}`;
+    }
+  });
+  const data = priceHistory.map(([_, price]) => price);
+
+  // Only destroy if chart object and method exist
+  if (window.priceChart && typeof window.priceChart.destroy === 'function') {
+    window.priceChart.destroy();
+  }
+
+  window.priceChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'TAO Price',
+        data,
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34,197,94,0.1)',
+        tension: 0.2,
+        pointRadius: 0,
+        fill: true
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { display: true, grid: { display: false } },
+        y: { display: true, grid: { color: '#222' } }
+      }
+    }
+  });
+}
+
+// ===== Initialization =====
+async function initDashboard() {
+  if (window._dashboardInitialized) return;
+  if (window._dashboardInitInProgress) return;
+  window._dashboardInitInProgress = true;
+  let initSucceeded = false;
+  try {
+    const [networkData, taoPrice, taostats] = await Promise.all([
+      fetchNetworkData(),
+      fetchTaoPrice(),
+      fetchTaostats()
+    ]);
+  // Expose taostats globally and update UI after available
+  window._taostats = taostats ?? null;
+  await updateNetworkStats(networkData);
+  updateTaoPrice(taoPrice);
+
+    // TAO Tensor Law iframe fallback: hide iframe if blocked and show a friendly fallback message
+    document.addEventListener('DOMContentLoaded', function() {
+      const embed = document.getElementById('taotensorEmbed');
+      const frame = document.getElementById('taotensorFrame');
+      if (!embed || !frame) return;
+      // If the iframe cannot load due to X-Frame-Options, we detect via a timeout and 'load' event
+      let loaded = false;
+      frame.addEventListener('load', function() { loaded = true; });
+      // After a short delay, if the frame didn't load, show fallback
+      setTimeout(function() {
+        try {
+          // Some browsers will block access; in that case, the 'load' event won't fire or will be blocked
+          if (!loaded) {
+            embed.classList.add('fallback-active');
+          }
+        } catch (e) {
+          embed.classList.add('fallback-active');
+        }
+      }, 1500);
+      // Modal / full-screen behavior for the embed
+      const openBtn = document.getElementById('taotensorFullBtn');
+      const modal = document.getElementById('taotensorModal');
+      const modalContent = document.getElementById('taotensorModalContent');
+      const closeBtn = document.getElementById('taotensorModalClose');
+      let originalParent = null;
+      const placeholder = document.createElement('div');
+      placeholder.className = 'tao-embed-placeholder';
+
+      function openModal() {
+        if (!embed || !frame) return;
+        // If we are in fallback mode, just open in a new tab instead
+        if (embed.classList.contains('fallback-active')) {
+          window.open(frame?.src || 'https://taotensorlaw.com', '_blank');
+          return;
+        }
+        if (modal.classList.contains('active')) return;
+        originalParent = frame.parentNode;
+        // Reserve a placeholder where the frame was
+        originalParent.replaceChild(placeholder, frame);
+        // Move iframe into modal content so it keeps state
+        modalContent.appendChild(frame);
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        try { frame.focus(); } catch (e) {}
+      }
+
+      function closeModal() {
+        if (!originalParent) return;
+        if (!modal.classList.contains('active')) return;
+        // Move iframe back to its original location
+        modalContent.removeChild(frame);
+        originalParent.replaceChild(frame, placeholder);
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        try { frame.focus(); } catch (e) {}
+      }
+
+      // Hook up the buttons
+      if (openBtn) openBtn.addEventListener('click', (e) => {
+        // If the embed failed (fallback) then allow the anchor's default behaviour
+        // so the user can open the model in a new tab. Otherwise, prevent
+        // navigation and open the modal in-place.
+        if (embed && embed.classList.contains('fallback-active')) {
+          // Let the link open in a new tab (anchor has target="_blank")
+          return;
+        }
+        e.preventDefault();
+        openModal();
+      });
+      // On mobile screens, intercept a tap on the overlay to open the modal (avoid clipped iframe tooltips)
+      const overlay = document.getElementById('taotensorOverlay');
+      if (overlay) {
+        overlay.addEventListener('click', (e) => {
+          // If embed fallback is active, open external link instead
+          if (embed && embed.classList.contains('fallback-active')) return;
+          openModal();
+        });
+      }
+      // Hide overlay when fallback is active or when the iframe fails to load
+      function updateOverlayVisibility() {
+        if (!overlay) return;
+        if (embed && embed.classList.contains('fallback-active')) {
+          overlay.setAttribute('aria-hidden', 'true');
+        } else {
+          overlay.setAttribute('aria-hidden', 'false');
+        }
+      }
+      // Initialize overlay visibility now and after fallback detection timeout
+      updateOverlayVisibility();
+      setTimeout(updateOverlayVisibility, 1600);
+      if (closeBtn) closeBtn.addEventListener('click', closeModal);
+      // Allow clicking outside the modal body to close it
+      if (modal) {
+        modal.addEventListener('click', function(e) {
+          if (e.target === modal) closeModal();
+        });
+      }
+      // Escape key to close
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && modal && modal.classList.contains('active')) {
+          closeModal();
+        }
+      });
+    });
+
+  // Fill initial volume and expose taostats globally
+  window._taostats = taostats ?? null;
+  window._taostats = taostats ?? null;
+  const volumeEl = document.getElementById('volume24h');
+  if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
+    volumeEl.textContent = `$${formatCompact(taostats.volume_24h)}`;
+  }
+
+  // Initial Volume Signal (Ampelsystem) update
+  // Use aggregates price_24h_pct as fallback if taostats doesn't provide it
+  const initPriceChange24h = taostats?.percent_change_24h ?? taoPrice?.change24h ?? null;
+  if (taostats?.volume_24h) {
+    updateVolumeSignal(taostats.volume_24h, initPriceChange24h);
+  }
+
+  // Fill initial API status
+  const apiStatusEl = document.getElementById('apiStatus');
+  const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
+  let statusText = 'All systems ok';
+  let color = '#22c55e'; // green
+  if (!networkData || !taostats) {
+    statusText = 'API error';
+    color = '#ef4444'; // red
+  } else if (!taostats.price || !taostats.volume_24h) {
+    statusText = 'Partial data';
+    color = '#eab308'; // yellow
+  }
+  if (apiStatusEl) {
+    // Render only the status chip in the card
+    const isOk = (color === '#22c55e');
+    let badgeText = 'Error';
+    let badgeClass = 'error';
+    if (isOk) {
+      badgeText = 'OK';
+      badgeClass = 'ok';
+    } else if (statusText === 'Partial data') {
+      badgeText = 'Partial';
+      badgeClass = 'partial';
+    }
+    apiStatusEl.innerHTML = `<span class="api-status-badge ${badgeClass} api-status-large">${badgeText}</span>`;
+  }
+  // Dynamically update SVG colors
+  if (apiStatusIcon) {
+    // Update circle color
+    const circle = apiStatusIcon.querySelector('circle');
+    if (circle) circle.setAttribute('stroke', color);
+    // Update heartbeat line color
+    const polyline = apiStatusIcon.querySelector('polyline');
+    if (polyline) polyline.setAttribute('stroke', color);
+  }
+
+  const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
+  const priceHistory = await fetchPriceHistory(currentPriceRange);
+  if (priceHistory) {
+    createPriceChart(priceHistory, currentPriceRange);
+  }
+    startHalvingCountdown();
+    startAutoRefresh();
+    // Mark initialization completed
+    initSucceeded = true;
+  } catch (err) {
+    console.error('initDashboard failed:', err);
+  } finally {
+    // Always clear the in-progress flag
+    window._dashboardInitInProgress = false;
+    if (initSucceeded) window._dashboardInitialized = true;
+  }
+}
+
+// ===== Halving Countdown =====
+function startHalvingCountdown() {
+  if (window.halvingInterval) clearInterval(window.halvingInterval);
+  updateHalvingCountdown();
+  window.halvingInterval = setInterval(updateHalvingCountdown, 1000);
+}
+// calculateHalvingDate removed: we compute halving date inline to maintain a single source of truth
+
+/**
+ * Generate fixed halving thresholds for the token supply.
+ * Example: for maxSupply=21_000_000 and maxEvents=6 it returns [10.5M, 15.75M, ...]
+ */
+function generateHalvingThresholds(maxSupply = 21_000_000, maxEvents = 6) {
+  const arr = [];
+  for (let n = 1; n <= maxEvents; n++) {
+    const threshold = Math.round(maxSupply * (1 - 1 / Math.pow(2, n)));
+    arr.push(threshold);
+  }
+  return arr;
+}
+
+// Helper: find next threshold index where currentSupply < thresholds[index]
+function findNextThresholdIndex(thresholds = [], currentSupply = 0) {
+  if (!Array.isArray(thresholds) || thresholds.length === 0) return 0;
+  for (let i = 0; i < thresholds.length; i++) {
+    if (currentSupply < thresholds[i]) return i;
+  }
+  return thresholds.length - 1; // if already past all thresholds, return last index
+}
+
+// Helper: set halvingDate to the given threshold index using emissionPerDay
+function rotateToThreshold(thresholds, index, currentSupply, emissionPerDay) {
+  if (!Array.isArray(thresholds) || thresholds.length === 0) return null;
+  const idx = Math.max(0, Math.min(index, thresholds.length - 1));
+  const threshold = thresholds[idx];
+  if (!emissionPerDay || emissionPerDay <= 0) return null;
+  const remaining = Math.max(0, threshold - (currentSupply || 0));
+  const daysToHalving = remaining / emissionPerDay;
+  if (!Number.isFinite(daysToHalving)) return null;
+  return new Date(Date.now() + daysToHalving * 24 * 60 * 60 * 1000);
+}
+function updateHalvingCountdown() {
+  const el = document.getElementById('halvingCountdown');
+  if (!el) return;
+  // If we just had a halving, show 'Halved!' for the brief animation window
+  if (window._lastHalving && (Date.now() - window._lastHalving.at) < 8000) {
+    el.textContent = 'Halved!';
+    return;
+  }
+  // If we recently had a halving and are within the "since" window, show a human-friendly 'since' text
+  if (window._lastHalving && (Date.now() - window._lastHalving.at) < window._showSinceMs) {
+    const diffMs = Date.now() - window._lastHalving.at;
+    const hrs = Math.floor(diffMs / (1000 * 60 * 60));
+    const mins = Math.floor((diffMs / (1000 * 60)) % 60);
+    if (hrs > 0) el.textContent = `Halved ${hrs}h ${mins}m ago`;
+    else el.textContent = `Halved ${mins}m ago`;
+    return;
+  }
+  if (!window.halvingDate) {
+    el.textContent = 'Calculating...';
+    return;
+  }
+  const now = new Date();
+  const diff = window.halvingDate - now;
+  if (diff <= 0) {
+    el.textContent = 'Halved!';
+    return;
+  }
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+  const minutes = Math.floor((diff / (1000 * 60)) % 60);
+  const seconds = Math.floor((diff / 1000) % 60);
+  // Show days, hours, minutes, and seconds
+  el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+}
+// Prevent link clicks on info-badge controls
+
+// Fetch ATH/ATL data and update pills
+async function updateAthAtlPills() {
+  try {
+    const res = await fetch('/api/ath-atl');
+    if (!res.ok) throw new Error('ATH/ATL API error');
+    const data = await res.json();
+    const athValue = document.getElementById('athValue');
+    const athDate = document.getElementById('athDate');
+    const atlValue = document.getElementById('atlValue');
+    const atlDate = document.getElementById('atlDate');
+    if (athValue && data.ath) athValue.textContent = `$${Number(data.ath).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if (athDate && data.ath_date) athDate.textContent = new Date(data.ath_date).toLocaleDateString('en-US');
+    if (atlValue && data.atl) atlValue.textContent = `$${Number(data.atl).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    if (atlDate && data.atl_date) atlDate.textContent = new Date(data.atl_date).toLocaleDateString('en-US');
+  } catch (err) {
+    console.error('❌ updateAthAtlPills:', err);
+  }
+}
+
+// Update Block Time card
+async function updateBlockTime() {
+  const data = await fetchBlockTime();
+  const el = document.getElementById('blockTime');
+  const badge = document.querySelector('#blockTimeCard .info-badge');
+  
+  if (!el) return;
+  
+  if (data && data.avg_block_time !== undefined) {
+    const avgTime = Number(data.avg_block_time).toFixed(1);
+    const status = data.status || 'unknown';
+    el.textContent = `${avgTime}s`;
+    el.classList.remove('skeleton-text');
+    
+    // Update tooltip with live data
+    if (badge) {
+      const deviation = data.deviation !== undefined ? data.deviation.toFixed(2) : '—';
+      const blocksAnalyzed = data.blocks_analyzed || 200;
+      const tooltipLines = [
+        `Average time between blocks (last ${blocksAnalyzed} blocks).`,
+        `Target: 12.0s`,
+        `Current: ${avgTime}s`,
+        `Deviation: ${deviation}s`,
+        `Status: ${status}`,
+        '',
+        `Calculation: (newest_ts - oldest_ts) / (blocks - 1)`,
+        `Source: Taostats Block API`
+      ];
+      badge.setAttribute('data-tooltip', tooltipLines.join('\n'));
+    }
+  } else {
+    el.textContent = '—';
+  }
+}
+
+// Update Staking APR card
+async function updateStakingApr() {
+  const data = await fetchStakingApr();
+  const el = document.getElementById('stakingApr');
+  const badge = document.querySelector('#stakingAprCard .info-badge');
+  
+  if (!el) return;
+  
+  if (data && data.avg_apr !== undefined) {
+    const avgApr = Number(data.avg_apr).toFixed(2);
+    el.textContent = `${avgApr}%`;
+    el.classList.remove('skeleton-text');
+    
+    // Update tooltip with live data
+    if (badge) {
+      const simpleAvg = data.simple_avg_apr !== undefined ? `${Number(data.simple_avg_apr).toFixed(2)}%` : '—';
+      const minApr = data.min_apr !== undefined ? `${Number(data.min_apr).toFixed(2)}%` : '—';
+      const maxApr = data.max_apr !== undefined ? `${Number(data.max_apr).toFixed(2)}%` : '—';
+      const validators = data.validators_analyzed || 50;
+      const tooltipLines = [
+        `Stake-weighted average APR across top ${validators} validators.`,
+        '',
+        `Calculation: Σ(APR × stake) / Σ(stake)`,
+        `APR per validator: (daily_return × 365 / stake) × 100`,
+        '',
+        `Simple Avg: ${simpleAvg}`,
+        `Range: ${minApr} to ${maxApr}`,
+        `Source: Taostats dTao Validator API`
+      ];
+      badge.setAttribute('data-tooltip', tooltipLines.join('\n'));
+    }
+  } else {
+    el.textContent = '—';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  (async () => {
+    await initDashboard();
+    await updateAthAtlPills();
+    await updateBlockTime();
+    await updateStakingApr();
+
+    // Debug overlay logic
+    if (window._debug) {
+      const overlay = document.getElementById('debugOverlay');
+      if (overlay) overlay.style.display = 'block';
+      updateDebugStatus();
+      const btn = document.getElementById('debugRetryBtn');
+      if (btn) btn.onclick = () => {
+        if (window._debug) console.log('Debug: manual retry triggered');
+        refreshDashboard();
+        setTimeout(updateDebugStatus, 1200);
+      };
+    }
+
+    // Prevent link clicks on info-badge controls
+    document.querySelectorAll('.stat-card .info-badge').forEach(badge => {
+      badge.addEventListener('click', function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+      });
+      badge.addEventListener('touchstart', function(e) {
+        e.stopPropagation();
+      });
+    });
+
+    // Time range buttons for the chart
+    document.querySelectorAll('.time-btn').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        const range = btn.getAttribute('data-range'); // "7", "30", "365"
+        if (range === currentPriceRange) return; // No reload if same
+        currentPriceRange = range;
+
+        // Update button UI
+        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Show chart skeleton (optional)
+        const priceCard = btn.closest('.dashboard-card');
+        if (priceCard) priceCard.classList.add('loading');
+
+        // Load data and redraw chart
+        const priceHistory = await fetchPriceHistory(currentPriceRange);
+        if (priceHistory) {
+          createPriceChart(priceHistory, currentPriceRange);
+        }
+        // Hide skeleton
+        if (priceCard) priceCard.classList.remove('loading');
+      });
+    });
+
+    // Info badge tooltip for API status card: preserve any existing (HTML) tooltip
+    // Only set a default if the attribute is missing or suspiciously short (regression guard).
+    const infoBadge = document.querySelector('#apiStatusCard .info-badge');
+    if (infoBadge) {
+        const existing = infoBadge.getAttribute('data-tooltip') || '';
+        if (!existing || existing.trim().length < 20) {
+          // Default detailed tooltip (HTML chips) — per-source chips allow quick status scan
+          const html = [
+            '<div>Status of all data sources powering the dashboard</div>',
+            '<br/>',
+            '<div><span class="tooltip-chip ok">OK</span> Taostats</div>',
+            '<div><span class="tooltip-chip error">Error</span> CoinGecko</div>',
+            '<div><span class="tooltip-chip ok">OK</span> Bittensor SDK</div>'
+          ].join('');
+          infoBadge.setAttribute('data-tooltip', html);
+          infoBadge.setAttribute('data-tooltip-html', 'true');
+        }
+    }
+  })();
+
+  // Background toggle button
+  const btn = document.getElementById('bgToggleBtn');
+  const moonIcon = document.getElementById('moonIcon');
+  const sunIcon = document.getElementById('sunIcon');
+  if (!btn || !moonIcon || !sunIcon) return;
+  const body = document.body;
+  // Initial state from localStorage
+  const header = document.querySelector('header.site-header');
+  // Add .pill-value directly and use Array.from() when querying NodeList
+  // This is Safari-friendly (older versions may not support spread on NodeList)
+  // Manually add the refresh indicator so it receives the `light-bg` class too
+  const refreshIndicator = document.getElementById('refresh-indicator');
+  const elementsToToggle = [
+    body,
+    header,
+    refreshIndicator,
+    ...Array.from(document.querySelectorAll('.dashboard-card, .stat-card, .price-pill, .halving-pill, .ath-atl-pill, .whitepaper-btn, #bgToggleBtn, .stat-value, .info-badge, .pill-value, .disclaimer-card, .site-footer'))
+  ];
+  function setLightMode(active) {
+    elementsToToggle.forEach(el => {
+      if (!el) return;
+      if (active) {
+        el.classList.add('light-bg');
+      } else {
+        el.classList.remove('light-bg');
+      }
+    });
+    // JS fallback for browsers that do not fully respect CSS overrides (Safari, PWA quirks)
+    // Apply inline styles to key elements to force proper Light Mode contrast
+    const rootStyle = getComputedStyle(document.documentElement);
+    const accent = (rootStyle.getPropertyValue('--accent') || '#22c55e').trim();
+    const brand = (rootStyle.getPropertyValue('--brand') || '#ff6b35').trim();
+    document.querySelectorAll('.disclaimer-card, .price-pill, .halving-pill').forEach(el => {
+      if (!el) return;
+      if (active) {
+        if (el.classList.contains('disclaimer-card')) {
+          el.style.background = '#fff';
+          el.style.backgroundImage = 'none';
+          el.style.border = '1px solid #c0c0c0';
+          el.style.boxShadow = '0 12px 32px rgba(0,0,0,0.08)';
+          el.style.color = '#000';
+          el.style.backdropFilter = 'none';
+          el.style.filter = 'none';
+          // also set child elements explicitly to avoid CSS overrides
+          const txt = el.querySelectorAll('.disclaimer-text, .disclaimer-header h3, .coingecko-attribution, .source-label');
+          txt.forEach(ch => {
+            ch.style.color = '#000';
+            ch.style.opacity = '1';
+            // Keep font weight unchanged so we don't alter the original design
+            ch.style.fontWeight = '';
+            ch.style.webkitTextFillColor = '#000';
+          });
+        }
+          // Ensure anchor links inside disclaimer remain green in Light Mode (Safari fallback)
+          const anchors = el.querySelectorAll('a');
+          anchors.forEach(a => {
+            a.style.setProperty('color', '#22c55e', 'important');
+            a.style.setProperty('-webkit-text-fill-color', '#22c55e', 'important');
+          });
+        if (el.classList.contains('price-pill')) {
+          el.style.background = '#fff';
+          el.style.borderColor = '#dcdcdc';
+          el.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
+          el.style.color = '#000';
+          el.style.borderLeft = `4px solid ${accent}`;
+        }
+        if (el.classList.contains('halving-pill')) {
+          el.style.background = '#fff';
+          el.style.borderColor = '#dcdcdc';
+          el.style.boxShadow = '0 6px 18px rgba(0,0,0,0.08)';
+          el.style.color = '#000';
+          el.style.borderLeft = `4px solid ${brand}`;
+        }
+        // (Map thumbnail swap is handled once after this loop to avoid repeated DOM updates.)
+      } else {
+        // Remove inline styles to fall back to CSS rules for Dark Mode
+        el.style.background = '';
+        el.style.backgroundImage = '';
+        el.style.border = '';
+        el.style.borderColor = '';
+        el.style.boxShadow = '';
+        el.style.color = '';
+        el.style.borderLeft = '';
+        el.style.backdropFilter = '';
+        el.style.filter = '';
+        if (el.classList.contains('disclaimer-card')) {
+          // clear inline styles from children
+          const txt = el.querySelectorAll('.disclaimer-text, .disclaimer-header h3, .coingecko-attribution, .source-label');
+          txt.forEach(ch => {
+            ch.style.color = '';
+            ch.style.opacity = '';
+            ch.style.fontWeight = '';
+            ch.style.webkitTextFillColor = '';
+          });
+          // clear anchor overrides as well
+          el.querySelectorAll('a').forEach(a => {
+            a.style.removeProperty('color');
+            a.style.removeProperty('-webkit-text-fill-color');
+          });
+        }
+      }
+    });
+    // Swap the miner map thumbnail once per theme change (only update once)
+    const mapThumb = document.getElementById('mapThumb');
+    if (mapThumb) {
+      if (active) {
+        const lightSrc = 'assets/miner-map-thumb-light.png';
+        mapThumb.onerror = function() { /* fallback to dark */ mapThumb.onerror = null; mapThumb.src = 'assets/miner-map-thumb.png'; mapThumb.style.filter = ''; };
+        mapThumb.src = lightSrc;
+        // Ensure we don't apply additional CSS filter when using the light asset
+        mapThumb.style.filter = 'none';
+      } else {
+        // Clear any error handler from previous attempts
+        mapThumb.onerror = null;
+        mapThumb.src = 'assets/miner-map-thumb.png';
+        mapThumb.style.filter = '';
+      }
+    }
+
+    if (active) {
+      body.style.background = '#dadada';
+      if (header) header.style.background = '#dadada';
+      // JS fallback for footer in case CSS does not apply (Safari / PWA quirks)
+      document.querySelectorAll('.site-footer').forEach(f => {
+        f.style.background = '#dadada';
+        f.style.color = '#222';
+        // Ensure paragraphs inside the footer are readable
+        const p = f.querySelectorAll('p');
+        p.forEach(el => {
+          el.style.color = '#222';
+          el.style.opacity = '1';
+          el.style.webkitTextFillColor = '#222';
+        });
+      });
+      moonIcon.style.display = 'none';
+      sunIcon.style.display = 'inline';
+    } else {
+      body.style.background = '';
+      if (header) header.style.background = '';
+      document.querySelectorAll('.site-footer').forEach(f => {
+        f.style.background = '';
+        f.style.color = '';
+        const p = f.querySelectorAll('p');
+        p.forEach(el => {
+          el.style.color = '';
+          el.style.opacity = '';
+          el.style.webkitTextFillColor = '';
+        });
+      });
+      moonIcon.style.display = 'inline';
+      sunIcon.style.display = 'none';
+    }
+  }
+  // NOTE: Preloading is handled via <link rel="preload"> in index.html — avoid duplicate downloads
+  // Initial state
+  setLightMode(localStorage.getItem('bgMode') === 'light');
+  btn.addEventListener('click', function() {
+    const isLight = body.classList.contains('light-bg');
+    setLightMode(!isLight);
+    localStorage.setItem('bgMode', isLight ? 'dark' : 'light');
+  });
+});
+
+// ===== Top Subnets Display Card (Main Grid) =====
+document.addEventListener('DOMContentLoaded', function() {
+  const displayTable = document.getElementById('topSubnetsDisplayTable');
+  const displayList = document.getElementById('topSubnetsDisplayList');
+
+  if (!displayTable || !displayList) return;
+
+  // Load and display top 10 subnets on page load
+  async function loadTopSubnetsDisplay() {
+    try {
+      const response = await fetch('/api/top_subnets');
+      if (!response.ok) throw new Error('Failed to fetch top subnets');
+      const data = await response.json();
+
+      const topSubnets = data.top_subnets || [];
+      if (topSubnets.length === 0) {
+        displayList.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">No subnet data available</td></tr>';
+        return;
+      }
+
+      // Display TOP 10 (all of them)
+      const rows = topSubnets.slice(0, 10).map((subnet, idx) => {
+        const netuid = subnet.netuid || idx;
+        const name = subnet.subnet_name || `SN${subnet.netuid}`;
+        const share = ((subnet.taostats_emission_share || 0) * 100).toFixed(4);
+        const daily = (subnet.estimated_emission_daily || 0).toFixed(4);
+
+        return `<tr>
+          <td class="rank-col">${netuid}</td>
+          <td class="subnet-col">${name}</td>
+          <td class="share-col">${share}%</td>
+          <td class="daily-col">${daily} τ</td>
+        </tr>`;
+      }).join('');
+
+      displayList.innerHTML = rows;
+    } catch (err) {
+      console.error('Error loading top subnets for display:', err);
+      displayList.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">Error loading subnet data</td></tr>';
+    }
+  }
+
+  loadTopSubnetsDisplay();
+
+  // Refresh on network data update
+  const originalRefreshDashboard = window.refreshDashboard;
+  window.refreshDashboard = async function() {
+    await originalRefreshDashboard.call(this);
+    loadTopSubnetsDisplay();
+  };
+});
+
+// ===== Top Validators Display =====
+document.addEventListener('DOMContentLoaded', function() {
+  const displayTable = document.getElementById('topValidatorsDisplayTable');
+  const displayList = document.getElementById('topValidatorsDisplayList');
+
+  if (!displayTable || !displayList) return;
+
+  async function loadTopValidatorsDisplay() {
+    try {
+      const response = await fetch('/api/top_validators');
+      if (!response.ok) throw new Error('Failed to fetch top validators');
+      const data = await response.json();
+
+      const topValidators = data.top_validators || [];
+      if (topValidators.length === 0) {
+        displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No validator data available</td></tr>';
+        return;
+      }
+
+      // Display TOP 10
+      const rows = topValidators.slice(0, 10).map((v, idx) => {
+        const rank = idx + 1;
+        const name = v.name || `Validator ${rank}`;
+        const stake = v.stake_formatted || '—';
+        const dominance = v.dominance != null ? `${v.dominance}%` : '—';
+        const nominators = v.nominators != null ? v.nominators.toLocaleString() : '—';
+
+        return `<tr>
+          <td class="rank-col">${rank}</td>
+          <td class="validator-col">${name}</td>
+          <td class="stake-col">${stake}</td>
+          <td class="dominance-col">${dominance}</td>
+          <td class="nominators-col">${nominators}</td>
+        </tr>`;
+      }).join('');
+
+      displayList.innerHTML = rows;
+    } catch (err) {
+      console.error('Error loading top validators:', err);
+      displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Error loading validator data</td></tr>';
+    }
+  }
+
+  loadTopValidatorsDisplay();
+
+  // Refresh on network data update
+  const origRefresh = window.refreshDashboard;
+  window.refreshDashboard = async function() {
+    await origRefresh.call(this);
+    loadTopValidatorsDisplay();
+  };
+});
+
+// ===== Top Wallets Display =====
+document.addEventListener('DOMContentLoaded', function() {
+  const displayTable = document.getElementById('topWalletsDisplayTable');
+  const displayList = document.getElementById('topWalletsDisplayList');
+
+  if (!displayTable || !displayList) return;
+
+  async function loadTopWalletsDisplay() {
+    try {
+      const response = await fetch('/api/top_wallets');
+      if (!response.ok) throw new Error('Failed to fetch top wallets');
+      const data = await response.json();
+
+      const wallets = data.wallets || [];
+      if (wallets.length === 0) {
+        displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No wallet data available</td></tr>';
+        return;
+      }
+
+      // Display TOP 10
+      const rows = wallets.slice(0, 10).map((w) => {
+        const rank = w.rank || '—';
+        const identity = w.identity || null;
+        const addressShort = w.address_short || 'Unknown';
+        const balance = w.balance_total != null ? `${w.balance_total.toLocaleString(undefined, {maximumFractionDigits: 0})} τ` : '—';
+        const dominance = w.dominance != null ? `${w.dominance.toFixed(2)}%` : '—';
+        const stakedPercent = w.staked_percent != null ? `${w.staked_percent.toFixed(1)}%` : '—';
+
+        // Show identity if available, otherwise just address
+        const walletDisplay = identity 
+          ? `<span class="wallet-identity">${identity}</span><span class="wallet-address">${addressShort}</span>`
+          : `<span class="wallet-address wallet-address-only">${addressShort}</span>`;
+
+        return `<tr>
+          <td class="rank-col">${rank}</td>
+          <td class="wallet-col">${walletDisplay}</td>
+          <td class="balance-col">${balance}</td>
+          <td class="dominance-col">${dominance}</td>
+          <td class="staked-col">${stakedPercent}</td>
+        </tr>`;
+      }).join('');
+
+      displayList.innerHTML = rows;
+    } catch (err) {
+      console.error('Error loading top wallets:', err);
+      displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Error loading wallet data</td></tr>';
+    }
+  }
+
+  loadTopWalletsDisplay();
+
+  // Also refresh when refreshDashboard is called
+  const currentRefresh = window.refreshDashboard;
+  window.refreshDashboard = async function() {
+    await currentRefresh.call(this);
+    loadTopWalletsDisplay();
+  };
+});
+
+// Old Top Subnets Tooltip handler removed - now uses standard data-tooltip
+
+// ===== Holiday Snowfall (simple, toggleable) =====
+(function() {
+  function isHolidayEnabled() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('holiday') === '1') return true;
+      if (params.get('holiday') === '0') return false;
+    } catch (e) { /* ignore */ }
+    if (document.body.classList.contains('holiday')) return true;
+    // Auto-enable during holiday season by default: Dec 1 → Jan 31
+    const now = new Date();
+    const m = now.getMonth() + 1; // 1-12
+    const d = now.getDate();
+    // Dec (any day) or January up to 31st
+    if ((m === 12 && d >= 1) || (m === 1 && d <= 31)) return true;
+    return false;
+  }
+
+  function enableSnowfall() {
+    const container = document.getElementById('snowfall');
+    if (!container) return;
+    // Keep it small and performant (reduced counts for lower CPU/GPU)
+    const flakes = window.innerWidth < 420 ? 12 : 18;
+    container.innerHTML = '';
+    for (let i = 0; i < flakes; i++) {
+      const s = document.createElement('span');
+      s.className = 'snowflake';
+      const left = Math.random() * 100;
+      const size = Math.floor(6 + Math.random() * 10); // px (smaller)
+      const dur = (8 + Math.random() * 12).toFixed(2); // seconds (slower fall)
+      const delay = (Math.random() * -12).toFixed(2);
+      s.style.left = `${left}%`;
+      s.style.fontSize = `${size}px`;
+      s.style.opacity = (0.35 + Math.random() * 0.55).toString();
+      s.style.animationDuration = `${dur}s, ${10 + Math.random() * 8}s`;
+      s.style.animationDelay = `${delay}s, ${delay}s`;
+      // Slight horizontal drift via small translateX applied through CSS left variation
+      container.appendChild(s);
+    }
+    // Add a couple of larger, slower flakes for visual interest
+    const largeCount = window.innerWidth < 420 ? 1 : 3;
+    for (let i = 0; i < largeCount; i++) {
+      const L = document.createElement('span');
+      L.className = 'snowflake large';
+      const leftL = Math.random() * 100;
+      const sizeL = Math.floor(22 + Math.random() * 24); // px - big flakes
+      const durL = (14 + Math.random() * 12).toFixed(2); // seconds, slow fall
+      const delayL = (Math.random() * -20).toFixed(2);
+      L.style.left = `${leftL}%`;
+      L.style.fontSize = `${sizeL}px`;
+      L.style.opacity = (0.7 + Math.random() * 0.3).toString();
+      L.style.animationDuration = `${durL}s, ${14 + Math.random() * 10}s`;
+      L.style.animationDelay = `${delayL}s, ${delayL}s`;
+      container.appendChild(L);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      if (isHolidayEnabled()) {
+        enableSnowfall();
+      } else {
+        // Ensure container is empty/hidden if not enabled
+        const c = document.getElementById('snowfall'); if (c) c.innerHTML = '';
+      }
+    } catch (e) {
+      if (window._debug) console.warn('Snowfall init failed', e);
+    }
+  });
+})();
+
+// ===== NYE Sparkles =====
+(function() {
+  function isNyeEnabled() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('nye') === '1') return true;
+      if (params.get('nye') === '0') return false;
+    } catch (e) { /* ignore */ }
+    if (document.body.classList.contains('nye')) return true;
+    // Auto-enable on Dec 31 and Jan 1
+    const now = new Date();
+    const m = now.getMonth() + 1; // 1-12
+    const d = now.getDate();
+    // Enable on Dec 31 and Jan 1
+    if ((m === 12 && d === 31) || (m === 1 && d === 1)) return true;
+    return false;
+  }
+
+  function spawnSparkle(container) {
+    if (!container) return;
+    // Limit active sparkles for performance (reduced)
+    if (container.childElementCount > 20) return;
+    const s = document.createElement('span');
+    s.className = 'sparkle';
+    // Position somewhere across the width, within the top container height
+    const left = Math.random() * 100;
+    const top = Math.random() * 28; // percent of viewport height (within container)
+    const scale = 0.6 + Math.random() * 1.0;
+    const dur = 900 + Math.random() * 900; // ms (slightly slower)
+    s.style.left = `${left}%`;
+    s.style.top = `${top}%`;
+    s.style.width = `${Math.round(6 + Math.random() * 8)}px`;
+    s.style.height = s.style.width;
+    s.style.animationDuration = `${Math.round(dur)}ms`;
+    // Slight hue variation
+    if (Math.random() > 0.6) s.style.background = 'radial-gradient(circle at 30% 30%, #fff, #ffcf33 60%)';
+    container.appendChild(s);
+    s.addEventListener('animationend', () => { try { s.remove(); } catch (e) {} });
+  }
+
+  function enableNye() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const container = document.getElementById('nye-sparkles');
+    if (!container) return;
+    // initial burst (smaller)
+    const initial = window.innerWidth < 420 ? 4 : 8;
+    for (let i = 0; i < initial; i++) spawnSparkle(container);
+    // periodic bursts
+    const interval = setInterval(() => {
+      // spawn 1-2 sparkles each tick (reduced)
+      const count = 1 + Math.floor(Math.random() * 2);
+      for (let i = 0; i < count; i++) spawnSparkle(container);
+      // Occasionally spawn confetti and rockets for a richer NYE effect
+      const confettiChance = 0.12; // ~12% per tick (reduced)
+      const rocketChance = 0.05; // ~5% per tick (reduced)
+      if (Math.random() < confettiChance) spawnConfettiBurst();
+      if (Math.random() < rocketChance) launchRocket();
+    }, 1000 + Math.random() * 800);
+    // keep reference so we can clear later if needed
+    window._nyeSparklesInterval = interval;
+  }
+
+  // Confetti burst: spawn several confetti pieces across the viewport (reduced)
+  function spawnConfettiBurst() {
+    const container = document.getElementById('confetti');
+    if (!container) return;
+    // limit total active pieces (reduced)
+    if (container.childElementCount > 60) return;
+    const pieces = 6 + Math.floor(Math.random() * 5);
+    for (let i = 0; i < pieces; i++) {
+      const p = document.createElement('span');
+      p.className = 'confetti-piece';
+      // random color
+      const colors = ['#ff3884','#ffd166','#7ee787','#7cc8ff','#ffb47b','#c77cff'];
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      const left = Math.random() * 100;
+      const startX = left;
+      const delay = Math.random() * 300; // ms
+      const dur = 2200 + Math.random() * 1000; // ms (slightly slower)
+      const sizeW = 4 + Math.random()*6;
+      const sizeH = 6 + Math.random()*8;
+      p.style.left = `${startX}%`;
+      p.style.top = `${-6 - Math.random()*8}vh`;
+      p.style.width = `${sizeW}px`;
+      p.style.height = `${sizeH}px`;
+      p.style.animationDuration = `${dur}ms`;
+      p.style.animationDelay = `${delay}ms`;
+      container.appendChild(p);
+      // cleanup after animation end (duration + delay)
+      setTimeout(() => { try { p.remove(); } catch (e) {} }, dur + delay + 100);
+    }
+  }
+
+  // Rocket launch: create a small rocket emoji that flies upward
+  function launchRocket() {
+    const container = document.getElementById('rockets');
+    if (!container) return;
+    // limit concurrent rockets (fewer concurrent rockets)
+    if (container.childElementCount > 3) return;
+    const r = document.createElement('span');
+    r.className = 'rocket';
+    r.textContent = '🚀';
+    // random horizontal start (avoid edges)
+    const left = 8 + Math.random() * 84;
+    const bottom = 4 + Math.random() * 10; // px from bottom
+    r.style.left = `${left}%`;
+    r.style.bottom = `${bottom}px`;
+    // randomize animation duration slightly
+    const dur = 1400 + Math.random() * 800;
+    r.style.animationDuration = `${dur}ms`;
+    container.appendChild(r);
+    // cleanup after animation
+    setTimeout(() => { try { r.remove(); } catch (e) {} }, dur + 120);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      if (isNyeEnabled()) enableNye(); else {
+        const c = document.getElementById('nye-sparkles'); if (c) c.innerHTML = '';
+      }
+    } catch (e) { if (window._debug) console.warn('NYE init failed', e); }
+  });
+})();

@@ -5,28 +5,6 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 - 
 
-## v1.0.0-rc.21 (2025-12-04)
-### Changed
-- Full modularization: glitch, refresh, and boot logic split into separate JS files (`glitch.js`, `refresh.js`, `boot.js`)
-- Matrix glitch overlay is now globally triggerable and only appears on auto-refresh (not on click)
-- Overlay container for Matrix glitch added to `index.html`
-- All code, comments, and release notes in English
-- No destructive actions or tag deletions
-- Bugfixes and code hygiene improvements
-
-### Details
-- `glitch.js`: Handles Matrix glitch overlay, exposes `showMatrixGlitch()` globally
-- `refresh.js`: Handles auto-refresh logic, triggers glitch overlay after each refresh
-- `boot.js`: Handles terminal boot overlay logic
-- `index.html`: Loads all new JS modules and includes the glitch overlay container
-- No manual refresh button; glitch only triggers on auto-refresh
-- All documentation files (`docs/`) and previous release notes retained
-
----
-
-This release finalizes the modular refactor and ensures a clean, maintainable, and professional codebase. All features are tested and ready for production.
-
-
 ## v1.0.0-rc.20 (2025-12-04)
 ### Added
 - Lightweight seasonal snowfall overlay (active Dec 1 → Jan 31). Toggle via `?holiday=1` or `body.holiday`.
