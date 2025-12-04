@@ -2030,22 +2030,9 @@ async function updateBlockTime() {
         const clamped = Math.max(6, Math.min(60, avgSec));
         const intervalMs = Math.round(clamped * 1000);
 
-        // clear any previous timeout/interval
-        try { if (window._blockTickTimeout) { clearTimeout(window._blockTickTimeout); window._blockTickTimeout = null; } } catch (e) {}
-        try { if (window._blockTickInterval) { clearInterval(window._blockTickInterval); window._blockTickInterval = null; } } catch (e) {}
-
-        // schedule first tick (optionally immediate), then repeat
-        const shouldPlayFirstNow = !!window._playFirstBlockTickImmediately;
-        if (shouldPlayFirstNow) {
-          try { triggerBlockTick(); } catch(e){}
-          try { window._blockTickInterval = setInterval(() => { try { triggerBlockTick(); } catch(e){} }, intervalMs); } catch(e){}
-        } else {
-          window._blockTickTimeout = setTimeout(() => {
-            try { triggerBlockTick(); } catch (e) {}
-            try { window._blockTickInterval = setInterval(() => { try { triggerBlockTick(); } catch(e){} }, intervalMs); } catch(e){}
-            window._blockTickTimeout = null;
-          }, intervalMs);
-        }
+          // Clear any previous block tick timers and do not schedule new ones.
+          try { if (window._blockTickTimeout) { clearTimeout(window._blockTickTimeout); window._blockTickTimeout = null; } } catch (e) {}
+          try { if (window._blockTickInterval) { clearInterval(window._blockTickInterval); window._blockTickInterval = null; } } catch (e) {}
       } catch (e) { /* ignore */ }
     }
   } else {
