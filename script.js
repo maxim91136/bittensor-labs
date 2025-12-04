@@ -2233,7 +2233,8 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!preview || !zoomOut || !zoomIn || !zoomReset || !zoomLevelText) return;
 
   const STORAGE_KEY = 'taobubblesZoom';
-  let zoom = parseFloat(localStorage.getItem(STORAGE_KEY) || '1');
+  // Default start zoom: 1.2 (120%) unless user previously saved a value
+  let zoom = parseFloat(localStorage.getItem(STORAGE_KEY) || '1.2');
   if (isNaN(zoom) || zoom <= 0) zoom = 1;
 
   function setZoom(v) {

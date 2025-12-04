@@ -737,13 +737,13 @@ body.light-bg #maxSupplyScribble {
 /* Responsive adjustments: larger preview on wide screens, smaller on narrow screens */
 @media (min-width: 1000px) {
   .taobubbles-card .taobubbles-preview {
-    --taobubbles-base-height: 420px;
+    --taobubbles-base-height: 520px;
   }
 }
 
 @media (max-width: 700px) {
   .taobubbles-card .taobubbles-preview {
-    --taobubbles-base-height: 180px;
+    --taobubbles-base-height: 220px;
   }
 }
 
@@ -751,7 +751,9 @@ body.light-bg #maxSupplyScribble {
 .taobubbles-card {
   grid-column: 1 / -1;
   /* slightly more padding to give the preview room */
-  padding-bottom: 18px;
+  padding-bottom: 28px;
+  /* Ensure card can expand vertically when preview scales */
+  overflow: visible;
 }
 
 /* Zoom controls styling */
