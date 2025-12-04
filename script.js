@@ -18,6 +18,21 @@
     const lineEls = [line1, line2, line3];
     
     let i = 0;
+    // safety: if the boot sequence doesn't finish (runtime error or missing elements),
+    // force-hide the overlay after a short timeout so init can continue.
+    const MAX_BOOT_MS = 5000;
+    const forcedTimeout = setTimeout(() => {
+      try {
+        overlay.classList.add('fade-out');
+        setTimeout(() => {
+          overlay.classList.add('hidden');
+          const ev = new CustomEvent('terminalBootDone');
+          document.dispatchEvent(ev);
+        }, fadeDelay);
+      } catch (e) {
+        if (window._debug) console.warn('terminalBoot forced hide failed', e);
+      }
+    }, MAX_BOOT_MS);
     function showNext() {
       if (i < lines.length) {
         lineEls[i].textContent = lines[i];
@@ -26,6 +41,7 @@
         setTimeout(showNext, delays[i - 1]);
       } else {
         // All lines shown, wait then fade out
+        clearTimeout(forcedTimeout);
         setTimeout(() => {
           overlay.classList.add('fade-out');
           setTimeout(() => {
