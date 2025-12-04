@@ -1824,10 +1824,18 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Info badge tooltip for API status card: static text
+    // Info badge tooltip for API status card: include helpful, non-invasive diagnostics
     const infoBadge = document.querySelector('#apiStatusCard .info-badge');
     if (infoBadge) {
-      infoBadge.setAttribute('data-tooltip', 'API status: Network, Taostats, Coingecko');
+      const lines = [
+        'API status: Network, Taostats, CoinGecko',
+        '',
+        'Last checked: --:-- (updates on refresh)',
+        'Price fallback: CoinGecko used when Taostats unavailable',
+        '',
+        'Tip: Click the refresh indicator or run `refreshDashboard()` in console to re-check.'
+      ];
+      infoBadge.setAttribute('data-tooltip', lines.join('\n'));
     }
   })();
 
