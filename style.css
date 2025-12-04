@@ -214,6 +214,146 @@ body {
   overflow-x: hidden;
 }
 
+/* ---- Holiday: Simple Snowfall Effect ---- */
+#snowfall {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9997; /* just under terminal overlay (9999) */
+  overflow: hidden;
+}
+.snowflake {
+  position: absolute;
+  top: -10vh;
+  color: #fff;
+  will-change: transform, opacity;
+  opacity: 0.9;
+  user-select: none;
+  -webkit-user-select: none;
+  animation-name: fall, spin;
+  animation-iteration-count: infinite;
+  animation-timing-function: linear;
+}
+.snowflake::before {
+  content: '❄';
+  display: inline-block;
+  transform: translateZ(0);
+}
+@keyframes fall {
+  to { transform: translateY(120vh); }
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Reduce motion for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .snowflake { animation: none; opacity: 0.85; }
+}
+
+/* Mobile tuning: fewer/ smaller flakes */
+@media (max-width: 420px) {
+  .snowflake { font-size: 10px !important; opacity: 0.85 !important; }
+}
+
+/* End Snowfall */
+
+/* ---- Holiday: NYE Sparkles ---- */
+#nye-sparkles {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 30vh; /* keep sparkles near top */
+  pointer-events: none;
+  z-index: 9998; /* above snowfall, under terminal */
+  overflow: visible;
+}
+.sparkle {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  pointer-events: none;
+  transform-origin: center;
+  background: radial-gradient(circle at 30% 30%, #fff, #ffd700 60%);
+  box-shadow: 0 0 8px rgba(255,215,0,0.9), 0 0 18px rgba(255,215,0,0.12);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation: sparkle-pop 900ms ease-out forwards;
+}
+@keyframes sparkle-pop {
+  0% { transform: scale(0.0) translateY(0); opacity: 0; }
+  30% { transform: scale(1.2) translateY(-6px); opacity: 1; }
+  100% { transform: scale(0.6) translateY(-40px); opacity: 0; }
+}
+
+/* fewer sparkles and smaller on very small screens */
+@media (max-width: 420px) {
+  .sparkle { width: 6px; height: 6px; box-shadow: 0 0 6px rgba(255,215,0,0.85); }
+  #nye-sparkles { height: 22vh; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sparkle { animation: none !important; opacity: 0.9 !important; transform: none !important; }
+}
+
+/* End NYE Sparkles */
+
+/* ---- NYE Confetti ---- */
+#confetti {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9996; /* below sparkles */
+  overflow: hidden;
+}
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 14px;
+  will-change: transform, opacity;
+  opacity: 0.95;
+  transform-origin: center;
+  border-radius: 2px;
+  animation: confetti-fall linear forwards;
+}
+@keyframes confetti-fall {
+  0% { transform: translateY(-6vh) rotate(0deg) translateX(0); opacity: 1; }
+  100% { transform: translateY(120vh) rotate(720deg) translateX(30px); opacity: 0; }
+}
+
+/* ---- NYE Rockets ---- */
+#rockets {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999; /* above everything except terminal */
+}
+.rocket {
+  position: absolute;
+  font-size: 18px;
+  transform-origin: center bottom;
+  will-change: transform, opacity;
+  animation: rocket-launch 1400ms ease-in forwards;
+  text-shadow: 0 0 6px rgba(255,160,40,0.9);
+}
+@keyframes rocket-launch {
+  0% { transform: translateY(0) scale(1) rotate(-6deg); opacity: 1; }
+  60% { transform: translateY(-60vh) scale(1.05) rotate(6deg); opacity: 1; }
+  100% { transform: translateY(-120vh) scale(0.9) rotate(12deg); opacity: 0; }
+}
+
+@media (max-width: 420px) {
+  .rocket { font-size: 14px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece, .rocket { animation: none !important; opacity: 0.9 !important; }
+}
+
+/* End confetti & rockets */
+
 /* ---- Header: Logo at the top, pills below, always centered ---- */
 .site-header {
   position: sticky;

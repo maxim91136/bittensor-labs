@@ -2382,3 +2382,182 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Old Top Subnets Tooltip handler removed - now uses standard data-tooltip
+
+// ===== Holiday Snowfall (simple, toggleable) =====
+(function() {
+  function isHolidayEnabled() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('holiday') === '1') return true;
+      if (params.get('holiday') === '0') return false;
+    } catch (e) { /* ignore */ }
+    if (document.body.classList.contains('holiday')) return true;
+    // Auto-enable during holiday season by default: Dec 1 → Jan 31
+    const now = new Date();
+    const m = now.getMonth() + 1; // 1-12
+    const d = now.getDate();
+    // Dec (any day) or January up to 31st
+    if ((m === 12 && d >= 1) || (m === 1 && d <= 31)) return true;
+    return false;
+  }
+
+  function enableSnowfall() {
+    const container = document.getElementById('snowfall');
+    if (!container) return;
+    // Keep it small and performant
+    const flakes = window.innerWidth < 420 ? 18 : 28;
+    container.innerHTML = '';
+    for (let i = 0; i < flakes; i++) {
+      const s = document.createElement('span');
+      s.className = 'snowflake';
+      const left = Math.random() * 100;
+      const size = Math.floor(8 + Math.random() * 18); // px
+      const dur = (6 + Math.random() * 10).toFixed(2); // seconds
+      const delay = (Math.random() * -12).toFixed(2);
+      s.style.left = `${left}%`;
+      s.style.fontSize = `${size}px`;
+      s.style.opacity = (0.4 + Math.random() * 0.6).toString();
+      s.style.animationDuration = `${dur}s, ${8 + Math.random() * 8}s`;
+      s.style.animationDelay = `${delay}s, ${delay}s`;
+      // Slight horizontal drift via small translateX applied through CSS left variation
+      container.appendChild(s);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      if (isHolidayEnabled()) {
+        enableSnowfall();
+      } else {
+        // Ensure container is empty/hidden if not enabled
+        const c = document.getElementById('snowfall'); if (c) c.innerHTML = '';
+      }
+    } catch (e) {
+      if (window._debug) console.warn('Snowfall init failed', e);
+    }
+  });
+})();
+
+// ===== NYE Sparkles =====
+(function() {
+  function isNyeEnabled() {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('nye') === '1') return true;
+      if (params.get('nye') === '0') return false;
+    } catch (e) { /* ignore */ }
+    if (document.body.classList.contains('nye')) return true;
+    // Auto-enable on Dec 31 and Jan 1
+    const now = new Date();
+    const m = now.getMonth() + 1; // 1-12
+    const d = now.getDate();
+    // Enable on Dec 31 and Jan 1
+    if ((m === 12 && d === 31) || (m === 1 && d === 1)) return true;
+    return false;
+  }
+
+  function spawnSparkle(container) {
+    if (!container) return;
+    // Limit active sparkles for performance
+    if (container.childElementCount > 36) return;
+    const s = document.createElement('span');
+    s.className = 'sparkle';
+    // Position somewhere across the width, within the top container height
+    const left = Math.random() * 100;
+    const top = Math.random() * 28; // percent of viewport height (within container)
+    const scale = 0.6 + Math.random() * 1.4;
+    const dur = 700 + Math.random() * 800; // ms
+    s.style.left = `${left}%`;
+    s.style.top = `${top}%`;
+    s.style.width = `${Math.round(6 + Math.random() * 8)}px`;
+    s.style.height = s.style.width;
+    s.style.animationDuration = `${Math.round(dur)}ms`;
+    // Slight hue variation
+    if (Math.random() > 0.6) s.style.background = 'radial-gradient(circle at 30% 30%, #fff, #ffcf33 60%)';
+    container.appendChild(s);
+    s.addEventListener('animationend', () => { try { s.remove(); } catch (e) {} });
+  }
+
+  function enableNye() {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const container = document.getElementById('nye-sparkles');
+    if (!container) return;
+    // initial burst
+    const initial = window.innerWidth < 420 ? 8 : 14;
+    for (let i = 0; i < initial; i++) spawnSparkle(container);
+    // periodic bursts
+    const interval = setInterval(() => {
+      // spawn 1-4 sparkles each tick
+      const count = 1 + Math.floor(Math.random() * 4);
+      for (let i = 0; i < count; i++) spawnSparkle(container);
+      // Occasionally spawn confetti and rockets for a richer NYE effect
+      const confettiChance = 0.28; // ~28% per tick
+      const rocketChance = 0.12; // ~12% per tick
+      if (Math.random() < confettiChance) spawnConfettiBurst();
+      if (Math.random() < rocketChance) launchRocket();
+    }, 1000 + Math.random() * 800);
+    // keep reference so we can clear later if needed
+    window._nyeSparklesInterval = interval;
+  }
+
+  // Confetti burst: spawn several confetti pieces across the viewport
+  function spawnConfettiBurst() {
+    const container = document.getElementById('confetti');
+    if (!container) return;
+    // limit total active pieces
+    if (container.childElementCount > 120) return;
+    const pieces = 12 + Math.floor(Math.random() * 12);
+    for (let i = 0; i < pieces; i++) {
+      const p = document.createElement('span');
+      p.className = 'confetti-piece';
+      // random color
+      const colors = ['#ff3884','#ffd166','#7ee787','#7cc8ff','#ffb47b','#c77cff'];
+      p.style.background = colors[Math.floor(Math.random()*colors.length)];
+      const left = Math.random() * 100;
+      const startX = left;
+      const delay = Math.random() * 300; // ms
+      const dur = 2000 + Math.random() * 1800; // ms
+      const sizeW = 6 + Math.random()*10;
+      const sizeH = 8 + Math.random()*12;
+      p.style.left = `${startX}%`;
+      p.style.top = `${-6 - Math.random()*8}vh`;
+      p.style.width = `${sizeW}px`;
+      p.style.height = `${sizeH}px`;
+      p.style.animationDuration = `${dur}ms`;
+      p.style.animationDelay = `${delay}ms`;
+      container.appendChild(p);
+      // cleanup after animation end (duration + delay)
+      setTimeout(() => { try { p.remove(); } catch (e) {} }, dur + delay + 100);
+    }
+  }
+
+  // Rocket launch: create a small rocket emoji that flies upward
+  function launchRocket() {
+    const container = document.getElementById('rockets');
+    if (!container) return;
+    // limit concurrent rockets
+    if (container.childElementCount > 6) return;
+    const r = document.createElement('span');
+    r.className = 'rocket';
+    r.textContent = '🚀';
+    // random horizontal start (avoid edges)
+    const left = 8 + Math.random() * 84;
+    const bottom = 4 + Math.random() * 10; // px from bottom
+    r.style.left = `${left}%`;
+    r.style.bottom = `${bottom}px`;
+    // randomize animation duration slightly
+    const dur = 1200 + Math.random() * 1000;
+    r.style.animationDuration = `${dur}ms`;
+    container.appendChild(r);
+    // cleanup after animation
+    setTimeout(() => { try { r.remove(); } catch (e) {} }, dur + 120);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    try {
+      if (isNyeEnabled()) enableNye(); else {
+        const c = document.getElementById('nye-sparkles'); if (c) c.innerHTML = '';
+      }
+    } catch (e) { if (window._debug) console.warn('NYE init failed', e); }
+  });
+})();
