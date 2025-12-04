@@ -756,6 +756,11 @@ body.light-bg #maxSupplyScribble {
   overflow: visible;
 }
 
+/* Reduce extra top spacing inside the full-width taobubbles card so
+   the heading and preview sit closer to the top (fixes perceived 'pushed down' layout). */
+.taobubbles-card .card-header { margin-bottom: 8px; }
+.taobubbles-card { padding-top: 12px; }
+
 /* Zoom controls styling */
 .taobubbles-controls-row {
   display: flex;
