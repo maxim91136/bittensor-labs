@@ -462,8 +462,7 @@ async function updateVolumeSignal(currentVolume, priceChange24h) {
   const aggregates = await fetchTaostatsAggregates();
   let { signal, tooltip } = getVolumeSignal(volumeData, priceChange24h, currentVolume, aggregates);
   
-  // Fetch MA data and append to tooltip
-  const aggregates = await fetchTaostatsAggregates();
+  // Fetch MA data and append to tooltip (we already fetched `aggregates` above)
   if (aggregates && aggregates.ma_short) {
     const maLines = [];
     maLines.push('\n\n📈 Moving Averages:');
