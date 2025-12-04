@@ -789,7 +789,7 @@ function statusLight(ok, partial) {
 }
 
 // Helper to update the API status info-badge tooltip with per-source AMPEL, last-checked time and source info
-function updateApiStatusTooltip(networkData, taostats, taoPrice, lastUpdated) {
+async function updateApiStatusTooltip(networkData, taostats, taoPrice, lastUpdated) {
   const infoBadge = document.querySelector('#apiStatusCard .info-badge');
   if (!infoBadge) return;
 
@@ -824,6 +824,16 @@ function updateApiStatusTooltip(networkData, taostats, taoPrice, lastUpdated) {
   const circSource = window._circSupplySource || (taostats && taostats._source) || 'unknown';
   lines.push(`Price source: ${priceSrc}`);
   lines.push(`CircSupply source: ${circSource}`);
+
+  // Also include explicit system list: Network, Taostats, CoinGecko (we'll probe CoinGecko in background if unknown)
+  const netOk = !!networkData;
+  const taostatsOk = !!taostats;
+  let coinStatus = 'Checking';
+  if (taoPrice && taoPrice._source === 'coingecko') coinStatus = 'OK';
+  // initial systems lines
+  lines.splice(1, 0, `${statusLight(netOk, false)} Network: ${netOk ? 'OK' : 'ERROR'}`);
+  lines.splice(2, 0, `${statusLight(taostatsOk, false)} Taostats: ${taostatsOk ? 'OK' : 'ERROR'}`);
+  lines.splice(3, 0, `${statusLight(coinStatus === 'OK', coinStatus === 'Checking')} CoinGecko: ${coinStatus}`);
   infoBadge.setAttribute('data-tooltip', lines.join('\n'));
 
   // Also update visible API status text and icon color to match AMPEL
@@ -851,6 +861,41 @@ function updateApiStatusTooltip(networkData, taostats, taoPrice, lastUpdated) {
     }
   } catch (e) {
     if (window._debug) console.debug('Failed to set apiStatus text/color from tooltip helper', e);
+  }
+
+  // If CoinGecko status is not known, probe it in background and update tooltip when ready
+  if (coinStatus === 'Checking') {
+    (async () => {
+      try {
+        const ctl = new AbortController();
+        const timeout = setTimeout(() => ctl.abort(), 1500);
+        const res = await fetch(`${COINGECKO_API}/ping`, { signal: ctl.signal });
+        clearTimeout(timeout);
+        if (res && res.ok) {
+          coinStatus = 'OK';
+        } else {
+          coinStatus = `ERROR (${res ? res.status : 'no-res'})`;
+        }
+      } catch (err) {
+        coinStatus = `ERROR`;
+        if (window._debug) console.debug('CoinGecko probe failed', err);
+      }
+      // rebuild lines with updated coinStatus
+      try {
+        const newLines = [];
+        newLines.push(`Last checked: ${hh}:${mm}`);
+        newLines.push('');
+        newLines.push(`${statusLight(netOk, false)} Network: ${netOk ? 'OK' : 'ERROR'}`);
+        newLines.push(`${statusLight(taostatsOk, false)} Taostats: ${taostatsOk ? 'OK' : 'ERROR'}`);
+        newLines.push(`${statusLight(coinStatus === 'OK', coinStatus === 'Checking')} CoinGecko: ${coinStatus}`);
+        newLines.push('');
+        newLines.push(`Price source: ${priceSrc}`);
+        newLines.push(`CircSupply source: ${circSource}`);
+        infoBadge.setAttribute('data-tooltip', newLines.join('\n'));
+      } catch (e) {
+        if (window._debug) console.debug('Failed to update tooltip after CoinGecko probe', e);
+      }
+    })();
   }
 }
 
