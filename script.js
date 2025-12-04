@@ -144,6 +144,29 @@ function ensureAutoRefreshStarted() {
   }
 }
 
+// Play block tick sound and show a brief visual pulse on header (respects reduced-motion)
+function triggerBlockTick() {
+  try {
+    if (window.sound) window.sound.play('blockTick');
+  } catch (e) {}
+  try {
+    const header = document.querySelector('.site-header');
+    if (!header) return;
+    // If user prefers reduced motion, do a subtle transform via inline style
+    const prefersReduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReduce) {
+      const prev = header.style.transform || '';
+      header.style.transition = 'transform 120ms ease-out';
+      header.style.transform = 'scale(1.005)';
+      setTimeout(() => { header.style.transform = prev; }, 140);
+      return;
+    }
+    if (header.classList.contains('block-tick-pulse')) return;
+    header.classList.add('block-tick-pulse');
+    setTimeout(() => header.classList.remove('block-tick-pulse'), 220);
+  } catch (e) {}
+}
+
 // After terminal boot, double-check key UI elements and trigger a refresh if still empty
 document.addEventListener('terminalBootDone', () => {
   ensureAutoRefreshStarted();
@@ -1997,12 +2020,18 @@ async function updateBlockTime() {
         try { if (window._blockTickTimeout) { clearTimeout(window._blockTickTimeout); window._blockTickTimeout = null; } } catch (e) {}
         try { if (window._blockTickInterval) { clearInterval(window._blockTickInterval); window._blockTickInterval = null; } } catch (e) {}
 
-        // schedule first tick after one interval, then repeat
-        window._blockTickTimeout = setTimeout(() => {
-          try { if (window.sound) window.sound.play('blockTick'); } catch (e) {}
-          try { window._blockTickInterval = setInterval(() => { try { if (window.sound) window.sound.play('blockTick'); } catch(e){} }, intervalMs); } catch(e){}
-          window._blockTickTimeout = null;
-        }, intervalMs);
+        // schedule first tick (optionally immediate), then repeat
+        const shouldPlayFirstNow = !!window._playFirstBlockTickImmediately;
+        if (shouldPlayFirstNow) {
+          try { triggerBlockTick(); } catch(e){}
+          try { window._blockTickInterval = setInterval(() => { try { triggerBlockTick(); } catch(e){} }, intervalMs); } catch(e){}
+        } else {
+          window._blockTickTimeout = setTimeout(() => {
+            try { triggerBlockTick(); } catch (e) {}
+            try { window._blockTickInterval = setInterval(() => { try { triggerBlockTick(); } catch(e){} }, intervalMs); } catch(e){}
+            window._blockTickTimeout = null;
+          }, intervalMs);
+        }
       } catch (e) { /* ignore */ }
     }
   } else {

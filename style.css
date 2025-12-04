@@ -199,6 +199,21 @@ a:hover {
   --gap-md: clamp(8px, 2vw, 12px);
 }
 
+/* Visual pulse for block tick - subtle and short */
+.site-header.block-tick-pulse {
+  transform-origin: center top;
+  animation: block-tick-pulse 220ms ease-out;
+  box-shadow: 0 6px 22px rgba(34,197,94,0.06);
+}
+@keyframes block-tick-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.006); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .site-header.block-tick-pulse { animation: none; transition: transform 120ms ease-out; }
+}
+
 *, *::before, *::after { box-sizing: border-box; }
 html { text-size-adjust: 100%; }
 body {
