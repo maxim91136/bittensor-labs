@@ -2414,7 +2414,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const container = document.getElementById('snowfall');
     if (!container) return;
     // Keep it small and performant (reduced counts for lower CPU/GPU)
-    const flakes = window.innerWidth < 420 ? 12 : 18;
+    // Reduce total snowfall count by 50% across all sizes to reduce visual/CPU load
+    const baseFlakes = window.innerWidth < 420 ? 12 : 18;
+    const flakes = Math.max(1, Math.floor(baseFlakes * 0.5));
     container.innerHTML = '';
     for (let i = 0; i < flakes; i++) {
       const s = document.createElement('span');
@@ -2432,7 +2434,9 @@ document.addEventListener('DOMContentLoaded', function() {
       container.appendChild(s);
     }
     // Add a couple of larger, slower flakes for visual interest
-    const largeCount = window.innerWidth < 420 ? 1 : 3;
+    const baseLarge = window.innerWidth < 420 ? 1 : 3;
+    // We reduce the larger flakes as well by 50% (rounded down); small screens may have 0 large flakes
+    const largeCount = Math.max(0, Math.floor(baseLarge * 0.5));
     for (let i = 0; i < largeCount; i++) {
       const L = document.createElement('span');
       L.className = 'snowflake large';
