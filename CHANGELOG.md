@@ -21,6 +21,11 @@ All notable changes to this project will be documented in this file.
 ### Notes
 - Version bumped to `v1.0.0-rc.20.3` and all release notes updated.
 
+## v1.0.0-rc.20.3.1 (2025-12-05)
+### Fixed
+- Darker Light Mode snowflakes for better contrast and unify `body.light-bg` and `prefers-color-scheme` behavior.
+
+
 ## v1.0.0-rc.20 (2025-12-04)
 ### Added
 - Lightweight seasonal snowfall overlay (active Dec 1 → Jan 31). Toggle via `?holiday=1` or `body.holiday`.
