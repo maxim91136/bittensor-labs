@@ -760,6 +760,28 @@ body.light-bg #maxSupplyScribble {
 .api-status-badge.partial { background: #eab308; color: #111; }
 .api-status-text { vertical-align: middle; color: var(--text); font-weight: 700; }
 
+/* Larger centered badge variant used inside the API Status card */
+#apiStatus {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+.api-status-badge.api-status-large {
+  min-width: 56px;
+  padding: 8px 16px;
+  font-size: 1.02rem;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.25), inset 0 -2px 6px rgba(0,0,0,0.06);
+}
+@media (max-width: 700px) {
+  .api-status-badge.api-status-large {
+    min-width: 48px;
+    padding: 10px 18px;
+    font-size: 1.05rem;
+  }
+}
+
 .stat-value {
   /* SMALLER: Cards should be less dominant than pills */
   font-size: clamp(0.85rem, 2vw, 1.1rem);

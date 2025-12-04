@@ -1478,7 +1478,7 @@ async function refreshDashboard() {
     color = '#eab308'; // yellow
   }
   if (apiStatusEl) {
-    // Prepend a small badge in English: OK (green), Partial (yellow), Error (red)
+    // Show only a single status chip in the card (larger + centered on small screens)
     const isOk = (color === '#22c55e');
     let badgeText = 'Error';
     let badgeClass = 'error';
@@ -1489,7 +1489,7 @@ async function refreshDashboard() {
       badgeText = 'Partial';
       badgeClass = 'partial';
     }
-    apiStatusEl.innerHTML = `<span class="api-status-badge ${badgeClass}">${badgeText}</span> <span class="api-status-text">${statusText}</span>`;
+    apiStatusEl.innerHTML = `<span class="api-status-badge ${badgeClass} api-status-large">${badgeText}</span>`;
   }
   // Dynamically update SVG colors
   if (apiStatusIcon) {
@@ -1769,7 +1769,7 @@ async function initDashboard() {
     color = '#eab308'; // yellow
   }
   if (apiStatusEl) {
-    // Prepend small badge in English: OK / Partial / Error (same logic as refreshDashboard)
+    // Render only the status chip in the card
     const isOk = (color === '#22c55e');
     let badgeText = 'Error';
     let badgeClass = 'error';
@@ -1780,7 +1780,7 @@ async function initDashboard() {
       badgeText = 'Partial';
       badgeClass = 'partial';
     }
-    apiStatusEl.innerHTML = `<span class="api-status-badge ${badgeClass}">${badgeText}</span> <span class="api-status-text">${statusText}</span>`;
+    apiStatusEl.innerHTML = `<span class="api-status-badge ${badgeClass} api-status-large">${badgeText}</span>`;
   }
   // Dynamically update SVG colors
   if (apiStatusIcon) {
