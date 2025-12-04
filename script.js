@@ -521,6 +521,41 @@ async function updateVolumeSignal(currentVolume, priceChange24h) {
 }
 
 // ===== Utility Functions =====
+// Build HTML for API status tooltip showing per-source chips
+function buildApiStatusHtml({ networkData, taostats, taoPrice }) {
+  function chip(status) {
+    const cls = status === 'ok' ? 'ok' : (status === 'partial' ? 'partial' : 'error');
+    const label = status === 'ok' ? 'OK' : (status === 'partial' ? 'Partial' : 'Error');
+    return `<span class="tooltip-chip ${cls}">${label}</span>`;
+  }
+
+  // Taostats
+  let taostatsStatus = 'error';
+  if (taostats) {
+    const hasPrice = taostats.price !== undefined && taostats.price !== null;
+    const hasVol = taostats.volume_24h !== undefined && taostats.volume_24h !== null;
+    taostatsStatus = (hasPrice && hasVol) ? 'ok' : 'partial';
+  }
+
+  // CoinGecko (derive from taoPrice._source if available)
+  let coingeckoStatus = 'error';
+  if (taoPrice && taoPrice._source) {
+    if (taoPrice._source === 'coingecko') coingeckoStatus = 'ok';
+    else if (taoPrice._source === 'taostats') coingeckoStatus = 'partial';
+    else coingeckoStatus = (taoPrice.price ? 'ok' : 'error');
+  }
+
+  // Bittensor SDK / network API
+  const networkStatus = networkData ? 'ok' : 'error';
+
+  const lines = [];
+  lines.push('<div>Status of all data sources powering the dashboard</div>');
+  lines.push('<div style="margin-top:8px">' + chip(taostatsStatus) + ' Taostats</div>');
+  lines.push('<div>' + chip(coingeckoStatus) + ' CoinGecko</div>');
+  lines.push('<div>' + chip(networkStatus) + ' Bittensor SDK</div>');
+  return lines.join('');
+}
+
 function animateValue(element, start, end, duration = 1000) {
   const startTime = performance.now();
   const isFloat = end % 1 !== 0;
@@ -1469,6 +1504,18 @@ async function refreshDashboard() {
   // Update Block Time and Staking APR cards
   await updateBlockTime();
   await updateStakingApr();
+
+  // Update API status tooltip with per-source live chips
+  try {
+    const infoBadge = document.querySelector('#apiStatusCard .info-badge');
+    if (infoBadge) {
+      const html = buildApiStatusHtml({ networkData, taostats, taoPrice });
+      infoBadge.setAttribute('data-tooltip', html);
+      infoBadge.setAttribute('data-tooltip-html', 'true');
+    }
+  } catch (e) {
+    if (window._debug) console.debug('Failed to update api status tooltip html', e);
+  }
 }
 
 // ===== Auto-refresh with countdown circle =====
