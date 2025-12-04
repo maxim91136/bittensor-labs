@@ -286,35 +286,33 @@ body {
   text-shadow: 0 1px 0 rgba(0,0,0,0.08);
 }
 
-/* Improve visibility in light mode: use a subtle darker snow glyph */
+/* Improve visibility in light mode: use a darker blue snow glyph for better contrast */
 @media (prefers-color-scheme: light) {
   .snowflake {
-    /* Bluer snowflakes for light mode for better contrast */
-    color: rgba(173,216,255,0.95); /* lightblue */
-    text-shadow: 0 0 8px rgba(173,216,255,0.45), 0 0 2px rgba(255,255,255,0.6);
+    /* Dark Blue for light mode */
+    color: rgba(43,109,246,0.96); /* #2b6df6 */
+    text-shadow: 0 0 8px rgba(43,109,246,0.35), 0 0 2px rgba(43,109,246,0.18);
   }
   .snowflake.large {
-    color: rgba(180,220,255,0.95);
-    text-shadow: 0 0 10px rgba(180,220,255,0.48), 0 0 2px rgba(255,255,255,0.64);
+    color: rgba(82,144,255,0.96); /* #5290ff */
+    text-shadow: 0 0 10px rgba(82,144,255,0.36), 0 0 2px rgba(82,144,255,0.22);
   }
-  .snowflake::before { filter: drop-shadow(0 1px 0 rgba(255,255,255,0.6)); }
-  /* Removed an accidental override that forced large flakes dark;
-     We'll handle the light-theme via a dedicated body.light-bg selector below. */
+  .snowflake::before { filter: drop-shadow(0 1px 0 rgba(43,109,246,0.18)); }
 }
 
 /* Also support toggled Light Mode via `.light-bg` on the body (explicit theme switch).
    This mirrors the `prefers-color-scheme: light` styles but applies when the app
    switches theme via JS toggling `body.light-bg` (more reliable for user toggles). */
 body.light-bg .snowflake {
-  color: rgba(173,216,255,0.95); /* lightblue — bluer snowflakes for light theme */
-  /* Use a blue-centered glow only (avoid white highlight to keep flakes visibly blue) */
-  text-shadow: 0 0 8px rgba(173,216,255,0.45), 0 0 2px rgba(173,216,255,0.30);
+  /* Use a darker blue for Light Mode toggles (consistent with prefers-color-scheme) */
+  color: rgba(43,109,246,0.96); /* #2b6df6 */
+  text-shadow: 0 0 8px rgba(43,109,246,0.35), 0 0 2px rgba(43,109,246,0.18);
 }
 body.light-bg .snowflake.large {
-  color: rgba(160,210,255,0.95);
-  text-shadow: 0 0 10px rgba(160,210,255,0.48), 0 0 2px rgba(160,210,255,0.36);
+  color: rgba(82,144,255,0.96); /* #5290ff */
+  text-shadow: 0 0 10px rgba(82,144,255,0.36), 0 0 2px rgba(82,144,255,0.22);
 }
-body.light-bg .snowflake::before { filter: drop-shadow(0 2px 0 rgba(94,147,255,0.18)); }
+body.light-bg .snowflake::before { filter: drop-shadow(0 2px 0 rgba(43,109,246,0.18)); }
 
 /* Reduce motion for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
