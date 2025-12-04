@@ -1551,6 +1551,15 @@ function startAutoRefresh() {
     refreshCountdown--;
     if (refreshCountdown <= 0) {
       refreshCountdown = REFRESH_SECONDS;
+      try {
+        // Trigger Matrix glitch only on automated refresh (not on manual click)
+        if (typeof window.showMatrixGlitch === 'function') {
+          // Use RC20.2-like duration (360ms visible) and minimal intensity
+          window.showMatrixGlitch({ duration: 360, intensity: 1 });
+        }
+      } catch (e) {
+        if (window._debug) console.warn('showMatrixGlitch failed', e);
+      }
       refreshDashboard();
     }
     renderRefreshIndicator();
