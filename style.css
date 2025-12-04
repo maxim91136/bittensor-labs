@@ -48,37 +48,6 @@
   50% { opacity: 0; }
 }
 
-/* Taobubbles modal styles */
-.taobubbles-card { cursor: pointer; }
-.modal {
-  position: fixed;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10050;
-}
-.modal.hidden { display: none; }
-.modal-backdrop {
-  position: absolute;
-  inset: 0;
-  background: rgba(2,6,10,0.7);
-}
-.modal-content {
-  position: relative;
-  width: 92%;
-  max-width: 1100px;
-  height: 82%;
-  background: linear-gradient(180deg, rgba(7,10,14,0.98), rgba(6,8,12,0.98));
-  border-radius: 10px;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.6);
-  overflow: hidden;
-}
-.modal-content iframe { width:100%; height:100%; border:0; display:block; }
-.modal-close {
-  position: absolute; top:10px; right:12px; z-index:10060; border:0; background:transparent; color:#fff; font-size:18px; cursor:pointer; padding:6px 8px; border-radius:6px;
-}
-.modal-close:hover { background: rgba(255,255,255,0.04); }
 /* Matrix Terminal Boot Overlay */
 .terminal-boot {
   position: fixed;
@@ -712,91 +681,6 @@ body.light-bg #maxSupplyScribble {
   overflow: visible;
 }
 
-/* Taobubbles inline preview inside the stat-card */
-.taobubbles-card .taobubbles-preview {
-  margin-top: 10px;
-  width: 100%;
-  /* Base height (adjusted by media queries). The actual used height multiplies
-     by the current zoom via the --taobubbles-zoom CSS variable set by JS. */
-  --taobubbles-base-height: 320px;
-  height: calc(var(--taobubbles-base-height) * var(--taobubbles-zoom, 1));
-  min-height: 180px;
-  max-height: 80vh; /* prevent runaway height */
-  border-radius: 10px;
-  overflow: hidden;
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border: 1px solid rgba(255,255,255,0.04);
-}
-.taobubbles-card .taobubbles-preview iframe {
-  width: 100%;
-  height: 100%;
-  border: 0;
-  display: block;
-}
-
-/* Responsive adjustments: larger preview on wide screens, smaller on narrow screens */
-@media (min-width: 1000px) {
-  .taobubbles-card .taobubbles-preview {
-    --taobubbles-base-height: 520px;
-  }
-}
-
-@media (max-width: 700px) {
-  .taobubbles-card .taobubbles-preview {
-    --taobubbles-base-height: 220px;
-  }
-}
-
-/* Make the taobubbles card span full width of the dashboard grid so preview can be large */
-.taobubbles-card {
-  grid-column: 1 / -1;
-  /* slightly more padding to give the preview room */
-  padding-bottom: 28px;
-  /* Ensure card can expand vertically when preview scales */
-  overflow: visible;
-}
-
-/* Reduce extra top spacing inside the full-width taobubbles card so
-   the heading and preview sit closer to the top (fixes perceived 'pushed down' layout). */
-.taobubbles-card .card-header { margin-bottom: 8px; }
-.taobubbles-card { padding-top: 12px; }
-
-/* Zoom controls styling */
-.taobubbles-controls-row {
-  display: flex;
-  justify-content: flex-end;
-  width: 100%;
-  margin-top: 6px;
-}
-.taobubbles-zoom-controls {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-}
-.tao-zoom-btn {
-  background: rgba(255,255,255,0.03);
-  border: 1px solid rgba(255,255,255,0.04);
-  color: var(--text);
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 700;
-}
-.tao-zoom-btn[title] { position: relative; }
-.tao-zoom-btn[title]:focus { outline: 2px solid rgba(34,197,94,0.18); }
-.tao-zoom-btn.small { padding: 6px 8px; font-size: 0.95rem; }
-.tao-zoom-btn.muted { opacity: 0.7; font-weight: 600; }
-.tao-zoom-btn:hover { background: rgba(255,255,255,0.05); }
-.tao-zoom-level { font-weight: 700; color: var(--text-muted); }
-
-/* Open (magnifier) button adjustments */
-.tao-open-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px; }
-.tao-open-btn svg { width: 18px; height: 18px; color: var(--text); }
-.tao-open-btn:hover { background: rgba(255,255,255,0.04); }
-
-/* Zoom behavior: use CSS variable to scale iframe content while preserving layout.
-   The iframe width/height are adjusted inversely so scale-origin keeps visible area centered.
-*/
 .taobubbles-preview iframe {
   width: calc(100% / var(--taobubbles-zoom, 1));
   height: calc(100% / var(--taobubbles-zoom, 1));

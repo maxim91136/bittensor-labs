@@ -314,32 +314,6 @@
       </div>
     </section>
 
-    <!-- Taobubbles Integration Card -->
-    <div class="stat-card taobubbles-card" id="taobubblesCard">
-      <div class="stat-content">
-        <div class="card-header">
-          <h2 id="taobubbles-heading">TAOBUBBLES</h2>
-        </div>
-        <!-- Zoom controls + Inline preview iframe: shows an embedded preview where possible. -->
-        <div class="taobubbles-controls-row">
-          <div class="taobubbles-zoom-controls" id="taobubblesZoomControls" aria-hidden="false">
-            <button id="taoZoomOut" class="tao-zoom-btn" title="Zoom out">−</button>
-            <span id="taoZoomLevel" class="tao-zoom-level">100%</span>
-            <button id="taoZoomIn" class="tao-zoom-btn" title="Zoom in">+</button>
-            <button id="taoZoomReset" class="tao-zoom-btn muted" title="Reset zoom">Reset</button>
-          </div>
-          <!-- Explicit open button so clicks inside the iframe don't trigger navigation -->
-          <div style="margin-left:12px;">
-            <button id="taobubblesOpenBtn" class="tao-zoom-btn tao-open-btn" aria-label="Open Taobubbles" title="Open Taobubbles">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M21 21l-4.35-4.35" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><circle cx="11" cy="11" r="6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </button>
-          </div>
-        </div>
-        <div class="taobubbles-preview" aria-hidden="true">
-          <iframe id="taobubblesInlineIframe" src="https://taobubbles.xyz" frameborder="0" loading="lazy" title="Taobubbles preview"></iframe>
-        </div>
-      </div>
-    </div>
 
   <!-- Top Validators Card -->
     <section class="dashboard-card top-validators-card" aria-labelledby="top-validators-card-heading">
@@ -555,14 +529,6 @@
   </div>
 </main>
 
-<!-- Taobubbles Modal (hidden by default) -->
-<div id="taobubblesModal" class="modal hidden" aria-hidden="true">
-  <div id="taobubblesModalBackdrop" class="modal-backdrop"></div>
-  <div class="modal-content" role="dialog" aria-modal="true" aria-label="Taobubbles visualizer">
-    <button id="taobubblesModalClose" class="modal-close" aria-label="Close">✕</button>
-    <iframe id="taobubblesIframe" src="" frameborder="0" allowfullscreen></iframe>
-  </div>
-</div>
 
 <footer class="site-footer">
   <p>© 2025 Bittensor-Labs.com · Built with ❤️ · <span id="siteVersion"></span> · by maxim91136<br></p>

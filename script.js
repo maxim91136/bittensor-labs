@@ -101,67 +101,6 @@ document.addEventListener('terminalBootDone', () => {
   }, 1200);
 });
 
-// ===== API Configuration =====
-const API_BASE = '/api';
-const COINGECKO_API = 'https://api.coingecko.com/api/v3';
-const REFRESH_INTERVAL = 60000;
-const PRICE_CACHE_TTL = 300000;
-const PRICE_CACHE_TTL_MAX = 3600000;
-
-// ===== State Management =====
-let priceChart = null;
-let lastPrice = null;
-let currentPriceRange = '7';
-let isLoadingPrice = false;
-// Track whether main dashboard init has completed
-window._dashboardInitialized = false;
-// Guard to prevent concurrent init runs
-window._dashboardInitInProgress = false;
-
-// Halving State
-window.halvingDate = null;
-window.halvingInterval = null;
-window.circulatingSupply = null;
-window._prevHalvingTs = null;
-// Persisted snapshots for halving calculation and rotation
-window._prevSupplyForHalving = null; // last snapshot of the supply used for halving computations
-window._halvingIndex = 0; // index into the halving thresholds array
-window._lastHalving = null; // { threshold, at: timestamp }
-window._showSinceMs = 1000 * 60 * 60 * 24; // show "since" text for 24h after a halving
-// Toggle to enable debugging messages in console: set `window._debug = true` at runtime
-window._debug = false;
-// Tooltip auto-hide duration (ms). Increased to double the previous default (2.5s -> 5s)
-const TOOLTIP_AUTO_HIDE_MS = 5000;
-
-// ===== Volume Signal (Ampelsystem) State =====
-let _volumeHistory = null;
-let _volumeHistoryTs = 0;
-const VOLUME_HISTORY_TTL = 60000; // Cache history for 1 minute
-const VOLUME_SIGNAL_THRESHOLD = 3; // ±3% threshold for "significant" change
-
-/**
- * Fetch taostats history for volume change calculation
- */
-async function fetchVolumeHistory() {
-  // Use cached history if fresh
-  if (_volumeHistory && (Date.now() - _volumeHistoryTs) < VOLUME_HISTORY_TTL) {
-    return _volumeHistory;
-  }
-  try {
-    const res = await fetch(`${API_BASE}/taostats_history`);
-    if (!res.ok) throw new Error(`History API error: ${res.status}`);
-    const data = await res.json();
-    if (Array.isArray(data) && data.length > 0) {
-      _volumeHistory = data;
-      _volumeHistoryTs = Date.now();
-      return data;
-    }
-    return null;
-  } catch (err) {
-    if (window._debug) console.warn('⚠️ Volume history fetch failed:', err);
-    return null;
-  }
-}
 
 /**
  * Calculate volume change percentage from history
