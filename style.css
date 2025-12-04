@@ -11,6 +11,35 @@
   justify-content: center;
   transition: opacity 0.3s, visibility 0.3s;
 }
+.matrix-glitch-overlay {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  inset: 0;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10,14,18,0.92);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 180ms ease-in-out;
+}
+.matrix-glitch-overlay.active {
+  display: flex;
+  opacity: 1;
+}
+.matrix-glitch-code {
+  font-family: 'Fira Mono', 'Courier New', monospace;
+  font-size: clamp(14px, 2.2vw, 26px);
+  line-height: 1.08;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 8px #22c55e, 0 0 2px #fff;
+  user-select: none;
+  white-space: pre;
+  display: inline-block;
+  text-align: center;
+}
+.matrix-glitch-code span { display: block; }
+.matrix-glitch-code span span { margin: 0 .06em; }
 .terminal-boot.hidden {
   opacity: 0;
   visibility: hidden;

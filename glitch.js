@@ -1,112 +1,74 @@
-// Minimal Matrix-style glitch overlay
-// Exposes: window.showMatrixGlitch({ duration, intensity })
-(function () {
-  const ID = 'matrixGlitchOverlay';
-  const STYLE_ID = 'matrixGlitchStyles';
-
-  function ensureDom() {
-    if (document.getElementById(ID)) return document.getElementById(ID);
-    // Insert styles
-    if (!document.getElementById(STYLE_ID)) {
-      const style = document.createElement('style');
-      style.id = STYLE_ID;
-      style.textContent = `
-        #${ID} { position: fixed; inset: 0; pointer-events: none; z-index: 9999; overflow: hidden; opacity: 0; transition: opacity 180ms ease; mix-blend-mode: screen; }
-        #${ID}.matrix-glitch-active { opacity: 1; }
-        #${ID} canvas { width: 100%; height: 100%; display: block; }
-        `;
-      document.head.appendChild(style);
-    }
-    const overlay = document.createElement('div');
-    overlay.id = ID;
-    const canvas = document.createElement('canvas');
-    canvas.setAttribute('aria-hidden', 'true');
-    overlay.appendChild(canvas);
+// DOM-based Matrix Glitch overlay (RC20.2 style)
+// Exposes window.showMatrixGlitch({ duration, intensity })
+(function() {
+  function _safe(el) { try { return el; } catch (e) { return null; } }
+  // Ensure the DOM overlay exists and return it
+  function ensureMatrixDom() {
+    let overlay = document.getElementById('matrixGlitch');
+    if (overlay) return overlay;
+    overlay = document.createElement('div');
+    overlay.id = 'matrixGlitch';
+    overlay.className = 'matrix-glitch-overlay';
+    overlay.style.display = 'none';
+    overlay.style.position = 'fixed';
+    overlay.style.zIndex = '9999';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.background = 'rgba(10,14,18,0.92)';
+    overlay.style.pointerEvents = 'none';
+    const code = document.createElement('div');
+    code.className = 'matrix-glitch-code';
+    // default style can be overridden by CSS in style.css
+    code.style.fontFamily = "'Fira Mono', monospace";
+    code.style.fontSize = '2.2vw';
+    code.style.lineHeight = '1.1';
+    code.style.letterSpacing = '0.08em';
+    code.style.textShadow = '0 0 8px #22c55e, 0 0 2px #fff';
+    code.style.userSelect = 'none';
+    overlay.appendChild(code);
     document.body.appendChild(overlay);
     return overlay;
   }
 
-  function randomChar() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%&*+-/<>?';
-    return chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-
   window.showMatrixGlitch = function showMatrixGlitch(opts = {}) {
     try {
-      if (document.body.classList.contains('no-glitch')) return; // explicit opt-out
-      const duration = typeof opts.duration === 'number' ? opts.duration : 900; // ms
-      const intensity = Math.max(1, Math.min(4, Number(opts.intensity) || 1));
-      const overlay = ensureDom();
-      const canvas = overlay.querySelector('canvas');
-      if (!canvas) return;
-      const ctx = canvas.getContext('2d');
-      const dpr = window.devicePixelRatio || 1;
-      function resize() {
-        canvas.width = Math.floor(window.innerWidth * dpr);
-        canvas.height = Math.floor(window.innerHeight * dpr);
-        canvas.style.width = window.innerWidth + 'px';
-        canvas.style.height = window.innerHeight + 'px';
+      if (document.body.classList.contains('no-glitch')) return;
+      const duration = typeof opts.duration === 'number' ? opts.duration : 360;
+      const fadeDuration = typeof opts.fade === 'number' ? opts.fade : 180;
+      const overlay = ensureMatrixDom();
+      const codeEl = overlay.querySelector('.matrix-glitch-code');
+      const palette = opts.palette || ['#22c55e', '#16a34a', '#14532d', '#a3a3a3', '#525252', '#eaff00', '#b3b300', '#d1fae5', '#d4d4d4'];
+      const glyphs = opts.glyphs || '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz░▒▓█▲◆◀▶◼︎◻︎※☰☲☷☯☢☣☠♠♣♥♦♤♧♡♢';
+      // Build small grid of spans like RC20.2 used
+      let html = '';
+      for (let i = 0; i < 10; i++) {
+        let row = '';
+        for (let j = 0; j < 8; j++) {
+          const ch = glyphs[Math.floor(Math.random() * glyphs.length)];
+          const color = palette[Math.floor(Math.random() * palette.length)];
+          row += `<span style="color:${color};">${String(ch).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`;
+        }
+        html += `<span>${row}</span>`;
       }
-      resize();
-      let rafId = null;
-      let start = null;
-      const cols = Math.floor(canvas.width / (16 * dpr));
-      const fontSize = Math.max(12 * dpr, Math.round(18 * dpr * (intensity / 2)));
-      const yPos = new Array(cols).fill(0).map(() => Math.random() * canvas.height);
-      function frame(ts) {
-        if (!start) start = ts;
-        const t = ts - start;
-        // semi-clear with small alpha to create trailing effect
-        ctx.fillStyle = 'rgba(0,0,0,0.15)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.font = fontSize + 'px monospace';
-        ctx.textBaseline = 'top';
-        const colWidth = Math.max(10 * dpr, fontSize * 0.6);
-        for (let i = 0; i < cols; i++) {
-          const x = i * colWidth;
-          const ch = randomChar();
-          const y = yPos[i];
-          // bright green head
-          ctx.fillStyle = 'rgba(180,255,180,0.95)';
-          ctx.fillText(ch, x, y);
-          // dim tail
-          ctx.fillStyle = 'rgba(34,197,94,0.18)';
-          for (let k = 1; k < 4 * intensity; k++) {
-            if (y - k * (fontSize * 0.6) > 0) {
-              ctx.fillText(randomChar(), x, y - k * (fontSize * 0.6));
-            }
-          }
-          yPos[i] += (1 + intensity * Math.random() * 2) * fontSize * 0.06 * (dpr);
-          if (yPos[i] > canvas.height + 50) yPos[i] = -Math.random() * canvas.height * 0.2;
-        }
-        // small horizontal bars for glitch effect
-        ctx.fillStyle = 'rgba(36,180,80,0.12)';
-        for (let b = 0; b < intensity; b++) {
-          const h = Math.random() * 10 * dpr * intensity;
-          const y = Math.random() * canvas.height;
-          ctx.fillRect(Math.random() * canvas.width, y, Math.random() * (canvas.width / 2), h);
-        }
-        // stop condition
-        if (t < duration) {
-          rafId = requestAnimationFrame(frame);
-        } else {
-          cancelAnimationFrame(rafId);
-          overlay.classList.remove('matrix-glitch-active');
-          // cleanup after a short timeout to let CSS opacity fade
-          setTimeout(() => {
-            if (overlay.parentNode) overlay.parentNode.removeChild(overlay);
-            const style = document.getElementById(STYLE_ID);
-            if (style) { /* keep style in case of repeated calls */ }
-          }, 260);
-        }
+      if (codeEl) {
+        codeEl.innerHTML = html;
       }
-      // attach
-      overlay.classList.add('matrix-glitch-active');
-      window.addEventListener('resize', resize);
-      rafId = requestAnimationFrame(frame);
+      overlay.style.display = 'flex';
+      // small visible animation using CSS class
+      overlay.classList.add('active');
+      setTimeout(() => {
+        overlay.classList.remove('active');
+        setTimeout(() => {
+          overlay.style.display = 'none';
+        }, fadeDuration);
+      }, duration);
     } catch (err) {
       if (window._debug) console.error('showMatrixGlitch error', err);
     }
   };
-
 })();
+
