@@ -1198,6 +1198,7 @@ function setupDynamicTooltips() {
     // opts.persistent -> keep tooltip visible until explicitly closed/tapped again
     const persistent = !!opts.persistent;
     const wide = !!opts.wide;
+    const html = !!opts.html;
     tooltipOwner = e.target;
     tooltipPersistent = persistent;
     tooltip.dataset.persistent = persistent ? 'true' : 'false';
@@ -1205,7 +1206,7 @@ function setupDynamicTooltips() {
     tooltip.innerHTML = '';
     const body = document.createElement('div');
     body.className = 'tooltip-body';
-    body.textContent = text;
+    if (html) body.innerHTML = text; else body.textContent = text;
     tooltip.appendChild(body);
     if (persistent) {
       // add close control
@@ -1259,19 +1260,22 @@ function setupDynamicTooltips() {
     // Read the attribute at event time so updates to `data-tooltip` later are respected.
     badge.addEventListener('mouseenter', e => {
       const txt = badge.getAttribute('data-tooltip');
-      if (txt) showTooltip(e, txt, { persistent: false });
+      const htmlFlag = badge.getAttribute('data-tooltip-html') === 'true';
+      if (txt) showTooltip(e, txt, { persistent: false, html: htmlFlag });
     });
     badge.addEventListener('mouseleave', hideTooltip);
     badge.addEventListener('focus', e => {
       const txt = badge.getAttribute('data-tooltip');
-      if (txt) showTooltip(e, txt, { persistent: false });
+      const htmlFlag = badge.getAttribute('data-tooltip-html') === 'true';
+      if (txt) showTooltip(e, txt, { persistent: false, html: htmlFlag });
     });
     badge.addEventListener('blur', hideTooltip);
     badge.addEventListener('click', e => {
       e.stopPropagation();
       const txt = badge.getAttribute('data-tooltip');
+      const htmlFlag = badge.getAttribute('data-tooltip-html') === 'true';
       if (txt) {
-        showTooltip(e, txt, { persistent: false });
+        showTooltip(e, txt, { persistent: false, html: htmlFlag });
         setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
       }
     });
@@ -1281,36 +1285,59 @@ function setupDynamicTooltips() {
   const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints && navigator.maxTouchPoints > 0);
   document.querySelectorAll('.halving-pill').forEach(pill => {
     // Use a wider tooltip on desktop so the halving projection content can breathe
-    pill.addEventListener('mouseenter', e => { if (!isTouch) showTooltip(e, pill.getAttribute('data-tooltip') || '', { wide: true }); });
+    pill.addEventListener('mouseenter', e => {
+      if (!isTouch) {
+        const txt = pill.getAttribute('data-tooltip') || '';
+        const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+        showTooltip(e, txt, { wide: true, html: htmlFlag });
+      }
+    });
     pill.addEventListener('mouseleave', e => { if (!isTouch) hideTooltip(); });
-    pill.addEventListener('focus', e => { if (!isTouch) showTooltip(e, pill.getAttribute('data-tooltip') || '', { wide: true }); });
+    pill.addEventListener('focus', e => {
+      if (!isTouch) {
+        const txt = pill.getAttribute('data-tooltip') || '';
+        const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+        showTooltip(e, txt, { wide: true, html: htmlFlag });
+      }
+    });
     pill.addEventListener('blur', e => { if (!isTouch) hideTooltip(); });
     pill.addEventListener('click', e => {
       e.stopPropagation();
       const text = pill.getAttribute('data-tooltip') || '';
+      const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
       if (isTouch) {
         // Toggle persistent tooltip on touch devices
         if (tooltipPersistent && tooltipOwner === pill) {
           hideTooltip();
         } else {
-          showTooltip(e, text, { persistent: true });
+          showTooltip(e, text, { persistent: true, html: htmlFlag });
         }
       } else {
         // On desktop clicking the pill should show the same wide variant as hover
-        showTooltip(e, text, { persistent: false, wide: true });
+        showTooltip(e, text, { persistent: false, wide: true, html: htmlFlag });
         setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
       }
     });
   });
 
   document.querySelectorAll('.price-pill').forEach(pill => {
-    pill.addEventListener('mouseenter', e => showTooltip(e, pill.getAttribute('data-tooltip') || ''));
+    pill.addEventListener('mouseenter', e => {
+      const txt = pill.getAttribute('data-tooltip') || '';
+      const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+      showTooltip(e, txt, { html: htmlFlag });
+    });
     pill.addEventListener('mouseleave', hideTooltip);
-    pill.addEventListener('focus', e => showTooltip(e, pill.getAttribute('data-tooltip') || ''));
+    pill.addEventListener('focus', e => {
+      const txt = pill.getAttribute('data-tooltip') || '';
+      const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+      showTooltip(e, txt, { html: htmlFlag });
+    });
     pill.addEventListener('blur', hideTooltip);
     pill.addEventListener('click', e => {
       e.stopPropagation();
-      showTooltip(e, pill.getAttribute('data-tooltip') || '');
+      const txt = pill.getAttribute('data-tooltip') || '';
+      const htmlFlag = pill.getAttribute('data-tooltip-html') === 'true';
+      showTooltip(e, txt, { html: htmlFlag });
       setTimeout(hideTooltip, TOOLTIP_AUTO_HIDE_MS);
     });
   });
@@ -1963,11 +1990,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Only set a default if the attribute is missing or suspiciously short (regression guard).
     const infoBadge = document.querySelector('#apiStatusCard .info-badge');
     if (infoBadge) {
-      const existing = infoBadge.getAttribute('data-tooltip') || '';
-      if (!existing || existing.trim().length < 20) {
-        // Default detailed tooltip (multi-line) — keep in sync with index.html default
-        infoBadge.setAttribute('data-tooltip', 'Status of all data sources powering the dashboard\nTaostats: OK\nCoinGecko: OK\nBittensor SDK: OK');
-      }
+        const existing = infoBadge.getAttribute('data-tooltip') || '';
+        if (!existing || existing.trim().length < 20) {
+          // Default detailed tooltip (HTML chips) — per-source chips allow quick status scan
+          const html = [
+            '<div>Status of all data sources powering the dashboard</div>',
+            '<br/>',
+            '<div><span class="tooltip-chip ok">OK</span> Taostats</div>',
+            '<div><span class="tooltip-chip error">Error</span> CoinGecko</div>',
+            '<div><span class="tooltip-chip ok">OK</span> Bittensor SDK</div>'
+          ].join('');
+          infoBadge.setAttribute('data-tooltip', html);
+          infoBadge.setAttribute('data-tooltip-html', 'true');
+        }
     }
   })();
 

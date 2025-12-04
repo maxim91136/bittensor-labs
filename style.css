@@ -822,6 +822,22 @@ body.light-bg #maxSupplyScribble {
   white-space: pre-line;
 }
 
+/* Tooltip chips used inside dynamic tooltips (small colored badges) */
+.dynamic-tooltip .tooltip-chip {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 0.8rem;
+  line-height: 1;
+  margin-right: 8px;
+  vertical-align: middle;
+  color: #fff;
+}
+.dynamic-tooltip .tooltip-chip.ok { background: #22c55e; }
+.dynamic-tooltip .tooltip-chip.error { background: #ef4444; }
+.dynamic-tooltip .tooltip-chip.partial { background: #eab308; color: #111; }
+
 .svg-attribution {
   font-size: 0.95em;
   color: #bbb;
