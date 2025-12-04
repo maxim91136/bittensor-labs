@@ -101,6 +101,67 @@ document.addEventListener('terminalBootDone', () => {
   }, 1200);
 });
 
+// ===== API Configuration =====
+const API_BASE = '/api';
+const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+const REFRESH_INTERVAL = 60000;
+const PRICE_CACHE_TTL = 300000;
+const PRICE_CACHE_TTL_MAX = 3600000;
+
+// ===== State Management =====
+let priceChart = null;
+let lastPrice = null;
+let currentPriceRange = '7';
+let isLoadingPrice = false;
+// Track whether main dashboard init has completed
+window._dashboardInitialized = false;
+// Guard to prevent concurrent init runs
+window._dashboardInitInProgress = false;
+
+// Halving State
+window.halvingDate = null;
+window.halvingInterval = null;
+window.circulatingSupply = null;
+window._prevHalvingTs = null;
+// Persisted snapshots for halving calculation and rotation
+window._prevSupplyForHalving = null; // last snapshot of the supply used for halving computations
+window._halvingIndex = 0; // index into the halving thresholds array
+window._lastHalving = null; // { threshold, at: timestamp }
+window._showSinceMs = 1000 * 60 * 60 * 24; // show "since" text for 24h after a halving
+// Toggle to enable debugging messages in console: set `window._debug = true` at runtime
+window._debug = false;
+// Tooltip auto-hide duration (ms). Increased to double the previous default (2.5s -> 5s)
+const TOOLTIP_AUTO_HIDE_MS = 5000;
+
+// ===== Volume Signal (Ampelsystem) State =====
+let _volumeHistory = null;
+let _volumeHistoryTs = 0;
+const VOLUME_HISTORY_TTL = 60000; // Cache history for 1 minute
+const VOLUME_SIGNAL_THRESHOLD = 3; // ±3% threshold for "significant" change
+
+/**
+ * Fetch taostats history for volume change calculation
+ */
+async function fetchVolumeHistory() {
+  // Use cached history if fresh
+  if (_volumeHistory && (Date.now() - _volumeHistoryTs) < VOLUME_HISTORY_TTL) {
+    return _volumeHistory;
+  }
+  try {
+    const res = await fetch(`${API_BASE}/taostats_history`);
+    if (!res.ok) throw new Error(`History API error: ${res.status}`);
+    const data = await res.json();
+    if (Array.isArray(data) && data.length > 0) {
+      _volumeHistory = data;
+      _volumeHistoryTs = Date.now();
+      return data;
+    }
+    return null;
+  } catch (err) {
+    if (window._debug) console.warn('⚠️ Volume history fetch failed:', err);
+    return null;
+  }
+}
 
 /**
  * Calculate volume change percentage from history
@@ -1256,42 +1317,6 @@ async function refreshDashboard() {
     if (polyline) polyline.setAttribute('stroke', color);
   }
 
-  // Update API info-badge tooltip with per-source status so UX shows which API is failing
-  try {
-    const infoBadge = document.querySelector('#apiStatusCard .info-badge');
-    if (infoBadge) {
-      const lines = [];
-      lines.push('API status:');
-      // Network API
-      lines.push(`Network API: ${networkData ? 'OK' : 'ERROR'}`);
-      // Taostats
-      lines.push(`Taostats: ${taostats ? 'OK' : 'ERROR'}`);
-      // Price source and status
-      if (taoPrice) {
-        const src = taoPrice._source || 'unknown';
-        const priceOk = (typeof taoPrice.price === 'number' && !Number.isNaN(taoPrice.price));
-        lines.push(`Price source: ${src} ${priceOk ? '(OK)' : '(no price)'}`);
-      } else {
-        lines.push('Price data: ERROR');
-      }
-
-      // Add brief guidance for debugging
-      if (!networkData || !taostats || !taoPrice || (taoPrice && (taoPrice.price === null || taoPrice._source === 'error'))) {
-        lines.push('');
-        lines.push('Notes:');
-        if (!networkData) lines.push('- /api/network failed or returned invalid data');
-        if (!taostats) lines.push('- /api/taostats failed or returned invalid data');
-        if (!taoPrice) lines.push('- Price fetch failed (Taostats/Coingecko)');
-        else if (taoPrice && (taoPrice.price === null || taoPrice._source === 'error')) lines.push('- Price source returned no price');
-        lines.push('- Check server logs or the API endpoints for error details');
-      }
-
-      infoBadge.setAttribute('data-tooltip', lines.join('\n'));
-    }
-  } catch (e) {
-    if (window._debug) console.debug('Failed to update API info-badge tooltip', e);
-  }
-
   // Update Block Time and Staking APR cards
   await updateBlockTime();
   await updateStakingApr();
@@ -2134,109 +2159,3 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // Old Top Subnets Tooltip handler removed - now uses standard data-tooltip
-
-// ===== Taobubbles Modal Wiring =====
-document.addEventListener('DOMContentLoaded', function() {
-  const card = document.getElementById('taobubblesCard');
-  const modal = document.getElementById('taobubblesModal');
-  const backdrop = document.getElementById('taobubblesModalBackdrop');
-  const closeBtn = document.getElementById('taobubblesModalClose');
-  const iframe = document.getElementById('taobubblesIframe');
-
-  if (!card || !modal || !backdrop || !closeBtn || !iframe) return;
-
-  const TAO_BUBBLES_URL = 'https://taobubbles.xyz';
-  let fallbackTimer = null;
-  let iframeLoaded = false;
-
-  function openTaobubbles() {
-    iframeLoaded = false;
-    // assign src just before showing modal so blocked-iframes are detectable
-    iframe.src = TAO_BUBBLES_URL;
-    modal.classList.remove('hidden');
-    modal.setAttribute('aria-hidden', 'false');
-    // focus the close button for accessibility
-    try { closeBtn.focus(); } catch (_) {}
-
-    clearTimeout(fallbackTimer);
-    // If iframe doesn't fire load within 1200ms, assume it's blocked and open in a new tab instead
-    fallbackTimer = setTimeout(() => {
-      if (!iframeLoaded) {
-        closeTaobubbles();
-        window.open(TAO_BUBBLES_URL, '_blank', 'noopener');
-      }
-    }, 1200);
-  }
-
-  function closeTaobubbles() {
-    clearTimeout(fallbackTimer);
-    modal.classList.add('hidden');
-    modal.setAttribute('aria-hidden', 'true');
-    // remove src so next open will reload and re-trigger load event
-    try { iframe.src = ''; } catch (_) {}
-  }
-
-  iframe.addEventListener('load', function() {
-    iframeLoaded = true;
-    clearTimeout(fallbackTimer);
-  });
-
-  // Only open when user clicks the explicit Open button; allow iframe to receive clicks
-  const openBtn = document.getElementById('taobubblesOpenBtn');
-  if (openBtn) {
-    openBtn.addEventListener('click', openTaobubbles);
-    openBtn.addEventListener('keydown', function(e) {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openTaobubbles(); }
-    });
-  }
-
-  closeBtn.addEventListener('click', closeTaobubbles);
-  backdrop.addEventListener('click', closeTaobubbles);
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeTaobubbles();
-  });
-});
-
-// ===== Taobubbles Zoom Controls =====
-document.addEventListener('DOMContentLoaded', function() {
-  const zoomOut = document.getElementById('taoZoomOut');
-  const zoomIn = document.getElementById('taoZoomIn');
-  const zoomReset = document.getElementById('taoZoomReset');
-  const zoomLevelText = document.getElementById('taoZoomLevel');
-  const preview = document.querySelector('.taobubbles-preview');
-
-  if (!preview || !zoomOut || !zoomIn || !zoomReset || !zoomLevelText) return;
-
-  const STORAGE_KEY = 'taobubblesZoom';
-  // Default start zoom: 1.2 (120%) unless user previously saved a value
-  let zoom = parseFloat(localStorage.getItem(STORAGE_KEY) || '1.2');
-  if (isNaN(zoom) || zoom <= 0) zoom = 1;
-
-  function setZoom(v) {
-    zoom = Math.max(0.6, Math.min(v, 2.0)); // clamp between 0.6x and 2.0x
-    // Apply CSS variable to preview container so iframe scales accordingly
-    preview.style.setProperty('--taobubbles-zoom', zoom);
-    // Update displayed percentage
-    zoomLevelText.textContent = Math.round(zoom * 100) + '%';
-    localStorage.setItem(STORAGE_KEY, String(zoom));
-  }
-
-  zoomOut.addEventListener('click', function() { setZoom(+(zoom - 0.1).toFixed(2)); });
-  zoomIn.addEventListener('click', function() { setZoom(+(zoom + 0.1).toFixed(2)); });
-  zoomReset.addEventListener('click', function() { setZoom(1); });
-
-  // Keyboard support when controls are focused
-  document.addEventListener('keydown', function(e) {
-    // Use +/- keys when the Taobubbles card or controls are focused
-    const active = document.activeElement;
-    if (!active) return;
-    const isInside = active.closest && (active.closest('.taobubbles-card') || active.id === 'taobubblesZoomControls');
-    if (!isInside) return;
-    if (e.key === '+' || e.key === '=' ) { e.preventDefault(); setZoom(+(zoom + 0.1).toFixed(2)); }
-    if (e.key === '-' || e.key === '_') { e.preventDefault(); setZoom(+(zoom - 0.1).toFixed(2)); }
-    if (e.key === '0') { e.preventDefault(); setZoom(1); }
-  });
-
-  // Initialize
-  setZoom(zoom);
-});

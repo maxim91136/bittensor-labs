@@ -47,7 +47,6 @@
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
 }
-
 /* Matrix Terminal Boot Overlay */
 .terminal-boot {
   position: fixed;
@@ -680,18 +679,6 @@ body.light-bg #maxSupplyScribble {
   min-width: 0;
   overflow: visible;
 }
-
-.taobubbles-preview iframe {
-  width: calc(100% / var(--taobubbles-zoom, 1));
-  height: calc(100% / var(--taobubbles-zoom, 1));
-  transform: scale(var(--taobubbles-zoom, 1));
-  transform-origin: center top;
-  border: 0;
-  display: block;
-}
-
-/* If the inline iframe is blocked by browser or X-Frame-Options, keep the card compact
-   and rely on the modal fallback (JS opens a new tab if iframe doesn't load). */
 
 .stat-card::before {
   content: '';
