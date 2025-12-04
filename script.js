@@ -141,6 +141,9 @@ const VOLUME_SIGNAL_THRESHOLD = 3; // ±3% threshold for "significant" change
 // Price spike detection thresholds (conservative defaults)
 const PRICE_SPIKE_PCT = 10; // if price moves >= 10% in 24h consider spike
 const LOW_VOL_PCT = 5;     // if volume change < 5% treat as low-volume move
+const SUSTAIN_VOL_PCT = 6; // sustained volume increase threshold (24h)
+const TRADED_SHARE_MIN = 0.02; // percent of circ supply traded to consider move meaningful (0.02%)
+const HYSTERESIS_REQUIRED = 2; // require 2 consecutive checks to mark sustained
 
 /**
  * Fetch taostats history for volume change calculation
@@ -231,7 +234,7 @@ function calculateVolumeChange(history, currentVolume) {
  * 🟠 ORANGE: Volume ↑ + Price stable = Potential breakout incoming
  * ⚪ NEUTRAL: No significant change
  */
-function getVolumeSignal(volumeData, priceChange, currentVolume = null) {
+function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregates = null) {
   // Handle missing data
   if (volumeData === null || priceChange === null) {
     return { signal: 'neutral', tooltip: 'Insufficient data for signal' };
@@ -259,6 +262,33 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null) {
     confidenceLine = `\n\nConfidence: ${confidence} (${samples} samples, ${hoursOfData}h data)`;
   }
   
+  // Composite detection: Sustained bullish vs short spikes
+  // Check for sustained bullish: moving averages aligned AND volume up enough
+  try {
+    const maShortPct = aggregates?.pct_change_vs_ma_short ?? null;
+    const ma3dPct = aggregates?.pct_change_vs_ma_3d ?? null;
+    const maShortUp = (maShortPct !== null && maShortPct > 0);
+    const ma3dUp = (ma3dPct !== null && ma3dPct > 0);
+    // traded share (percent) if data available
+    let tradedSharePct = null;
+    if (currentVolume && window.circulatingSupply) tradedSharePct = (currentVolume / window.circulatingSupply) * 100;
+    const sustainCondition = maShortUp && ma3dUp && (volumeChange >= SUSTAIN_VOL_PCT || (tradedSharePct !== null && tradedSharePct >= TRADED_SHARE_MIN));
+    if (sustainCondition) {
+      // hysteresis: require consecutive confirmations to avoid flapping
+      window._sustainedBullishCount = (window._sustainedBullishCount || 0) + 1;
+    } else {
+      window._sustainedBullishCount = 0;
+    }
+    if ((window._sustainedBullishCount || 0) >= HYSTERESIS_REQUIRED) {
+      return {
+        signal: 'green',
+        tooltip: `🟢 Sustained bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nMoving averages aligned — sustained buying pressure` + (confidenceLine || '')
+      };
+    }
+  } catch (e) {
+    if (window._debug) console.debug('sustained detection failed', e);
+  }
+
   // 🟢 GREEN: Volume up + Price up = Strong buying pressure
   if (volUp && priceUp) {
     return {
@@ -368,6 +398,24 @@ function applyVolumeSignal(signal, tooltip) {
   allBlinkClasses.filter(c => c !== `blink-${cssSignal}`).forEach(c => volumeCard.classList.remove(c));
   _lastVolumeSignal = signal;
   if (window._debug) console.log(`📊 Volume Signal: changed to ${signal}`, tooltip);
+
+  // Update a small subtitle element under the value for quick visible hint
+  try {
+    let sub = volumeCard.querySelector('.stat-sub');
+    if (!sub) {
+      sub = document.createElement('div');
+      sub.className = 'stat-sub';
+      // place it after the stat-value element if present
+      const val = volumeCard.querySelector('.stat-value');
+      if (val && val.parentNode) val.parentNode.insertBefore(sub, val.nextSibling);
+      else volumeCard.appendChild(sub);
+    }
+    // Keep subtitle short
+    const short = (signal === 'green') ? 'Sustained buying' : (signal === 'yellow') ? 'Low-volume move' : (signal === 'red') ? 'Distribution' : (signal === 'orange') ? 'High activity' : 'Quiet';
+    sub.textContent = short;
+  } catch (e) {
+    if (window._debug) console.debug('Failed to update volume subtitle', e);
+  }
 }
 
 /**
@@ -410,7 +458,9 @@ async function fetchTaostatsAggregates() {
 async function updateVolumeSignal(currentVolume, priceChange24h) {
   const history = await fetchVolumeHistory();
   const volumeData = calculateVolumeChange(history, currentVolume);
-  let { signal, tooltip } = getVolumeSignal(volumeData, priceChange24h, currentVolume);
+  // Fetch MA aggregates to help detect sustained moves
+  const aggregates = await fetchTaostatsAggregates();
+  let { signal, tooltip } = getVolumeSignal(volumeData, priceChange24h, currentVolume, aggregates);
   
   // Fetch MA data and append to tooltip
   const aggregates = await fetchTaostatsAggregates();
