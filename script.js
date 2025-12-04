@@ -1933,10 +1933,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Info badge tooltip for API status card: static text
+    // Info badge tooltip for API status card: preserve any existing (HTML) tooltip
+    // Only set a default if the attribute is missing or suspiciously short (regression guard).
     const infoBadge = document.querySelector('#apiStatusCard .info-badge');
     if (infoBadge) {
-      infoBadge.setAttribute('data-tooltip', 'API status: Network, Taostats, Coingecko');
+      const existing = infoBadge.getAttribute('data-tooltip') || '';
+      if (!existing || existing.trim().length < 20) {
+        // Default detailed tooltip (multi-line) — keep in sync with index.html default
+        infoBadge.setAttribute('data-tooltip', 'Status of all data sources powering the dashboard\nTaostats: OK\nCoinGecko: OK\nBittensor SDK: OK');
+      }
     }
   })();
 
