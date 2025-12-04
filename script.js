@@ -1,3 +1,37 @@
+// ===== Dashboard Initialization (restored, global) =====
+window.initDashboard = async function initDashboard() {
+  window._dashboardInitInProgress = true;
+  try {
+    // Example: fetch and update all main dashboard data
+    await Promise.all([
+      typeof updatePrice === 'function' ? updatePrice() : null,
+      typeof updateHalvingInfo === 'function' ? updateHalvingInfo() : null,
+      typeof updateVolumeSignal === 'function' ? updateVolumeSignal() : null,
+      typeof updateTopSubnets === 'function' ? updateTopSubnets() : null,
+      typeof updateTopValidators === 'function' ? updateTopValidators() : null,
+      typeof updateTopWallets === 'function' ? updateTopWallets() : null,
+      typeof updateBlockTime === 'function' ? updateBlockTime() : null,
+      typeof updateStakingApr === 'function' ? updateStakingApr() : null,
+      typeof updateApiStatus === 'function' ? updateApiStatus() : null
+    ]);
+    window._dashboardInitialized = true;
+  } catch (e) {
+    if (window._debug) console.error('initDashboard error', e);
+    window._dashboardInitialized = false;
+  } finally {
+    window._dashboardInitInProgress = false;
+  }
+};
+
+// Make all key state variables global for debugging and modular access
+window._lastVolumeSignal = _lastVolumeSignal;
+window.priceChart = priceChart;
+window.lastPrice = lastPrice;
+window.currentPriceRange = currentPriceRange;
+window.isLoadingPrice = isLoadingPrice;
+window._volumeHistory = _volumeHistory;
+window._volumeHistoryTs = _volumeHistoryTs;
+window._sustainedBullishCount = window._sustainedBullishCount || 0;
 // ===== Matrix Terminal Boot Sequence =====
 (function() {
   const lines = [
