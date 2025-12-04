@@ -35,11 +35,15 @@
   text-shadow: 0 0 8px #22c55e, 0 0 2px #fff;
   user-select: none;
   white-space: pre;
-  display: inline-block;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  max-width: 1100px; /* match dashboard width, broad across the dashboard */
   text-align: center;
 }
-.matrix-glitch-code > span { display: block; }
-.matrix-glitch-code > span > span { display: inline-block; margin: 0 .06em; }
+.matrix-glitch-code > span { display: flex; justify-content: center; gap: .06em; white-space: nowrap; overflow: hidden; }
+.matrix-glitch-code > span > span { display: inline-block; }
 .terminal-boot.hidden {
   opacity: 0;
   visibility: hidden;

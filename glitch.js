@@ -43,11 +43,18 @@
       const codeEl = overlay.querySelector('.matrix-glitch-code');
       const palette = opts.palette || ['#22c55e', '#16a34a', '#14532d', '#a3a3a3', '#525252', '#eaff00', '#b3b300', '#d1fae5', '#d4d4d4'];
       const glyphs = opts.glyphs || '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz░▒▓█▲◆◀▶◼︎◻︎※☰☲☷☯☢☣☠♠♣♥♦♤♧♡♢';
-      // Build small grid of spans like RC20.2 used
+      // Build 1-2 horizontal rows based on viewport width to span the dashboard
+      const fontSizeCss = window.getComputedStyle(document.documentElement).getPropertyValue('--glitch-font-size') || null;
+      // Estimate font size (fallback) and chars per row
+      const vpWidth = window.innerWidth || document.documentElement.clientWidth;
+      const fontSize = Math.max(14, Math.min(26, Math.round(vpWidth * 0.022)));
+      const charWidth = Math.max(8, Math.round(fontSize * 0.55));
+      const charsPerRow = Math.max(16, Math.floor(vpWidth / charWidth));
+      const rows = Math.min(2, Math.max(1, Math.round(opts.rows || 2)));
       let html = '';
-      for (let i = 0; i < 10; i++) {
+      for (let r = 0; r < rows; r++) {
         let row = '';
-        for (let j = 0; j < 8; j++) {
+        for (let j = 0; j < charsPerRow; j++) {
           const ch = glyphs[Math.floor(Math.random() * glyphs.length)];
           const color = palette[Math.floor(Math.random() * palette.length)];
           row += `<span style="color:${color};">${String(ch).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>`;
