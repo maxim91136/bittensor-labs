@@ -781,6 +781,55 @@ function updateMarketCapAndFDV(price, circulatingSupply) {
   }
 }
 
+// Build a small AMPEL (traffic-light) emoji for status
+function statusLight(ok, partial) {
+  if (ok) return '🟢';
+  if (partial) return '🟡';
+  return '🔴';
+}
+
+// Helper to update the API status info-badge tooltip with per-source AMPEL, last-checked time and source info
+function updateApiStatusTooltip(networkData, taostats, taoPrice, lastUpdated) {
+  const infoBadge = document.querySelector('#apiStatusCard .info-badge');
+  if (!infoBadge) return;
+
+  const lines = [];
+  // Last checked time (use provided lastUpdated when available, otherwise now)
+  const checkedAt = lastUpdated ? new Date(lastUpdated) : new Date();
+  const hh = checkedAt.getHours().toString().padStart(2, '0');
+  const mm = checkedAt.getMinutes().toString().padStart(2, '0');
+  lines.push(`Last checked: ${hh}:${mm}`);
+  lines.push('');
+
+  // Network
+  const netOk = !!networkData;
+  lines.push(`${statusLight(netOk, false)} Network: ${netOk ? 'OK' : 'ERROR'}`);
+
+  // Taostats
+  let taostatsOk = false;
+  let taostatsPartial = false;
+  if (taostats) {
+    // consider partial if missing some fields
+    if (taostats.price && taostats.volume_24h) taostatsOk = true;
+    else taostatsPartial = true;
+  }
+  lines.push(`${statusLight(taostatsOk, taostatsPartial)} Taostats: ${taostatsOk ? 'OK' : (taostatsPartial ? 'PARTIAL' : 'ERROR')}`);
+
+  // Price (source-aware)
+  const priceSrc = (taoPrice && taoPrice._source) ? taoPrice._source : 'unknown';
+  const priceOk = !!(taoPrice && taoPrice.price);
+  lines.push(`${statusLight(priceOk, false)} Price (${priceSrc}): ${priceOk ? 'OK' : 'ERROR'}`);
+
+  // Fallback/source hint (concise)
+  if (priceSrc === 'coingecko') {
+    lines.push('Fallback: CoinGecko used for price');
+  } else if (priceSrc === 'taostats') {
+    lines.push('Source: Taostats');
+  }
+
+  infoBadge.setAttribute('data-tooltip', lines.join('\n'));
+}
+
 function tryUpdateMarketCapAndFDV() {
   if (window.circulatingSupply && lastPrice) {
     updateMarketCapAndFDV(lastPrice, window.circulatingSupply);
@@ -1282,6 +1331,13 @@ async function refreshDashboard() {
     if (lastUpdateEl) lastUpdateEl.textContent = `Updated: --:--`;
   }
 
+  // Update API status tooltip immediately with per-source AMPEL status and last-checked time
+  try {
+    updateApiStatusTooltip(networkData, taostats, taoPrice, lastUpdated || null);
+  } catch (e) {
+    if (window._debug) console.debug('Failed to update API status tooltip from refreshDashboard', e);
+  }
+
   // Get volume from taostats!
   const volumeEl = document.getElementById('volume24h');
   if (volumeEl && taostats && typeof taostats.volume_24h === 'number') {
@@ -1561,26 +1617,13 @@ async function initDashboard() {
   }
 
   // Fill initial API status
-  const apiStatusEl = document.getElementById('apiStatus');
-  const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
-  let statusText = 'All systems ok';
-  let color = '#22c55e'; // green
-  if (!networkData || !taostats) {
-    statusText = 'API error';
-    color = '#ef4444'; // red
-  } else if (!taostats.price || !taostats.volume_24h) {
-    statusText = 'Partial data';
-    color = '#eab308'; // yellow
-  }
-  if (apiStatusEl) apiStatusEl.textContent = statusText;
-  // Dynamically update SVG colors
-  if (apiStatusIcon) {
-    // Update circle color
-    const circle = apiStatusIcon.querySelector('circle');
-    if (circle) circle.setAttribute('stroke', color);
-    // Update heartbeat line color
-    const polyline = apiStatusIcon.querySelector('polyline');
-    if (polyline) polyline.setAttribute('stroke', color);
+  // Update API status tooltip immediately on init too
+  try {
+    // Use taostats.last_updated when available, otherwise null
+    const lastUpdated = (taoPrice && taoPrice._source === 'taostats' && taoPrice.last_updated) ? taoPrice.last_updated : null;
+    updateApiStatusTooltip(networkData, taostats, taoPrice, lastUpdated);
+  } catch (e) {
+    if (window._debug) console.debug('Failed to update API status tooltip from initDashboard', e);
   }
 
   const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
@@ -1824,19 +1867,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Info badge tooltip for API status card: include helpful, non-invasive diagnostics
-    const infoBadge = document.querySelector('#apiStatusCard .info-badge');
-    if (infoBadge) {
-      const lines = [
-        'API status: Network, Taostats, CoinGecko',
-        '',
-        'Last checked: --:-- (updates on refresh)',
-        'Price fallback: CoinGecko used when Taostats unavailable',
-        '',
-        'Tip: Click the refresh indicator or run `refreshDashboard()` in console to re-check.'
-      ];
-      infoBadge.setAttribute('data-tooltip', lines.join('\n'));
-    }
+    // Remove static API tooltip; we'll update it dynamically on init/refresh
   })();
 
   // Background toggle button
