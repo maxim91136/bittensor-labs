@@ -769,44 +769,6 @@ function updateTaoPrice(priceData) {
   
 }
 
-// Centralized API status UI updater (text, colors, and per-source tooltip)
-function updateApiStatusUI(networkData, taostats, taoPrice) {
-  const apiStatusEl = document.getElementById('apiStatus');
-  const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
-  let statusText = 'All systems ok';
-  let color = '#22c55e'; // green
-  if (!networkData || !taostats) {
-    statusText = 'API error';
-    color = '#ef4444'; // red
-  } else if (!taostats.price || !taostats.volume_24h) {
-    statusText = 'Partial data';
-    color = '#eab308'; // yellow
-  }
-  if (apiStatusEl) apiStatusEl.textContent = statusText;
-  if (apiStatusIcon) {
-    const circle = apiStatusIcon.querySelector('circle');
-    if (circle) circle.setAttribute('stroke', color);
-    const polyline = apiStatusIcon.querySelector('polyline');
-    if (polyline) polyline.setAttribute('stroke', color);
-  }
-
-  // per-source status tooltip
-  try {
-    const infoBadge = document.querySelector('#apiStatusCard .info-badge');
-    if (infoBadge) {
-      const lines = [];
-      lines.push(`Network: ${networkData ? 'OK' : 'ERROR'}`);
-      lines.push(`Taostats: ${taostats ? 'OK' : 'ERROR'}`);
-      const priceSource = (taoPrice && taoPrice._source) ? taoPrice._source : 'unknown';
-      const priceStatus = (taoPrice && taoPrice.price) ? 'OK' : 'ERROR';
-      lines.push(`Price (${priceSource}): ${priceStatus}`);
-      infoBadge.setAttribute('data-tooltip', lines.join('\n'));
-    }
-  } catch (e) {
-    if (window._debug) console.debug('Failed to update API status info-badge', e);
-  }
-}
-
 function updateMarketCapAndFDV(price, circulatingSupply) {
   const marketCapEl = document.getElementById('marketCap');
   const fdvEl = document.getElementById('fdv');
@@ -1332,11 +1294,27 @@ async function refreshDashboard() {
     updateVolumeSignal(taostats.volume_24h, priceChange24h);
   }
 
-  // Update API status UI (text, svg color, and per-source tooltip)
-  try {
-    updateApiStatusUI(networkData, taostats, taoPrice);
-  } catch (e) {
-    if (window._debug) console.debug('Failed to call updateApiStatusUI from refreshDashboard', e);
+  // Set API status
+  const apiStatusEl = document.getElementById('apiStatus');
+  const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
+  let statusText = 'All systems ok';
+  let color = '#22c55e'; // green
+  if (!networkData || !taostats) {
+    statusText = 'API error';
+    color = '#ef4444'; // red
+  } else if (!taostats.price || !taostats.volume_24h) {
+    statusText = 'Partial data';
+    color = '#eab308'; // yellow
+  }
+  if (apiStatusEl) apiStatusEl.textContent = statusText;
+  // Dynamically update SVG colors
+  if (apiStatusIcon) {
+    // Update circle color
+    const circle = apiStatusIcon.querySelector('circle');
+    if (circle) circle.setAttribute('stroke', color);
+    // Update heartbeat line color
+    const polyline = apiStatusIcon.querySelector('polyline');
+    if (polyline) polyline.setAttribute('stroke', color);
   }
 
   // Update Block Time and Staking APR cards
@@ -1583,10 +1561,26 @@ async function initDashboard() {
   }
 
   // Fill initial API status
-  try {
-    updateApiStatusUI(networkData, taostats, taoPrice);
-  } catch (e) {
-    if (window._debug) console.debug('Failed to call updateApiStatusUI from initDashboard', e);
+  const apiStatusEl = document.getElementById('apiStatus');
+  const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
+  let statusText = 'All systems ok';
+  let color = '#22c55e'; // green
+  if (!networkData || !taostats) {
+    statusText = 'API error';
+    color = '#ef4444'; // red
+  } else if (!taostats.price || !taostats.volume_24h) {
+    statusText = 'Partial data';
+    color = '#eab308'; // yellow
+  }
+  if (apiStatusEl) apiStatusEl.textContent = statusText;
+  // Dynamically update SVG colors
+  if (apiStatusIcon) {
+    // Update circle color
+    const circle = apiStatusIcon.querySelector('circle');
+    if (circle) circle.setAttribute('stroke', color);
+    // Update heartbeat line color
+    const polyline = apiStatusIcon.querySelector('polyline');
+    if (polyline) polyline.setAttribute('stroke', color);
   }
 
   const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
@@ -1830,7 +1824,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Do not overwrite API status tooltip here — initDashboard/updateApiStatusUI will set it.
+    // Info badge tooltip for API status card: static text
+    const infoBadge = document.querySelector('#apiStatusCard .info-badge');
+    if (infoBadge) {
+      infoBadge.setAttribute('data-tooltip', 'API status: Network, Taostats, Coingecko');
+    }
   })();
 
   // Background toggle button
