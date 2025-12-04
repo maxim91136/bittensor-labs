@@ -1,7 +1,7 @@
 // Minimal WebAudio SoundManager (no external deps)
 // Exposes `window.sound` with: init(), play(name), toggleMute(), isMuted(), setVolume(v)
 (function(){
-  const ctx = { audioCtx: null, masterGain: null, muted: false, volume: 0.18 };
+  const ctx = { audioCtx: null, masterGain: null, muted: false, volume: 0.18, _pending: [] };
 
   function ensureAudioContext() {
     if (!ctx.audioCtx) {
@@ -20,7 +20,33 @@
 
   function resumeIfNeeded() {
     if (ctx.audioCtx && ctx.audioCtx.state === 'suspended') {
-      ctx.audioCtx.resume().catch(()=>{});
+      // attempt to resume; if successful, flush pending plays
+      ctx.audioCtx.resume().then(() => {
+        try { flushPending(); } catch(e){}
+      }).catch(()=>{});
+    } else if (ctx.audioCtx && ctx.audioCtx.state === 'running') {
+      try { flushPending(); } catch(e){}
+    }
+  }
+
+  function flushPending() {
+    if (!ctx._pending || ctx._pending.length === 0) return;
+    const toPlay = ctx._pending.slice();
+    ctx._pending.length = 0;
+    setTimeout(() => {
+      toPlay.forEach(n => { try { playImmediate(n); } catch(e){} });
+    }, 8);
+  }
+
+  // internal immediate play that bypasses pending queue checks
+  function playImmediate(name) {
+    switch(name) {
+      case 'drip': playDrip(); break;
+      case 'whoosh': playWhoosh(); break;
+      case 'blockTick': playBlockTick(); break;
+      case 'terminalTick': playTerminalTick(); break;
+      case 'terminalChime': playTerminalChime(); break;
+      default: break;
     }
   }
 
@@ -65,25 +91,44 @@
     src.start(); src.stop(ctx.audioCtx.currentTime + 0.42);
   }
 
-  // beep-boop: two simple beeps (nice and soft)
+  // improved blockTick: layered metallic/filtered hit with slight noise, more Matrix-like
   function playBlockTick() {
     ensureAudioContext(); if (!ctx.audioCtx) return;
     const now = ctx.audioCtx.currentTime;
-    // first tone
-    const o1 = ctx.audioCtx.createOscillator(); o1.type='triangle'; o1.frequency.value = 540;
-    const g1 = ctx.audioCtx.createGain(); g1.gain.setValueAtTime(0, now);
-    g1.gain.linearRampToValueAtTime(1, now+0.002);
-    g1.gain.exponentialRampToValueAtTime(0.001, now+0.18);
-    o1.connect(g1); g1.connect(ctx.masterGain);
-    o1.start(now); o1.stop(now+0.18);
-    // second tone, a bit softer/higher
-    const o2 = ctx.audioCtx.createOscillator(); o2.type='sine'; o2.frequency.value = 720;
-    const start2 = now + 0.20;
-    const g2 = ctx.audioCtx.createGain(); g2.gain.setValueAtTime(0, start2);
-    g2.gain.linearRampToValueAtTime(0.9, start2+0.002);
-    g2.gain.exponentialRampToValueAtTime(0.001, start2+0.26);
-    o2.connect(g2); g2.connect(ctx.masterGain);
-    o2.start(start2); o2.stop(start2+0.26);
+    // carrier with quick frequency sweep
+    const carrier = ctx.audioCtx.createOscillator(); carrier.type = 'sine';
+    const carrierGain = ctx.audioCtx.createGain();
+    carrierGain.gain.setValueAtTime(0.0001, now);
+    carrier.frequency.setValueAtTime(220, now);
+    carrier.frequency.exponentialRampToValueAtTime(880, now + 0.09);
+    carrierGain.gain.linearRampToValueAtTime(0.9, now + 0.003);
+    carrierGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.26);
+
+    // subtle metallic overtone using detuned saw
+    const overtone = ctx.audioCtx.createOscillator(); overtone.type = 'sawtooth';
+    overtone.frequency.value = 660;
+    overtone.detune.value = (Math.random() - 0.5) * 10;
+    const overtoneGain = ctx.audioCtx.createGain(); overtoneGain.gain.setValueAtTime(0.18, now);
+    overtoneGain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+    // small noise burst through bandpass for 'impact' tone
+    const bufferSize = Math.floor(ctx.audioCtx.sampleRate * 0.06);
+    const noiseBuf = ctx.audioCtx.createBuffer(1, bufferSize, ctx.audioCtx.sampleRate);
+    const data = noiseBuf.getChannelData(0);
+    for (let i=0;i<bufferSize;i++) data[i] = (Math.random()*2-1) * (1 - i/bufferSize);
+    const src = ctx.audioCtx.createBufferSource(); src.buffer = noiseBuf;
+    const band = ctx.audioCtx.createBiquadFilter(); band.type = 'bandpass'; band.frequency.value = 1200; band.Q.value = 1.2;
+    const noiseGain = ctx.audioCtx.createGain(); noiseGain.gain.setValueAtTime(0.7, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+
+    // mix nodes
+    carrier.connect(carrierGain); carrierGain.connect(ctx.masterGain);
+    overtone.connect(overtoneGain); overtoneGain.connect(ctx.masterGain);
+    src.connect(band); band.connect(noiseGain); noiseGain.connect(ctx.masterGain);
+
+    carrier.start(now); carrier.stop(now + 0.26);
+    overtone.start(now); overtone.stop(now + 0.22);
+    src.start(now); src.stop(now + 0.08);
   }
 
   // terminal tick: short per-line click (for terminal boot typing)
@@ -122,20 +167,22 @@
     // try to resume at start if user already interacted
     document.addEventListener('click', resumeIfNeeded, {once:true});
     document.addEventListener('keydown', resumeIfNeeded, {once:true});
+    // also attempt to flush pending when page becomes visible (some browsers resume on visibility)
+    document.addEventListener('visibilitychange', () => { try { resumeIfNeeded(); } catch(e){} });
     return ctx;
   }
 
   function play(name) {
     try { resumeIfNeeded(); } catch(e){}
-    if (ctx.muted) return;
-    switch(name) {
-      case 'drip': playDrip(); break;
-      case 'whoosh': playWhoosh(); break;
-      case 'blockTick': playBlockTick(); break;
-      case 'terminalTick': playTerminalTick(); break;
-      case 'terminalChime': playTerminalChime(); break;
-      default: break;
+    // if no audio context yet, create it (may be suspended until user gesture)
+    ensureAudioContext();
+    // if suspended, queue the play request to be flushed when resumed
+    if (ctx.audioCtx && ctx.audioCtx.state !== 'running') {
+      ctx._pending.push(name);
+      return;
     }
+    if (ctx.muted) return;
+    playImmediate(name);
   }
 
   function toggleMute(setTo) {

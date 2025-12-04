@@ -83,7 +83,21 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   if (soundBtn) {
     updateSoundIcon();
-    soundBtn.addEventListener('click', function(){ try { window.sound.toggleMute(); updateSoundIcon(); } catch(e){} });
+    soundBtn.addEventListener('click', function(){
+      try {
+        if (window.sound && window.sound.init) window.sound.init();
+        // If currently muted, unmute (user is expressing intent)
+        if (window.sound && window.sound.isMuted && window.sound.isMuted()) {
+          try { window.sound.toggleMute(false); } catch(e){}
+        }
+        // If not muted, toggle to mute on second click
+        else {
+          // a normal toggle: if unmuted -> mute, if muted -> unmute
+          try { window.sound.toggleMute(); } catch(e){}
+        }
+        updateSoundIcon();
+      } catch(e){}
+    });
   }
 
   // Hover -> drip (debounced per element)
