@@ -768,17 +768,17 @@ body.light-bg #maxSupplyScribble {
   gap: 12px;
 }
 .api-status-badge.api-status-large {
-  min-width: 56px;
-  padding: 8px 16px;
-  font-size: 1.02rem;
+  min-width: 44px;
+  padding: 6px 12px;
+  font-size: 0.94rem;
   border-radius: 999px;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.25), inset 0 -2px 6px rgba(0,0,0,0.06);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.18), inset 0 -1px 4px rgba(0,0,0,0.05);
 }
 @media (max-width: 700px) {
   .api-status-badge.api-status-large {
-    min-width: 48px;
-    padding: 10px 18px;
-    font-size: 1.05rem;
+    min-width: 40px;
+    padding: 6px 12px;
+    font-size: 0.98rem;
   }
 }
 

@@ -550,9 +550,10 @@ function buildApiStatusHtml({ networkData, taostats, taoPrice }) {
 
   const lines = [];
   lines.push('<div>Status of all data sources powering the dashboard</div>');
-  lines.push('<div style="margin-top:8px">' + chip(taostatsStatus) + ' Taostats</div>');
+  // Order: Bittensor SDK (network), Taostats, CoinGecko
+  lines.push('<div style="margin-top:8px">' + chip(networkStatus) + ' Bittensor SDK</div>');
+  lines.push('<div>' + chip(taostatsStatus) + ' Taostats</div>');
   lines.push('<div>' + chip(coingeckoStatus) + ' CoinGecko</div>');
-  lines.push('<div>' + chip(networkStatus) + ' Bittensor SDK</div>');
   return lines.join('');
 }
 
