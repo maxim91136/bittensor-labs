@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.21 (2025-12-05)
+### Added
+- Fear & Greed (F&G) UI: improved card layout with history matrix and a spoon-shaped gauge. Support for user-provided spoon graphics added (`assets/fng-spoon-*.webp`).
+- `useFngGraphics()` loader to automatically switch spoon images for dark/light themes.
+
+### Changed
+- Ampelsystem (Volume Signal): tuned heuristics (tradedShare guard, hysteresis, soft strict-down rule, runtime override `STRICT_DOWN_ALWAYS_RED`) to reduce false positives and add debug info.
+- Desktop layout: increased `fng-card` max-width on wide screens to improve spoon/gauge scale.
+
+### Fixed
+- Resolved a syntax regression in `script.js` and validated parse via Node.
+- Image handling: optimized supplied spoon PNGs to WebP and updated loader to prefer WebP assets.
+
+### Notes
+- Release candidate focusing on F&G UI polish, Ampelsystem robustness, and image optimization.
+
+
 ## v1.0.0-rc.20.6 (2025-12-05)
 ### Changed
 - Volume signal: `Slightly bearish` (Volume ↓ + Price ↓ with price ≤ -2%) now maps to **red** (stronger visual alert). Tooltip and client logic updated.

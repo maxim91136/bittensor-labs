@@ -1,3 +1,34 @@
+# BITTENSOR-HUB — Dashboard
+
+This repository contains the front-end dashboard and Cloudflare Worker functions used to present network statistics, the Fear & Greed (F&G) index card, and related widgets.
+
+Quick summary
+- Frontend: static HTML/CSS/JS in the repository root (`index.html`, `style.css`, `script.js`).
+- Serverless functions: under `functions/api/` (Cloudflare Worker endpoints).
+- Assets: `assets/` contains images and other static assets.
+
+Local development
+1. Open the repo in your browser (serve the folder with a static server) or edit files directly.
+2. To test F&G interactions locally, run a local static server (e.g., Python 3 builtin):
+   - `python3 -m http.server 8000`
+   - Open `http://localhost:8000` in your browser.
+
+Image assets
+- The project prefers WebP variants for performance: `assets/fng-spoon-dark.webp` and `assets/fng-spoon-light.webp` were added for the spoon gauge.
+
+Release process (prepare RC)
+1. Bump `VERSION` to the target RC tag (example: `v1.0.0-rc.21`).
+2. Add an entry to `CHANGELOG.md` and create a release note file in `RELEASE_NOTES/`.
+3. Commit changes and create an annotated tag:
+   - `git add . && git commit -m "chore(release): v1.0.0-rc.21"`
+   - `git tag -a v1.0.0-rc.21 -m "v1.0.0-rc.21"`
+4. Push when ready: `git push origin main --follow-tags` (only after you confirm).
+
+Notes & conventions
+- The front-end prefers user-provided graphics when available. `script.js` contains `useFngGraphics()` to override the gauge images.
+- Runtime volume signal logic is configurable via `window.VOLUME_SIGNAL_CONFIG` and `window.applyVolumeConfig()` for testing.
+
+If you want, I can (a) commit & tag the RC locally (I will do that now), and (b) push the branch and tags to the remote when you explicitly approve.
 # bittensor-labs
 
 Bittensor-Labs.com ultra-compact Dashboard
