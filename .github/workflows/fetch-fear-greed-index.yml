@@ -1,0 +1,25 @@
+name: Fetch Fear & Greed Index
+
+on:
+  schedule:
+    - cron: '15 */3 * * *'  # every 3 hours at minute 15
+  workflow_dispatch:
+
+jobs:
+  fetch-fear-greed-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: pip install requests
+      - name: Fetch and store Fear & Greed Index
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_METRICS_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+        run: python .github/scripts/fetch_fear_and_greed_index.py
