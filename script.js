@@ -790,6 +790,18 @@ window.testSpoonGauge = function(value = 50) {
     }
   }
 
+  // Also update left-side badge when using test helper
+  try {
+    const side = document.querySelector('#fngCard .fng-side-status .status-text');
+    if (side) {
+      const lc = String(classification || '').toLowerCase();
+      if (lc.includes('fear')) side.textContent = 'FEAR';
+      else if (lc.includes('greed')) side.textContent = 'GREED';
+      else if (lc.includes('neutral')) side.textContent = 'NEUTRAL';
+      else side.textContent = Math.round(pct).toString();
+    }
+  } catch(e) { if (window._debug) console.debug('test side status update failed', e); }
+
   console.log(`🥄 Spoon Gauge set to: ${pct} (${classification})`);
   return true;
 };
@@ -814,6 +826,18 @@ async function updateFearAndGreed() {
     card.classList.remove('fng-red','fng-yellow','fng-green');
     card.classList.add(mapFngToClass(cur.value_classification));
   }
+
+  // Update left-side status badge text (FEAR / NEUTRAL / GREED)
+  try {
+    const side = document.querySelector('#fngCard .fng-side-status .status-text');
+    if (side) {
+      const c = String(cur.value_classification || '').toLowerCase();
+      if (c.includes('fear')) side.textContent = 'FEAR';
+      else if (c.includes('greed')) side.textContent = 'GREED';
+      else if (c.includes('neutral')) side.textContent = 'NEUTRAL';
+      else side.textContent = (typeof cur.value === 'number') ? Math.round(cur.value).toString() : '—';
+    }
+  } catch (e) { if (window._debug) console.debug('update side status failed', e); }
 
   // Tooltip: show source + last-updated
   let lastTs = cur.timestamp || cur._time || null;
