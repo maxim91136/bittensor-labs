@@ -943,8 +943,12 @@ body.light-bg .matrix-quote {
 }
 body.light-bg .fng-spoon-bg {
   left: 34%;
-}
-  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  /* In light mode avoid a visible dark rectangle from the source image:
+     - use `mix-blend-mode: screen` so black backgrounds become transparent
+     - reduce heavy drop-shadow so the spoon sits cleanly on white
+  */
+  mix-blend-mode: screen;
+  filter: brightness(0.98) contrast(1.02) drop-shadow(0 2px 6px rgba(0,0,0,0.12));
   transition: filter 300ms ease;
 }
 
@@ -962,6 +966,12 @@ body.light-bg .fng-spoon-img {
   flex-direction: column;
   align-items: center;
   gap: 16px;
+}
+
+/* Light-mode: make sure the spoon container doesn't add heavy shadows/white boxes */
+body.light-bg .fng-spoon-gauge-container {
+  box-shadow: none;
+  background: transparent;
 }
 
 /* SVG Needle Overlay - positioned absolutely over the image */
@@ -1192,6 +1202,22 @@ body.light-bg .barometer-face {
 .fng-red .barometer-class { color: #ef4444; }
 .fng-yellow .barometer-class { color: #eab308; }
 .fng-green .barometer-class { color: #22c55e; }
+
+/* Red 'Matrix' status: move slightly left, stronger red and neon-like glow, monospace */
+.fng-card.fng-red .barometer-class {
+  transform: translateX(-65%);
+  color: #ff4d4d;
+  font-family: ui-monospace, 'Courier New', monospace;
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 6px rgba(255,77,77,0.9), 0 0 16px rgba(255,77,77,0.18);
+  font-weight: 800;
+}
+
+/* Keep the red/matrix look legible in light mode as well */
+body.light-bg .fng-card.fng-red .barometer-class {
+  color: #c53030;
+  text-shadow: 0 0 6px rgba(197,48,48,0.9), 0 0 12px rgba(197,48,48,0.12);
+}
 
 /* Barometer scale */
 .barometer-scale {
