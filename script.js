@@ -800,7 +800,6 @@ async function updateFearAndGreed() {
   const data = await fetchFearAndGreed();
 
   if (!data || !data.current) {
-    // No data available
     if (timelineEl) timelineEl.innerHTML = '';
     return;
   }
@@ -816,13 +815,12 @@ async function updateFearAndGreed() {
   }
 
   // Tooltip: show source + last-updated
-  let lastTs = cur._time || data.updated || data._timestamp || null;
-  // Try to get latest timestamp from history if available
-  if (Array.isArray(data.history) && data.history.length > 0) {
-    const lastHist = data.history[data.history.length-1];
-    if (lastHist && lastHist._time) lastTs = lastHist._time;
+  let lastTs = cur.timestamp || cur._time || null;
+  if (lastTs && typeof lastTs === 'string' && lastTs.length === 10 && !isNaN(Number(lastTs))) {
+    // If timestamp is unix seconds, convert to ms
+    lastTs = Number(lastTs) * 1000;
   }
-  const sourceStr = data._source || cur._source || 'alternative.me';
+  const sourceStr = 'alternative.me';
   const updatedText = lastTs ? new Date(lastTs).toLocaleString() : '—';
   const tooltipText = `Source: ${sourceStr}\n\nLast updated: ${updatedText}`;
   try { if (infoBadge) infoBadge.setAttribute('data-tooltip', tooltipText); } catch (e) {}
@@ -834,42 +832,37 @@ async function updateFearAndGreed() {
 
     if (typeof value === 'number' && !isNaN(value)) {
       const pct = Math.max(0, Math.min(100, Number(value)));
-
-      // Animate the needle along the spoon path
       animateSpoonNeedle(pct);
-
-      // Update display values
       if (elValueCenter) elValueCenter.textContent = `${Math.round(pct)}`;
       if (elClass) elClass.textContent = cur.value_classification || '';
     } else {
-      // Default position (start of path)
       animateSpoonNeedle(0);
       if (elValueCenter) elValueCenter.textContent = '—';
       if (elClass) elClass.textContent = '—';
     }
   } catch (e) { if (window._debug) console.debug('spoon needle animate failed', e); }
 
-  // Render F&G timeline (history)
+  // Render F&G timeline (yesterday, last_week, last_month, current)
   if (timelineEl) {
+    const timeline = [];
+    if (data.last_month) timeline.push({label:'Month',...data.last_month});
+    if (data.last_week) timeline.push({label:'Week',...data.last_week});
+    if (data.yesterday) timeline.push({label:'Yesterday',...data.yesterday});
+    timeline.push({label:'Now',...cur});
     let bars = '';
-    if (Array.isArray(data.history) && data.history.length > 0) {
-      // Show last 14 entries (or fewer)
-      const hist = data.history.slice(-14);
-      hist.forEach((h, i) => {
-        const v = typeof h.value === 'number' ? h.value : Number(h.value);
-        const pct = Math.max(0, Math.min(100, v));
-        let cls = 'fng-timeline-bar';
-        const c = String(h.value_classification||'').toLowerCase();
-        if (c.includes('extreme fear')) cls += ' extreme-fear';
-        else if (c.includes('fear')) cls += ' fear';
-        else if (c.includes('greed') && c.includes('extreme')) cls += ' extreme-greed';
-        else if (c.includes('greed')) cls += ' greed';
-        else if (c.includes('neutral')) cls += ' neutral';
-        // Mark current value
-        if (h.value === cur.value) cls += ' current';
-        bars += `<div class="${cls}" title="${c}\n${pct}" style="height:${8+Math.round(pct*0.18)}px"></div>`;
-      });
-    }
+    timeline.forEach((h, i) => {
+      const v = typeof h.value === 'number' ? h.value : Number(h.value);
+      const pct = Math.max(0, Math.min(100, v));
+      let cls = 'fng-timeline-bar';
+      const c = String(h.value_classification||'').toLowerCase();
+      if (c.includes('extreme fear')) cls += ' extreme-fear';
+      else if (c.includes('fear')) cls += ' fear';
+      else if (c.includes('greed') && c.includes('extreme')) cls += ' extreme-greed';
+      else if (c.includes('greed')) cls += ' greed';
+      else if (c.includes('neutral')) cls += ' neutral';
+      if (i === timeline.length-1) cls += ' current';
+      bars += `<div class=\"${cls}\" title=\"${h.label}: ${c} (${pct})\" style=\"height:${8+Math.round(pct*0.18)}px\"></div>`;
+    });
     timelineEl.innerHTML = bars;
   }
 }
