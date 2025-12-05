@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.20.6 (2025-12-05)
+### Changed
+- Volume signal: `Slightly bearish` (Volume ↓ + Price ↓ with price ≤ -2%) now maps to **red** (stronger visual alert). Tooltip and client logic updated.
+- Documentation: `README.md` updated to reflect the new mapping for `Slightly bearish`.
+
+### Notes
+- Bumped `VERSION` to `v1.0.0-rc.20.6`.
+
 ## v1.0.0-rc.20.3 (2025-12-05)
 ### Added
 - Release notes and documentation for RC20.3.
