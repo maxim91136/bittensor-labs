@@ -796,7 +796,7 @@ window.testSpoonGauge = function(value = 50) {
 
 async function updateFearAndGreed() {
   const infoBadge = document.getElementById('fngInfo');
-  const timelineEl = document.getElementById('fngTimeline');
+  // const timelineEl = document.getElementById('fngTimeline');
   const timelineTextEl = document.getElementById('fngTimelineText');
   const data = await fetchFearAndGreed();
 
@@ -849,26 +849,11 @@ async function updateFearAndGreed() {
   if (data.last_week) timeline.push({label:'Week',...data.last_week});
   if (data.yesterday) timeline.push({label:'Yesterday',...data.yesterday});
   timeline.push({label:'Now',...cur});
-  if (timelineEl) {
-    let bars = '';
-    timeline.forEach((h, i) => {
-      const v = typeof h.value === 'number' ? h.value : Number(h.value);
-      const pct = Math.max(0, Math.min(100, v));
-      let cls = 'fng-timeline-bar';
-      const c = String(h.value_classification||'').toLowerCase();
-      if (c.includes('extreme fear')) cls += ' extreme-fear';
-      else if (c.includes('fear')) cls += ' fear';
-      else if (c.includes('greed') && c.includes('extreme')) cls += ' extreme-greed';
-      else if (c.includes('greed')) cls += ' greed';
-      else if (c.includes('neutral')) cls += ' neutral';
-      if (i === timeline.length-1) cls += ' current';
-      bars += `<div class=\"${cls}\" title=\"${h.label}: ${c} (${pct})\" style=\"height:${38+Math.round(pct*0.42)}px\"></div>`;
-    });
-    timelineEl.innerHTML = bars;
-  }
+  // Balken entfernt, nur Text bleibt
   // Render compact timeline text
   if (timelineTextEl) {
-    const txt = timeline.map(h => `${h.label}: ${h.value} (${h.value_classification})`).join(' | ');
+    // Kompaktere Darstellung: Month/Week/Yest/Now: Wert (Class)
+    const txt = timeline.map(h => `${h.label[0]}/${h.label==='Yesterday'?'Yest':h.label==='Now'?'Now':h.label}: ${h.value} (${h.value_classification})`).join(' | ');
     timelineTextEl.textContent = txt;
   }
 }
