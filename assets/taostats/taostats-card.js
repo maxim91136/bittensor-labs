@@ -36,18 +36,22 @@
     const candidate = data.trend_direction || 'neutral';
 
     if (parentCard) {
-      // Border/background styling is handled exclusively by Ampelsystem in script.js
-      // Only manage pulse classes for icon glow effects
-      parentCard.classList.remove('pulse-up','pulse-down','neutral');
-      if (candidate === 'up') {
-        parentCard.classList.add('pulse-up');
-      } else if (candidate === 'down') {
-        parentCard.classList.add('pulse-down');
-      } else {
-        parentCard.classList.add('neutral');
+      // Avoid mutating legacy `.stat-card` containers' classes here because
+      // the Ampelsystem (script.js) is responsible for the card-level
+      // blink/pulse styling. Only update pulse classes on the newer
+      // `.tao-volume-card` variant (if present) to prevent visual conflicts.
+      if (parentCard.classList.contains('tao-volume-card')) {
+        parentCard.classList.remove('pulse-up','pulse-down','neutral');
+        if (candidate === 'up') {
+          parentCard.classList.add('pulse-up');
+        } else if (candidate === 'down') {
+          parentCard.classList.add('pulse-down');
+        } else {
+          parentCard.classList.add('neutral');
+        }
       }
-      
-      // Also set inline styles on stat-icon for glow effect
+
+      // Always manage the icon glow only (safe for legacy `.stat-card`).
       const icon = parentCard.querySelector('.stat-icon');
       if (icon) {
         icon.classList.remove('pulse-up', 'pulse-down');

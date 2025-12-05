@@ -152,15 +152,58 @@ const TOOLTIP_AUTO_HIDE_MS = 5000;
 // ===== Volume Signal (Ampelsystem) State =====
 let _volumeHistory = null;
 let _volumeHistoryTs = 0;
-const VOLUME_HISTORY_TTL = 60000; // Cache history for 1 minute
-const VOLUME_SIGNAL_THRESHOLD = 3; // ±3% threshold for "significant" change
-// Price spike detection thresholds (conservative defaults)
-const PRICE_SPIKE_PCT = 10; // if price moves >= 10% in 24h consider spike
-const LOW_VOL_PCT = 5;     // if volume change < 5% treat as low-volume move
-const SUSTAIN_VOL_PCT = 6; // sustained volume increase threshold (24h)
-const TRADED_SHARE_MIN = 0.1; // percent of circ supply traded to consider move meaningful (0.1%)
-const SUSTAIN_PRICE_PCT = 8; // lower price pct that can indicate sustained move when combined with other signals
-const HYSTERESIS_REQUIRED = 2; // require 2 consecutive checks to mark sustained
+let VOLUME_HISTORY_TTL = 60000; // Cache history for 1 minute
+// Threshold defaults (can be overridden at runtime via `window.VOLUME_SIGNAL_CONFIG`)
+let VOLUME_SIGNAL_THRESHOLD = 3; // ±3% threshold for "significant" change
+let PRICE_SPIKE_PCT = 10; // if price moves >= 10% in 24h consider spike
+let LOW_VOL_PCT = 5;     // if volume change < 5% treat as low-volume move
+let SUSTAIN_VOL_PCT = 6; // sustained volume increase threshold (24h)
+let TRADED_SHARE_MIN = 0.1; // percent of circ supply traded to consider move meaningful (0.1%)
+let SUSTAIN_PRICE_PCT = 8; // lower price pct that can indicate sustained move when combined with other signals
+let HYSTERESIS_REQUIRED = 2; // require 2 consecutive checks to mark sustained
+let STRICT_DOWN_ALWAYS_RED = false; // runtime toggle to force strict down->RED rule
+
+// Apply optional runtime overrides from `window.VOLUME_SIGNAL_CONFIG` (set in console)
+try {
+  if (window.VOLUME_SIGNAL_CONFIG && typeof window.VOLUME_SIGNAL_CONFIG === 'object') {
+    const cfg = window.VOLUME_SIGNAL_CONFIG;
+    if (typeof cfg.VOLUME_HISTORY_TTL === 'number') VOLUME_HISTORY_TTL = cfg.VOLUME_HISTORY_TTL;
+    if (typeof cfg.VOLUME_SIGNAL_THRESHOLD === 'number') VOLUME_SIGNAL_THRESHOLD = cfg.VOLUME_SIGNAL_THRESHOLD;
+    if (typeof cfg.PRICE_SPIKE_PCT === 'number') PRICE_SPIKE_PCT = cfg.PRICE_SPIKE_PCT;
+    if (typeof cfg.LOW_VOL_PCT === 'number') LOW_VOL_PCT = cfg.LOW_VOL_PCT;
+    if (typeof cfg.SUSTAIN_VOL_PCT === 'number') SUSTAIN_VOL_PCT = cfg.SUSTAIN_VOL_PCT;
+    if (typeof cfg.TRADED_SHARE_MIN === 'number') TRADED_SHARE_MIN = cfg.TRADED_SHARE_MIN;
+    if (typeof cfg.SUSTAIN_PRICE_PCT === 'number') SUSTAIN_PRICE_PCT = cfg.SUSTAIN_PRICE_PCT;
+    if (typeof cfg.HYSTERESIS_REQUIRED === 'number') HYSTERESIS_REQUIRED = cfg.HYSTERESIS_REQUIRED;
+    if (typeof cfg.STRICT_DOWN_ALWAYS_RED === 'boolean') STRICT_DOWN_ALWAYS_RED = cfg.STRICT_DOWN_ALWAYS_RED;
+  }
+} catch (e) { /* ignore */ }
+
+/**
+ * Apply a volume signal config at runtime without reloading the page.
+ * Usage: window.applyVolumeConfig({ VOLUME_SIGNAL_THRESHOLD: 2, STRICT_DOWN_ALWAYS_RED: true })
+ */
+function applyVolumeConfig(cfg) {
+  try {
+    window.VOLUME_SIGNAL_CONFIG = Object.assign({}, window.VOLUME_SIGNAL_CONFIG || {}, cfg || {});
+    const c = window.VOLUME_SIGNAL_CONFIG;
+    if (typeof c.VOLUME_HISTORY_TTL === 'number') VOLUME_HISTORY_TTL = c.VOLUME_HISTORY_TTL;
+    if (typeof c.VOLUME_SIGNAL_THRESHOLD === 'number') VOLUME_SIGNAL_THRESHOLD = c.VOLUME_SIGNAL_THRESHOLD;
+    if (typeof c.PRICE_SPIKE_PCT === 'number') PRICE_SPIKE_PCT = c.PRICE_SPIKE_PCT;
+    if (typeof c.LOW_VOL_PCT === 'number') LOW_VOL_PCT = c.LOW_VOL_PCT;
+    if (typeof c.SUSTAIN_VOL_PCT === 'number') SUSTAIN_VOL_PCT = c.SUSTAIN_VOL_PCT;
+    if (typeof c.TRADED_SHARE_MIN === 'number') TRADED_SHARE_MIN = c.TRADED_SHARE_MIN;
+    if (typeof c.SUSTAIN_PRICE_PCT === 'number') SUSTAIN_PRICE_PCT = c.SUSTAIN_PRICE_PCT;
+    if (typeof c.HYSTERESIS_REQUIRED === 'number') HYSTERESIS_REQUIRED = c.HYSTERESIS_REQUIRED;
+    if (typeof c.STRICT_DOWN_ALWAYS_RED === 'boolean') STRICT_DOWN_ALWAYS_RED = c.STRICT_DOWN_ALWAYS_RED;
+    if (window._debug) console.log('applyVolumeConfig applied', window.VOLUME_SIGNAL_CONFIG);
+    return true;
+  } catch (e) {
+    console.warn('applyVolumeConfig failed', e);
+    return false;
+  }
+}
+window.applyVolumeConfig = applyVolumeConfig;
 
 /**
  * Fetch taostats history for volume change calculation
@@ -236,7 +279,7 @@ function calculateVolumeChange(history, currentVolume) {
     confidence = 'medium';
   }
   
-  return { change, confidence, samples, hoursOfData: Math.round(hoursOfData) };
+  return { change, confidence, samples, hoursOfData: Math.round(hoursOfData), oldVolume, oldTimestamp: oldEntry?._timestamp };
 }
 
 /**
@@ -291,6 +334,35 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
     const ma3dVal = aggregates?.ma_3d ?? null;
     const maShortUp = (maShortVal !== null && maMedVal !== null && maShortVal > maMedVal);
     const ma3dUp = (maMedVal !== null && ma3dVal !== null && maMedVal > ma3dVal);
+
+    // STRICT RULE (softer): Only apply immediate RED when both price and volume are down
+    // if we don't have high confidence OR the moving averages are not bull-aligned.
+    // This prevents the strict rule from overriding strong MA-based bullish signals
+    // when data coverage is good.
+    const masAligned = maShortVal !== null && maMedVal !== null && ma3dVal !== null && (maShortVal > maMedVal && maMedVal > ma3dVal);
+    // If operator explicitly forces the strict down->RED rule, apply it immediately
+    if (STRICT_DOWN_ALWAYS_RED && volumeChange < 0 && priceChange < 0) {
+      const volStrStrict = volumeChange >= 0 ? `+${volumeChange.toFixed(1)}%` : `${volumeChange.toFixed(1)}%`;
+      const priceStrStrict = priceChange >= 0 ? `+${priceChange.toFixed(1)}%` : `${priceChange.toFixed(1)}%`;
+      if (window._debug) console.debug('Ampelsystem strict rule forced by config: priceDown && volumeDown => RED', {priceChange, volumeChange});
+      return {
+        signal: 'red',
+        tooltip: `🔴 Bearish (strict rule)
+Volume: ${volStrStrict}
+Price: ${priceStrStrict}
+Both price and volume are down` + (confidenceLine || '')
+      };
+    }
+    if (volumeChange < 0 && priceChange < 0 && (confidence !== 'high' || !masAligned)) {
+      const volStrStrict = volumeChange >= 0 ? `+${volumeChange.toFixed(1)}%` : `${volumeChange.toFixed(1)}%`;
+      const priceStrStrict = priceChange >= 0 ? `+${priceChange.toFixed(1)}%` : `${priceChange.toFixed(1)}%`;
+      if (window._debug) console.debug('Ampelsystem strict rule applied (soft): priceDown && volumeDown => RED', {priceChange, volumeChange, confidence, masAligned});
+      const strictNote = '\n\n(Strict rule applied)';
+      return {
+        signal: 'red',
+        tooltip: `🔴 Bearish (strict rule)\nVolume: ${volStrStrict}\nPrice: ${priceStrStrict}\nBoth price and volume are down` + strictNote + (confidenceLine || '')
+      };
+    }
     // traded share (percent) if data available — convert USD volume to TAO using lastPrice when possible
     let tradedSharePct = null;
     if (currentVolume && window.circulatingSupply) {
@@ -306,15 +378,16 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
         tradedSharePct = null;
       }
     }
-    // sustain if MAs aligned AND (volume up OR traded share large OR strong price move)
-    const masAligned = maShortVal !== null && maMedVal !== null && ma3dVal !== null && (maShortVal > maMedVal && maMedVal > ma3dVal);
+    // sustain if MAs aligned AND (volume up OR traded share large (with non-negative price) OR strong price move)
+    // Only treat tradedSharePct as evidence of buying pressure when price is not strongly negative
+    const tradedShareGood = (tradedSharePct !== null && tradedSharePct >= TRADED_SHARE_MIN && priceChange >= -2.0);
     const sustainCondition = masAligned && (
       volumeChange >= SUSTAIN_VOL_PCT ||
-      (tradedSharePct !== null && tradedSharePct >= TRADED_SHARE_MIN) ||
+      tradedShareGood ||
       (priceChange >= SUSTAIN_PRICE_PCT)
     );
-    // If traded-share or strong price move is present, consider sustained immediately
-    if (masAligned && ((tradedSharePct !== null && tradedSharePct >= TRADED_SHARE_MIN) || priceChange >= SUSTAIN_PRICE_PCT)) {
+    // If traded-share or strong price move is present, consider sustained immediately (but ignore traded-share when price is strongly negative)
+    if (masAligned && (tradedShareGood || priceChange >= SUSTAIN_PRICE_PCT)) {
       return {
         signal: 'green',
         tooltip: `🟢 Sustained bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nMoving averages aligned — sustained buying pressure` + (confidenceLine || '')
@@ -534,7 +607,243 @@ async function updateVolumeSignal(currentVolume, priceChange24h) {
   applyVolumeSignal(signal, tooltip);
 }
 
+/**
+ * Switch the Fear&Greed spoon variant at runtime.
+ * Usage: window.setFngSpoonVariant('deep') or ('flat')
+ */
+window.setFngSpoonVariant = function(variant) {
+  try {
+    const card = document.getElementById('fngCard');
+    if (!card) return false;
+    if (variant === 'flat') {
+      card.classList.add('fng-spoon-flat');
+    } else {
+      card.classList.remove('fng-spoon-flat');
+    }
+    // Toggle display of variant groups (additional safeguard)
+    document.querySelectorAll('.spoon-variant').forEach(g => {
+      if (g.classList.contains('variant-' + variant)) g.style.display = '';
+      else g.style.display = 'none';
+    });
+    return true;
+  } catch (e) {
+    console.warn('setFngSpoonVariant failed', e);
+    return false;
+  }
+};
+
+/**
+ * Use user-supplied graphics for the spoon gauge.
+ * darkPath and lightPath are relative URLs to the images (e.g. 'assets/fng-spoon-dark.png').
+ * The image will switch when `body.light-bg` toggles.
+ */
+window.useFngGraphics = async function(darkPath = '/assets/fng-spoon-dark.webp', lightPath = '/assets/fng-spoon-light.webp') {
+  try {
+    const imgEl = document.getElementById('fngSpoonImage');
+    if (!imgEl) return false;
+
+    const checkImage = (url) => new Promise(resolve => {
+      const i = new Image();
+      i.onload = () => resolve(true);
+      i.onerror = () => resolve(false);
+      i.src = url;
+    });
+
+    const darkOk = await checkImage(darkPath);
+    const lightOk = await checkImage(lightPath);
+    if (!darkOk && !lightOk) {
+      return false;
+    }
+
+    // choose appropriate source based on current theme
+    const chooseSrc = () => {
+      const isLight = document.body.classList.contains('light-bg');
+      if (isLight && lightOk) return lightPath;
+      if (!isLight && darkOk) return darkPath;
+      // fallback to whichever exists
+      return darkOk ? darkPath : lightPath;
+    };
+
+    // set initial
+    imgEl.src = chooseSrc();
+
+    // observe theme changes on body and switch image accordingly
+    const mo = new MutationObserver(() => {
+      try { imgEl.src = chooseSrc(); } catch (e) {}
+    });
+    mo.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+
+    return true;
+  } catch (e) {
+    if (window._debug) console.warn('useFngGraphics failed', e);
+    return false;
+  }
+};
+
 // ===== Utility Functions =====
+// ===== Fear & Greed UI helpers =====
+async function fetchFearAndGreed() {
+  try {
+    const res = await fetch('/api/fear_and_greed_index', { cache: 'no-store' });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data;
+  } catch (e) {
+    if (window._debug) console.debug('fetchFearAndGreed failed', e);
+    return null;
+  }
+}
+
+function mapFngToClass(classification) {
+  if (!classification) return 'fng-neutral';
+  const c = String(classification).toLowerCase();
+  if (c.includes('fear')) return 'fng-red';
+  if (c.includes('greed')) return 'fng-green';
+  if (c.includes('neutral')) return 'fng-yellow';
+  return 'fng-yellow';
+}
+
+/**
+ * Animate the needle along the curved spoon path
+ */
+function animateSpoonNeedle(value) {
+  const needleGroup = document.getElementById('fngNeedleGroup');
+  const needleCircle = document.getElementById('fngNeedleCircle');
+  const spoonPath = document.getElementById('spoonPath');
+
+  if (!needleGroup || !spoonPath) return;
+
+  // Get the total length of the path
+  const pathLength = spoonPath.getTotalLength();
+
+  // Calculate position along path (0-100 maps to 0%-100% of path)
+  const pct = Math.max(0, Math.min(100, Number(value)));
+  const distance = (pct / 100) * pathLength;
+
+  // Get the point on the path
+  const point = spoonPath.getPointAtLength(distance);
+
+  // Move the needle to this point
+  needleGroup.setAttribute('transform', `translate(${point.x}, ${point.y})`);
+
+  // Color the needle based on value
+  let needleColor = '#fff';
+  if (pct < 25) {
+    needleColor = '#ef4444'; // red (extreme fear)
+  } else if (pct < 45) {
+    needleColor = '#f59e0b'; // orange (fear)
+  } else if (pct < 55) {
+    needleColor = '#eab308'; // yellow (neutral)
+  } else if (pct < 75) {
+    needleColor = '#84cc16'; // lime (greed)
+  } else {
+    needleColor = '#22c55e'; // green (extreme greed)
+  }
+
+  if (needleCircle) {
+    needleCircle.setAttribute('fill', needleColor);
+  }
+}
+
+/**
+ * Test function for the spoon gauge animation
+ * Usage in browser console: testSpoonGauge(75) to test Greed value
+ */
+window.testSpoonGauge = function(value = 50) {
+  const pct = Math.max(0, Math.min(100, Number(value)));
+
+  // Animate the needle
+  animateSpoonNeedle(pct);
+
+  // Update display values
+  const elValueCenter = document.getElementById('fngValueCenter');
+  const elClass = document.getElementById('fngClass');
+
+  if (elValueCenter) elValueCenter.textContent = `${Math.round(pct)}`;
+
+  // Set classification based on value
+  let classification = '';
+  if (pct < 25) {
+    classification = 'Extreme Fear';
+  } else if (pct < 45) {
+    classification = 'Fear';
+  } else if (pct < 55) {
+    classification = 'Neutral';
+  } else if (pct < 75) {
+    classification = 'Greed';
+  } else {
+    classification = 'Extreme Greed';
+  }
+
+  if (elClass) elClass.textContent = classification;
+
+  // Update card color class
+  const card = document.getElementById('fngCard');
+  if (card) {
+    card.classList.remove('fng-red', 'fng-yellow', 'fng-green');
+    if (pct < 45) {
+      card.classList.add('fng-red');
+    } else if (pct < 55) {
+      card.classList.add('fng-yellow');
+    } else {
+      card.classList.add('fng-green');
+    }
+  }
+
+  console.log(`🥄 Spoon Gauge set to: ${pct} (${classification})`);
+  return true;
+};
+
+async function updateFearAndGreed() {
+  const infoBadge = document.getElementById('fngInfo');
+  const data = await fetchFearAndGreed();
+
+  if (!data || !data.current) {
+    // No data available
+    return;
+  }
+
+  const cur = data.current;
+  const value = cur.value ? Number(cur.value) : null;
+
+  // Color class
+  const card = document.getElementById('fngCard');
+  if (card) {
+    card.classList.remove('fng-red','fng-yellow','fng-green');
+    card.classList.add(mapFngToClass(cur.value_classification));
+  }
+
+  // Tooltip: show source + last-updated
+  const sourceStr = data._source || cur._source || 'alternative.me';
+  const ts = cur._time || data.updated || data._timestamp || null;
+  const updatedText = ts ? new Date(ts).toLocaleString() : '—';
+  const tooltipText = `Source: ${sourceStr}\n\nLast updated: ${updatedText}`;
+  try { if (infoBadge) infoBadge.setAttribute('data-tooltip', tooltipText); } catch (e) {}
+
+
+  // Animate spoon needle along the curved path
+  try {
+    const elValueCenter = document.getElementById('fngValueCenter');
+    const elClass = document.getElementById('fngClass');
+
+    if (typeof value === 'number' && !isNaN(value)) {
+      const pct = Math.max(0, Math.min(100, Number(value)));
+
+      // Animate the needle along the spoon path
+      animateSpoonNeedle(pct);
+
+      // Update display values
+      if (elValueCenter) elValueCenter.textContent = `${Math.round(pct)}`;
+      if (elClass) elClass.textContent = cur.value_classification || '';
+    } else {
+      // Default position (start of path)
+      animateSpoonNeedle(0);
+      if (elValueCenter) elValueCenter.textContent = '—';
+      if (elClass) elClass.textContent = '—';
+    }
+  } catch (e) { if (window._debug) console.debug('spoon needle animate failed', e); }
+}
+
 // Build HTML for API status tooltip showing per-source chips
 function buildApiStatusHtml({ networkData, taostats, taoPrice }) {
   function chip(status) {
@@ -1478,6 +1787,8 @@ async function refreshDashboard() {
   const priceChange24h = taostats?.percent_change_24h ?? taoPrice?.change24h ?? null;
   if (taostats?.volume_24h) {
     updateVolumeSignal(taostats.volume_24h, priceChange24h);
+    // Update Fear & Greed card (fetch from Worker KV via API)
+    try { updateFearAndGreed(); } catch (e) { if (window._debug) console.debug('updateFearAndGreed failed', e); }
   }
 
   // Set API status
@@ -1778,6 +2089,7 @@ async function initDashboard() {
   const initPriceChange24h = taostats?.percent_change_24h ?? taoPrice?.change24h ?? null;
   if (taostats?.volume_24h) {
     updateVolumeSignal(taostats.volume_24h, initPriceChange24h);
+    try { updateFearAndGreed(); } catch (e) { if (window._debug) console.debug('init updateFearAndGreed failed', e); }
   }
 
   // Fill initial API status
@@ -1823,6 +2135,12 @@ async function initDashboard() {
   }
     startHalvingCountdown();
     startAutoRefresh();
+    // Auto-load user-supplied FNG graphics if present (assets/fng-spoon-*.png)
+    try {
+      if (window.useFngGraphics) {
+          window.useFngGraphics('/assets/fng-spoon-dark.webp','/assets/fng-spoon-light.webp');
+        }
+    } catch (e) { if (window._debug) console.debug('auto useFngGraphics failed', e); }
     // Mark initialization completed
     initSucceeded = true;
   } catch (err) {
@@ -2104,6 +2422,13 @@ document.addEventListener('DOMContentLoaded', () => {
         el.classList.remove('light-bg');
       }
     });
+
+    // Switch spoon background image for Fear & Greed card
+    const spoonBg = document.getElementById('fngSpoonBg');
+    if (spoonBg) {
+      spoonBg.src = active ? 'assets/fng-spoon-white.png' : 'assets/fng-spoon-black.png';
+    }
+
     // JS fallback for browsers that do not fully respect CSS overrides (Safari, PWA quirks)
     // Apply inline styles to key elements to force proper Light Mode contrast
     const rootStyle = getComputedStyle(document.documentElement);

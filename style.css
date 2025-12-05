@@ -783,6 +783,449 @@ body.light-bg #maxSupplyScribble {
   display: none !important;
 }
 
+/* Fear & Greed stat-card color variants (subtle, light tints for small cards) */
+.stat-card.fng-red {
+  background: linear-gradient(180deg, rgba(239,68,68,0.06), rgba(239,68,68,0.02));
+  border: 1px solid rgba(239,68,68,0.14);
+}
+.stat-card.fng-red .stat-value {
+  color: #ef4444; /* red */
+}
+
+.stat-card.fng-yellow {
+  background: linear-gradient(180deg, rgba(234,179,8,0.06), rgba(234,179,8,0.02));
+  border: 1px solid rgba(234,179,8,0.14);
+}
+.stat-card.fng-yellow .stat-value {
+  color: #eab308; /* yellow */
+}
+
+.stat-card.fng-green {
+  background: linear-gradient(180deg, rgba(34,197,94,0.06), rgba(34,197,94,0.02));
+  border: 1px solid rgba(34,197,94,0.14);
+}
+.stat-card.fng-green .stat-value {
+  color: #22c55e; /* green */
+}
+
+/* F&G Card styling */
+.fng-card {
+  border-radius: 8px;
+  position: relative;
+  background: #000a08 !important;
+  backdrop-filter: none !important;
+  border: 1px solid rgba(34,197,94,0.15);
+  min-height: 120px;
+  width: 100%;
+}
+
+/* Light mode */
+body.light-bg .fng-card {
+  background: #ffffff !important;
+}
+
+/* Spoon background image */
+.fng-spoon-bg {
+  position: absolute;
+  width: 60%;
+  height: 85%;
+  object-fit: contain;
+  object-position: left center;
+  top: 0;
+  left: 30%;
+  opacity: 0.85;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.fng-card .fng-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0;
+  padding: 5px 20px 8px 20px;
+  overflow: visible;
+  position: relative;
+  z-index: 1;
+  min-height: 120px;
+  background: #000a08;
+}
+
+body.light-bg .fng-card .fng-card-body {
+  background: #ffffff;
+}
+
+/* Matrix Easter Egg */
+.matrix-quote {
+  position: absolute;
+  bottom: 8px;
+  left: 12px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.65rem;
+  color: #00ff41;
+  opacity: 0.25;
+  text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+  letter-spacing: 0.05em;
+  z-index: 10;
+  animation: matrixGlitch 8s ease-in-out infinite;
+}
+
+body.light-bg .matrix-quote {
+  color: #00cc33;
+  opacity: 0.35;
+  text-shadow: 0 0 6px rgba(0, 204, 51, 0.4);
+}
+
+@keyframes matrixGlitch {
+  0%, 90%, 100% { opacity: 0.25; }
+  93%, 96% { opacity: 0.5; }
+  94%, 97% { opacity: 0.1; }
+}
+
+body.light-bg .matrix-quote {
+  animation: matrixGlitchLight 8s ease-in-out infinite;
+}
+
+@keyframes matrixGlitchLight {
+  0%, 90%, 100% { opacity: 0.35; }
+  93%, 96% { opacity: 0.6; }
+  94%, 97% { opacity: 0.15; }
+}
+
+/* Spoon Gauge */
+.fng-spoon-gauge {
+  width: 100%;
+  max-width: 320px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+.fng-spoon-img {
+  width: 100%;
+  height: auto;
+  max-height: 320px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 12px rgba(0,0,0,0.5));
+  transition: filter 300ms ease;
+}
+
+/* Light mode spoon styling */
+body.light-bg .fng-spoon-img {
+  filter: drop-shadow(0 2px 8px rgba(0,0,0,0.2));
+}
+
+/* Spoon Gauge Container with Needle Overlay */
+.fng-spoon-gauge-container {
+  position: relative;
+  width: 100%;
+  max-width: 550px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+/* SVG Needle Overlay - positioned absolutely over the image */
+.fng-needle-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  max-height: 320px;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* Needle animation */
+.needle-group {
+  transform-origin: center;
+  transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#fngNeedleCircle {
+  transition: fill 0.5s ease, stroke 0.5s ease;
+}
+
+/* Pulsing animation for the needle */
+@keyframes needlePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+/* Display section below SVG */
+.fng-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.fng-value-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fng-value-large {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  transition: all 0.5s ease;
+}
+
+/* Color classes for value display */
+.fng-red .fng-value-large {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.fng-yellow .fng-value-large {
+  background: linear-gradient(135deg, #eab308, #f59e0b);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.fng-green .fng-value-large {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.fng-class-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fng-class-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: color 0.3s ease;
+}
+
+/* Responsive adjustments for spoon gauge */
+@media (max-width: 900px) {
+  .fng-spoon-gauge-container {
+    max-width: 100%;
+  }
+
+  .fng-spoon-img {
+    max-height: 240px;
+  }
+
+  .fng-needle-overlay {
+    max-height: 240px;
+  }
+
+  .fng-value-large {
+    font-size: 2rem;
+  }
+
+  .fng-class-text {
+    font-size: 0.9rem;
+  }
+}
+
+.fng-gauge-track {
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  height: 12px;
+  overflow: hidden;
+}
+.fng-gauge-fill {
+  height: 100%;
+  width: 0%;
+  transition: width 900ms cubic-bezier(.22,.9,.25,1);
+  background: linear-gradient(90deg,#22c55e,#16a34a);
+}
+
+/* Color the gauge fill to match classification */
+.fng-red .fng-gauge-fill { background: linear-gradient(90deg, rgba(239,68,68,0.95), rgba(244,63,94,0.95)); }
+.fng-yellow .fng-gauge-fill { background: linear-gradient(90deg, rgba(234,179,8,0.95), rgba(245,158,11,0.95)); }
+.fng-green .fng-gauge-fill { background: linear-gradient(90deg, rgba(34,197,94,0.95), rgba(16,163,74,0.95)); }
+
+.fng-main .stat-value { font-variant-numeric: tabular-nums; }
+
+/* Barometer (semicircular gauge) - positioned inside spoon handle curve */
+.fng-barometer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  max-width: 200px;
+  position: relative;
+  margin-top: 0;
+}
+
+.barometer-plate {
+  position: relative;
+  width: 100%;
+  max-width: 180px;
+  height: 90px;
+}
+
+.barometer-face {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  top: 0;
+  border-radius: 120px 120px 0 0;
+  background: radial-gradient(120% 80% at 50% 40%, rgba(34,197,94,0.08), rgba(0,0,0,0.75));
+  box-shadow: inset 0 -6px 18px rgba(0,0,0,0.6), 0 6px 18px rgba(0,0,0,0.4);
+  border: 1px solid rgba(34,197,94,0.2);
+}
+
+/* Light mode barometer styling */
+body.light-bg .barometer-face {
+  background: radial-gradient(120% 80% at 50% 40%, rgba(34,197,94,0.1), rgba(255,255,255,0.85));
+  box-shadow: inset 0 -6px 18px rgba(0,0,0,0.1), 0 6px 18px rgba(0,0,0,0.15);
+  border: 1px solid rgba(34,197,94,0.25);
+}
+
+.barometer-needle {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  width: 3px;
+  height: 75%;
+  transform-origin: 50% 92%;
+  background: linear-gradient(180deg, #fff, rgba(255,255,255,0.6));
+  box-shadow: 0 2px 8px rgba(0,0,0,0.7), 0 0 12px rgba(255,255,255,0.3);
+  border-radius: 2px;
+  transition: transform 900ms cubic-bezier(.22,.9,.25,1);
+  z-index: 5;
+}
+.barometer-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 14px;
+  width: 88px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  border-radius: 26px;
+  color: var(--text);
+  border: 1px solid rgba(34,197,94,0.1);
+  z-index: 6;
+  font-weight: 700;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.6);
+}
+
+.barometer-class {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: -10px;
+  width: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  z-index: 6;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.fng-red .barometer-class { color: #ef4444; }
+.fng-yellow .barometer-class { color: #eab308; }
+.fng-green .barometer-class { color: #22c55e; }
+
+/* Barometer scale */
+.barometer-scale {
+  width: 100%;
+  max-width: 240px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: rgba(34,197,94,0.5);
+  font-weight: 600;
+  font-family: ui-monospace, monospace;
+}
+
+/* needle color by classification */
+.fng-red .barometer-needle { background: linear-gradient(180deg,#ef4444,#f43f5e); box-shadow: 0 0 8px rgba(239,68,68,0.5); }
+.fng-yellow .barometer-needle { background: linear-gradient(180deg,#eab308,#f59e0b); box-shadow: 0 0 8px rgba(234,179,8,0.5); }
+.fng-green .barometer-needle { background: linear-gradient(180deg,#22c55e,#16a34a); box-shadow: 0 0 8px rgba(34,197,94,0.5); }
+
+/* responsive */
+@media (max-width:900px) {
+  .fng-card {
+    min-height: 220px;
+  }
+
+  .fng-card .fng-card-body {
+    padding: 30px 20px 20px 20px;
+    min-height: 220px;
+  }
+
+  .fng-barometer {
+    max-width: 140px;
+    margin-top: 15px;
+  }
+
+  .barometer-plate {
+    max-width: 120px;
+    height: 60px;
+  }
+
+  .barometer-scale {
+    max-width: 120px;
+    font-size: 0.7rem;
+  }
+
+  .barometer-center {
+    width: 60px;
+    height: 36px;
+    font-size: 0.85rem;
+  }
+}
+
+/* Desktop: center F&G card */
+@media (min-width:1000px) {
+  .fng-card {
+    width: 50%;
+    /* allow larger card on wide screens so spoon + gauge aren't overly small */
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    justify-self: center;
+  }
+}
+
+/* Desktop: slightly larger spoon graphic and adjusted placement */
+@media (min-width:1000px) {
+  .fng-spoon-bg {
+    width: 72%;
+    left: 30%;
+    opacity: 0.95;
+  }
+}
+
 /* ---- Halving Pill ---- */
 .halving-pill {
   display: flex;
@@ -929,6 +1372,13 @@ body.light-bg #maxSupplyScribble {
 .stat-card:hover:not(.blink-green):not(.blink-red):not(.blink-yellow):not(.blink-orange):not(.blink-white) .stat-icon {
   background: linear-gradient(135deg, rgba(34,197,94,0.25), rgba(34,197,94,0.1));
   box-shadow: 0 0 20px rgba(34,197,94,0.3);
+}
+
+/* Override the green icon background for the Fear & Greed card specifically
+   to avoid showing the decorative green block when the icon SVG is removed. */
+.fng-card .stat-icon {
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .stat-content {
@@ -1187,6 +1637,27 @@ body.light-bg #maxSupplyScribble {
   font-size: var(--text-base);
   font-weight: 600;
   color: var(--text);
+}
+
+/* Center the title for the Fear & Greed card while keeping the info-badge at the card corner */
+.fng-card .card-header {
+  /* use block layout so header's internal flex rules don't force left alignment */
+  display: block;
+  text-align: center;
+  padding-top: 2px; /* small top spacing so title isn't flush with card edge */
+  margin-bottom: 0; /* remove default margin */
+}
+.fng-card .card-header h2 {
+  display: inline-block;
+  margin: 0 auto;
+  text-align: center;
+}
+/* position the info badge in the card's top-right corner */
+.fng-card > .info-badge, .fng-card .info-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 40;
 }
 
 /* Unified rule for the main dashboard card headlines (TAO Price, Miner Map, Film) */
