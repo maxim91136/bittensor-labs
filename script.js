@@ -394,14 +394,14 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
     };
   }
   
-  // 🟡 YELLOW: Volume down + Price down = Consolidation
+  // Vol↓ + Price↓: Consolidation or Slightly bearish (light red)
   if (volDown && priceDown) {
-    // If price drop is meaningful, label as slightly bearish rather than neutral consolidation
+    // If price drop is meaningful, mark as slightly bearish (use red CSS class for light-red)
     const SLIGHT_BEAR_PCT = 2.0; // 2% price drop threshold for 'slightly bearish'
     if (priceChange <= -SLIGHT_BEAR_PCT) {
       return {
-        signal: 'yellow',
-        tooltip: `🟡 Slightly bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nSelling pressure with reduced participation${confidenceLine}`
+        signal: 'red',
+        tooltip: `🔴 Slightly bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nSelling pressure with reduced participation${confidenceLine}`
       };
     }
     return {

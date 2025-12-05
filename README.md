@@ -36,10 +36,11 @@ Smart volume-price correlation indicator:
 | Signal | Meaning |
 |--------|---------|
 | 🟢 **Bullish** | Volume ↑ + Price ↑ — Strong demand |
-| 🔴 **Bearish** | Volume ↑ + Price ↓ — Selling pressure |
+| 🔴 **Bearish** | Volume ↑ + Price ↓ — Selling pressure (distribution) |
 | 🟠 **Watch** | Volume ↑ + Price stable — Potential breakout |
 | 🟡 **Caution** | Volume ↓ + Price ↑ — Momentum loss |
-| 🟡 **Consolidation** | Volume ↓ + Price ↓ — Sideways market |
+| 🔴 **Slightly bearish** | Volume ↓ + Price ↓ with price ≤ -2% — Selling pressure with reduced participation (displayed as light‑red) |
+| 🟡 **Consolidation** | Volume ↓ + Price ↓ (small drop) — Sideways market |
 | ⚪ **Stable** | Quiet market conditions |
 
 **Implementation notes**
