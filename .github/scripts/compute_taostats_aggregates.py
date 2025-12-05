@@ -128,11 +128,11 @@ def compute_aggregates(history):
     ma_short = mean(last_3) if last_3 else None
     ma_med = mean(last_10) if last_10 else None
     
-    # 3-day MA: use all data if we have >= 48h, otherwise None
-    ma_3d = mean(only_vols) if hours_of_data >= 48 else None
-    
-    # 7-day MA: use all data if we have >= 120h (5 days), otherwise None  
-    ma_7d = mean(only_vols) if hours_of_data >= 120 else None
+    # 3-day MA: use all data if we have >= 72h, otherwise None
+    ma_3d = mean(only_vols) if hours_of_data >= 72 else None
+
+    # 7-day MA: use all data if we have >= 168h (7 days), otherwise None
+    ma_7d = mean(only_vols) if hours_of_data >= 168 else None
     
     sd_med = stddev(last_10) if len(last_10) >= 2 else None
 
