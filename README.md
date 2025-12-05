@@ -1,3 +1,4 @@
+
 # bittensor-labs
 
 Bittensor-Labs.com ultra-compact Dashboard
@@ -11,26 +12,6 @@ This project provides a compact dashboard for visualizing and monitoring key Bit
 
 > ℹ️ Spoon gauge: The Fear & Greed card now uses optimized WebP spoon assets (`assets/fng-spoon-dark.webp`, `assets/fng-spoon-light.webp`).
 > Ampelsystem: Volume signal logic and UI have been improved for RC21. See `script.js` for runtime config.
-
-# bittensor-labs
-
-Bittensor-Labs.com ultra-compact Dashboard
-
-## Overview
-Started: November 3, 2025
-
-This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem. 
-
-First it was just a learning and hobby project, but now it is passion.
-PS: This is my first ever GitHub and website project, with many headaches but also much fun.
-
-**Latest release:** `v1.0.0-rc.20.6` — see [RELEASE_NOTES/v1.0.0-rc.20.6.md](RELEASE_NOTES/v1.0.0-rc.20.6.md) and [CHANGELOG.md](CHANGELOG.md) for details.
-
-> ℹ️ The version badge and release notes link are auto-updated from the `VERSION` file. To update the README after a version bump, run:
-> ```bash
-> node scripts/update-readme-version.js
-> ```
-> Or add this step to your release workflow for automation.
 
 ## Features
 
