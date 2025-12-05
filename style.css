@@ -1267,6 +1267,11 @@ body.light-bg .barometer-face {
 .fng-yellow .barometer-class { color: #eab308; }
 .fng-green .barometer-class { color: #22c55e; }
 
+/* Hide the small classification label below the barometer — the large left-side
+  badge communicates the status more clearly. Kept via CSS so it's reversible.
+*/
+.barometer-class { display: none !important; }
+
 /* Red 'Matrix' status: move slightly left, stronger red and neon-like glow, monospace */
 .fng-card.fng-red .barometer-class {
   transform: translateX(-65%);
