@@ -930,7 +930,8 @@ body.light-bg .matrix-quote {
   height: 85%;
   object-fit: contain;
   object-position: left center;
-  top: 0;
+  /* lift the spoon slightly so it aligns better across devices */
+  top: -8px;
   left: 30%;
   /* keep image visible but slightly brighten it so it doesn't disappear on black */
   opacity: 0.95;
@@ -1259,6 +1260,8 @@ body.light-bg .barometer-face {
   .fng-spoon-bg {
     width: 72%;
     left: 30%;
+    /* slightly raise the spoon on wide screens too */
+    top: -6px;
     opacity: 0.95;
   }
 }
