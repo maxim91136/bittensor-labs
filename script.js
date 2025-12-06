@@ -127,7 +127,7 @@ const PRICE_CACHE_TTL_MAX = 3600000;
 // ===== State Management =====
 let priceChart = null;
 let lastPrice = null;
-let currentPriceRange = '7';
+let currentPriceRange = '3';
 let isLoadingPrice = false;
 // Track whether main dashboard init has completed
 window._dashboardInitialized = false;
