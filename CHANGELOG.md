@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 -
+## v1.0.0-rc.23.3 (2025-12-06)
+### Fixed
+- **Spoon Position**: Fine-tuned positioning for optimal visual balance on all screen sizes (top: 0, translateX: -33%)
+
 ## v1.0.0-rc.23.2 (2025-12-06)
 ### Fixed
 - **FEAR Badge**: Desktop positioning now forced via JavaScript (CSS specificity issues resolved)
