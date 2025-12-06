@@ -7,6 +7,8 @@ Calculates average time between the last N blocks.
 import os
 import sys
 import json
+import time
+import random
 import requests
 from datetime import datetime, timezone
 
@@ -16,7 +18,7 @@ BLOCK_URL = "https://api.taostats.io/api/block/v1"
 # Target block time in seconds
 TARGET_BLOCK_TIME = 12.0
 
-def fetch_block_time(num_blocks=500):
+def fetch_block_time(num_blocks=500, max_attempts=4):
     """Fetch last N blocks and calculate average block time."""
     if not TAOSTATS_API_KEY:
         print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
@@ -31,13 +33,43 @@ def fetch_block_time(num_blocks=500):
         all_blocks = []
         page = 1
         per_page = 200  # API limit per request
+        rate_limited = False
         
         print(f"⏱️ Fetching {num_blocks} blocks...", file=sys.stderr)
         
         while len(all_blocks) < num_blocks:
             url = f"{BLOCK_URL}?limit={per_page}&page={page}"
-            resp = requests.get(url, headers=headers, timeout=30)
-            resp.raise_for_status()
+            # Retry loop to handle transient errors and rate limits
+            resp = None
+            for attempt in range(1, max_attempts + 1):
+                try:
+                    resp = requests.get(url, headers=headers, timeout=30)
+                    if resp.status_code == 429:
+                        # Respect Retry-After header if present
+                        rate_limited = True
+                        ra = resp.headers.get('Retry-After')
+                        try:
+                            delay = int(ra)
+                        except Exception:
+                            # exponential backoff with jitter
+                            delay = min(2 ** attempt + random.random(), 60)
+                        print(f"⚠️  Rate limited (429). Waiting {delay:.1f}s before retry (attempt {attempt}/{max_attempts})...", file=sys.stderr)
+                        time.sleep(delay)
+                        continue
+                    resp.raise_for_status()
+                    break
+                except requests.RequestException as e:
+                    if attempt == max_attempts:
+                        raise
+                    backoff = min(2 ** attempt + random.random(), 60)
+                    print(f"⚠️  Request failed (attempt {attempt}/{max_attempts}): {e}. Backing off {backoff:.1f}s...", file=sys.stderr)
+                    time.sleep(backoff)
+                    continue
+
+            if resp is None:
+                # Shouldn't happen, but guard
+                break
+
             data = resp.json()
             
             blocks = data.get("data", [])
@@ -120,11 +152,11 @@ def fetch_block_time(num_blocks=500):
             "_timestamp": datetime.now(timezone.utc).isoformat()
         }
         
-        return result
+        return result, rate_limited
         
     except Exception as e:
         print(f"❌ Failed to fetch blocks: {e}", file=sys.stderr)
-        return None
+        return None, False
 
 
 def parse_timestamp(ts_str):
@@ -151,11 +183,16 @@ def parse_timestamp(ts_str):
 
 def main():
     # Fetch block time data (200 blocks = ~40 min of chain data)
-    result = fetch_block_time(200)
-    
+    result, rate_limited = fetch_block_time(200)
+
     if not result:
-        print("❌ Failed to fetch block time data", file=sys.stderr)
-        sys.exit(1)
+        if rate_limited:
+            print("⚠️  Rate limited by Taostats API (429). Skipping write to avoid CI failure.", file=sys.stderr)
+            # Do not fail the workflow on transient rate limits
+            sys.exit(0)
+        else:
+            print("❌ Failed to fetch block time data", file=sys.stderr)
+            sys.exit(1)
     
     # Save to file
     output_file = "block_time.json"
