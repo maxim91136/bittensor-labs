@@ -124,15 +124,33 @@ def compute_aggregates(history):
     # Use time-based logic: show MA if we have enough time coverage
     last_3 = only_vols[-3:] if N >= 3 else only_vols
     last_10 = only_vols[-10:] if N >= 10 else only_vols
-    
+
     ma_short = mean(last_3) if last_3 else None
     ma_med = mean(last_10) if last_10 else None
-    
-    # 3-day MA: use all data if we have >= 72h, otherwise None
-    ma_3d = mean(only_vols) if hours_of_data >= 72 else None
 
-    # 7-day MA: use all data if we have >= 168h (7 days), otherwise None
-    ma_7d = mean(only_vols) if hours_of_data >= 168 else None
+    # 3-day MA: calculate mean of only last 72 hours of data
+    ma_3d = None
+    if hours_of_data >= 72:
+        try:
+            last_ts = vols[-1][0]
+            last_dt = datetime.fromisoformat(last_ts.replace('Z', '+00:00'))
+            cutoff_3d = last_dt.timestamp() - (72 * 3600)
+            vols_3d = [v for (ts, v) in vols if datetime.fromisoformat(ts.replace('Z', '+00:00')).timestamp() >= cutoff_3d]
+            ma_3d = mean(vols_3d) if vols_3d else None
+        except Exception:
+            pass
+
+    # 7-day MA: calculate mean of only last 168 hours of data
+    ma_7d = None
+    if hours_of_data >= 168:
+        try:
+            last_ts = vols[-1][0]
+            last_dt = datetime.fromisoformat(last_ts.replace('Z', '+00:00'))
+            cutoff_7d = last_dt.timestamp() - (168 * 3600)
+            vols_7d = [v for (ts, v) in vols if datetime.fromisoformat(ts.replace('Z', '+00:00')).timestamp() >= cutoff_7d]
+            ma_7d = mean(vols_7d) if vols_7d else None
+        except Exception:
+            pass
     
     sd_med = stddev(last_10) if len(last_10) >= 2 else None
 
