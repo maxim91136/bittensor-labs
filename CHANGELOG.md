@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 -
+## v1.0.0-rc.22 (2025-12-06)
+### Added
+- **Easter Egg**: "Wake up, Neo..." Matrix-themed Easter Egg for engaged users
+  - Floating green snippet appears after 15-45 seconds (random)
+  - Visible for 30 seconds with Matrix-style glow and float animations
+  - Click triggers full-screen Morpheus message with Matrix rain and typewriter effect
+  - Gender-neutral message text customized for the dashboard
+  - Only appears once per session, targets intensive users
+
+### Notes
+- Pure frontend enhancement, no backend changes
+- Fully self-contained with inline CSS animations, no external dependencies
+- See `RELEASE_NOTES/v1.0.0-rc.22.md` for full details
+
 ## v1.0.0-rc.21.3.2 (2025-12-06)
 ### Fixed / Improved
 - Add retries with exponential backoff and respect `Retry-After` for the Taostats Block API; avoid failing CI on transient `429` responses.
