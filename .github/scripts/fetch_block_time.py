@@ -32,7 +32,7 @@ def fetch_block_time(num_blocks=500, max_attempts=4):
     try:
         all_blocks = []
         page = 1
-        per_page = 200  # API limit per request
+        per_page = 100  # Reduced to lower burst pressure on Taostats API
         rate_limited = False
         
         print(f"⏱️ Fetching {num_blocks} blocks...", file=sys.stderr)
