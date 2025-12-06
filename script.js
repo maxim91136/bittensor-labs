@@ -3537,26 +3537,6 @@ document.addEventListener('DOMContentLoaded', function() {
         'I know, because I was once looking for the same thing.',
         '',
         '— Trinity'
-      ],
-      // Trinity #2
-      [
-        'Neo, I\'m not afraid anymore.',
-        '',
-        'The Oracle told me',
-        'that I would fall in love,',
-        'and that man, the man that I loved,',
-        'would be The One.',
-        '',
-        'So you see,',
-        'you can\'t be dead.',
-        '',
-        'You can\'t be...',
-        'because I love you.',
-        '',
-        'You hear me?',
-        'I love you.',
-        '',
-        '— Trinity'
       ]
     ];
 
