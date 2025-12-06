@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 -
+## v1.0.0-rc.23.4 (2025-12-06)
+### Added
+- **Easter Egg Variety**: 5 randomized Matrix messages (3x Morpheus, 1x Trinity, 1x The Oracle)
+
 ## v1.0.0-rc.23.3 (2025-12-06)
 ### Fixed
 - **Spoon Position**: Fine-tuned positioning for optimal visual balance on all screen sizes (top: 0, translateX: -33%)
