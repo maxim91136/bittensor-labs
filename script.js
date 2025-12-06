@@ -3571,3 +3571,26 @@ document.addEventListener('DOMContentLoaded', function() {
     setTimeout(showNeoSnippet, delay);
   });
 })();
+
+// ===== Force Fear & Greed Badge Position on Desktop =====
+(function() {
+  function repositionFngBadge() {
+    const badge = document.querySelector('.fng-side-status');
+    if (!badge) return;
+
+    if (window.innerWidth >= 800) {
+      badge.style.left = '50%';
+      badge.style.top = 'auto';
+      badge.style.bottom = '20px';
+      badge.style.transform = 'translateX(-50%)';
+    } else {
+      badge.style.left = '';
+      badge.style.top = '';
+      badge.style.bottom = '';
+      badge.style.transform = '';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', repositionFngBadge);
+  window.addEventListener('resize', repositionFngBadge);
+})();

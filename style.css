@@ -1061,6 +1061,13 @@ body.light-bg .fng-spoon-gauge-container {
   100% { transform: translateY(-50%) translateX(0) scale(1); }
 }
 
+/* Animation for centered bottom badge (desktop) */
+@keyframes statusFloatBottom {
+  0% { transform: translateX(-50%) translateY(0) scale(1); }
+  50% { transform: translateX(-50%) translateY(-3px) scale(1.02); }
+  100% { transform: translateX(-50%) translateY(0) scale(1); }
+}
+
 @keyframes statusPulse {
   0% { box-shadow: 0 0 0 rgba(0,0,0,0); }
   50% { box-shadow: 0 0 18px rgba(255,0,0,0.12); }
@@ -1068,21 +1075,86 @@ body.light-bg .fng-spoon-gauge-container {
 }
 
 /* State styles */
-.fng-card.fng-red .fng-side-status { transform-origin: left center; animation: statusFloat 3.2s ease-in-out infinite; }
-.fng-card.fng-red .fng-side-status .status-text { background: linear-gradient(180deg,#4b0000,#a60000); color:#fff; box-shadow:0 0 10px rgba(255,50,50,0.9); text-shadow:0 0 8px rgba(255,80,80,0.95);}
+.fng-card.fng-red .fng-side-status {
+  transform-origin: left center;
+  animation: statusFloat 3.2s ease-in-out infinite;
+}
+.fng-card.fng-red .fng-side-status .status-text {
+  background: linear-gradient(180deg,#4b0000,#a60000);
+  color:#fff;
+  box-shadow:0 0 10px rgba(255,50,50,0.9);
+  text-shadow:0 0 8px rgba(255,80,80,0.95);
+}
 
-.fng-card.fng-green .fng-side-status .status-text { background: linear-gradient(180deg,#003a00,#007a1a); color:#eaffea; box-shadow:0 0 10px rgba(34,197,94,0.75); text-shadow:0 0 8px rgba(34,197,94,0.6);} 
+.fng-card.fng-green .fng-side-status .status-text {
+  background: linear-gradient(180deg,#003a00,#007a1a);
+  color:#eaffea;
+  box-shadow:0 0 10px rgba(34,197,94,0.75);
+  text-shadow:0 0 8px rgba(34,197,94,0.6);
+}
 
-.fng-card.fng-yellow .fng-side-status .status-text { background: linear-gradient(180deg,#9a6a00,#f7b500); color:#111; box-shadow:0 0 8px rgba(234,179,8,0.35);} 
+.fng-card.fng-yellow .fng-side-status .status-text {
+  background: linear-gradient(180deg,#9a6a00,#f7b500);
+  color:#111;
+  box-shadow:0 0 8px rgba(234,179,8,0.35);
+}
 
 /* 'Matrix' neon accent for red (extra glow) */
-.fng-card.fng-red .fng-side-status .status-text { font-family: ui-monospace, 'Courier New', monospace; letter-spacing:0.18em;}
-.fng-card.fng-red .fng-side-status { box-shadow: 0 6px 28px rgba(166,0,0,0.18), inset 0 0 18px rgba(255,77,77,0.06);}
+.fng-card.fng-red .fng-side-status .status-text {
+  font-family: ui-monospace, 'Courier New', monospace;
+  letter-spacing:0.18em;
+}
+.fng-card.fng-red .fng-side-status {
+  box-shadow: 0 6px 28px rgba(166,0,0,0.18), inset 0 0 18px rgba(255,77,77,0.06);
+}
 
-/* Make badge larger on wide screens and push further left */
+/* Adjust badge on wide screens - center it at the bottom */
+@media (min-width:800px) {
+  .fng-side-status {
+    left: 50% !important;
+    top: auto !important;
+    bottom: 20px !important;
+    transform: translateX(-50%) !important;
+    width: 140px;
+    height: 100px;
+  }
+  .fng-side-status .status-text { font-size: 1.65rem; }
+
+  /* Use bottom-centered animation on desktop for all states */
+  .fng-card.fng-red .fng-side-status,
+  .fng-card.fng-green .fng-side-status,
+  .fng-card.fng-yellow .fng-side-status {
+    transform-origin: center center !important;
+    animation: statusFloatBottom 3.2s ease-in-out infinite !important;
+  }
+}
+
 @media (min-width:1000px) {
-  .fng-side-status { left: 28px; width: 140px; height: 120px; }
-  .fng-side-status .status-text { font-size: 1.8rem; }
+  .fng-side-status {
+    bottom: 25px;
+    width: 145px;
+    height: 105px;
+  }
+  .fng-side-status .status-text { font-size: 1.7rem; }
+}
+
+/* On very large screens, adjust positioning */
+@media (min-width:1400px) {
+  .fng-side-status {
+    bottom: 30px;
+    width: 140px;
+    height: 100px;
+  }
+  .fng-side-status .status-text { font-size: 1.65rem; }
+}
+
+@media (min-width:1600px) {
+  .fng-side-status {
+    bottom: 30px;
+    width: 135px;
+    height: 95px;
+  }
+  .fng-side-status .status-text { font-size: 1.6rem; }
 }
 
 /* Hide or shrink on very small screens */
@@ -1406,29 +1478,57 @@ body.light-bg .fng-card.fng-red .barometer-class {
     max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
+    gap: var(--gap-lg);
   }
 
   .fng-card {
     width: 100%;
-    max-width: none;
-    margin-left: 0;
-    margin-right: 0;
-    justify-self: stretch;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+    justify-self: center;
   }
 
   .fng-map-container .map-preview-card {
     width: 100%;
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+/* Larger screens: keep cards compact */
+@media (min-width:1400px) {
+  .fng-card {
+    max-width: 550px;
+  }
+
+  .fng-map-container .map-preview-card {
+    max-width: 550px;
   }
 }
 
 /* Desktop: slightly larger spoon graphic and adjusted placement */
 @media (min-width:1000px) {
   .fng-spoon-bg {
-    width: 72%;
-    /* centered via left: 50% + transform: translateX(-50%) from base style */
+    width: 68%;
+    max-width: 420px;
+    /* centered via left: 50% + transform: translateX(-35%) from base style */
     /* slightly raise the spoon on wide screens too */
     top: -6px;
     opacity: 0.95;
+  }
+
+  .fng-barometer {
+    max-width: 180px;
+  }
+}
+
+/* Extra large screens: further constraints */
+@media (min-width:1600px) {
+  .fng-spoon-bg {
+    width: 60%;
+    max-width: 400px;
   }
 }
 
@@ -1852,11 +1952,15 @@ body.light-bg .fng-card.fng-red .barometer-class {
   text-align: center;
   padding-top: 2px; /* small top spacing so title isn't flush with card edge */
   margin-bottom: 0; /* remove default margin */
+  position: relative;
+  z-index: 30; /* Above spoon image (z-index: 0) */
 }
 .fng-card .card-header h2 {
   display: inline-block;
   margin: 0 auto;
   text-align: center;
+  position: relative;
+  z-index: 30;
 }
 /* position the info badge in the card's top-right corner */
 .fng-card > .info-badge, .fng-card .info-badge {
