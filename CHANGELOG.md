@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 -
+## v1.0.0-rc.21.3.2 (2025-12-06)
+### Fixed / Improved
+- Add retries with exponential backoff and respect `Retry-After` for the Taostats Block API; avoid failing CI on transient `429` responses.
+
+### Changed
+- Reduced `per_page` to `100` for block requests to lower burst pressure on the Taostats API.
+- Limit block sample size to `100` blocks per run (was 200 in some earlier invocations); still sufficient for block time estimation.
+
+### Notes
+- Operational/CI focused release — monitor scheduled runs for 24–48 hours to confirm reduced 429 frequency.
 
 ## v1.0.0-rc.21.3.1 (2025-12-06)
 ### Fixed
@@ -15,7 +25,6 @@ All notable changes to this project will be documented in this file.
 
 ### Notes
 - Frontend-only, low-risk release. Hard-refresh recommended after deployment to pick up updated assets and script changes.
-
 ## v1.0.0-rc.21.1 (2025-12-06)
 ### Fixed
 - Light-mode spoon rendering: use white-background PNG (`assets/fng-spoon-white.png`) as the light-mode asset so the spoon displays correctly in Light Mode and PWA contexts.
