@@ -883,7 +883,7 @@ body.light-bg .fng-card {
   align-items: center;
   justify-content: center;
   gap: 0;
-  padding: 5px 20px 8px 20px;
+  padding: 20px 20px 8px 20px;
   overflow: visible;
   position: relative;
   z-index: 1;
@@ -983,8 +983,8 @@ body.light-bg .matrix-quote {
   height: 85%;
   object-fit: contain;
   object-position: center center;
-  /* lift the spoon slightly so it aligns better across devices */
-  top: -8px;
+  /* centered vertically for better balance */
+  top: 15px;
   left: 50%;
   transform: translateX(-35%);
   /* keep image visible but slightly brighten it so it doesn't disappear on black */
@@ -1311,7 +1311,7 @@ body.light-bg .fng-spoon-gauge-container {
   width: 100%;
   max-width: 200px;
   position: relative;
-  margin-top: 0;
+  margin-top: 10px;
 }
 
 .barometer-plate {
@@ -1514,13 +1514,14 @@ body.light-bg .fng-card.fng-red .barometer-class {
     width: 68%;
     max-width: 420px;
     /* centered via left: 50% + transform: translateX(-35%) from base style */
-    /* slightly raise the spoon on wide screens too */
-    top: -6px;
+    /* centered vertically on wide screens */
+    top: 20px;
     opacity: 0.95;
   }
 
   .fng-barometer {
     max-width: 180px;
+    margin-top: 15px;
   }
 }
 
