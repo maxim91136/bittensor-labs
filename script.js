@@ -2981,3 +2981,270 @@ document.addEventListener('DOMContentLoaded', function() {
     } catch (e) { if (window._debug) console.warn('NYE init failed', e); }
   });
 })();
+
+// ===== "Wake up, Neo" Easter Egg =====
+(function() {
+  let neoSnippetShown = false;
+  let neoSnippet = null;
+
+  function showNeoSnippet() {
+    if (neoSnippetShown) return;
+    neoSnippetShown = true;
+
+    // Create floating snippet in Matrix style
+    neoSnippet = document.createElement('div');
+    neoSnippet.style.cssText = `
+      position: fixed;
+      top: ${20 + Math.random() * 30}%;
+      right: ${10 + Math.random() * 20}px;
+      background: rgba(0, 0, 0, 0.95);
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      font-size: 14px;
+      padding: 12px 18px;
+      border: 1px solid #0f0;
+      border-radius: 4px;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.5), inset 0 0 10px rgba(0, 255, 0, 0.1);
+      z-index: 99999;
+      cursor: pointer;
+      animation: neoGlow 2s ease-in-out infinite, neoFloat 3s ease-in-out infinite;
+      backdrop-filter: blur(4px);
+      user-select: none;
+      opacity: 0;
+      transition: opacity 0.5s ease-in;
+    `;
+    neoSnippet.textContent = 'Wake up, Neo...';
+
+    // Add animations
+    if (!document.getElementById('neoEasterEggStyles')) {
+      const style = document.createElement('style');
+      style.id = 'neoEasterEggStyles';
+      style.textContent = `
+        @keyframes neoGlow {
+          0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.5), inset 0 0 10px rgba(0, 255, 0, 0.1); }
+          50% { box-shadow: 0 0 30px rgba(0, 255, 0, 0.8), inset 0 0 15px rgba(0, 255, 0, 0.2); }
+        }
+        @keyframes neoFloat {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-10px); }
+        }
+        @keyframes matrixRain {
+          0% { transform: translateY(-100%); opacity: 0; }
+          10% { opacity: 1; }
+          90% { opacity: 1; }
+          100% { transform: translateY(100vh); opacity: 0; }
+        }
+        @keyframes morpheusFadeIn {
+          from { opacity: 0; transform: scale(0.9); }
+          to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes morpheusFadeOut {
+          from { opacity: 1; }
+          to { opacity: 0; }
+        }
+        @keyframes typewriter {
+          from { width: 0; }
+          to { width: 100%; }
+        }
+        @keyframes blink {
+          0%, 50% { opacity: 1; }
+          51%, 100% { opacity: 0; }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(neoSnippet);
+
+    // Fade in
+    setTimeout(() => { neoSnippet.style.opacity = '1'; }, 100);
+
+    // Click handler - show Morpheus message
+    neoSnippet.addEventListener('click', showMorpheusMessage);
+
+    // Auto-hide after 30 seconds if not clicked
+    setTimeout(() => {
+      if (neoSnippet && neoSnippet.parentNode) {
+        neoSnippet.style.opacity = '0';
+        setTimeout(() => {
+          if (neoSnippet && neoSnippet.parentNode) {
+            neoSnippet.remove();
+          }
+        }, 500);
+      }
+    }, 30000);
+  }
+
+  function showMorpheusMessage() {
+    // Remove snippet
+    if (neoSnippet) {
+      neoSnippet.style.opacity = '0';
+      setTimeout(() => neoSnippet.remove(), 300);
+    }
+
+    // Create full-screen overlay with Matrix effect
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: #000;
+      z-index: 999999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: morpheusFadeIn 0.5s ease-out;
+    `;
+
+    // Matrix rain background
+    const matrixCanvas = document.createElement('canvas');
+    matrixCanvas.width = window.innerWidth;
+    matrixCanvas.height = window.innerHeight;
+    matrixCanvas.style.cssText = 'position: absolute; top: 0; left: 0; opacity: 0.15;';
+    overlay.appendChild(matrixCanvas);
+
+    const ctx = matrixCanvas.getContext('2d');
+    const chars = '01アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+    const fontSize = 16;
+    const columns = Math.floor(matrixCanvas.width / fontSize);
+    const drops = Array(columns).fill(1);
+
+    function drawMatrix() {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+      ctx.fillRect(0, 0, matrixCanvas.width, matrixCanvas.height);
+      ctx.fillStyle = '#0f0';
+      ctx.font = fontSize + 'px monospace';
+
+      for (let i = 0; i < drops.length; i++) {
+        const text = chars[Math.floor(Math.random() * chars.length)];
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        if (drops[i] * fontSize > matrixCanvas.height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+        drops[i]++;
+      }
+    }
+
+    const matrixInterval = setInterval(drawMatrix, 50);
+
+    // Message container
+    const messageBox = document.createElement('div');
+    messageBox.style.cssText = `
+      position: relative;
+      z-index: 10;
+      max-width: 700px;
+      padding: 50px;
+      background: rgba(0, 20, 0, 0.95);
+      border: 2px solid #0f0;
+      border-radius: 8px;
+      box-shadow: 0 0 40px rgba(0, 255, 0, 0.6), inset 0 0 20px rgba(0, 255, 0, 0.1);
+      font-family: 'Courier New', monospace;
+      color: #0f0;
+    `;
+
+    // Messages from Morpheus
+    const messages = [
+      'I imagine that right now, you\'re feeling a bit like Alice.',
+      'Tumbling down the rabbit hole?',
+      '',
+      'I can see it in your eyes.',
+      'You have the look of someone who accepts what they see,',
+      'because they are expecting to wake up.',
+      '',
+      'Ironically, this is not far from the truth.',
+      '',
+      'The Matrix is everywhere.',
+      'It is all around us.',
+      'Even now, in this very dashboard.',
+      '',
+      'You can see it when you look at your validators,',
+      'or when you check the TAO price.',
+      '',
+      'It is the world that has been pulled over your eyes',
+      'to blind you from the truth.',
+      '',
+      '— Morpheus'
+    ];
+
+    const textContainer = document.createElement('div');
+    textContainer.style.cssText = `
+      font-size: 18px;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      min-height: 400px;
+    `;
+
+    messageBox.appendChild(textContainer);
+    overlay.appendChild(messageBox);
+
+    // Typewriter effect
+    let lineIndex = 0;
+    let charIndex = 0;
+
+    function typeMessage() {
+      if (lineIndex < messages.length) {
+        const currentLine = messages[lineIndex];
+
+        if (charIndex < currentLine.length) {
+          textContainer.textContent += currentLine[charIndex];
+          charIndex++;
+
+          // Faster typing for short pauses
+          const delay = currentLine === '' ? 50 : (40 + Math.random() * 40);
+          setTimeout(typeMessage, delay);
+        } else {
+          textContainer.textContent += '\n';
+          lineIndex++;
+          charIndex = 0;
+
+          // Pause between lines
+          const pause = messages[lineIndex] === '' ? 400 : 600;
+          setTimeout(typeMessage, pause);
+        }
+      } else {
+        // Show close hint
+        setTimeout(() => {
+          const closeHint = document.createElement('div');
+          closeHint.textContent = '[ Press ESC or click to close ]';
+          closeHint.style.cssText = `
+            margin-top: 30px;
+            text-align: center;
+            font-size: 14px;
+            opacity: 0.6;
+            animation: blink 1.5s infinite;
+          `;
+          messageBox.appendChild(closeHint);
+        }, 800);
+      }
+    }
+
+    document.body.appendChild(overlay);
+
+    // Start typing after short delay
+    setTimeout(typeMessage, 600);
+
+    // Close handlers
+    function closeOverlay() {
+      clearInterval(matrixInterval);
+      overlay.style.animation = 'morpheusFadeOut 0.5s ease-in';
+      setTimeout(() => overlay.remove(), 500);
+      document.removeEventListener('keydown', keyHandler);
+    }
+
+    function keyHandler(e) {
+      if (e.key === 'Escape') closeOverlay();
+    }
+
+    document.addEventListener('keydown', keyHandler);
+    overlay.addEventListener('click', closeOverlay);
+  }
+
+  // Trigger snippet randomly between 15-45 seconds after page load
+  document.addEventListener('DOMContentLoaded', function() {
+    const delay = 15000 + Math.random() * 30000; // 15-45 seconds
+    setTimeout(showNeoSnippet, delay);
+  });
+})();
