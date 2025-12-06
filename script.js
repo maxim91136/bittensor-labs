@@ -3537,6 +3537,27 @@ document.addEventListener('DOMContentLoaded', function() {
         'I know, because I was once looking for the same thing.',
         '',
         '— Trinity'
+      ],
+      // The Oracle
+      [
+        'I\'d ask you to sit down, but you\'re not going to anyway.',
+        'And don\'t worry about the vase.',
+        '',
+        'What vase?',
+        '',
+        'That vase.',
+        '',
+        'I\'m sorry.',
+        '',
+        'I said don\'t worry about it.',
+        'I\'ll get one of my kids to fix it.',
+        '',
+        'How did you know?',
+        '',
+        'What\'s really going to bake your noodle later on is,',
+        'would you still have broken it if I hadn\'t said anything?',
+        '',
+        '— The Oracle'
       ]
     ];
 
