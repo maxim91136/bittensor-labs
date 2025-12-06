@@ -907,6 +907,32 @@ body.light-bg .matrix-quote {
   text-shadow: 0 0 6px rgba(0, 204, 51, 0.4);
 }
 
+/* F&G timeline text: console / matrix-style and slightly smaller */
+#fngTimelineText,
+.fng-timeline-text {
+  font-family: ui-monospace, 'Fira Mono', 'Courier New', monospace;
+  font-size: 0.9rem; /* slightly smaller */
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  font-variant-numeric: tabular-nums;
+  text-transform: none;
+  opacity: 0.95;
+}
+
+/* Slightly darker muted text for Light Mode so it remains readable */
+body.light-bg #fngTimelineText,
+body.light-bg .fng-timeline-text {
+  color: #6b7280; /* slate-500 */
+}
+
+@media (max-width: 900px) {
+  #fngTimelineText, .fng-timeline-text { font-size: 0.82rem; }
+}
+
+@media (max-width: 420px) {
+  #fngTimelineText, .fng-timeline-text { font-size: 0.78rem; }
+}
+
 @keyframes matrixGlitch {
   0%, 90%, 100% { opacity: 0.25; }
   93%, 96% { opacity: 0.5; }
