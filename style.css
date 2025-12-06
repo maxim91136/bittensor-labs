@@ -984,7 +984,7 @@ body.light-bg .matrix-quote {
   object-fit: contain;
   object-position: center center;
   /* centered vertically for better balance */
-  top: 15px;
+  top: 5px;
   left: 50%;
   transform: translateX(-35%);
   /* keep image visible but slightly brighten it so it doesn't disappear on black */
@@ -1515,7 +1515,7 @@ body.light-bg .fng-card.fng-red .barometer-class {
     max-width: 420px;
     /* centered via left: 50% + transform: translateX(-35%) from base style */
     /* centered vertically on wide screens */
-    top: 20px;
+    top: 10px;
     opacity: 0.95;
   }
 
