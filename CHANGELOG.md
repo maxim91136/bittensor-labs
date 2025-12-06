@@ -28,6 +28,15 @@ All notable changes to this project will be documented in this file.
 ### Notes
 - Small frontend polish release; recommended to hard-refresh after deploy to clear cached assets.
 
+## v1.0.0-rc.21.3 (2025-12-06)
+### Added / Changed
+- Docs: Disclaimer now attributes the Fear & Greed Index values to `alternative.me` and includes a direct source link in the Data Sources grid.
+- Layout: Data sources grid converted to a 4×2 layout; one slot intentionally left empty for future links.
+- UI: Minor polish to the F&G card — timeline monospace styling, Matrix quote moved to header, and small easter-egg repositioning.
+
+### Notes
+- Low-risk frontend patch. Hard-refresh recommended to ensure updated assets and CSS rules are loaded correctly.
+
 ## v1.0.0-rc.21 (2025-12-05)
 ### Added
 - Fear & Greed (F&G) UI: improved card layout with history matrix and a spoon-shaped gauge. Support for user-provided spoon graphics added (`assets/fng-spoon-*.webp`).
