@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 -
+## v1.0.0-rc.23.2 (2025-12-06)
+### Fixed
+- **FEAR Badge**: Desktop positioning now forced via JavaScript (CSS specificity issues resolved)
+- **Vertical Centering**: Spoon and barometer better centered within card for improved visual balance
+
 ## v1.0.0-rc.23.1 (2025-12-06)
 ### Improved
 - **Card Layout**: Fear & Greed Index and Miner Map cards now display side-by-side on wider screens
