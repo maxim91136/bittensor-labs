@@ -430,37 +430,57 @@
       </div>
     </section>
       <div class="last-update" id="lastUpdate"></div>
-    <!-- Fear & Greed Index (placed under Price Chart; width unchanged) -->
-    <section class="dashboard-card fng-card" id="fngCard" aria-labelledby="fng-card-heading">
-      <!-- Left-side status badge (FEAR / NEUTRAL / GREED) -->
-      <div class="fng-side-status" aria-hidden="true">
-        <span class="status-text">—</span>
-      </div>
-      <div class="card-header">
-        <h2 id="fng-card-heading">Fear & Greed Index</h2>
-        <span class="info-badge" translate="no" aria-hidden="true" id="fngInfo" data-tooltip="Source: alternative.me">i</span>
-      </div>
-      <!-- Matrix Easter Egg (moved to card header area to avoid overlapping timeline) -->
-      <div class="matrix-quote" aria-hidden="true">there is no spoon...</div>
-      <div class="fng-card-body">
-        <!-- Spoon background image (id used by `useFngGraphics`) -->
-        <img id="fngSpoonImage" src="assets/fng-spoon-black.png" class="fng-spoon-bg" alt="">
-        <!-- Barometer (Tachometer) positioned in spoon handle curve -->
-        <div class="fng-barometer">
-          <div class="barometer-plate" aria-hidden="true">
-            <div class="barometer-face"></div>
-            <div id="fngNeedle" class="barometer-needle" style="transform:rotate(-90deg);"></div>
-            <div class="barometer-center" aria-hidden="true"><span id="fngValueCenter" style="font-size:1.1rem;line-height:1;">—</span></div>
-            <div class="barometer-class" aria-hidden="true"><span id="fngClass" style="font-size:0.78rem;line-height:1;color:var(--text-muted)">—</span></div>
-          </div>
-          <div class="barometer-scale">
-            <span>0</span><span>50</span><span>100</span>
-          </div>
+
+    <!-- Container for Fear & Greed and Miner Map Cards -->
+    <div class="fng-map-container">
+      <!-- Fear & Greed Index -->
+      <section class="dashboard-card fng-card" id="fngCard" aria-labelledby="fng-card-heading">
+        <!-- Left-side status badge (FEAR / NEUTRAL / GREED) -->
+        <div class="fng-side-status" aria-hidden="true">
+          <span class="status-text">—</span>
         </div>
-        <!-- F&G Timeline: historical values -->
-        <div id="fngTimelineText" class="fng-timeline-text" style="text-align:center;font-size:0.92em;color:var(--text-muted);margin-top:18px;position:relative;z-index:2;"></div>
-      </div>
-    </section>
+        <div class="card-header">
+          <h2 id="fng-card-heading">Fear & Greed Index</h2>
+          <span class="info-badge" translate="no" aria-hidden="true" id="fngInfo" data-tooltip="Source: alternative.me">i</span>
+        </div>
+        <!-- Matrix Easter Egg (moved to card header area to avoid overlapping timeline) -->
+        <div class="matrix-quote" aria-hidden="true">there is no spoon...</div>
+        <div class="fng-card-body">
+          <!-- Spoon background image (id used by `useFngGraphics`) -->
+          <img id="fngSpoonImage" src="assets/fng-spoon-black.png" class="fng-spoon-bg" alt="">
+          <!-- Barometer (Tachometer) positioned in spoon handle curve -->
+          <div class="fng-barometer">
+            <div class="barometer-plate" aria-hidden="true">
+              <div class="barometer-face"></div>
+              <div id="fngNeedle" class="barometer-needle" style="transform:rotate(-90deg);"></div>
+              <div class="barometer-center" aria-hidden="true"><span id="fngValueCenter" style="font-size:1.1rem;line-height:1;">—</span></div>
+              <div class="barometer-class" aria-hidden="true"><span id="fngClass" style="font-size:0.78rem;line-height:1;color:var(--text-muted)">—</span></div>
+            </div>
+            <div class="barometer-scale">
+              <span>0</span><span>50</span><span>100</span>
+            </div>
+          </div>
+          <!-- F&G Timeline: historical values -->
+          <div id="fngTimelineText" class="fng-timeline-text" style="text-align:center;font-size:0.92em;color:var(--text-muted);margin-top:18px;position:relative;z-index:2;"></div>
+        </div>
+      </section>
+
+      <!-- Miner Map Card -->
+      <section class="dashboard-card map-preview-card" aria-labelledby="map-preview-heading">
+        <div class="card-header">
+          <h2 id="map-preview-heading">Miner Map</h2>
+          <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Distribution of miners; click to open the interactive map">i</span>
+        </div>
+        <div class="map-preview-body">
+          <!-- Place your provided map thumbnail at assets/miner-map-thumb.png to use a custom image here -->
+          <img id="mapThumb" src="assets/miner-map-thumb.png" alt="Miner map preview (source: learnbittensor.org)" aria-describedby="map-attribution">
+          <div style="width:100%;display:flex;align-items:center;justify-content:center;margin-top:10px">
+            <a href="https://learnbittensor.org/map" target="_blank" rel="noopener" class="card-badge">Open Map</a>
+          </div>
+          <div id="map-attribution" class="map-attribution">Map preview image from learnbittensor.org</div>
+        </div>
+      </section>
+    </div>
       <!-- TAO Tensor Law Embed Card: Model preview + link (Dark Mode aware) -->
       <section class="dashboard-card taotensor-card" aria-labelledby="taotensor-heading">
         <div class="card-header">
@@ -501,21 +521,6 @@
           </div>
         </div>
       </div>
-      <!-- Map Preview Card (Option A) -->
-      <section class="dashboard-card map-preview-card" aria-labelledby="map-preview-heading">
-        <div class="card-header">
-          <h2 id="map-preview-heading">Miner Map</h2>
-          <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Distribution of miners; click to open the interactive map">i</span>
-        </div>
-        <div class="map-preview-body">
-          <!-- Place your provided map thumbnail at assets/miner-map-thumb.png to use a custom image here -->
-          <img id="mapThumb" src="assets/miner-map-thumb.png" alt="Miner map preview (source: learnbittensor.org)" aria-describedby="map-attribution">
-          <div style="width:100%;display:flex;align-items:center;justify-content:center;margin-top:10px">
-            <a href="https://learnbittensor.org/map" target="_blank" rel="noopener" class="card-badge">Open Map</a>
-          </div>
-          <div id="map-attribution" class="map-attribution">Map preview image from learnbittensor.org</div>
-        </div>
-      </section>
   <!-- Dashboard card: Film -->
     <section class="dashboard-card film-card">
   <div class="card-header">

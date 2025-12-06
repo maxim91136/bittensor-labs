@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 -
+## v1.0.0-rc.23.1 (2025-12-06)
+### Improved
+- **Card Layout**: Fear & Greed Index and Miner Map cards now display side-by-side on wider screens
+  - Responsive container: side-by-side at ≥800px, stacked below
+  - Equal card widths for balanced appearance
+  - Centered spoon graphic in F&G card
+  - Adjusted Matrix quote positioning for better spacing
+
+### Technical
+- New `.fng-map-container` grid layout
+- Spoon background centered with `translateX(-35%)`
+- Matrix quote repositioned (top: 6px, smaller font)
+
+### Notes
+- Pure frontend layout enhancement
+- See `RELEASE_NOTES/v1.0.0-rc.23.1.md` for full details
+
 ## v1.0.0-rc.23 (2025-12-06)
 ### Added
 - **Sound System**: Complete procedural Matrix-themed audio engine

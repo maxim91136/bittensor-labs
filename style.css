@@ -877,20 +877,6 @@ body.light-bg .fng-card {
   background: #ffffff !important;
 }
 
-/* Spoon background image */
-.fng-spoon-bg {
-  position: absolute;
-  width: 60%;
-  height: 85%;
-  object-fit: contain;
-  object-position: left center;
-  top: 0;
-  left: 30%;
-  opacity: 0.85;
-  z-index: 0;
-  pointer-events: none;
-}
-
 .fng-card .fng-card-body {
   display: flex;
   flex-direction: column;
@@ -966,17 +952,17 @@ body.light-bg .fng-timeline-text {
 /* Place the Matrix quote in the F&G card header to avoid overlapping the timeline */
 .fng-card .matrix-quote {
   bottom: auto;
-  top: 12px;
-  left: 18px;
-  font-size: 0.78rem;
-  opacity: 0.48;
+  top: 6px;
+  left: 12px;
+  font-size: 0.68rem;
+  opacity: 0.45;
   z-index: 25;
   text-shadow: 0 0 6px rgba(0,255,65,0.28);
 }
 
 body.light-bg .fng-card .matrix-quote {
   color: #00cc33;
-  opacity: 0.55;
+  opacity: 0.5;
   text-shadow: 0 0 4px rgba(0,204,51,0.18);
 }
 
@@ -996,10 +982,11 @@ body.light-bg .matrix-quote {
   width: 60%;
   height: 85%;
   object-fit: contain;
-  object-position: left center;
+  object-position: center center;
   /* lift the spoon slightly so it aligns better across devices */
   top: -8px;
-  left: 30%;
+  left: 50%;
+  transform: translateX(-35%);
   /* keep image visible but slightly brighten it so it doesn't disappear on black */
   opacity: 0.95;
   z-index: 0;
@@ -1009,7 +996,6 @@ body.light-bg .matrix-quote {
   background-color: transparent;
 }
 body.light-bg .fng-spoon-bg {
-  left: 34%;
   /* Use a lighter filter in light mode and avoid blend modes that can
      remove the image against white backgrounds. The loader (`useFngGraphics`)
      will swap in a light variant image when available. */
@@ -1405,15 +1391,33 @@ body.light-bg .fng-card.fng-red .barometer-class {
   }
 }
 
-/* Desktop: center F&G card */
-@media (min-width:1000px) {
-  .fng-card {
-    width: 50%;
-    /* allow larger card on wide screens so spoon + gauge aren't overly small */
-    max-width: 900px;
+/* Container for Fear & Greed and Miner Map Cards */
+.fng-map-container {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--gap-md);
+  width: 100%;
+}
+
+/* Desktop: side-by-side layout */
+@media (min-width:800px) {
+  .fng-map-container {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 1400px;
     margin-left: auto;
     margin-right: auto;
-    justify-self: center;
+  }
+
+  .fng-card {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    margin-right: 0;
+    justify-self: stretch;
+  }
+
+  .fng-map-container .map-preview-card {
+    width: 100%;
   }
 }
 
@@ -1421,7 +1425,7 @@ body.light-bg .fng-card.fng-red .barometer-class {
 @media (min-width:1000px) {
   .fng-spoon-bg {
     width: 72%;
-    left: 30%;
+    /* centered via left: 50% + transform: translateX(-50%) from base style */
     /* slightly raise the spoon on wide screens too */
     top: -6px;
     opacity: 0.95;
