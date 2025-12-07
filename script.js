@@ -2180,6 +2180,7 @@ function setupDynamicTooltips() {
         const html = badge.getAttribute('data-tooltip-html') === 'true';
         if (text) tooltipManager.show(badge, { text, html, persistent: false, autoHide: 0 });
       });
+      badge.addEventListener('mouseleave', () => tooltipManager.hide());
     }
 
     // Keyboard navigation
