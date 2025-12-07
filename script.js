@@ -692,11 +692,11 @@ Both declining — downward momentum${marketPhaseNote}` + (confidenceLine || '')
     if (ma3dVal && ma7dVal) {
       const ma7dTrend = ((ma3dVal - ma7dVal) / ma7dVal) * 100;
       if (ma7dTrend > 5) {
-        marketPhaseNote = `\n📈 Market: Bullish trend (7d: +${ma7dTrend.toFixed(1)}%)`;
+        marketPhaseNote = `\n📈 Market: Bullish trend (MA-3d vs MA-7d: +${ma7dTrend.toFixed(1)}%)`;
       } else if (ma7dTrend < -5) {
-        marketPhaseNote = `\n📉 Market: Bearish trend (7d: ${ma7dTrend.toFixed(1)}%)`;
+        marketPhaseNote = `\n📉 Market: Bearish trend (MA-3d vs MA-7d: ${ma7dTrend.toFixed(1)}%)`;
       } else {
-        marketPhaseNote = `\n➡️ Market: Neutral (7d: ${ma7dTrend >= 0 ? '+' : ''}${ma7dTrend.toFixed(1)}%)`;
+        marketPhaseNote = `\n➡️ Market: Neutral (MA-3d vs MA-7d: ${ma7dTrend >= 0 ? '+' : ''}${ma7dTrend.toFixed(1)}%)`;
       }
     }
   } catch (e) { /* ignore */ }
