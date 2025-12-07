@@ -554,7 +554,13 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
   if (volumeData === null || priceChange === null) {
     return { signal: 'neutral', tooltip: 'Insufficient data for signal' };
   }
-  
+
+  // Check if weekend (UTC)
+  const now = new Date();
+  const dayUTC = now.getUTCDay(); // 0=Sunday, 6=Saturday
+  const isWeekend = (dayUTC === 0 || dayUTC === 6);
+  const weekendNote = isWeekend ? '\n\n📅 Weekend — typically lower activity' : '';
+
   // Support both old format (number) and new format (object with change, confidence)
   const volumeChange = typeof volumeData === 'object' ? volumeData.change : volumeData;
   const confidence = typeof volumeData === 'object' ? volumeData.confidence : null;
@@ -605,7 +611,7 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
         tooltip: `🔴 Bearish
 Volume: ${volStrStrict}
 Price: ${priceStrStrict}
-Both declining — downward momentum` + (confidenceLine || '')
+Both declining — downward momentum` + (confidenceLine || '') + weekendNote
       };
     }
     if (volumeChange < 0 && priceChange < 0 && (confidence !== 'high' || !masAligned)) {
@@ -614,7 +620,7 @@ Both declining — downward momentum` + (confidenceLine || '')
       if (window._debug) console.debug('Ampelsystem strict rule applied (soft): priceDown && volumeDown => RED', {priceChange, volumeChange, confidence, masAligned});
       return {
         signal: 'red',
-        tooltip: `🔴 Bearish\nVolume: ${volStrStrict}\nPrice: ${priceStrStrict}\nBoth declining — downward momentum` + (confidenceLine || '')
+        tooltip: `🔴 Bearish\nVolume: ${volStrStrict}\nPrice: ${priceStrStrict}\nBoth declining — downward momentum` + (confidenceLine || '') + weekendNote
       };
     }
     // traded share (percent) if data available — convert USD volume to TAO using lastPrice when possible
@@ -644,7 +650,7 @@ Both declining — downward momentum` + (confidenceLine || '')
     if (masAligned && (tradedShareGood || priceChange >= SUSTAIN_PRICE_PCT)) {
       return {
         signal: 'green',
-        tooltip: `🟢 Strong Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nSustained upward momentum confirmed` + (confidenceLine || '')
+        tooltip: `🟢 Strong Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nSustained upward momentum confirmed` + (confidenceLine || '') + weekendNote
       };
     }
     // Otherwise use hysteresis to avoid flapping for marginal signals
@@ -656,7 +662,7 @@ Both declining — downward momentum` + (confidenceLine || '')
     if ((window._sustainedBullishCount || 0) >= HYSTERESIS_REQUIRED) {
       return {
         signal: 'green',
-        tooltip: `🟢 Strong Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nSustained upward momentum confirmed` + (confidenceLine || '')
+        tooltip: `🟢 Strong Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nSustained upward momentum confirmed` + (confidenceLine || '') + weekendNote
       };
     }
   } catch (e) {
@@ -667,7 +673,7 @@ Both declining — downward momentum` + (confidenceLine || '')
   if (volUp && priceUp) {
     return {
       signal: 'green',
-      tooltip: `🟢 Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nStrong buying interest${confidenceLine}`
+      tooltip: `🟢 Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nStrong buying interest${confidenceLine}${weekendNote}`
     };
   }
 
@@ -675,7 +681,7 @@ Both declining — downward momentum` + (confidenceLine || '')
   if (volUp && priceDown) {
     return {
       signal: 'red',
-      tooltip: `🔴 Bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nHigh selling pressure${confidenceLine}`
+      tooltip: `🔴 Bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nHigh selling pressure${confidenceLine}${weekendNote}`
     };
   }
 
@@ -683,7 +689,7 @@ Both declining — downward momentum` + (confidenceLine || '')
   if (volUp && priceStable) {
     return {
       signal: 'orange',
-      tooltip: `🟠 Watch\nVolume: ${volStr}\nPrice: ${priceStr}\nIncreased activity — watch for direction${confidenceLine}`
+      tooltip: `🟠 Watch\nVolume: ${volStr}\nPrice: ${priceStr}\nIncreased activity — watch for direction${confidenceLine}${weekendNote}`
     };
   }
   
@@ -697,6 +703,7 @@ Both declining — downward momentum` + (confidenceLine || '')
     const spikeLines = [`🟡 Low Volume Spike`, `Volume: ${volStr}`, `Price: ${priceStr}`];
     if (pctTraded !== null) spikeLines.push(`Traded: ${pctTraded.toFixed(4)}% of supply`);
     spikeLines.push('Price surge on low liquidity', confidenceLine);
+    if (weekendNote) spikeLines.push(weekendNote.trim());
     return { signal: 'yellow', tooltip: spikeLines.join('\n') };
   }
 
@@ -712,12 +719,13 @@ Both declining — downward momentum` + (confidenceLine || '')
       const spikeLines = [`🟡 Low Volume Spike`,`Volume: ${volStr}`,`Price: ${priceStr}`];
       if (pctTraded !== null) spikeLines.push(`Traded: ${pctTraded.toFixed(4)}% of supply`);
       spikeLines.push('Price surge on low liquidity', confidenceLine);
+      if (weekendNote) spikeLines.push(weekendNote.trim());
       return { signal: 'yellow', tooltip: spikeLines.join('\n') };
     }
 
     return {
       signal: 'yellow',
-      tooltip: `🟡 Caution\nVolume: ${volStr}\nPrice: ${priceStr}\nWeak momentum — watch closely${confidenceLine}`
+      tooltip: `🟡 Caution\nVolume: ${volStr}\nPrice: ${priceStr}\nWeak momentum — watch closely${confidenceLine}${weekendNote}`
     };
   }
   
@@ -728,19 +736,19 @@ Both declining — downward momentum` + (confidenceLine || '')
     if (priceChange <= -SLIGHT_BEAR_PCT) {
       return {
         signal: 'red',
-        tooltip: `🔴 Bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nDecline on reduced interest${confidenceLine}`
+        tooltip: `🔴 Bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nDecline on reduced interest${confidenceLine}${weekendNote}`
       };
     }
     return {
       signal: 'yellow',
-      tooltip: `🟡 Consolidation\nVolume: ${volStr}\nPrice: ${priceStr}\nLow activity — sideways trend${confidenceLine}`
+      tooltip: `🟡 Consolidation\nVolume: ${volStr}\nPrice: ${priceStr}\nLow activity — sideways trend${confidenceLine}${weekendNote}`
     };
   }
 
   // ⚪ STABLE: No significant movement (includes vol↓ + price stable)
   return {
     signal: 'neutral',
-    tooltip: `⚪ Stable\nVolume: ${volStr}\nPrice: ${priceStr}\nQuiet market${confidenceLine}`
+    tooltip: `⚪ Stable\nVolume: ${volStr}\nPrice: ${priceStr}\nQuiet market${confidenceLine}${weekendNote}`
   };
 }
 
