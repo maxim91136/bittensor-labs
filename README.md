@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem.
 
-**Latest release:** `v1.0.0-rc.23.5` — see [RELEASE_NOTES/v1.0.0-rc.23.5.md](RELEASE_NOTES/v1.0.0-rc.23.5.md) and [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.23.6` — see [RELEASE_NOTES/v1.0.0-rc.23.6.md](RELEASE_NOTES/v1.0.0-rc.23.6.md) and [CHANGELOG.md](CHANGELOG.md) for details.
 
 > ℹ️ Spoon gauge: The Fear & Greed card now uses optimized WebP spoon assets (`assets/fng-spoon-dark.webp`, `assets/fng-spoon-light.webp`).
 > Ampelsystem: Volume signal logic and UI have been improved for RC21. See `script.js` for runtime config.
