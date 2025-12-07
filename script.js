@@ -555,7 +555,7 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
     return { signal: 'neutral', tooltip: 'Insufficient data for signal' };
   }
 
-  // Check if weekend (UTC)
+  // Check if weekend (UTC) and adjust thresholds
   const now = new Date();
   const dayUTC = now.getUTCDay(); // 0=Sunday, 6=Saturday
   const isWeekend = (dayUTC === 0 || dayUTC === 6);
@@ -566,8 +566,9 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
   const confidence = typeof volumeData === 'object' ? volumeData.confidence : null;
   const samples = typeof volumeData === 'object' ? volumeData.samples : null;
   const hoursOfData = typeof volumeData === 'object' ? volumeData.hoursOfData : null;
-  
-  const threshold = VOLUME_SIGNAL_THRESHOLD;
+
+  // Weekend mode: Higher thresholds (lower activity is normal)
+  const threshold = isWeekend ? VOLUME_SIGNAL_THRESHOLD * 1.5 : VOLUME_SIGNAL_THRESHOLD;
   const volUp = volumeChange > threshold;
   const volDown = volumeChange < -threshold;
   const priceUp = priceChange > threshold;
@@ -583,44 +584,58 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
     confidenceLine = `\n\nConfidence: ${confidence} (${samples} samples, ${hoursOfData}h data)`;
   }
   
-  // Composite detection: Sustained bullish vs short spikes
-  // Check for sustained bullish: moving averages aligned AND volume up enough
+  // Composite detection: Sustained bullish vs short spikes + Market phase
   try {
-    // Determine MA alignment using the actual MA values instead of
-    // percent-change-to-MA proxies. This avoids false positives where
-    // the latest volume sits above a short MA but the MA ordering is
-    // not bull-aligned (short > med > long).
+    // Determine MA alignment and market phase
     const maShortVal = aggregates?.ma_short ?? null;
     const maMedVal = aggregates?.ma_med ?? null;
     const ma3dVal = aggregates?.ma_3d ?? null;
+    const ma7dVal = aggregates?.ma_7d ?? null;
     const maShortUp = (maShortVal !== null && maMedVal !== null && maShortVal > maMedVal);
     const ma3dUp = (maMedVal !== null && ma3dVal !== null && maMedVal > ma3dVal);
 
-    // STRICT RULE (softer): Only apply immediate RED when both price and volume are down
-    // if we don't have high confidence OR the moving averages are not bull-aligned.
-    // This prevents the strict rule from overriding strong MA-based bullish signals
-    // when data coverage is good.
+    // MA alignment (bullish structure)
     const masAligned = maShortVal !== null && maMedVal !== null && ma3dVal !== null && (maShortVal > maMedVal && maMedVal > ma3dVal);
-    // If operator explicitly forces the strict down->RED rule, apply it immediately
-    if (STRICT_DOWN_ALWAYS_RED && volumeChange < 0 && priceChange < 0) {
+
+    // Long-term market phase (7d trend)
+    let marketPhase = 'neutral';
+    let marketPhaseNote = '';
+    if (ma3dVal && ma7dVal) {
+      const ma7dTrend = ((ma3dVal - ma7dVal) / ma7dVal) * 100;
+      if (ma7dTrend > 5) {
+        marketPhase = 'bullish';
+        marketPhaseNote = `\n📈 Market: Bullish trend (7d: +${ma7dTrend.toFixed(1)}%)`;
+      } else if (ma7dTrend < -5) {
+        marketPhase = 'bearish';
+        marketPhaseNote = `\n📉 Market: Bearish trend (7d: ${ma7dTrend.toFixed(1)}%)`;
+      } else {
+        marketPhaseNote = `\n➡️ Market: Neutral (7d: ${ma7dTrend >= 0 ? '+' : ''}${ma7dTrend.toFixed(1)}%)`;
+      }
+    }
+
+    // STRICT RULE (refined): Only RED when significant drop + no MA support
+    // Don't override if we're in a bullish market phase with good MA alignment
+    const significantDrop = volumeChange < -threshold * 1.5 && priceChange < -threshold * 1.5;
+
+    if (STRICT_DOWN_ALWAYS_RED && significantDrop && marketPhase !== 'bullish') {
       const volStrStrict = volumeChange >= 0 ? `+${volumeChange.toFixed(1)}%` : `${volumeChange.toFixed(1)}%`;
       const priceStrStrict = priceChange >= 0 ? `+${priceChange.toFixed(1)}%` : `${priceChange.toFixed(1)}%`;
-      if (window._debug) console.debug('Ampelsystem strict rule forced by config: priceDown && volumeDown => RED', {priceChange, volumeChange});
+      if (window._debug) console.debug('Ampelsystem strict rule: significant drop in non-bullish phase', {priceChange, volumeChange, marketPhase});
       return {
         signal: 'red',
         tooltip: `🔴 Bearish
 Volume: ${volStrStrict}
 Price: ${priceStrStrict}
-Both declining — downward momentum` + (confidenceLine || '') + weekendNote
+Both declining — downward momentum${marketPhaseNote}` + (confidenceLine || '') + weekendNote
       };
     }
-    if (volumeChange < 0 && priceChange < 0 && (confidence !== 'high' || !masAligned)) {
+    if (volumeChange < 0 && priceChange < 0 && (confidence !== 'high' || !masAligned) && marketPhase !== 'bullish') {
       const volStrStrict = volumeChange >= 0 ? `+${volumeChange.toFixed(1)}%` : `${volumeChange.toFixed(1)}%`;
       const priceStrStrict = priceChange >= 0 ? `+${priceChange.toFixed(1)}%` : `${priceChange.toFixed(1)}%`;
-      if (window._debug) console.debug('Ampelsystem strict rule applied (soft): priceDown && volumeDown => RED', {priceChange, volumeChange, confidence, masAligned});
+      if (window._debug) console.debug('Ampelsystem soft strict: both down, no MA support', {priceChange, volumeChange, confidence, masAligned, marketPhase});
       return {
         signal: 'red',
-        tooltip: `🔴 Bearish\nVolume: ${volStrStrict}\nPrice: ${priceStrStrict}\nBoth declining — downward momentum` + (confidenceLine || '') + weekendNote
+        tooltip: `🔴 Bearish\nVolume: ${volStrStrict}\nPrice: ${priceStrStrict}\nBoth declining — downward momentum${marketPhaseNote}` + (confidenceLine || '') + weekendNote
       };
     }
     // traded share (percent) if data available — convert USD volume to TAO using lastPrice when possible
@@ -650,7 +665,7 @@ Both declining — downward momentum` + (confidenceLine || '') + weekendNote
     if (masAligned && (tradedShareGood || priceChange >= SUSTAIN_PRICE_PCT)) {
       return {
         signal: 'green',
-        tooltip: `🟢 Strong Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nSustained upward momentum confirmed` + (confidenceLine || '') + weekendNote
+        tooltip: `🟢 Strong Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nSustained upward momentum confirmed${marketPhaseNote}` + (confidenceLine || '') + weekendNote
       };
     }
     // Otherwise use hysteresis to avoid flapping for marginal signals
@@ -662,18 +677,35 @@ Both declining — downward momentum` + (confidenceLine || '') + weekendNote
     if ((window._sustainedBullishCount || 0) >= HYSTERESIS_REQUIRED) {
       return {
         signal: 'green',
-        tooltip: `🟢 Strong Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nSustained upward momentum confirmed` + (confidenceLine || '') + weekendNote
+        tooltip: `🟢 Strong Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nSustained upward momentum confirmed${marketPhaseNote}` + (confidenceLine || '') + weekendNote
       };
     }
   } catch (e) {
     if (window._debug) console.debug('sustained detection failed', e);
   }
 
+  // Build market phase note for standard signals (fallback if not in try block)
+  let marketPhaseNote = '';
+  try {
+    const ma3dVal = aggregates?.ma_3d ?? null;
+    const ma7dVal = aggregates?.ma_7d ?? null;
+    if (ma3dVal && ma7dVal) {
+      const ma7dTrend = ((ma3dVal - ma7dVal) / ma7dVal) * 100;
+      if (ma7dTrend > 5) {
+        marketPhaseNote = `\n📈 Market: Bullish trend (7d: +${ma7dTrend.toFixed(1)}%)`;
+      } else if (ma7dTrend < -5) {
+        marketPhaseNote = `\n📉 Market: Bearish trend (7d: ${ma7dTrend.toFixed(1)}%)`;
+      } else {
+        marketPhaseNote = `\n➡️ Market: Neutral (7d: ${ma7dTrend >= 0 ? '+' : ''}${ma7dTrend.toFixed(1)}%)`;
+      }
+    }
+  } catch (e) { /* ignore */ }
+
   // 🟢 GREEN: Volume up + Price up = Strong buying pressure
   if (volUp && priceUp) {
     return {
       signal: 'green',
-      tooltip: `🟢 Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nStrong buying interest${confidenceLine}${weekendNote}`
+      tooltip: `🟢 Bullish\nVolume: ${volStr}\nPrice: ${priceStr}\nStrong buying interest${marketPhaseNote}${confidenceLine}${weekendNote}`
     };
   }
 
@@ -681,15 +713,15 @@ Both declining — downward momentum` + (confidenceLine || '') + weekendNote
   if (volUp && priceDown) {
     return {
       signal: 'red',
-      tooltip: `🔴 Bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nHigh selling pressure${confidenceLine}${weekendNote}`
+      tooltip: `🔴 Bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nHigh selling pressure${marketPhaseNote}${confidenceLine}${weekendNote}`
     };
   }
 
-  // 🟠 ORANGE: Volume up + Price stable = Potential breakout
+  // 🟠 ORANGE: Volume up + Price stable = High activity, direction unclear
   if (volUp && priceStable) {
     return {
       signal: 'orange',
-      tooltip: `🟠 Watch\nVolume: ${volStr}\nPrice: ${priceStr}\nIncreased activity — watch for direction${confidenceLine}${weekendNote}`
+      tooltip: `🟠 Watch\nVolume: ${volStr}\nPrice: ${priceStr}\nHigh activity — direction unclear${marketPhaseNote}${confidenceLine}${weekendNote}`
     };
   }
   
@@ -718,37 +750,38 @@ Both declining — downward momentum` + (confidenceLine || '') + weekendNote
       }
       const spikeLines = [`🟡 Low Volume Spike`,`Volume: ${volStr}`,`Price: ${priceStr}`];
       if (pctTraded !== null) spikeLines.push(`Traded: ${pctTraded.toFixed(4)}% of supply`);
-      spikeLines.push('Price surge on low liquidity', confidenceLine);
+      spikeLines.push('Price surge on low liquidity — may reverse', confidenceLine);
+      if (marketPhaseNote) spikeLines.push(marketPhaseNote.trim());
       if (weekendNote) spikeLines.push(weekendNote.trim());
       return { signal: 'yellow', tooltip: spikeLines.join('\n') };
     }
 
     return {
       signal: 'yellow',
-      tooltip: `🟡 Caution\nVolume: ${volStr}\nPrice: ${priceStr}\nWeak momentum — watch closely${confidenceLine}${weekendNote}`
+      tooltip: `🟡 Caution\nVolume: ${volStr}\nPrice: ${priceStr}\nWeak momentum — needs volume confirmation${marketPhaseNote}${confidenceLine}${weekendNote}`
     };
   }
-  
-  // Vol↓ + Price↓: Consolidation or Slightly bearish (light red)
+
+  // Vol↓ + Price↓: Consolidation or Slightly bearish
   if (volDown && priceDown) {
-    // If price drop is meaningful, mark as slightly bearish (use red CSS class for light-red)
-    const SLIGHT_BEAR_PCT = 2.0; // 2% price drop threshold for 'slightly bearish'
+    // If price drop is meaningful, mark as bearish
+    const SLIGHT_BEAR_PCT = 2.0; // 2% price drop threshold
     if (priceChange <= -SLIGHT_BEAR_PCT) {
       return {
         signal: 'red',
-        tooltip: `🔴 Bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nDecline on reduced interest${confidenceLine}${weekendNote}`
+        tooltip: `🔴 Bearish\nVolume: ${volStr}\nPrice: ${priceStr}\nDecline on reduced interest${marketPhaseNote}${confidenceLine}${weekendNote}`
       };
     }
     return {
       signal: 'yellow',
-      tooltip: `🟡 Consolidation\nVolume: ${volStr}\nPrice: ${priceStr}\nLow activity — sideways trend${confidenceLine}${weekendNote}`
+      tooltip: `🟡 Consolidation\nVolume: ${volStr}\nPrice: ${priceStr}\nLow activity — sideways movement${marketPhaseNote}${confidenceLine}${weekendNote}`
     };
   }
 
-  // ⚪ STABLE: No significant movement (includes vol↓ + price stable)
+  // ⚪ STABLE: No significant movement
   return {
     signal: 'neutral',
-    tooltip: `⚪ Stable\nVolume: ${volStr}\nPrice: ${priceStr}\nQuiet market${confidenceLine}${weekendNote}`
+    tooltip: `⚪ Stable\nVolume: ${volStr}\nPrice: ${priceStr}\nQuiet market${marketPhaseNote}${confidenceLine}${weekendNote}`
   };
 }
 
