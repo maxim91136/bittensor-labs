@@ -1,0 +1,389 @@
+/* ========================================
+   MARKET CONDITIONS CARD (Matrix Console Style)
+   ======================================== */
+
+.market-conditions-card {
+  background: rgba(0,0,0,0.85);
+  border: 1px solid rgba(34,197,94,0.3);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin: 0 auto 1.5rem;
+  max-width: 1200px;
+  width: 100%;
+  box-shadow: 0 0 20px rgba(34,197,94,0.15), inset 0 0 40px rgba(34,197,94,0.05);
+  font-family: 'Courier New', Consolas, monospace;
+  transition: all 0.3s ease;
+}
+
+.market-conditions-card:hover {
+  border-color: rgba(34,197,94,0.5);
+  box-shadow: 0 0 30px rgba(34,197,94,0.25), inset 0 0 50px rgba(34,197,94,0.08);
+}
+
+/* Header - Matrix Style */
+.market-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(34,197,94,0.2);
+}
+
+.market-title {
+  font-size: clamp(1.2em, 3.5vw, 1.6em);
+  font-weight: 900;
+  color: #22c55e;
+  margin: 0;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(34,197,94,0.5);
+}
+
+.market-title::before {
+  content: '> ';
+  color: #16a34a;
+}
+
+.market-last-updated {
+  font-size: 0.75em;
+  color: rgba(34,197,94,0.6);
+  font-family: 'Courier New', monospace;
+}
+
+/* Metrics Grid - Compact Console Style */
+.market-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.market-metric {
+  background: rgba(34,197,94,0.05);
+  border: 1px solid rgba(34,197,94,0.2);
+  border-radius: 4px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Für Signal: Icon und Label nebeneinander */
+.market-metric#marketSignal {
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+}
+.market-metric#marketSignal .metric-icon {
+  margin-right: 0;
+  font-size: 1.6em;
+}
+.market-metric#marketSignal .metric-label {
+  margin-right: 0.5em;
+}
+  transition: all 0.2s ease;
+}
+
+.market-metric:hover {
+  background: rgba(34,197,94,0.1);
+  border-color: rgba(34,197,94,0.4);
+  box-shadow: 0 0 10px rgba(34,197,94,0.2);
+}
+
+.market-metric .metric-icon {
+  font-size: 1.2em;
+  line-height: 1;
+}
+
+.market-metric .metric-label {
+  font-size: 0.85em;
+  font-weight: 700;
+  color: #22c55e;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.market-metric .metric-value {
+  font-size: 2em;
+  font-weight: 900;
+  color: #22c55e;
+  font-family: 'Caveat', 'Courier New', Consolas, monospace;
+  text-shadow: none;
+  letter-spacing: 1px;
+  filter: brightness(1.2) contrast(1.2);
+}
+
+/* Signal color states */
+.market-metric#marketSignal.signal-green .metric-icon { filter: hue-rotate(0deg); }
+.market-metric#marketSignal.signal-green .metric-value { color: #22c55e; }
+.market-metric#marketSignal.signal-red .metric-icon { filter: hue-rotate(0deg); }
+.market-metric#marketSignal.signal-red .metric-value { color: #ef4444; }
+.market-metric#marketSignal.signal-yellow .metric-icon { filter: hue-rotate(0deg); }
+.market-metric#marketSignal.signal-yellow .metric-value { color: #eab308; }
+.market-metric#marketSignal.signal-orange .metric-icon { filter: hue-rotate(0deg); }
+.market-metric#marketSignal.signal-orange .metric-value { color: #f97316; }
+
+/* Details Section - Compact */
+.market-details {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.market-phase-section {
+  background: rgba(0,0,0,0.4);
+  border-left: 2px solid #22c55e;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 0.8em;
+  line-height: 1.5;
+  color: rgba(34,197,94,0.9);
+  white-space: pre-line;
+  font-family: 'Courier New', monospace;
+}
+
+.market-phase-section.phase-bearish {
+  border-left-color: #ef4444;
+}
+
+.market-phase-section.phase-neutral {
+  border-left-color: #eab308;
+}
+
+/* Moving Averages Grid - Matrix Compact */
+.market-ma-section {
+  background: rgba(0,0,0,0.3);
+  border-radius: 4px;
+  padding: 10px 12px;
+  border: 1px solid rgba(34,197,94,0.15);
+}
+
+.ma-title {
+  font-size: 0.75em;
+  font-weight: 700;
+  color: rgba(34,197,94,0.8);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+}
+
+.ma-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px;
+}
+
+.ma-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 8px;
+  background: rgba(34,197,94,0.05);
+  border-radius: 3px;
+  font-size: 0.75em;
+  font-family: 'Courier New', monospace;
+  border: 1px solid rgba(34,197,94,0.1);
+}
+
+.ma-item:hover {
+  background: rgba(34,197,94,0.1);
+  border-color: rgba(34,197,94,0.3);
+}
+
+.ma-item .ma-label {
+  color: rgba(34,197,94,0.7);
+  font-weight: 700;
+}
+
+.ma-item .ma-value {
+  color: #22c55e;
+  font-weight: 700;
+  text-shadow: 0 0 5px rgba(34,197,94,0.3);
+}
+
+.ma-item .ma-change {
+  margin-left: 6px;
+  font-size: 0.9em;
+}
+
+.ma-item .ma-change.positive {
+  color: #4ade80;
+}
+
+.ma-item .ma-change.negative {
+  color: #ef4444;
+}
+
+/* Confidence Section - Matrix Style */
+.market-confidence {
+  font-size: 0.7em;
+  color: rgba(34,197,94,0.5);
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid rgba(34,197,94,0.15);
+  font-family: 'Courier New', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* Responsive */
+/* Desktop: Kleinerer Titel */
+@media (min-width: 1000px) {
+  .market-title {
+    font-size: 1.3em;
+  }
+}
+
+@media (max-width: 768px) {
+  .market-conditions-card {
+    padding: 12px 16px;
+    margin-bottom: 1rem;
+  }
+
+  .market-title {
+    font-size: 1em;
+  }
+
+  .market-metrics {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+
+  .ma-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .market-conditions-card {
+    padding: 10px 12px;
+  }
+
+  .market-metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .market-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .market-title {
+    font-size: 0.9em;
+  }
+}
+
+/* Light Mode - Inverted Matrix */
+.market-conditions-card.light-bg {
+  background: rgba(255,255,255,0.95);
+  border-color: rgba(22,163,74,0.3);
+  box-shadow: 0 0 20px rgba(22,163,74,0.1), inset 0 0 40px rgba(22,163,74,0.03);
+}
+
+.market-conditions-card.light-bg .market-title {
+  color: #16a34a;
+  text-shadow: 0 0 10px rgba(22,163,74,0.3);
+}
+
+.market-conditions-card.light-bg .market-last-updated {
+  color: rgba(22,163,74,0.6);
+}
+
+.market-conditions-card.light-bg .market-metric {
+  background: rgba(22,163,74,0.05);
+  border-color: rgba(22,163,74,0.2);
+}
+
+.market-conditions-card.light-bg .metric-value {
+  color: #16a34a;
+  text-shadow: 0 0 5px rgba(22,163,74,0.2);
+}
+
+.market-conditions-card.light-bg .metric-label {
+  color: rgba(22,163,74,0.7);
+}
+
+.market-conditions-card.light-bg .market-phase-section {
+  background: rgba(22,163,74,0.05);
+  border-left-color: #16a34a;
+  color: #16a34a;
+}
+
+.market-conditions-card.light-bg .market-ma-section {
+  background: rgba(22,163,74,0.03);
+  border-color: rgba(22,163,74,0.15);
+}
+
+.market-conditions-card.light-bg .ma-title {
+  color: rgba(22,163,74,0.8);
+}
+
+.market-conditions-card.light-bg .ma-item {
+  background: rgba(22,163,74,0.05);
+  border-color: rgba(22,163,74,0.1);
+}
+
+.market-conditions-card.light-bg .ma-label {
+  color: rgba(22,163,74,0.7);
+}
+
+.market-conditions-card.light-bg .ma-value {
+  color: #16a34a;
+  text-shadow: 0 0 5px rgba(22,163,74,0.2);
+}
+
+.market-conditions-card.light-bg .market-confidence {
+  color: rgba(22,163,74,0.6);
+  border-top-color: rgba(22,163,74,0.15);
+}
+
+/* ========================================
+   TOKEN ECONOMICS CARD
+   ======================================== */
+
+.token-econ-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.econ-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.econ-item:last-child {
+  border-bottom: none;
+}
+
+.econ-label {
+  font-size: 0.85em;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.econ-value {
+  font-size: 1.1em;
+  font-weight: 600;
+  color: #e5e7eb;
+  font-family: monospace;
+}
+
+/* Light Mode */
+.stat-card.light-bg .econ-item {
+  border-bottom-color: rgba(0,0,0,0.08);
+}
+
+.stat-card.light-bg .econ-label {
+  color: rgba(0,0,0,0.6);
+}
+
+.stat-card.light-bg .econ-value {
+  color: #16a34a;
+}

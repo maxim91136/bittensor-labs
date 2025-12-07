@@ -16,6 +16,7 @@
   <link rel="preload" href="assets/miner-map-thumb-light.png" as="image" />
   <link rel="stylesheet" href="style.css?v=16.13" />
   <link rel="stylesheet" href="assets/taostats/taostats-card.css" />
+  <link rel="stylesheet" href="market-conditions.css" />
   <!-- Handwritten header note font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +24,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
   <script src="glitch.js" defer></script>
   <script src="script.js" defer></script>
+  <script src="market-conditions.js" defer></script>
   <script src="assets/taostats/taostats-card.js" defer></script>
 </head>
 <body>
@@ -128,6 +130,54 @@
 </header>
 
 <main class="dashboard">
+  <!-- Market Conditions Card (Volume Signal Expanded) - Prominent Position #1 -->
+  <div class="market-conditions-card" id="marketConditionsCard">
+    <div class="market-header">
+      <h2 class="market-title">Market Conditions</h2>
+      <span class="market-last-updated" id="marketLastUpdated">—</span>
+    </div>
+
+    <div class="market-metrics">
+      <div class="market-metric" id="marketSignal">
+        <span class="metric-icon">🔴</span>
+        <span class="metric-label">Signal</span>
+        <span class="metric-value">—</span>
+      </div>
+      <div class="market-metric" id="marketVolume">
+        <span class="metric-icon"></span>
+        <span class="metric-label">Volume 24h</span>
+        <span class="metric-value">—</span>
+      </div>
+      <div class="market-metric" id="marketPrice">
+        <span class="metric-icon"></span>
+        <span class="metric-label">Price 24h</span>
+        <span class="metric-value">—</span>
+      </div>
+      <div class="market-metric" id="marketPhase">
+        <span class="metric-icon"></span>
+        <span class="metric-label">Phase</span>
+        <span class="metric-value">—</span>
+      </div>
+    </div>
+
+    <div class="market-details" id="marketDetails">
+      <div class="market-phase-section" id="marketPhaseSection">
+        <!-- Phase and sentiment info will be inserted here -->
+      </div>
+
+      <div class="market-ma-section">
+        <div class="ma-title">Moving Averages</div>
+        <div class="ma-grid" id="marketMAGrid">
+          <!-- MA data will be inserted here -->
+        </div>
+      </div>
+
+      <div class="market-confidence" id="marketConfidence">
+        <!-- Confidence info will be inserted here -->
+      </div>
+    </div>
+  </div>
+
   <div class="stats-grid">
   <div class="stat-card" id="subnetsCard">
   <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Total active subnets in the Bittensor network">i</span>
@@ -165,23 +215,6 @@
       </a></div>
     </div>
   </div>
-     <div class="stat-card">
-        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="TAO trading volume in the last 24 hours across all tracked exchanges">i</span>
-        <div class="stat-icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <title>Volume 24h</title>
-            <rect x="4" y="14" width="3" height="6" rx="1" fill="#22c55e"/>
-            <rect x="9" y="10" width="3" height="10" rx="1" fill="#22c55e"/>
-            <rect x="14" y="6" width="3" height="14" rx="1" fill="#22c55e"/>
-            <rect x="19" y="12" width="3" height="8" rx="1" fill="#16a34a"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">Volume 24h</div>
-    <div class="stat-value" id="volume24h">—</div>
-        </div>
-      </div>
-      <!-- Fear & Greed Index Card will be rendered above Top Subnets (full width) -->
   <div class="stat-card">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Current circulating supply of TAO tokens">i</span>
       <div class="stat-icon" aria-hidden="true">
@@ -241,24 +274,50 @@
       </div>
     </div>
     <!-- Next Halving stat-card: removed per user preference. Keep only dynamic halving pill -->
-    <div class="stat-card">
-      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Total number of neurons in the network">i</span>
+
+    <!-- Token Economics Card -->
+    <div class="stat-card" id="tokenEconomicsCard">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Token supply and emission metrics&#10;&#10;Daily Emission: TAO minted per day&#10;Total Issuance: % of max supply issued&#10;Next Halving: Days until emission reduces">i</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <title>Neurons</title>
-          <circle cx="6" cy="12" r="2" fill="#22c55e"/>
-          <circle cx="12" cy="6" r="2" fill="#16a34a"/>
-          <circle cx="18" cy="12" r="2" fill="#22c55e"/>
-          <circle cx="12" cy="18" r="2" fill="#16a34a"/>
-          <line x1="6" y1="12" x2="12" y2="6" stroke="#111318" stroke-width="1.1"/>
-          <line x1="12" y1="6" x2="18" y2="12" stroke="#111318" stroke-width="1.1"/>
-          <line x1="18" y1="12" x2="12" y2="18" stroke="#111318" stroke-width="1.1"/>
-          <line x1="12" y1="18" x2="6" y2="12" stroke="#111318" stroke-width="1.1"/>
+          <title>Token Economics</title>
+          <circle cx="12" cy="12" r="9" stroke="#22c55e" stroke-width="2" fill="none"/>
+          <path d="M12 6v12M8 9h8M8 15h8" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>
         </svg>
       </div>
       <div class="stat-content">
-        <div class="stat-label">Neurons</div>
-  <div class="stat-value" id="totalNeurons">—</div>
+        <div class="stat-label">Token Economics</div>
+        <div class="token-econ-grid">
+          <div class="econ-item">
+            <span class="econ-label">Daily Emission</span>
+            <span class="econ-value" id="dailyEmissionValue">—</span>
+          </div>
+          <div class="econ-item">
+            <span class="econ-label">Issued</span>
+            <span class="econ-value" id="issuedPercentValue">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  <!-- API Status Card -->
+    <div class="stat-card" id="apiStatusCard">
+      <span
+        class="info-badge" translate="no" aria-hidden="true"
+        data-tooltip="<div>Status of all data sources powering the dashboard</div><br/><div><span class='tooltip-chip ok'>OK</span> Bittensor SDK</div><div><span class='tooltip-chip ok'>OK</span> Taostats</div><div><span class='tooltip-chip ok'>OK</span> CoinGecko</div>"
+        data-tooltip-html="true">
+        i
+      </span>
+      <div class="stat-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <title>API Status</title>
+          <circle cx="12" cy="12" r="9" stroke="#22c55e" stroke-width="1.2" fill="none"/>
+          <polyline points="5,13 8,13 9,9 11,17 13,7 15,13 19,13" stroke="#22c55e" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <div class="stat-content stat-content-centered">
+        <div class="stat-label">API Status</div>
+        <div class="stat-value" id="apiStatus">Checking…</div>
       </div>
     </div>
       <div class="stat-card">
@@ -306,24 +365,24 @@
       </div>
     </div>
 
-  <!-- API Status Card -->
-    <div class="stat-card" id="apiStatusCard">
-      <span 
-        class="info-badge" translate="no" aria-hidden="true"
-        data-tooltip="<div>Status of all data sources powering the dashboard</div><br/><div><span class='tooltip-chip ok'>OK</span> Bittensor SDK</div><div><span class='tooltip-chip ok'>OK</span> Taostats</div><div><span class='tooltip-chip ok'>OK</span> CoinGecko</div>"
-        data-tooltip-html="true">
-        i
-      </span>
+    <div class="stat-card">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Total number of neurons in the network">i</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <title>API Status</title>
-          <circle cx="12" cy="12" r="9" stroke="#22c55e" stroke-width="1.2" fill="none"/>
-          <polyline points="5,13 8,13 9,9 11,17 13,7 15,13 19,13" stroke="#22c55e" stroke-width="1.1" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          <title>Neurons</title>
+          <circle cx="6" cy="12" r="2" fill="#22c55e"/>
+          <circle cx="12" cy="6" r="2" fill="#16a34a"/>
+          <circle cx="18" cy="12" r="2" fill="#22c55e"/>
+          <circle cx="12" cy="18" r="2" fill="#16a34a"/>
+          <line x1="6" y1="12" x2="12" y2="6" stroke="#111318" stroke-width="1.1"/>
+          <line x1="12" y1="6" x2="18" y2="12" stroke="#111318" stroke-width="1.1"/>
+          <line x1="18" y1="12" x2="12" y2="18" stroke="#111318" stroke-width="1.1"/>
+          <line x1="12" y1="18" x2="6" y2="12" stroke="#111318" stroke-width="1.1"/>
         </svg>
       </div>
       <div class="stat-content">
-        <div class="stat-label">API Status</div>
-        <div class="stat-value" id="apiStatus">Checking…</div>
+        <div class="stat-label">Neurons</div>
+  <div class="stat-value" id="totalNeurons">—</div>
       </div>
     </div>
   </div>
@@ -624,9 +683,5 @@
 <!-- Confetti and Rocket containers (NYE enhancements) -->
 <div id="confetti" aria-hidden="true"></div>
 <div id="rockets" aria-hidden="true"></div>
-<!-- Spring elements overlay (birds/bees for spring season) -->
-<div id="spring-elements" aria-hidden="true"></div>
-<!-- Autumn leaves overlay (falling leaves for autumn season) -->
-<div id="autumn-leaves" aria-hidden="true"></div>
 
 </html>

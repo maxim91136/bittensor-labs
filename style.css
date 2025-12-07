@@ -283,6 +283,7 @@ a:hover {
   --card-padding: clamp(10px, 2.5vw, 16px);
   --gap-sm: clamp(6px, 1.5vw, 10px);
   --gap-md: clamp(8px, 2vw, 12px);
+  --gap-lg: clamp(12px, 2.5vw, 16px);
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -474,121 +475,6 @@ body.light-bg .snowflake::before { filter: drop-shadow(0 2px 0 rgba(43,109,246,0
 }
 
 /* End confetti & rockets */
-
-/* ---- Spring Elements (Birds & Bees) ---- */
-#spring-elements {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9997; /* same level as snowfall */
-  overflow: hidden;
-}
-.spring-element {
-  position: absolute;
-  will-change: transform, left;
-  opacity: 0.85;
-  user-select: none;
-  -webkit-user-select: none;
-  animation: fly-across linear infinite;
-}
-.spring-element.bird::before {
-  content: '🐦';
-  display: inline-block;
-  font-size: inherit;
-}
-.spring-element.bee::before {
-  content: '🐝';
-  display: inline-block;
-  font-size: inherit;
-}
-@keyframes fly-across {
-  0% {
-    transform: translateX(-30px) translateY(0) scale(1);
-    opacity: 0;
-  }
-  10% {
-    opacity: 0.85;
-  }
-  90% {
-    opacity: 0.85;
-  }
-  100% {
-    transform: translateX(calc(100vw + 30px)) translateY(var(--fly-y, 0)) scale(1.1);
-    opacity: 0;
-  }
-}
-
-/* Improve visibility in light mode */
-@media (prefers-color-scheme: light) {
-  .spring-element {
-    filter: brightness(0.95) contrast(1.05);
-  }
-}
-body.light-bg .spring-element {
-  filter: brightness(0.95) contrast(1.05);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .spring-element { animation: none; opacity: 0.7; }
-}
-
-@media (max-width: 420px) {
-  .spring-element { font-size: 14px !important; }
-}
-/* End Spring Elements */
-
-/* ---- Autumn Leaves ---- */
-#autumn-leaves {
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 9997; /* same level as snowfall */
-  overflow: hidden;
-}
-.autumn-leaf {
-  position: absolute;
-  top: -10vh;
-  will-change: transform, opacity;
-  opacity: 0.9;
-  user-select: none;
-  -webkit-user-select: none;
-  animation: leaf-fall linear infinite, leaf-sway ease-in-out infinite;
-}
-.autumn-leaf::before {
-  display: inline-block;
-  font-size: inherit;
-  transform: translateZ(0);
-}
-.autumn-leaf.maple::before { content: '🍁'; }
-.autumn-leaf.oak::before { content: '🍂'; }
-.autumn-leaf.yellow::before { content: '🍃'; }
-
-@keyframes leaf-fall {
-  to { transform: translateY(120vh) rotate(720deg); }
-}
-@keyframes leaf-sway {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(var(--sway-distance, 30px)); }
-}
-
-/* Improve visibility in light mode */
-@media (prefers-color-scheme: light) {
-  .autumn-leaf {
-    filter: brightness(0.92) saturate(1.1);
-  }
-}
-body.light-bg .autumn-leaf {
-  filter: brightness(0.92) saturate(1.1);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .autumn-leaf { animation: none; opacity: 0.7; }
-}
-
-@media (max-width: 420px) {
-  .autumn-leaf { font-size: 12px !important; opacity: 0.8 !important; }
-}
-/* End Autumn Leaves */
 
 /* ---- Header: Logo at the top, pills below, always centered ---- */
 .site-header {
@@ -1630,13 +1516,13 @@ body.light-bg .fng-card.fng-red .barometer-class {
     max-width: 420px;
     /* centered via left: 50% + transform: translateX(-33%) from base style */
     /* centered vertically on wide screens */
-    top: 5px;
+    top: 30px;
     opacity: 0.95;
   }
 
   .fng-barometer {
     max-width: 180px;
-    margin-top: 15px;
+    margin-top: 50px;
   }
 }
 
@@ -1645,6 +1531,10 @@ body.light-bg .fng-card.fng-red .barometer-class {
   .fng-spoon-bg {
     width: 60%;
     max-width: 400px;
+  }
+
+  .fng-barometer {
+    margin-top: 65px;
   }
 }
 
@@ -1842,11 +1732,30 @@ body.light-bg .fng-card.fng-red .barometer-class {
 .api-status-text { vertical-align: middle; color: var(--text); font-weight: 700; }
 
 /* Larger centered badge variant used inside the API Status card */
-#apiStatus {
+/* API Status Card - Badge zentral mit absolutem Positioning */
+#apiStatusCard {
+  align-items: stretch;
+}
+
+#apiStatusCard .stat-content {
+  position: relative;
+  flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 12px;
+  flex-direction: column;
+}
+
+#apiStatus {
+  position: absolute;
+  top: 55%;
+  left: 45%;
+  transform: translate(-50%, -50%);
+}
+
+/* Desktop/Vollbild: Badge zentral */
+@media (min-width: 1000px) {
+  #apiStatus {
+    top: 50%;
+  }
 }
 .api-status-badge.api-status-large {
   min-width: 44px;
@@ -1940,130 +1849,6 @@ body.light-bg .fng-card.fng-red .barometer-class {
 .dynamic-tooltip .tooltip-chip.ok { background: #22c55e; }
 .dynamic-tooltip .tooltip-chip.error { background: #ef4444; }
 .dynamic-tooltip .tooltip-chip.partial { background: #eab308; color: #111; }
-
-/* ---- Modern Tooltip System (Redesigned) ---- */
-.modern-tooltip {
-  position: fixed;
-  background: rgba(26, 26, 26, 0.98);
-  color: #fff;
-  padding: 12px 16px;
-  border-radius: 12px;
-  font-size: 0.95em;
-  line-height: 1.5;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.1);
-  z-index: 99999;
-  pointer-events: none;
-  opacity: 0;
-  transform: scale(0.95);
-  transition: opacity 0.2s ease, transform 0.2s ease;
-  max-width: 280px;
-  backdrop-filter: blur(10px);
-}
-
-.modern-tooltip.visible {
-  opacity: 1;
-  transform: scale(1);
-  pointer-events: auto;
-}
-
-.modern-tooltip.wide {
-  max-width: 520px;
-  padding: 14px 20px;
-}
-
-.modern-tooltip.has-close {
-  padding-right: 36px;
-}
-
-.modern-tooltip .tooltip-body {
-  white-space: pre-line;
-  word-break: break-word;
-}
-
-.modern-tooltip .tooltip-close {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  width: 24px;
-  height: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.1);
-  border: none;
-  border-radius: 6px;
-  color: #fff;
-  font-size: 18px;
-  line-height: 1;
-  cursor: pointer;
-  transition: background 0.2s;
-  pointer-events: auto;
-}
-
-.modern-tooltip .tooltip-close:hover {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.modern-tooltip .tooltip-close:active {
-  background: rgba(255, 255, 255, 0.15);
-  transform: scale(0.95);
-}
-
-/* Tooltip chips (for API status, etc) */
-.modern-tooltip .tooltip-chip {
-  display: inline-block;
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-weight: 700;
-  font-size: 0.8rem;
-  line-height: 1;
-  margin-right: 8px;
-  vertical-align: middle;
-  color: #fff;
-}
-.modern-tooltip .tooltip-chip.ok { background: #22c55e; }
-.modern-tooltip .tooltip-chip.error { background: #ef4444; }
-.modern-tooltip .tooltip-chip.partial { background: #eab308; color: #111; }
-
-/* Light mode variant */
-@media (prefers-color-scheme: light) {
-  .modern-tooltip {
-    background: rgba(255, 255, 255, 0.98);
-    color: #111;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
-  }
-  .modern-tooltip .tooltip-close {
-    background: rgba(0, 0, 0, 0.06);
-    color: #111;
-  }
-  .modern-tooltip .tooltip-close:hover {
-    background: rgba(0, 0, 0, 0.12);
-  }
-}
-
-body.light-bg .modern-tooltip {
-  background: rgba(255, 255, 255, 0.98);
-  color: #111;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
-}
-body.light-bg .modern-tooltip .tooltip-close {
-  background: rgba(0, 0, 0, 0.06);
-  color: #111;
-}
-body.light-bg .modern-tooltip .tooltip-close:hover {
-  background: rgba(0, 0, 0, 0.12);
-}
-
-/* Mobile optimizations */
-@media (max-width: 420px) {
-  .modern-tooltip {
-    max-width: 92vw;
-    font-size: 0.9em;
-  }
-  .modern-tooltip.wide {
-    max-width: 92vw;
-  }
-}
 
 .svg-attribution {
   font-size: 0.95em;
