@@ -2308,7 +2308,13 @@ try {
 } catch (err) {
   console.warn('⚠️ Version loader failed to run:', err && err.message);
 }
-setupDynamicTooltips();
+
+// Setup tooltips after DOM is ready
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', setupDynamicTooltips);
+} else {
+  setupDynamicTooltips();
+}
 
 // ===== Data Refresh =====
 async function refreshDashboard() {
@@ -2351,6 +2357,14 @@ async function refreshDashboard() {
   const priceChange24h = taostats?.percent_change_24h ?? taoPrice?.change24h ?? null;
   if (taostats?.volume_24h) {
     updateVolumeSignal(taostats.volume_24h, priceChange24h);
+    // Update Market Conditions Card
+    if (typeof updateMarketConditionsCard === 'function') {
+      try {
+        await updateMarketConditionsCard(taostats.volume_24h, priceChange24h);
+      } catch (e) {
+        if (window._debug) console.debug('updateMarketConditionsCard failed', e);
+      }
+    }
     // Update Fear & Greed card (fetch from Worker KV via API)
     try { updateFearAndGreed(); } catch (e) { if (window._debug) console.debug('updateFearAndGreed failed', e); }
   }
@@ -2654,6 +2668,14 @@ async function initDashboard() {
   const initPriceChange24h = taostats?.percent_change_24h ?? taoPrice?.change24h ?? null;
   if (taostats?.volume_24h) {
     updateVolumeSignal(taostats.volume_24h, initPriceChange24h);
+    // Update Market Conditions Card on init
+    if (typeof updateMarketConditionsCard === 'function') {
+      try {
+        await updateMarketConditionsCard(taostats.volume_24h, initPriceChange24h);
+      } catch (e) {
+        if (window._debug) console.debug('init updateMarketConditionsCard failed', e);
+      }
+    }
     try { updateFearAndGreed(); } catch (e) { if (window._debug) console.debug('init updateFearAndGreed failed', e); }
   }
 
