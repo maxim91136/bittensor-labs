@@ -5,6 +5,42 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.25 (2025-12-07)
+### Added
+- **Dynamic Phase Coloring**: Market phase status now color-coded (Bearish=red, Bullish=green, Watch=orange, Caution=yellow)
+- **Complete Tooltip System**: Added missing CSS for modern tooltips (backdrop blur, animations, arrows, status chips)
+- **Market Monitoring Magic**: Market Conditions card fully functional with real-time intelligence
+
+### Fixed
+- **Tooltip Visibility**: Added missing `.modern-tooltip` CSS (167 lines) - tooltips were invisible before
+- **Tooltip Behavior**: Added missing `mouseleave` event listener - tooltips now properly hide
+- **Light Mode Support**: Market Conditions card now properly switches with theme toggle
+- **Initial Data Load**: Token Economics and Market Conditions cards now update on page load (not just refresh)
+
+### Changed
+- **Token Economics Card**: Simplified to "Issued Tokens" only (% of max supply)
+  - Removed duplicate Avg. Emission data (we have dedicated card)
+  - Cleaner stat-card format
+- **API Card**: Renamed from "API Status" to "API" for brevity
+
+### Improved
+- **Market Intelligence**: Complete monitoring system with multi-factor analysis
+  - Volume trends + Price action + Moving Averages + Sentiment
+  - Confidence scoring and data quality metrics
+  - Weekend context indicators
+- **Visual Feedback**: Dynamic coloring provides instant market sentiment recognition
+
+### Technical
+- Tooltip CSS: backdrop blur, scale animations, arrows, chips, light mode
+- Event listeners: proper cleanup with `mouseleave` handlers
+- Light mode: `.market-conditions-card` added to toggle selector
+- Integration: Cards update in both `initDashboard()` and `refreshDashboard()`
+
+### Notes
+- **The monitoring centerpiece** - Market Conditions card is fully operational
+- Multi-source data aggregation (volume history, Taostats, F&G Index)
+- See `RELEASE_NOTES/v1.0.0-rc.25.md` for complete technical details
+
 ## v1.0.0-rc.24 (2025-12-07)
 ### Added
 - **Market Conditions Card**: New comprehensive card with market signal, volume/price metrics, moving averages, and phase analysis
