@@ -31,11 +31,14 @@ def parse_fng(data):
         target = now - days*86400
         closest = min(data_sorted, key=lambda x: abs(int(x['timestamp']) - target))
         return closest
+    now_iso = datetime.now(timezone.utc).isoformat()
     return {
         'current': current,
         'yesterday': find_closest(1),
         'last_week': find_closest(7),
-        'last_month': find_closest(30)
+        'last_month': find_closest(30),
+        'last_updated': now_iso,
+        '_timestamp': now_iso
     }
 
 def put_kv_json(account_id, api_token, namespace_id, key, obj):

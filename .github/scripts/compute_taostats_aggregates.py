@@ -291,8 +291,10 @@ def compute_aggregates(history):
     except Exception:
         trend_direction = 'neutral'
 
+    now_iso = datetime.now(timezone.utc).isoformat()
     aggregates = {
-        '_generated_at': datetime.now(timezone.utc).isoformat(),
+        '_generated_at': now_iso,
+        'last_updated': now_iso,
         'count': N,
         'last_volume': last_volume,
         'last_price': current_price,
@@ -329,8 +331,10 @@ def main():
     if history is None:
         print('No taostats_history found in KV; nothing to aggregate')
         # still write an empty aggregates object with timestamp
+        now_iso = datetime.now(timezone.utc).isoformat()
         empty = {
-            '_generated_at': datetime.now(timezone.utc).isoformat(),
+            '_generated_at': now_iso,
+            'last_updated': now_iso,
             'count': 0
         }
         put_kv_json(CF_ACCOUNT_ID, CF_API_TOKEN, CF_KV_NAMESPACE_ID, 'taostats_aggregates', empty)

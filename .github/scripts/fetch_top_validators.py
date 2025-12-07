@@ -138,8 +138,10 @@ def fetch_top_validators() -> Dict[str, object]:
     if not validators:
         print(f"⚠️ Could not fetch validators from Taostats: {error_msg}", file=sys.stderr)
         # Could add on-chain fallback here if needed
+        now_iso = datetime.now(timezone.utc).isoformat()
         return {
-            'generated_at': datetime.now(timezone.utc).isoformat(),
+            'generated_at': now_iso,
+            'last_updated': now_iso,
             'network': NETWORK,
             'top_n': TOP_N,
             'top_validators': [],
@@ -255,8 +257,10 @@ def fetch_top_validators() -> Dict[str, object]:
         if 'raw' in v:
             del v['raw']
     
+    now_iso = datetime.now(timezone.utc).isoformat()
     out = {
-        'generated_at': datetime.now(timezone.utc).isoformat(),
+        'generated_at': now_iso,
+        'last_updated': now_iso,
         'network': NETWORK,
         'top_n': TOP_N,
         'total_validators': len(sorted_validators),

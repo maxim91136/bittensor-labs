@@ -74,6 +74,7 @@ def fetch_metrics() -> Dict[str, Any]:
         total_issuance_raw = None
         total_issuance_human = None
 
+    now_iso = datetime.now(timezone.utc).isoformat()
     result = {
         "blockHeight": block,
         "subnets": total_subnets,
@@ -84,7 +85,8 @@ def fetch_metrics() -> Dict[str, Any]:
         "totalIssuanceHuman": total_issuance_human,
         "halvingThresholds": generate_halving_thresholds(),
         "_source": "bittensor-sdk",
-        "_timestamp": datetime.now(timezone.utc).isoformat()
+        "_timestamp": now_iso,
+        "last_updated": now_iso
     }
     # Attempt to read existing metrics from Cloudflare KV (if env provided)
     # existing will be the current issuance_history (as list) from CF KV if present

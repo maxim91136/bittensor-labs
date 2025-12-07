@@ -195,10 +195,12 @@ def main():
     wallets = calculate_dominance(wallets)
     
     # Build result
+    now_iso = datetime.now(timezone.utc).isoformat()
     result = {
         "wallets": wallets,
         "_source": "taostats",
-        "_timestamp": datetime.now(timezone.utc).isoformat(),
+        "_timestamp": now_iso,
+        "last_updated": now_iso,
         "_count": len(wallets)
     }
     

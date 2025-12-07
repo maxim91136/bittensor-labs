@@ -133,6 +133,7 @@ def fetch_block_time(num_blocks=100, max_attempts=4):
         else:
             status = "congested" if avg_block_time > TARGET_BLOCK_TIME else "very_fast"
         
+        now_iso = datetime.now(timezone.utc).isoformat()
         result = {
             "avg_block_time": round(avg_block_time, 2),
             "target_block_time": TARGET_BLOCK_TIME,
@@ -149,7 +150,8 @@ def fetch_block_time(num_blocks=100, max_attempts=4):
             },
             "status": status,
             "_source": "taostats",
-            "_timestamp": datetime.now(timezone.utc).isoformat()
+            "_timestamp": now_iso,
+            "last_updated": now_iso
         }
         
         return result, rate_limited

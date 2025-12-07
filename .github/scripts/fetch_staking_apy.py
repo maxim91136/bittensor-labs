@@ -91,6 +91,7 @@ def fetch_staking_apy(num_validators=50):
         # Get top validator info
         top_validator = validators[0] if validators else None
         
+        now_iso = datetime.now(timezone.utc).isoformat()
         result = {
             "avg_apr": round(weighted_avg_apr, 2),
             "simple_avg_apr": round(simple_avg_apr, 2),
@@ -102,7 +103,8 @@ def fetch_staking_apy(num_validators=50):
                 "dominance": top_validator.get("dominance") if top_validator else None
             } if top_validator else None,
             "_source": "taostats",
-            "_timestamp": datetime.now(timezone.utc).isoformat()
+            "_timestamp": now_iso,
+            "last_updated": now_iso
         }
         
         return result

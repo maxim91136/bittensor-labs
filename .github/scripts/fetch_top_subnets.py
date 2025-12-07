@@ -796,8 +796,10 @@ def fetch_top_subnets() -> Dict[str, object]:
     else:
         discrepancy_stats = {'count': 0, 'avg_abs_delta': 0.0, 'max_abs_delta': None, 'avg_pct_delta': 0.0, 'max_pct_delta': None}
 
+    now_iso = datetime.now(timezone.utc).isoformat()
     out = {
-        'generated_at': datetime.now(timezone.utc).isoformat(),
+        'generated_at': now_iso,
+        'last_updated': now_iso,
         'network': NETWORK,
         'daily_emission_assumed': DAILY_EMISSION,
         'total_neurons': total_neurons,
