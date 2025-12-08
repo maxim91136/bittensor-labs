@@ -2366,6 +2366,7 @@ async function refreshDashboard() {
   }
   // Expose lastUpdated globally for tooltips BEFORE other updates
   window._lastUpdated = lastUpdated;
+  if (window._debug) console.log('DEBUG lastUpdated:', { lastUpdated, taoPrice_last_updated: taoPrice?.last_updated, taoPrice_source: taoPrice?._source });
 
   updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
