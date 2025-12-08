@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.25.3 (2025-12-08)
+### Changed
+- **Metric Label Clarity**: Fourth metric renamed for maximum understanding
+  - "Phase" → "MA Trend" → "Price Trend" → "Trend (3d/7d)"
+  - Final label: **"Trend (3d/7d)"** - clear, compact, mobile-friendly
+  - Shows medium-term price trend (3-day vs 7-day MA comparison)
+  - Eliminates confusion with "Signal" metric
+
+### Improved
+- **Centered Values**: All metric values now centered in their cards
+  - Better visual balance and polish
+  - Signal card maintains horizontal layout
+- **Label Clarity**: Four metrics now crystal clear at a glance:
+  - Signal: Multi-factor short-term signal
+  - Volume 24h: Trading volume + change
+  - Price 24h: Short-term price change
+  - Trend (3d/7d): Medium-term price trend
+- **Mobile Optimization**: Compact labels fit perfectly on small screens
+
+### Notes
+- Pure UX/UI refinement pass
+- No functional changes to data or logic
+- Focus on clarity and mobile experience
+- See `RELEASE_NOTES/v1.0.0-rc.25.3.md` for details
+
 ## v1.0.0-rc.25.2 (2025-12-08)
 ### Added
 - **Dollar Volume Display**: Volume 24h now shows actual dollar amount ($171.6M) plus percentage change (+144.3%)
