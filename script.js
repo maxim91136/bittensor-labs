@@ -622,7 +622,7 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
       // Base market phase from MA trend
       if (ma7dTrend > 5) {
         marketPhase = 'bullish';
-        let phaseText = `📈 Market: Bullish (3d avg is ${ma7dTrend.toFixed(1)}% above 7d avg)`;
+        let phaseText = `📈 Market: Bullish (+${ma7dTrend.toFixed(1)}% 3d/7d)`;
 
         // Add Fear & Greed context
         if (fngSentiment === 'extreme_greed') {
@@ -636,7 +636,7 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
         marketPhaseNote = `\n${phaseText}`;
       } else if (ma7dTrend < -5) {
         marketPhase = 'bearish';
-        let phaseText = `📉 Market: Bearish (3d avg is ${Math.abs(ma7dTrend).toFixed(1)}% below 7d avg)`;
+        let phaseText = `📉 Market: Bearish (-${Math.abs(ma7dTrend).toFixed(1)}% 3d/7d)`;
 
         // Add Fear & Greed context
         if (fngSentiment === 'extreme_fear') {
@@ -651,7 +651,8 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
       } else {
         const aboveBelow = ma7dTrend >= 0 ? 'above' : 'below';
         const absValue = Math.abs(ma7dTrend).toFixed(1);
-        let phaseText = `➡️ Market: Neutral (3d avg is ${absValue}% ${aboveBelow} 7d avg)`;
+        const sign = ma7dTrend >= 0 ? '+' : '-';
+        let phaseText = `➡️ Market: Neutral (${sign}${absValue}% 3d/7d)`;
 
         // Add Fear & Greed as primary indicator in neutral markets
         if (fngSentiment === 'extreme_greed') {
@@ -764,7 +765,7 @@ Both declining — downward momentum${marketPhaseNote}` + (confidenceLine || '')
       const ma7dTrend = ((ma3dVal - ma7dVal) / ma7dVal) * 100;
 
       if (ma7dTrend > 5) {
-        let phaseText = `📈 Market: Bullish (3d avg is ${ma7dTrend.toFixed(1)}% above 7d avg)`;
+        let phaseText = `📈 Market: Bullish (+${ma7dTrend.toFixed(1)}% 3d/7d)`;
         if (fngSentiment === 'extreme_greed') {
           phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🌡️ overheating?\n📊 max optimism`;
         } else if (fngSentiment === 'greed') {
@@ -774,7 +775,7 @@ Both declining — downward momentum${marketPhaseNote}` + (confidenceLine || '')
         }
         marketPhaseNote = `\n${phaseText}`;
       } else if (ma7dTrend < -5) {
-        let phaseText = `📉 Market: Bearish (3d avg is ${Math.abs(ma7dTrend).toFixed(1)}% below 7d avg)`;
+        let phaseText = `📉 Market: Bearish (-${Math.abs(ma7dTrend).toFixed(1)}% 3d/7d)`;
         if (fngSentiment === 'extreme_fear') {
           phaseText += `\n🔻 Sentiment: Extreme Fear (${fngValue})\n💀 capitulation?\n📊 max selling pressure`;
         } else if (fngSentiment === 'fear') {
@@ -786,7 +787,8 @@ Both declining — downward momentum${marketPhaseNote}` + (confidenceLine || '')
       } else {
         const aboveBelow = ma7dTrend >= 0 ? 'above' : 'below';
         const absValue = Math.abs(ma7dTrend).toFixed(1);
-        let phaseText = `➡️ Market: Neutral (3d avg is ${absValue}% ${aboveBelow} 7d avg)`;
+        const sign = ma7dTrend >= 0 ? '+' : '-';
+        let phaseText = `➡️ Market: Neutral (${sign}${absValue}% 3d/7d)`;
         if (fngSentiment === 'extreme_greed') {
           phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🎯 correction?\n📊 high sentiment`;
         } else if (fngSentiment === 'extreme_fear') {
