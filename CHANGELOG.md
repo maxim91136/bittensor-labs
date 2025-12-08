@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.25.2 (2025-12-08)
+### Added
+- **Dollar Volume Display**: Volume 24h now shows actual dollar amount ($171.6M) plus percentage change (+144.3%)
+  - New `formatCompactVolume()` function for clean dollar formatting
+  - Dual-value metric display with main value (white) and sub value (conditional color)
+
+### Changed
+- **Strategic Color Usage**: Reduced green overload for better visual hierarchy
+  - **Neutral/white**: All dollar values, metric labels (VOLUME 24H, PRICE 24H, MA-2h, etc.)
+  - **Conditional green/red**: Only percentage changes (+5.9% = green, -5.3% = red)
+  - **Signal badges**: Market status indicators remain colored (Bullish/Bearish)
+  - Result: Color now indicates signals and trends, not decoration
+
+### Improved
+- **Visual Hierarchy**: Clear distinction between signals (colored) and values (neutral)
+- **Reduced Visual Fatigue**: Less overwhelming when all metrics are bullish
+- **Faster Scanning**: Eye drawn to important signals, not distracted by uniform color
+- **Professional Polish**: Intentional design with semantic color usage
+
+### Notes
+- Pure UX/UI refinement pass
+- No functional changes to data or logic
+- Full responsive and light/dark mode support
+- See `RELEASE_NOTES/v1.0.0-rc.25.2.md` for details
+
 ## v1.0.0-rc.25.1 (2025-12-07)
 ### Changed
 - **Market Conditions Title**: Renamed to "Market Conditions (short term)" for clarity
