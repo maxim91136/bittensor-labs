@@ -698,6 +698,14 @@ body.light-bg #maxSupplyScribble {
 
 }
 
+/* Generic positive/negative color classes */
+.positive {
+  color: #22c55e;
+}
+.negative {
+  color: #ef4444;
+}
+
 .price-icon {
   color: var(--accent);
   display: flex;

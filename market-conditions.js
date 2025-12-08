@@ -108,7 +108,13 @@ async function updateMarketConditionsCard(currentVolume, priceChange24h) {
       }
     }
 
-    // Add ATH/ATL distance line
+    // Build HTML content with plain text lines
+    let htmlContent = phaseLines.map(line => {
+      // Escape HTML entities
+      return line.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }).join('<br>');
+
+    // Add ATH/ATL distance line with colored values
     if (athAtlData && taostats?.price) {
       const currentPrice = taostats.price;
       const ath = athAtlData.ath;
@@ -116,11 +122,11 @@ async function updateMarketConditionsCard(currentVolume, priceChange24h) {
       if (ath && atl && currentPrice) {
         const distFromAtl = ((currentPrice - atl) / atl) * 100;
         const distFromAth = ((ath - currentPrice) / ath) * 100;
-        phaseLines.push(`📍 ATL: +${distFromAtl.toFixed(1)}% | ATH: -${distFromAth.toFixed(1)}%`);
+        htmlContent += `<br>📍 ATL: <span class="positive">+${distFromAtl.toFixed(1)}%</span> | ATH: <span class="negative">-${distFromAth.toFixed(1)}%</span>`;
       }
     }
 
-    phaseSection.textContent = phaseLines.join('\n');
+    phaseSection.innerHTML = htmlContent;
 
     // Set phase class
     phaseSection.className = 'market-phase-section';
