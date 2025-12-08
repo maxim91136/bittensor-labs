@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.25.6 (2025-12-08)
+### Improved
+- **Volume Moving Averages**: Renamed section title for clarity
+- **Mobile Readability (480px)**: Optimized font sizes for MA section
+  - `.ma-title`: 0.9em
+  - `.ma-item`: 0.9em
+  - `.ma-label`: 0.88em
+  - `.ma-value`: 1.0em
+  - `.ma-change`: 0.88em
+
 ## v1.0.0-rc.25.5 (2025-12-08)
 ### Improved
 - **Mobile Readability**: Larger font sizes for MA values and phase section
