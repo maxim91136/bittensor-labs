@@ -243,41 +243,139 @@
 
 @media (max-width: 768px) {
   .market-conditions-card {
-    padding: 12px 16px;
+    padding: 10px 14px;
     margin-bottom: 1rem;
   }
 
   .market-title {
-    font-size: 1em;
+    font-size: 0.95em;
+  }
+
+  .market-last-updated {
+    font-size: 0.7em;
   }
 
   .market-metrics {
     grid-template-columns: repeat(2, 1fr);
     gap: 6px;
+    margin-bottom: 10px;
+  }
+
+  .market-metric {
+    padding: 6px 8px;
+  }
+
+  .market-metric .metric-label {
+    font-size: 0.75em;
+  }
+
+  .market-metric .metric-value {
+    font-size: 1.5em;
+  }
+
+  .market-phase-section,
+  .market-ma-section {
+    padding: 8px 10px;
+    margin-bottom: 8px;
   }
 
   .ma-grid {
     grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .ma-item {
+    padding: 6px 8px;
+  }
+
+  .market-confidence {
+    font-size: 0.7em;
+    padding-top: 6px;
   }
 }
 
 @media (max-width: 480px) {
   .market-conditions-card {
-    padding: 10px 12px;
-  }
-
-  .market-metrics {
-    grid-template-columns: 1fr;
+    padding: 8px 10px;
   }
 
   .market-header {
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: 3px;
+    margin-bottom: 8px;
   }
 
   .market-title {
+    font-size: 0.85em;
+  }
+
+  .market-last-updated {
+    font-size: 0.65em;
+  }
+
+  .market-metrics {
+    grid-template-columns: 1fr;
+    gap: 5px;
+    margin-bottom: 8px;
+  }
+
+  .market-metric {
+    padding: 5px 7px;
+  }
+
+  .market-metric .metric-label {
+    font-size: 0.7em;
+    letter-spacing: 0.5px;
+  }
+
+  .market-metric .metric-value {
+    font-size: 1.3em;
+  }
+
+  .market-metric#marketSignal {
+    gap: 8px;
+  }
+
+  .market-metric#marketSignal .metric-icon {
+    font-size: 1.3em;
+  }
+
+  .market-phase-section,
+  .market-ma-section {
+    padding: 6px 8px;
+    margin-bottom: 6px;
+    font-size: 0.85em;
+  }
+
+  .ma-title {
+    font-size: 0.75em;
+    margin-bottom: 6px;
+  }
+
+  .ma-grid {
+    gap: 5px;
+  }
+
+  .ma-item {
+    padding: 5px 6px;
+  }
+
+  .ma-label {
+    font-size: 0.75em;
+  }
+
+  .ma-value {
     font-size: 0.9em;
+  }
+
+  .ma-change {
+    font-size: 0.7em;
+  }
+
+  .market-confidence {
+    font-size: 0.65em;
+    padding-top: 5px;
   }
 }
 
