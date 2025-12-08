@@ -1742,7 +1742,7 @@ async function updateNetworkStats(data) {
         elements.blockHeight.textContent = formatFull(data.blockHeight);
         elements.blockHeight.classList.remove('skeleton-text');
       }
-      // Update Block Height tooltip (no last_updated - Network API has no timestamp)
+      // Update Block Height tooltip
       const blockHeightBadge = document.querySelector('#blockHeightCard .info-badge');
       if (blockHeightBadge) {
         const tooltipLines = [
@@ -1750,6 +1750,9 @@ async function updateNetworkStats(data) {
           `Block: ${formatFull(data.blockHeight)}`,
           'Source: Network API'
         ];
+        if (data.last_issuance_ts) {
+          tooltipLines.push(`Last updated: ${new Date(data.last_issuance_ts * 1000).toLocaleString()}`);
+        }
         blockHeightBadge.setAttribute('data-tooltip', tooltipLines.join('\n'));
       }
     }
