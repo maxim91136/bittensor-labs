@@ -71,6 +71,14 @@ Real-time market analysis card combining multiple data sources into actionable i
 - **Top Wallets** by TAO holdings
 - **Top Subnets** by emission allocation
 
+### 📈 Subnet Ranking System (RC26+)
+Track subnet position changes over time with visual indicators:
+- **Position Change Indicators**: ▲ (rank up), ▼ (rank down), NEW (new entry)
+- **Historical Comparison**: Compares current ranking against previous snapshot
+- **Color-Coded Signals**: Green for improvements, Red for drops, Blue for new entries
+- **Compact Display**: Rank + change indicator in single column (e.g., "1 ▲2")
+- **Data Source**: Historical snapshots stored via `/api/top_subnets_history`
+
 ### 🌗 Dark/Light Mode
 - Auto-detects system preference
 - Manual toggle with smooth transitions
