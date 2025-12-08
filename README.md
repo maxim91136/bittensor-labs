@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem.
 
-**Latest release:** `v1.0.0-rc.25.4` — see [RELEASE_NOTES/v1.0.0-rc.25.4.md](RELEASE_NOTES/v1.0.0-rc.25.4.md) and [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.25.5` — see [RELEASE_NOTES/v1.0.0-rc.25.5.md](RELEASE_NOTES/v1.0.0-rc.25.5.md) and [CHANGELOG.md](CHANGELOG.md) for details.
 
 > 🎯 **RC25 Highlight**: Market Conditions Card with real-time intelligence - multi-factor signal analysis combining volume, price, moving averages, and Fear & Greed sentiment.
 > 📊 Strategic color usage for clearer visual hierarchy - neutral values, conditional signals.

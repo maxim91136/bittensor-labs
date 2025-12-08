@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.25.5 (2025-12-08)
+### Improved
+- **Mobile Readability**: Larger font sizes for MA values and phase section
+  - Moving Averages: 25-30% larger across all breakpoints
+  - Phase section: 0.8em → 1em (desktop), 0.9em (mobile)
+- **Dual Market Labels**: Emotional + technical interpretation for each condition
+  - Emotional labels with `?` (questions, not statements)
+  - Technical labels (pure descriptions)
+  - Example: `💀 capitulation?` + `📊 max selling pressure`
+- **Shorter Market Text**: `Market: Bearish (-22.5% 3d/7d)` (~50% shorter)
+- **Clean Line Breaks**: Each label on separate line, no mid-text wrapping
+
+### Fixed
+- **Legal Safety**: Removed all investment advice language
+  - No "buy opportunity", "sell signal", etc.
+  - All interpretations are questions or descriptions
+
 ## v1.0.0-rc.25.4 (2025-12-08)
 ### Fixed
 - **Market Phase Colors**: Corrected color mapping for market conditions
