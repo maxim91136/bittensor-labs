@@ -60,38 +60,11 @@ Real-time market analysis card combining multiple data sources into actionable i
 - **Halving Countdown** based on issuance reaching 10.5M TAO threshold
 - **Emission curve visualization** showing TAO distribution over time
 
-### 🚦 Volume Signal (Ampelsystem)
-Smart volume-price correlation indicator:
-| Signal | Meaning |
-|--------|---------|
-| 🟢 **Bullish** | Volume ↑ + Price ↑ — Strong demand |
-| 🔴 **Bearish** | Volume ↑ + Price ↓ — Selling pressure (distribution) |
-| 🟠 **Watch** | Volume ↑ + Price stable — Potential breakout |
-| 🟡 **Caution** | Volume ↓ + Price ↑ — Momentum loss |
-| 🔴 **Slightly bearish** | Volume ↓ + Price ↓ with price ≤ -2% — Selling pressure with reduced participation (displayed as light‑red) |
-| 🟡 **Consolidation** | Volume ↓ + Price ↓ (small drop) — Sideways market |
-| ⚪ **Stable** | Quiet market conditions |
-
-**Implementation notes**
-
-- **Clarification:** The code treats `Volume ↓ + Price stable` as a neutral/quiet market state (⚪) to avoid false alerts when activity is low. Strong price moves on low volume are treated as **🟡 Price spike (low volume)** and are surfaced with a special tooltip explaining thin‑liquidity conditions.
-
-- **Behavioral nuance:** The Ampelsystem can also mark a move as *sustained* (solid 🟢) when short‑ and medium‑term moving averages are aligned and volume/ traded‑share/price strength meet configured thresholds. Hysteresis (consecutive checks) is used to avoid flapping.
-
-**Key implementation thresholds (see `script.js`)**
-
-- `VOLUME_SIGNAL_THRESHOLD = 3` — ±3%: minimum change to consider volume/price up or down.
-- `LOW_VOL_PCT = 5` — <5%: treat as low‑volume for spike detection.
-- `PRICE_SPIKE_PCT = 10` — ≥10%: consider a 24h price move a spike.
-- `SUSTAIN_VOL_PCT = 6` — 6%: sustained 24h volume increase threshold.
-- `TRADED_SHARE_MIN = 0.1` — 0.1% of circulating supply: minimal traded share to consider move meaningful.
-- `HYSTERESIS_REQUIRED = 2` — require 2 consecutive checks to mark a sustained signal.
-
-These values are chosen conservatively for on‑chain and exchange data; feel free to request adjustments if you want the signals to be more/less sensitive.
-### 📈 Moving Averages
-- **MA-2h, MA-4h, MA-3d, MA-7d** for volume trend analysis
-- Percentage deviation from each MA in tooltip
-- Confidence indicator based on data availability
+### 😱 Fear & Greed Index
+- Real-time sentiment tracking from Alternative.me
+- Spoon gauge visualization (0-100 scale)
+- Historical timeline showing sentiment trends
+- Integration with Market Conditions Card for comprehensive analysis
 
 ### 🏆 Leaderboards
 - **Top Validators** by stake with delegation info
