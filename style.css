@@ -3643,19 +3643,19 @@ body.light-bg .map-preview-card .map-attribution {
   color: var(--text);
 }
 
-.validators-display-table .stake-col {
+.validators-display-table td.stake-col {
   font-weight: 500;
   color: var(--accent);
   font-variant-numeric: tabular-nums;
 }
 
-.validators-display-table .dominance-col {
+.validators-display-table td.dominance-col {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.85);
   font-variant-numeric: tabular-nums;
 }
 
-.validators-display-table .nominators-col {
+.validators-display-table td.nominators-col {
   font-weight: 500;
   color: rgba(255, 255, 255, 0.7);
   font-variant-numeric: tabular-nums;
