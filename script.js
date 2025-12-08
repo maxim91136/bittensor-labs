@@ -626,11 +626,11 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
 
         // Add Fear & Greed context
         if (fngSentiment === 'extreme_greed') {
-          phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🌡️ overheating?`;
+          phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🌡️ overheating? | 📊 max optimism`;
         } else if (fngSentiment === 'greed') {
-          phaseText += `\n🔥 Sentiment: Greed (${fngValue})\n✨ euphoria?`;
+          phaseText += `\n🔥 Sentiment: Greed (${fngValue})\n✨ euphoria? | 📊 high optimism`;
         } else if (fngSentiment === 'extreme_fear' || fngSentiment === 'fear') {
-          phaseText += `\n✅ Sentiment: ${fngClass} (${fngValue})\n📊 divergence`;
+          phaseText += `\n✅ Sentiment: ${fngClass} (${fngValue})\n🤔 divergence? | 📊 fear in uptrend`;
         }
 
         marketPhaseNote = `\n${phaseText}`;
@@ -640,11 +640,11 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
 
         // Add Fear & Greed context
         if (fngSentiment === 'extreme_fear') {
-          phaseText += `\n🔻 Sentiment: Extreme Fear (${fngValue})\n💀 capitulation?`;
+          phaseText += `\n🔻 Sentiment: Extreme Fear (${fngValue})\n💀 capitulation? | 📊 max selling pressure`;
         } else if (fngSentiment === 'fear') {
-          phaseText += `\n😰 Sentiment: Fear (${fngValue})\n📉 bearish`;
+          phaseText += `\n😰 Sentiment: Fear (${fngValue})\n😟 panic? | 📊 selling pressure`;
         } else if (fngSentiment === 'extreme_greed' || fngSentiment === 'greed') {
-          phaseText += `\n⚠️ Sentiment: ${fngClass} (${fngValue})\n🔀 disconnect`;
+          phaseText += `\n⚠️ Sentiment: ${fngClass} (${fngValue})\n🔀 disconnect? | 📊 greed in downtrend`;
         }
 
         marketPhaseNote = `\n${phaseText}`;
@@ -655,9 +655,9 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
 
         // Add Fear & Greed as primary indicator in neutral markets
         if (fngSentiment === 'extreme_greed') {
-          phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🎯 correction?`;
+          phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🎯 correction? | 📊 high sentiment`;
         } else if (fngSentiment === 'extreme_fear') {
-          phaseText += `\n💎 Sentiment: Extreme Fear (${fngValue})\n📊 low sentiment`;
+          phaseText += `\n💎 Sentiment: Extreme Fear (${fngValue})\n😰 extreme fear? | 📊 low sentiment`;
         } else if (fngSentiment) {
           phaseText += `\n😐 Sentiment: ${fngClass} (${fngValue})`;
         }
@@ -766,21 +766,21 @@ Both declining — downward momentum${marketPhaseNote}` + (confidenceLine || '')
       if (ma7dTrend > 5) {
         let phaseText = `📈 Market: Bullish (3d avg is ${ma7dTrend.toFixed(1)}% above 7d avg)`;
         if (fngSentiment === 'extreme_greed') {
-          phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🌡️ overheating?`;
+          phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🌡️ overheating? | 📊 max optimism`;
         } else if (fngSentiment === 'greed') {
-          phaseText += `\n🔥 Sentiment: Greed (${fngValue})\n✨ euphoria?`;
+          phaseText += `\n🔥 Sentiment: Greed (${fngValue})\n✨ euphoria? | 📊 high optimism`;
         } else if (fngSentiment === 'extreme_fear' || fngSentiment === 'fear') {
-          phaseText += `\n✅ Sentiment: ${fngClass} (${fngValue})\n📊 divergence`;
+          phaseText += `\n✅ Sentiment: ${fngClass} (${fngValue})\n🤔 divergence? | 📊 fear in uptrend`;
         }
         marketPhaseNote = `\n${phaseText}`;
       } else if (ma7dTrend < -5) {
         let phaseText = `📉 Market: Bearish (3d avg is ${Math.abs(ma7dTrend).toFixed(1)}% below 7d avg)`;
         if (fngSentiment === 'extreme_fear') {
-          phaseText += `\n🔻 Sentiment: Extreme Fear (${fngValue})\n💀 capitulation?`;
+          phaseText += `\n🔻 Sentiment: Extreme Fear (${fngValue})\n💀 capitulation? | 📊 max selling pressure`;
         } else if (fngSentiment === 'fear') {
-          phaseText += `\n😰 Sentiment: Fear (${fngValue})\n📉 bearish`;
+          phaseText += `\n😰 Sentiment: Fear (${fngValue})\n😟 panic? | 📊 selling pressure`;
         } else if (fngSentiment === 'extreme_greed' || fngSentiment === 'greed') {
-          phaseText += `\n⚠️ Sentiment: ${fngClass} (${fngValue})\n🔀 disconnect`;
+          phaseText += `\n⚠️ Sentiment: ${fngClass} (${fngValue})\n🔀 disconnect? | 📊 greed in downtrend`;
         }
         marketPhaseNote = `\n${phaseText}`;
       } else {
@@ -788,9 +788,9 @@ Both declining — downward momentum${marketPhaseNote}` + (confidenceLine || '')
         const absValue = Math.abs(ma7dTrend).toFixed(1);
         let phaseText = `➡️ Market: Neutral (3d avg is ${absValue}% ${aboveBelow} 7d avg)`;
         if (fngSentiment === 'extreme_greed') {
-          phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🎯 correction?`;
+          phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🎯 correction? | 📊 high sentiment`;
         } else if (fngSentiment === 'extreme_fear') {
-          phaseText += `\n💎 Sentiment: Extreme Fear (${fngValue})\n📊 low sentiment`;
+          phaseText += `\n💎 Sentiment: Extreme Fear (${fngValue})\n😰 extreme fear? | 📊 low sentiment`;
         } else if (fngSentiment) {
           phaseText += `\n😐 Sentiment: ${fngClass} (${fngValue})`;
         }
