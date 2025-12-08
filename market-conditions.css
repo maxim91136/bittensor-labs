@@ -99,7 +99,7 @@
 .market-metric .metric-label {
   font-size: 0.85em;
   font-weight: 700;
-  color: #22c55e;
+  color: rgba(229,231,235,0.7);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
@@ -204,7 +204,7 @@
 .ma-title {
   font-size: 0.75em;
   font-weight: 700;
-  color: rgba(34,197,94,0.8);
+  color: rgba(229,231,235,0.7);
   margin-bottom: 8px;
   text-transform: uppercase;
   letter-spacing: 1.5px;
@@ -234,7 +234,7 @@
 }
 
 .ma-item .ma-label {
-  color: rgba(34,197,94,0.7);
+  color: rgba(229,231,235,0.6);
   font-weight: 700;
 }
 
@@ -480,7 +480,7 @@
 }
 
 .market-conditions-card.light-bg .metric-label {
-  color: rgba(22,163,74,0.7);
+  color: rgba(55,65,81,0.7);
 }
 
 .market-conditions-card.light-bg .market-phase-section {
@@ -495,7 +495,7 @@
 }
 
 .market-conditions-card.light-bg .ma-title {
-  color: rgba(22,163,74,0.8);
+  color: rgba(55,65,81,0.7);
 }
 
 .market-conditions-card.light-bg .ma-item {
@@ -504,7 +504,7 @@
 }
 
 .market-conditions-card.light-bg .ma-label {
-  color: rgba(22,163,74,0.7);
+  color: rgba(55,65,81,0.6);
 }
 
 .market-conditions-card.light-bg .ma-value {
