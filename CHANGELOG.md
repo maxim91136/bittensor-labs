@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.26.1 (2025-12-08)
+### Added
+- **Validators Ranking System**: Position change indicators (▲ ▼ NEW)
+- **History Comparison**: Uses hotkey as unique identifier
+
+### Improved
+- **Unified Fonts**: Monospace across entire validators table
+- **Header Consistency**: 0.9em font-size, matching Subnets
+- **Color-Matched Headers**: DOM % and NOMS headers gray/white like data
+
 ## v1.0.0-rc.26 (2025-12-08)
 ### Added
 - **Subnet Ranking System**: Position change indicators (▲ ▼ NEW)
