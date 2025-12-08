@@ -3573,8 +3573,8 @@ body.light-bg .map-preview-card .map-attribution {
   text-align: left;
   font-weight: 700;
   color: var(--accent);
-  letter-spacing: 0.03em;
-  font-size: 0.80em;
+  letter-spacing: 0.05em;
+  font-size: 0.9em;
   text-transform: uppercase;
   background: transparent;
   white-space: nowrap;
