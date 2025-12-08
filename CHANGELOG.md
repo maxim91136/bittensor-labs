@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.25.3.2 (2025-12-08)
+### Changed
+- **Documentation Overhaul**: Complete README update to RC25.3.2
+  - Updated version from RC23.7 to current release
+  - Added comprehensive Market Conditions Intelligence section
+  - Documented all RC25+ features (4 key metrics, phase analysis, MAs)
+  - Updated highlights to showcase current dashboard state
+
+### Removed
+- **Legacy Ampelsystem Code**: Cleaned up deprecated Volume Signal Card
+  - Removed standalone Ampelsystem section from README (~33 lines)
+  - Removed taostats-card asset links from index.html
+  - Deleted `assets/taostats/` folder (CSS, HTML, JS - 3 files, 10KB)
+  - Result: -313 lines of redundant code
+
+### Added
+- **Fear & Greed Index Section**: New dedicated documentation
+- **Git Tags**: Created retroactive tags for RC25.2, RC25.3, RC25.3.1
+
+### Improved
+- **Documentation Accuracy**: README now matches actual implementation
+- **Codebase Cleanliness**: No dead code, no broken links
+- **Professional Presentation**: Complete, accurate, current docs
+
+### Notes
+- Pure documentation and cleanup release
+- No functional changes to dashboard
+- Foundation for v1.0.0 with complete documentation
+- See `RELEASE_NOTES/v1.0.0-rc.25.3.2.md` for details
+
 ## v1.0.0-rc.25.3.1 (2025-12-08)
 ### Changed
 - **Market Phase Section Mobile Optimization**: Improved text readability on small screens
