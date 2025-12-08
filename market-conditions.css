@@ -415,34 +415,35 @@
 
   .market-phase-section {
     word-wrap: break-word;
-    overflow-wrap: break-word;
-    hyphens: auto;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    hyphens: none;
   }
 
   .ma-title {
-    font-size: 0.85em;
+    font-size: 0.95em;
     margin-bottom: 6px;
   }
 
   .ma-grid {
-    gap: 5px;
+    gap: 6px;
   }
 
   .ma-item {
-    padding: 6px 8px;
-    font-size: 0.9em;
-  }
-
-  .ma-label {
-    font-size: 0.85em;
-  }
-
-  .ma-value {
+    padding: 8px 10px;
     font-size: 1em;
   }
 
+  .ma-label {
+    font-size: 0.95em;
+  }
+
+  .ma-value {
+    font-size: 1.1em;
+  }
+
   .ma-change {
-    font-size: 0.85em;
+    font-size: 0.95em;
   }
 
   .market-confidence {
