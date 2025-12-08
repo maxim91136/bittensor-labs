@@ -630,7 +630,7 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
         } else if (fngSentiment === 'greed') {
           phaseText += `\n🔥 Sentiment: Greed (${fngValue})\n✨ strong optimism`;
         } else if (fngSentiment === 'extreme_fear' || fngSentiment === 'fear') {
-          phaseText += `\n✅ Sentiment: ${fngClass} (${fngValue})\n💎 opportunity`;
+          phaseText += `\n✅ Sentiment: ${fngClass} (${fngValue})\n🤔 contrarian?`;
         }
 
         marketPhaseNote = `\n${phaseText}`;
@@ -657,7 +657,7 @@ function getVolumeSignal(volumeData, priceChange, currentVolume = null, aggregat
         if (fngSentiment === 'extreme_greed') {
           phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🎯 correction risk`;
         } else if (fngSentiment === 'extreme_fear') {
-          phaseText += `\n💎 Sentiment: Extreme Fear (${fngValue})\n🛒 buy opportunity`;
+          phaseText += `\n💎 Sentiment: Extreme Fear (${fngValue})\n🤔 oversold?`;
         } else if (fngSentiment) {
           phaseText += `\n😐 Sentiment: ${fngClass} (${fngValue})`;
         }
@@ -770,7 +770,7 @@ Both declining — downward momentum${marketPhaseNote}` + (confidenceLine || '')
         } else if (fngSentiment === 'greed') {
           phaseText += `\n🔥 Sentiment: Greed (${fngValue})\n✨ strong optimism`;
         } else if (fngSentiment === 'extreme_fear' || fngSentiment === 'fear') {
-          phaseText += `\n✅ Sentiment: ${fngClass} (${fngValue})\n💎 opportunity`;
+          phaseText += `\n✅ Sentiment: ${fngClass} (${fngValue})\n🤔 contrarian?`;
         }
         marketPhaseNote = `\n${phaseText}`;
       } else if (ma7dTrend < -5) {
@@ -790,7 +790,7 @@ Both declining — downward momentum${marketPhaseNote}` + (confidenceLine || '')
         if (fngSentiment === 'extreme_greed') {
           phaseText += `\n⚠️ Sentiment: Extreme Greed (${fngValue})\n🎯 correction risk`;
         } else if (fngSentiment === 'extreme_fear') {
-          phaseText += `\n💎 Sentiment: Extreme Fear (${fngValue})\n🛒 buy opportunity`;
+          phaseText += `\n💎 Sentiment: Extreme Fear (${fngValue})\n🤔 oversold?`;
         } else if (fngSentiment) {
           phaseText += `\n😐 Sentiment: ${fngClass} (${fngValue})`;
         }
