@@ -8,9 +8,9 @@ Started: November 3, 2025
 
 This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem.
 
-**Latest release:** `v1.0.0-rc.26.1` — see [RELEASE_NOTES/v1.0.0-rc.26.1.md](RELEASE_NOTES/v1.0.0-rc.26.1.md) and [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.26.2` — see [RELEASE_NOTES/v1.0.0-rc.26.2.md](RELEASE_NOTES/v1.0.0-rc.26.2.md) and [CHANGELOG.md](CHANGELOG.md) for details.
 
-> 🎯 **RC26.1 Highlight**: Validators Ranking System with position change indicators (▲ ▼ NEW).
+> 🎯 **RC26.2 Highlight**: Complete Ranking System for all 3 Top 10 cards (Subnets, Validators, Wallets).
 > 📊 Strategic color usage for clearer visual hierarchy - neutral values, conditional signals.
 > 📱 Mobile-optimized with compact, responsive design.
 
@@ -71,13 +71,13 @@ Real-time market analysis card combining multiple data sources into actionable i
 - **Top Wallets** by TAO holdings
 - **Top Subnets** by emission allocation
 
-### 📈 Subnet Ranking System (RC26+)
-Track subnet position changes over time with visual indicators:
+### 📈 Leaderboard Ranking System (RC26+)
+Track position changes across all Top 10 cards with visual indicators:
 - **Position Change Indicators**: ▲ (rank up), ▼ (rank down), NEW (new entry)
 - **Historical Comparison**: Compares current ranking against previous snapshot
 - **Color-Coded Signals**: Green for improvements, Red for drops, Blue for new entries
 - **Compact Display**: Rank + change indicator in single column (e.g., "1 ▲2")
-- **Data Source**: Historical snapshots stored via `/api/top_subnets_history`
+- **Supported Cards**: Subnets (netuid), Validators (hotkey), Wallets (address)
 
 ### 🌗 Dark/Light Mode
 - Auto-detects system preference
