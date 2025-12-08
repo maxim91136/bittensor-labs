@@ -1686,6 +1686,7 @@ function updateTaoPrice(priceData) {
             const lines = ['Price changes:'];
             parts.forEach(p => lines.push(p));
             lines.push(`Source: ${source}`);
+            if (window._lastUpdated) lines.push(`Last updated: ${new Date(window._lastUpdated).toLocaleString()}`);
             pill.setAttribute('data-tooltip', lines.join('\n'));
       } else {
         pill.removeAttribute('data-tooltip');
@@ -1740,6 +1741,17 @@ async function updateNetworkStats(data) {
       if (elements.blockHeight) {
         elements.blockHeight.textContent = formatFull(data.blockHeight);
         elements.blockHeight.classList.remove('skeleton-text');
+      }
+      // Update Block Height tooltip with last updated
+      const blockHeightBadge = document.querySelector('#blockHeightCard .info-badge');
+      if (blockHeightBadge) {
+        const tooltipLines = [
+          'Current block height of the Bittensor blockchain',
+          `Block: ${formatFull(data.blockHeight)}`,
+          'Source: Network API'
+        ];
+        if (window._lastUpdated) tooltipLines.push(`Last updated: ${new Date(window._lastUpdated).toLocaleString()}`);
+        blockHeightBadge.setAttribute('data-tooltip', tooltipLines.join('\n'));
       }
     }
     if (data.subnets !== undefined) {
@@ -1979,6 +1991,10 @@ async function updateNetworkStats(data) {
           halvingLines.push(`${step} ${t} → ${eta} → ${used}`);
         });
       }
+    }
+    // Add last updated timestamp
+    if (window._lastUpdated) {
+      halvingLines.push(`Last updated: ${new Date(window._lastUpdated).toLocaleString()}`);
     }
 
     halvingPill.setAttribute('data-tooltip', halvingLines.join('\n'));
@@ -2360,6 +2376,8 @@ async function refreshDashboard() {
   } else {
     if (lastUpdateEl) lastUpdateEl.textContent = `Updated: --:--`;
   }
+  // Expose lastUpdated globally for tooltips
+  window._lastUpdated = lastUpdated;
 
   // Get volume from taostats!
   const volumeEl = document.getElementById('volume24h');
@@ -2894,6 +2912,8 @@ async function updateBlockTime() {
         `Calculation: (newest_ts - oldest_ts) / (blocks - 1)`,
         `Source: Taostats Block API`
       ];
+      const blockLastUpd = data.last_updated || window._lastUpdated;
+      if (blockLastUpd) tooltipLines.push(`Last updated: ${new Date(blockLastUpd).toLocaleString()}`);
       badge.setAttribute('data-tooltip', tooltipLines.join('\n'));
     }
   } else {
@@ -2934,12 +2954,15 @@ async function updateStakingApr() {
       if (lastUpdatedStr) tooltipLines.push(`Last updated: ${lastUpdatedStr}`);
       badge.setAttribute('data-tooltip', tooltipLines.join('\n'));
     }
-    // Add tooltip for price badge
+    // Add tooltip for price badge (using global data)
     const priceBadge = document.querySelector('#taoPriceCard .info-badge');
     if (priceBadge) {
-      let tooltip = 'Current TAO price';
-      if (taoPrice && taoPrice.price) tooltip += `\n$${taoPrice.price}`;
-      if (lastUpdated) tooltip += `\nLast updated: ${new Date(lastUpdated).toLocaleString()}`;
+      const ts = window._taostats;
+      const priceVal = ts?.price ?? null;
+      const lastUpd = window._lastUpdated;
+      let tooltip = 'Current TAO price from Taostats API';
+      if (priceVal) tooltip += `\nPrice: $${priceVal}`;
+      if (lastUpd) tooltip += `\nLast updated: ${new Date(lastUpd).toLocaleString()}`;
       priceBadge.setAttribute('data-tooltip', tooltip);
     }
   } else {
