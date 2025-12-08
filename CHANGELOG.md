@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.25.1 (2025-12-07)
+### Changed
+- **Market Conditions Title**: Renamed to "Market Conditions (short term)" for clarity
+- **Card Layout**: Swapped Neurons (position 8) and API (position 12) - API now last badge
+- **Mobile Optimization**: Compact design for small screens (30-40% less space)
+  - Tablet: Reduced padding, smaller fonts (metric-value: 1.5em)
+  - Mobile: Minimal padding, compact fonts (metric-value: 1.3em)
+  - 2x2 grid maintained on all mobile screens for consistency
+
+### Notes
+- Pure UX/UI polish pass
+- No functional changes
+- See `RELEASE_NOTES/v1.0.0-rc.25.1.md` for details
+
 ## v1.0.0-rc.25 (2025-12-07)
 ### Added
 - **Dynamic Phase Coloring**: Market phase status now color-coded (Bearish=red, Bullish=green, Watch=orange, Caution=yellow)
