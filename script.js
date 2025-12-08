@@ -1744,7 +1744,6 @@ async function updateNetworkStats(data) {
       }
       // Update Block Height tooltip with last updated
       const blockHeightBadge = document.querySelector('#blockHeightCard .info-badge');
-      console.log('TOOLTIP DEBUG - blockHeightBadge:', blockHeightBadge, 'window._lastUpdated:', window._lastUpdated);
       if (blockHeightBadge) {
         const tooltipLines = [
           'Current block height of the Bittensor blockchain',
@@ -1753,7 +1752,6 @@ async function updateNetworkStats(data) {
         ];
         if (window._lastUpdated) tooltipLines.push(`Last updated: ${new Date(window._lastUpdated).toLocaleString()}`);
         blockHeightBadge.setAttribute('data-tooltip', tooltipLines.join('\n'));
-        console.log('TOOLTIP SET:', tooltipLines.join('\n'));
       }
     }
     if (data.subnets !== undefined) {
