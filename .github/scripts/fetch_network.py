@@ -252,16 +252,24 @@ def fetch_metrics() -> Dict[str, Any]:
 
             # Check against last sample in sanitized history
             if is_valid and history:
-                last_issuance = history[-1].get('issuance', 0)
+                last_sample = history[-1]
+                last_issuance = last_sample.get('issuance', 0)
+                last_ts = last_sample.get('ts', 0)
                 delta = new_issuance - last_issuance
-                max_delta_per_interval = 1000  # TAO per 15min interval (very generous)
+                time_elapsed = ts - last_ts if last_ts > 0 else 900  # seconds since last sample
+
+                # Max delta should be proportional to time elapsed
+                # Expected: ~7200 TAO/day = ~5 TAO/minute = ~75 TAO per 15min
+                # Allow 2x expected emission as max (to handle variance)
+                expected_emission_per_second = 7200.0 / 86400.0  # ~0.083 TAO/sec
+                max_delta = max(1000, expected_emission_per_second * time_elapsed * 2)  # At least 1000, or 2x expected
 
                 if delta < -10:  # Allow tiny floating point variance
                     is_valid = False
                     reject_reason = f"issuance decreased by {abs(delta):.2f} TAO"
-                elif delta > max_delta_per_interval:
+                elif delta > max_delta:
                     is_valid = False
-                    reject_reason = f"issuance jumped by {delta:.2f} TAO (max {max_delta_per_interval})"
+                    reject_reason = f"issuance jumped by {delta:.2f} TAO (max {max_delta:.2f} for {time_elapsed/3600:.1f}h gap)"
 
             if is_valid:
                 # Append snapshot; drop duplicates if same second
