@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.27 (2025-12-09)
+### Fixed
+- **Emission Calculation Bug**: Fixed 752k TAO/day display caused by missing anomaly filter
+- **History Sanitization**: Improved to only remove corrupt samples, not cascading deletions
+- **Sample Validation**: New samples are now validated before being added to history
+
+### Added
+- **Dynamic Emission Bounds**: Filter automatically adjusts based on halving level
+- **Halving-Ready**: System will continue working correctly after each halving event
+
+### Technical
+- Emission filter now uses dynamic bounds (±40% of expected rate per halving level)
+- Pre-halving: 4320-10080 TAO/day, Post-halving 1: 2160-5040 TAO/day, etc.
+- Corrupt samples detected by drops are removed (the high value before the drop)
+- New samples validated: bounds check, no decreases, max 1000 TAO/interval jump
+
+## v1.0.0-rc.26.5 (2025-12-08)
+### Fixed
+- **Block Time Fetch**: Reduced from 100 to 25 blocks for faster response
+
 ## v1.0.0-rc.26.4 (2025-12-08)
 ### Fixed
 - **Correct Timestamp Sources**: Each tooltip uses its proper API timestamp
