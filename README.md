@@ -10,9 +10,9 @@ This project provides a compact dashboard for visualizing and monitoring key Bit
 
 **Latest release:** `v1.0.0-rc.27.3.1` — see [CHANGELOG.md](CHANGELOG.md) for details.
 
-> 🥚 **RC27.3.1 Highlight**: New Easter Egg! Triple-click the refresh countdown...
-> 🔴 Matrix-style "SYSTEM FAILURE" screen with red code rain
-> 📱 Enhanced refresh indicator with click-to-refresh
+> 🥚 **RC27.3.1 Highlight**: New Easter Egg hidden somewhere...
+> 🔄 Enhanced refresh indicator with click-to-refresh
+> 📱 Mobile-optimized sizing
 
 ## Features
 
@@ -90,9 +90,7 @@ Track position changes across all Top 10 cards with visual indicators:
 - Optimized for all screen sizes
 
 ### 🥚 Easter Eggs
-- **"Wake up, Neo..."** - Random Matrix message appears after page load
-- **System Failure** - Triple-click the refresh countdown for a surprise
-- More hidden features to discover...
+- Hidden Matrix-themed surprises - can you find them?
 
 ### ♿ Accessibility
 - `prefers-reduced-motion` support
