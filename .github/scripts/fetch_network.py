@@ -245,8 +245,8 @@ def fetch_metrics() -> Dict[str, Any]:
     now_ts = int(datetime.now(timezone.utc).timestamp())
     
     # emission_daily = time-weighted mean per_day for last 24h
-    # Only use positive deltas (negative = data anomaly)
-    deltas_last_24h = [d for d in per_interval_deltas if d['ts'] >= (now_ts - 86400) and d['per_day'] > 0]
+    # Filter anomalies: only use values in reasonable range (5000-9000 TAO/day)
+    deltas_last_24h = [d for d in per_interval_deltas if d['ts'] >= (now_ts - 86400) and 5000 <= d['per_day'] <= 9000]
     # require at least 3 interval samples in the last 24h to compute a reliable daily estimate
     if len(deltas_last_24h) >= 3:
         # use winsorized mean for last 24h to smooth out spikes
@@ -383,7 +383,8 @@ def fetch_metrics() -> Dict[str, Any]:
         avg_for_projection = emission_daily
         projection_method = 'emission_daily_low_confidence'
     else:
-        vals = [d['per_day'] for d in per_interval_deltas if isinstance(d.get('per_day'), (int, float))]
+        # Filter anomalies: only use values in reasonable range (5000-9000 TAO/day)
+        vals = [d['per_day'] for d in per_interval_deltas if isinstance(d.get('per_day'), (int, float)) and 5000 <= d['per_day'] <= 9000]
         if vals:
             avg_for_projection = sum(vals) / len(vals)
             projection_method = 'mean_from_intervals'
