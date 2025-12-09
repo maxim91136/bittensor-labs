@@ -178,28 +178,31 @@
   </div>
 
   <div class="stats-grid">
-  <div class="stat-card" id="subnetsCard">
-  <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Total active subnets in the Bittensor network">i</span>
-  <div class="stat-icon" aria-hidden="true">
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <title>Subnets</title>
-      <circle cx="6" cy="6" r="3" fill="#22c55e"/>
-      <circle cx="18" cy="6" r="3" fill="#22c55e"/>
-      <circle cx="12" cy="18" r="3" fill="#22c55e"/>
-      <line x1="6" y1="6" x2="12" y2="18" stroke="#16a34a" stroke-width="2"/>
-      <line x1="18" y1="6" x2="12" y2="18" stroke="#16a34a" stroke-width="2"/>
-      <line x1="6" y1="6" x2="18" y2="6" stroke="#16a34a" stroke-width="2"/>
-    </svg>
-  </div>
-  <div class="stat-content">
-    <div class="stat-label">Subnets</div>
-    <div class="stat-value"><a href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; color: inherit;">
-      <span id="subnets">—</span>
-    </a></div>
-  </div>
-  </div>
-  <div class="stat-card">
-    <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Number of active validators securing the network">i</span>
+    <!-- 1. Subnets -->
+    <div class="stat-card" id="subnetsCard">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Total active subnets in the Bittensor network">i</span>
+      <div class="stat-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <title>Subnets</title>
+          <circle cx="6" cy="6" r="3" fill="#22c55e"/>
+          <circle cx="18" cy="6" r="3" fill="#22c55e"/>
+          <circle cx="12" cy="18" r="3" fill="#22c55e"/>
+          <line x1="6" y1="6" x2="12" y2="18" stroke="#16a34a" stroke-width="2"/>
+          <line x1="18" y1="6" x2="12" y2="18" stroke="#16a34a" stroke-width="2"/>
+          <line x1="6" y1="6" x2="18" y2="6" stroke="#16a34a" stroke-width="2"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">SUBNETS</div>
+        <div class="stat-value"><a href="https://taostats.io/subnets" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; color: inherit;">
+          <span id="subnets">—</span>
+        </a></div>
+      </div>
+    </div>
+
+    <!-- 2. Validators -->
+    <div class="stat-card">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Number of active validators securing the network">i</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <title>User Icon</title>
@@ -207,14 +210,16 @@
           <path d="M4 20c0-3.3 3.6-6 8-6s8 2.7 8 6" stroke="#16a34a" stroke-width="2" fill="none"/>
         </svg>
       </div>
-    <div class="stat-content">
-      <div class="stat-label">Validators</div>
-      <div class="stat-value"><a href="https://taostats.io/validators" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; color: inherit;">
-        <span id="validators">—</span>
-      </a></div>
+      <div class="stat-content">
+        <div class="stat-label">VALIDATORS</div>
+        <div class="stat-value"><a href="https://taostats.io/validators" target="_blank" rel="noopener noreferrer" style="text-decoration: underline; color: inherit;">
+          <span id="validators">—</span>
+        </a></div>
+      </div>
     </div>
-  </div>
-  <div class="stat-card">
+
+    <!-- 3. Circ Supply -->
+    <div class="stat-card">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Current circulating supply of TAO tokens">i</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -225,10 +230,28 @@
         </svg>
       </div>
       <div class="stat-content">
-    <div class="stat-label">Circ Supply</div>
-  <div class="stat-value" id="circulatingSupply">—</div>
+        <div class="stat-label">CIRC SUPPLY</div>
+        <div class="stat-value" id="circulatingSupply">—</div>
       </div>
-   </div>
+    </div>
+
+    <!-- 4. Issued Tokens -->
+    <div class="stat-card" id="tokenEconomicsCard">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Percentage of maximum supply (21M TAO) that has been issued">i</span>
+      <div class="stat-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <title>Token Economics</title>
+          <circle cx="12" cy="12" r="9" stroke="#22c55e" stroke-width="2" fill="none"/>
+          <path d="M12 6v12M8 9h8M8 15h8" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">ISSUED TOKENS</div>
+        <div class="stat-value" id="issuedPercentValue">—</div>
+      </div>
+    </div>
+
+    <!-- 5. Market Cap -->
     <div class="stat-card">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Market capitalization = price × circulating supply">i</span>
       <div class="stat-icon" aria-hidden="true">
@@ -240,10 +263,12 @@
         </svg>
       </div>
       <div class="stat-content">
-        <div class="stat-label" translate="no">Market Cap</div>
-  <div class="stat-value" id="marketCap">—</div>
+        <div class="stat-label" translate="no">MARKET CAP</div>
+        <div class="stat-value" id="marketCap">—</div>
       </div>
     </div>
+
+    <!-- 6. FDV -->
     <div class="stat-card">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Fully Diluted Valuation = price × max supply">i</span>
       <div class="stat-icon" aria-hidden="true">
@@ -256,9 +281,11 @@
       </div>
       <div class="stat-content">
         <div class="stat-label" translate="no">FDV</div>
-  <div class="stat-value" id="fdv">—</div>
+        <div class="stat-value" id="fdv">—</div>
       </div>
     </div>
+
+    <!-- 7. Avg. Emission / Day -->
     <div class="stat-card">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Current emission rate of TAO per day">i</span>
       <div class="stat-icon" aria-hidden="true">
@@ -269,27 +296,57 @@
       </div>
       <div class="stat-content">
         <div class="stat-label" translate="no">AVG. EMISSION / DAY</div>
-  <div class="stat-value" id="emission">—</div>
+        <div class="stat-value" id="emission">—</div>
       </div>
     </div>
-    <!-- Next Halving stat-card: removed per user preference. Keep only dynamic halving pill -->
 
-    <!-- Token Economics Card -->
-    <div class="stat-card" id="tokenEconomicsCard">
-      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Percentage of maximum supply (21M TAO) that has been issued">i</span>
+    <!-- 8. Avg. Staking APR -->
+    <div class="stat-card" id="stakingAprCard">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Stake-weighted average APR across top 50 validators.&#10;&#10;Calculation: Σ(APR × stake) / Σ(stake)&#10;APR per validator: (daily_return × 365 / stake) × 100&#10;&#10;Simple Avg: —&#10;Range: — to —&#10;Source: Taostats dTao Validator API">i</span>
       <div class="stat-icon" aria-hidden="true">
         <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <title>Token Economics</title>
-          <circle cx="12" cy="12" r="9" stroke="#22c55e" stroke-width="2" fill="none"/>
-          <path d="M12 6v12M8 9h8M8 15h8" stroke="#16a34a" stroke-width="2" stroke-linecap="round"/>
+          <title>Staking APR</title>
+          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#22c55e" stroke="#16a34a" stroke-width="1"/>
         </svg>
       </div>
       <div class="stat-content">
-        <div class="stat-label">Issued Tokens</div>
-        <div class="stat-value" id="issuedPercentValue">—</div>
+        <div class="stat-label">AVG. STAKING APR</div>
+        <div class="stat-value" id="stakingApr">—</div>
       </div>
     </div>
 
+    <!-- 9. Block Height -->
+    <div class="stat-card" id="blockHeightCard">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Current block height of the Bittensor blockchain">i</span>
+      <div class="stat-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <title>Block</title>
+          <polygon points="12,6 18,10 18,16 12,20 6,16 6,10" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">BLOCK HEIGHT</div>
+        <div class="stat-value" id="blockHeight">—</div>
+      </div>
+    </div>
+
+    <!-- 10. Block Time -->
+    <div class="stat-card" id="blockTimeCard">
+      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Average time between blocks (last 200 blocks).&#10;Target: 12.0s&#10;&#10;Calculation: (newest_timestamp - oldest_timestamp) / (blocks - 1)&#10;Source: Taostats Block API">i</span>
+      <div class="stat-icon" aria-hidden="true">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <title>Block Time</title>
+          <circle cx="12" cy="12" r="9" stroke="#22c55e" stroke-width="1.5" fill="none"/>
+          <polyline points="12,6 12,12 16,14" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      </div>
+      <div class="stat-content">
+        <div class="stat-label">BLOCK TIME</div>
+        <div class="stat-value" id="blockTime">—</div>
+      </div>
+    </div>
+
+    <!-- 11. Neurons -->
     <div class="stat-card">
       <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Total number of neurons in the network">i</span>
       <div class="stat-icon" aria-hidden="true">
@@ -306,56 +363,12 @@
         </svg>
       </div>
       <div class="stat-content">
-        <div class="stat-label">Neurons</div>
-  <div class="stat-value" id="totalNeurons">—</div>
-      </div>
-    </div>
-      <div class="stat-card" id="blockHeightCard">
-        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Current block height of the Bittensor blockchain">i</span>
-        <div class="stat-icon" aria-hidden="true">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <title>Block</title>
-            <polygon points="12,6 18,10 18,16 12,20 6,16 6,10" fill="#22c55e" stroke="#16a34a" stroke-width="1.5"/>
-          </svg>
-        </div>
-        <div class="stat-content">
-          <div class="stat-label">Block Height</div>
-          <div class="stat-value" id="blockHeight">—</div>
-        </div>
-      </div>
-
-  <!-- Block Time Card -->
-    <div class="stat-card" id="blockTimeCard">
-      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Average time between blocks (last 200 blocks).&#10;Target: 12.0s&#10;&#10;Calculation: (newest_timestamp - oldest_timestamp) / (blocks - 1)&#10;Source: Taostats Block API">i</span>
-      <div class="stat-icon" aria-hidden="true">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <title>Block Time</title>
-          <circle cx="12" cy="12" r="9" stroke="#22c55e" stroke-width="1.5" fill="none"/>
-          <polyline points="12,6 12,12 16,14" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-label">Block Time</div>
-        <div class="stat-value" id="blockTime">—</div>
+        <div class="stat-label">NEURONS</div>
+        <div class="stat-value" id="totalNeurons">—</div>
       </div>
     </div>
 
-  <!-- Staking APR Card -->
-    <div class="stat-card" id="stakingAprCard">
-      <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Stake-weighted average APR across top 50 validators.&#10;&#10;Calculation: Σ(APR × stake) / Σ(stake)&#10;APR per validator: (daily_return × 365 / stake) × 100&#10;&#10;Simple Avg: —&#10;Range: — to —&#10;Source: Taostats dTao Validator API">i</span>
-      <div class="stat-icon" aria-hidden="true">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <title>Staking APR</title>
-          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#22c55e" stroke="#16a34a" stroke-width="1"/>
-        </svg>
-      </div>
-      <div class="stat-content">
-        <div class="stat-label">Avg. Staking APR</div>
-        <div class="stat-value" id="stakingApr">—</div>
-      </div>
-    </div>
-
-  <!-- API Status Card -->
+    <!-- 12. API Status -->
     <div class="stat-card" id="apiStatusCard">
       <span
         class="info-badge" translate="no" aria-hidden="true"
