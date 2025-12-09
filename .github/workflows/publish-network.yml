@@ -3,7 +3,13 @@ name: Fetch Network Data
 on:
   schedule:
     - cron: '7,22,37,52 * * * *' # every 15 Minuten, versetzt
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      replace_history:
+        description: 'Replace issuance history (skip merge with KV data)'
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   publish:
@@ -44,6 +50,7 @@ jobs:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
           FORCE_ISSUANCE_ON_KV_FAIL: '0'
+          REPLACE_ISSUANCE_HISTORY: ${{ inputs.replace_history && '1' || '0' }}
         run: |
           bash .github/scripts/push_issuance_history.sh
 

@@ -17,7 +17,13 @@ HTTP_STATUS_KV=$(curl -s -o /tmp/kv_current.json -w "%{http_code}" -H "Authoriza
 echo "DEBUG: HTTP_STATUS_KV=$HTTP_STATUS_KV" >&2
 PUSH_FILE=issuance_history.json
 FORCE_LOCAL=${FORCE_ISSUANCE_ON_KV_FAIL:-0}
-if [ "$HTTP_STATUS_KV" = "200" ]; then
+REPLACE_HISTORY=${REPLACE_ISSUANCE_HISTORY:-0}
+
+# If REPLACE_ISSUANCE_HISTORY=1, skip merge and just push local data
+if [ "$REPLACE_HISTORY" = "1" ]; then
+  echo "REPLACE_ISSUANCE_HISTORY=1: Replacing KV history with local sanitized data (no merge)" >&2
+  PUSH_FILE=issuance_history.json
+elif [ "$HTTP_STATUS_KV" = "200" ]; then
   set +e
   KV_JSON=$(jq -cS '.' /tmp/kv_current.json 2>/dev/null || true)
   if [ -s /tmp/kv_current.json ]; then
