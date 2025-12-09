@@ -2740,9 +2740,16 @@ function showSystemFailureEasterEgg() {
 
   document.body.appendChild(overlay);
 
-  // Click to close and resume
-  overlay.onclick = () => {
+  // Triple-click or ESC to close
+  let closeClickTimestamps = [];
+  let canClose = false;
+
+  // Delay before accepting clicks (prevents immediate close from triggering triple-click)
+  setTimeout(() => { canClose = true; }, 500);
+
+  function closeOverlay() {
     clearInterval(matrixInterval);
+    document.removeEventListener('keydown', handleEsc);
     overlay.style.animation = 'systemFailureFadeOut 0.3s ease-out forwards';
     setTimeout(() => {
       overlay.remove();
@@ -2753,7 +2760,38 @@ function showSystemFailureEasterEgg() {
       startAutoRefresh();
       MatrixSound.play('boot-ready');
     }, 300);
+  }
+
+  overlay.onclick = () => {
+    if (!canClose) return;
+
+    const now = Date.now();
+    closeClickTimestamps.push(now);
+    closeClickTimestamps = closeClickTimestamps.filter(t => now - t < 800);
+
+    if (closeClickTimestamps.length >= 3) {
+      closeOverlay();
+    } else {
+      // Visual feedback - flash the text
+      subText.textContent = `[ ${3 - closeClickTimestamps.length} MORE CLICKS ]`;
+      setTimeout(() => {
+        if (overlay.parentNode) {
+          subText.textContent = '[ TRIPLE-CLICK OR ESC TO RESTORE ]';
+        }
+      }, 400);
+    }
   };
+
+  // ESC key to close
+  function handleEsc(e) {
+    if (e.key === 'Escape') {
+      closeOverlay();
+    }
+  }
+  document.addEventListener('keydown', handleEsc);
+
+  // Update sub text to show instructions
+  subText.textContent = '[ TRIPLE-CLICK OR ESC TO RESTORE ]';
 
   // Play dramatic sound
   MatrixSound.play('glitch');
