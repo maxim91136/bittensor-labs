@@ -2,8 +2,8 @@ name: Fetch Block Time
 
 on:
   schedule:
-    # Every hour at :41
-    - cron: '41 * * * *'
+    # Every hour at :12 (between :07 price-history and :17 publish-taostats to avoid rate limits)
+    - cron: '12 * * * *'
   workflow_dispatch:
 
 jobs:
