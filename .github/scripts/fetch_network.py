@@ -203,9 +203,9 @@ def fetch_metrics() -> Dict[str, Any]:
         history = history
 
     # =====================================================================
-    # SANITIZE HISTORY: Remove corrupt samples instead of trying to fix them
-    # Strategy: Delete samples that violate constraints (drops, unrealistic jumps,
-    # out-of-bounds values). This produces cleaner data for emission calculations.
+    # SANITIZE HISTORY: Remove only the actual corrupt samples
+    # Strategy: Identify samples that are clearly wrong (drops indicate the
+    # NEXT sample after a good run is corrupt, not the samples after it).
     # =====================================================================
     def sanitize_history(hist: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         if len(hist) < 2:
@@ -223,40 +223,38 @@ def fetch_metrics() -> Dict[str, Any]:
                 print(f"⚠️  Removed out-of-bounds sample: {iss:.2f} TAO", file=sys.stderr)
 
         if len(cleaned) < 2:
+            if removed_bounds > 0:
+                print(f"✅ Sanitized history: removed {removed_bounds} out-of-bounds samples", file=sys.stderr)
             return cleaned
 
-        # Second pass: remove samples that cause unrealistic deltas
-        # Work backwards to identify which sample is corrupt when there's a discontinuity
-        final = [cleaned[0]]
-        removed_deltas = 0
-        max_delta = 1000  # TAO per interval (very generous for ~15min)
-
-        for i in range(1, len(cleaned)):
-            prev_iss = final[-1]['issuance']
+        # Second pass: identify and remove samples that cause drops
+        # When issuance drops, the sample BEFORE the drop is likely corrupt
+        # (since issuance can never decrease)
+        removed_drops = 0
+        i = 1
+        while i < len(cleaned):
+            prev_iss = cleaned[i-1]['issuance']
             curr_iss = cleaned[i]['issuance']
             delta = curr_iss - prev_iss
 
-            # Check for drops or unrealistic jumps
-            if delta < -10:  # Drop (allowing tiny float variance)
-                removed_deltas += 1
-                print(f"⚠️  Removed sample with drop: {curr_iss:.2f} TAO (delta: {delta:.2f})", file=sys.stderr)
-                continue
-            elif delta > max_delta:
-                # Big jump - could be current or previous that's wrong
-                # Heuristic: if current is closer to expected trend, keep it
-                # For now, just remove the outlier (current)
-                removed_deltas += 1
-                print(f"⚠️  Removed sample with jump: {curr_iss:.2f} TAO (delta: {delta:.2f})", file=sys.stderr)
-                continue
+            if delta < -10:  # Drop detected (allowing tiny float variance)
+                # The previous sample is likely corrupt (too high)
+                # Remove it and re-check from the new position
+                print(f"⚠️  Removed corrupt sample: {prev_iss:.2f} TAO (caused drop of {abs(delta):.2f})", file=sys.stderr)
+                del cleaned[i-1]
+                removed_drops += 1
+                # Stay at same index to re-check with new previous
+                if i > 1:
+                    i -= 1
+            else:
+                i += 1
 
-            final.append(cleaned[i])
-
-        total_removed = removed_bounds + removed_deltas
+        total_removed = removed_bounds + removed_drops
         if total_removed > 0:
-            print(f"✅ Sanitized history: removed {total_removed} corrupt samples ({removed_bounds} out-of-bounds, {removed_deltas} bad deltas)", file=sys.stderr)
-            print(f"   History size: {len(hist)} → {len(final)} samples", file=sys.stderr)
+            print(f"✅ Sanitized history: removed {total_removed} corrupt samples ({removed_bounds} out-of-bounds, {removed_drops} drops)", file=sys.stderr)
+            print(f"   History size: {len(hist)} → {len(cleaned)} samples", file=sys.stderr)
 
-        return final
+        return cleaned
 
     history = sanitize_history(history)
 
