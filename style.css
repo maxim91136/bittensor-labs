@@ -3389,6 +3389,12 @@ body.light-bg .map-preview-card .map-attribution {
   font-size: 0.75em;
   font-weight: 800;
   text-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
+  white-space: nowrap;
+}
+
+.subnets-display-table .rank-up,
+.subnets-display-table .rank-down {
+  white-space: nowrap;
 }
 
 .subnets-display-table .sn-id {
@@ -3499,7 +3505,7 @@ body.light-bg .map-preview-card .map-attribution {
   }
 
   .subnets-display-table th.rank-col {
-    width: 8%;
+    width: 14%;
     padding: 10px 2px;
   }
 
@@ -3509,7 +3515,7 @@ body.light-bg .map-preview-card .map-attribution {
   }
 
   .subnets-display-table th.subnet-col {
-    width: 36%;
+    width: 30%;
     padding-left: 4px;
   }
 
@@ -3537,17 +3543,17 @@ body.light-bg .map-preview-card .map-attribution {
   }
 
   .subnets-display-table th.rank-col {
-    width: 8%;
+    width: 14%;
     padding: 8px 1px;
   }
 
   .subnets-display-table th.change-col {
-    width: 12%;
+    width: 10%;
     padding: 8px 1px;
   }
 
   .subnets-display-table th.subnet-col {
-    width: 34%;
+    width: 30%;
     padding-left: 2px;
   }
 
@@ -3716,6 +3722,12 @@ body.light-bg .map-preview-card .map-attribution {
   font-size: 0.75em;
   font-weight: 800;
   text-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
+  white-space: nowrap;
+}
+
+.validators-display-table .rank-up,
+.validators-display-table .rank-down {
+  white-space: nowrap;
 }
 
 /* Champion gold accent - #1 Validator */
@@ -3913,8 +3925,9 @@ body.light-bg .map-preview-card .map-attribution {
 }
 
 .wallets-display-table .wallet-col .wallet-address-only {
-  font-size: 1em;
+  font-size: 0.9em;
   color: var(--text);
+  font-family: 'SF Mono', 'Menlo', 'Monaco', monospace;
 }
 
 .wallets-display-table td.balance-col {
@@ -3951,6 +3964,12 @@ body.light-bg .map-preview-card .map-attribution {
   font-size: 0.75em;
   font-weight: 800;
   text-shadow: 0 0 6px rgba(59, 130, 246, 0.4);
+  white-space: nowrap;
+}
+
+.wallets-display-table .rank-up,
+.wallets-display-table .rank-down {
+  white-space: nowrap;
 }
 
 /* Champion gold accent - #1 Wallet */
@@ -3996,6 +4015,7 @@ body.light-bg .map-preview-card .map-attribution {
 
 .top-wallets-card.light-bg .wallets-display-table .wallet-col .wallet-address-only {
   color: #1a1a1a;
+  font-size: 0.9em;
 }
 
 .top-wallets-card.light-bg .wallets-display-table .balance-col {
