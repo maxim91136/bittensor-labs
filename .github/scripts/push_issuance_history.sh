@@ -11,6 +11,43 @@ fi
 if ! command -v jq >/dev/null 2>&1; then
   sudo apt-get update && sudo apt-get install -y jq
 fi
+
+# ============================================================
+# PREFER WORKER POST FOR CHUNKED WRITES (avoids race conditions)
+# ============================================================
+WORKER_URL="${CF_WORKER_URL:-}"
+if [ -n "$WORKER_URL" ]; then
+  BASE_URL=$(echo "$WORKER_URL" | sed -E 's#(https?://[^/]+).*#\1#')
+  ISSUANCE_HISTORY_URL="$BASE_URL/api/issuance_history"
+
+  echo "Posting to Worker at $ISSUANCE_HISTORY_URL"
+
+  if [ -n "${CF_WORKER_WRITE_TOKEN:-}" ]; then
+    STATUS=$(curl -sS -o /tmp/issuance_history_post.json -w "%{http_code}" -X POST "$ISSUANCE_HISTORY_URL" \
+      -H "Content-Type: application/json" \
+      -H "X-WRITE-TOKEN: ${CF_WORKER_WRITE_TOKEN}" \
+      --data-binary @issuance_history.json || true)
+  else
+    STATUS=$(curl -sS -o /tmp/issuance_history_post.json -w "%{http_code}" -X POST "$ISSUANCE_HISTORY_URL" \
+      -H "Content-Type: application/json" \
+      --data-binary @issuance_history.json || true)
+  fi
+
+  if [ "$STATUS" -eq 200 ]; then
+    echo "✅ Issuance history posted to Worker (chunked)"
+    cat /tmp/issuance_history_post.json
+    exit 0
+  else
+    echo "⚠️  Worker POST failed with status $STATUS, falling back to legacy KV write" >&2
+    cat /tmp/issuance_history_post.json || true
+  fi
+fi
+
+# ============================================================
+# FALLBACK: Legacy merge and direct KV write (no chunking)
+# ============================================================
+echo "Using legacy KV write (no chunking)"
+
 LOCAL_CANONICAL=$(jq -cS 'if type=="array" then . elif type=="object" then [.] else [.] end' issuance_history.json 2>/dev/null || cat issuance_history.json | jq -cS 'if type=="array" then . elif type=="object" then [.] else [.] end')
 URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/issuance_history"
 HTTP_STATUS_KV=$(curl -s -o /tmp/kv_current.json -w "%{http_code}" -H "Authorization: Bearer ${CF_API_TOKEN}" "$URL" || true)

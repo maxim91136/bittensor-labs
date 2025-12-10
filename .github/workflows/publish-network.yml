@@ -44,43 +44,75 @@ jobs:
         run: |
           bash .github/scripts/push_network_metrics.sh
 
-      - name: Push issuance_history to Cloudflare KV
+      - name: Push issuance_history via Worker (chunked)
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          CF_WORKER_URL: ${{ secrets.CF_WORKER_URL }}
+          CF_WORKER_WRITE_TOKEN: ${{ secrets.CF_WORKER_WRITE_TOKEN }}
           FORCE_ISSUANCE_ON_KV_FAIL: '0'
           REPLACE_ISSUANCE_HISTORY: ${{ inputs.replace_history && '1' || '0' }}
         run: |
           bash .github/scripts/push_issuance_history.sh
 
-      - name: Push Network history to Cloudflare KV
+      - name: Push Network history via Worker (chunked)
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          CF_WORKER_URL: ${{ secrets.CF_WORKER_URL }}
+          CF_WORKER_WRITE_TOKEN: ${{ secrets.CF_WORKER_WRITE_TOKEN }}
         run: |
           if [ ! -f network_latest.json ]; then
             echo "No network_latest.json found - skipping network history"
             exit 0
           fi
-          
-          # Merge network_latest with existing history from KV
+
+          # Prefer Worker POST for chunked writes (avoids race conditions)
+          WORKER_URL="${CF_WORKER_URL:-}"
+          if [ -n "$WORKER_URL" ]; then
+            BASE_URL=$(echo "$WORKER_URL" | sed -E 's#(https?://[^/]+).*#\1#')
+            NETWORK_HISTORY_URL="$BASE_URL/api/network-history"
+
+            echo "Posting to Worker at $NETWORK_HISTORY_URL"
+
+            if [ -n "${CF_WORKER_WRITE_TOKEN:-}" ]; then
+              STATUS=$(curl -sS -o /tmp/network_history_post.json -w "%{http_code}" -X POST "$NETWORK_HISTORY_URL" \
+                -H "Content-Type: application/json" \
+                -H "X-WRITE-TOKEN: ${CF_WORKER_WRITE_TOKEN}" \
+                --data-binary @network_latest.json || true)
+            else
+              STATUS=$(curl -sS -o /tmp/network_history_post.json -w "%{http_code}" -X POST "$NETWORK_HISTORY_URL" \
+                -H "Content-Type: application/json" \
+                --data-binary @network_latest.json || true)
+            fi
+
+            if [ "$STATUS" -eq 200 ]; then
+              echo "✅ Network history posted to Worker (chunked)"
+              cat /tmp/network_history_post.json
+              exit 0
+            else
+              echo "⚠️  Worker POST failed with status $STATUS, falling back to legacy KV write"
+              cat /tmp/network_history_post.json || true
+            fi
+          fi
+
+          # Fallback: Legacy merge and direct KV write
+          echo "Using legacy KV write (no chunking)"
           python .github/scripts/merge-network-history.py
-          
-          # Check if merge was successful
+
           if [ ! -f /tmp/network_history_merged.json ]; then
             echo "❌ Failed to create merged history file"
             exit 1
           fi
-          
-          # Push merged history to KV
+
           KV_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/network_history"
           CURL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$KV_URL" -H "Authorization: Bearer ${CF_API_TOKEN}" -H "Content-Type: application/json" --data-binary @/tmp/network_history_merged.json || true)
-          
+
           if [ "$CURL_STATUS" -ne 200 ] && [ "$CURL_STATUS" -ne 204 ]; then
             echo "❌ Failed to write network_history to KV (status=$CURL_STATUS)"
             exit 1
           fi
-          echo "✅ Network history pushed to KV"
+          echo "✅ Network history pushed to KV (legacy)"
 
