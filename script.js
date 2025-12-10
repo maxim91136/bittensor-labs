@@ -2542,7 +2542,8 @@ async function refreshDashboard() {
   }
 
   // Update Volume Signal (Ampelsystem)
-  const priceChange24h = taostats?.percent_change_24h ?? taoPrice?.change24h ?? null;
+  // Prefer Binance (taoPrice) for real-time 24h change, fallback to Taostats
+  const priceChange24h = taoPrice?.change24h ?? taostats?.percent_change_24h ?? null;
   if (taostats?.volume_24h) {
     updateVolumeSignal(taostats.volume_24h, priceChange24h);
     // Update Market Conditions Card
@@ -3278,8 +3279,8 @@ async function initDashboard() {
   }
 
   // Initial Volume Signal (Ampelsystem) update
-  // Use aggregates price_24h_pct as fallback if taostats doesn't provide it
-  const initPriceChange24h = taostats?.percent_change_24h ?? taoPrice?.change24h ?? null;
+  // Prefer Binance (taoPrice) for real-time 24h change, fallback to Taostats
+  const initPriceChange24h = taoPrice?.change24h ?? taostats?.percent_change_24h ?? null;
   if (taostats?.volume_24h) {
     updateVolumeSignal(taostats.volume_24h, initPriceChange24h);
     // Update Market Conditions Card on init
@@ -3640,38 +3641,59 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // EUR currency toggle button
+    // Shared EUR toggle handler (used by both chart and pill toggles)
+    async function handleEurToggle() {
+      showEurPrices = !showEurPrices;
+      localStorage.setItem('showEurPrices', showEurPrices);
+
+      // Sync both toggle buttons
+      const eurToggle = document.getElementById('eurToggle');
+      const pillToggle = document.getElementById('pillCurrencyToggle');
+      if (eurToggle) eurToggle.classList.toggle('active', showEurPrices);
+      if (pillToggle) {
+        pillToggle.textContent = showEurPrices ? '€' : '$';
+        pillToggle.classList.toggle('active', showEurPrices);
+      }
+
+      // Fetch EUR rate if enabling
+      if (showEurPrices && !eurUsdRate) {
+        await fetchEurUsdRate();
+      }
+
+      // Update the price pill
+      if (window._lastPriceData) {
+        updateTaoPrice(window._lastPriceData);
+      }
+
+      // Reload chart with EUR conversion
+      const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
+      if (priceCard) priceCard.classList.add('loading');
+
+      const priceHistory = await fetchPriceHistory(currentPriceRange);
+      const btcHistory = showBtcComparison ? await fetchBtcPriceHistory(currentPriceRange) : null;
+      if (priceHistory) {
+        createPriceChart(priceHistory, currentPriceRange, btcHistory);
+      }
+
+      if (priceCard) priceCard.classList.remove('loading');
+    }
+
+    // EUR currency toggle button (chart)
     const eurToggle = document.getElementById('eurToggle');
     if (eurToggle) {
-      // Set initial state from localStorage
       if (showEurPrices) eurToggle.classList.add('active');
+      eurToggle.addEventListener('click', handleEurToggle);
+    }
 
-      eurToggle.addEventListener('click', async () => {
-        showEurPrices = !showEurPrices;
-        localStorage.setItem('showEurPrices', showEurPrices);
-        eurToggle.classList.toggle('active', showEurPrices);
-
-        // Fetch EUR rate if enabling
-        if (showEurPrices && !eurUsdRate) {
-          await fetchEurUsdRate();
-        }
-
-        // Reload chart with EUR conversion
-        const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
-        if (priceCard) priceCard.classList.add('loading');
-
-        const priceHistory = await fetchPriceHistory(currentPriceRange);
-        const btcHistory = showBtcComparison ? await fetchBtcPriceHistory(currentPriceRange) : null;
-        if (priceHistory) {
-          createPriceChart(priceHistory, currentPriceRange, btcHistory);
-        }
-
-        // Also update the price pill with new currency
-        if (window._lastPriceData) {
-          updateTaoPrice(window._lastPriceData);
-        }
-
-        if (priceCard) priceCard.classList.remove('loading');
+    // EUR currency toggle button (pill)
+    const pillCurrencyToggle = document.getElementById('pillCurrencyToggle');
+    if (pillCurrencyToggle) {
+      // Set initial state
+      pillCurrencyToggle.textContent = showEurPrices ? '€' : '$';
+      if (showEurPrices) pillCurrencyToggle.classList.add('active');
+      pillCurrencyToggle.addEventListener('click', (e) => {
+        e.stopPropagation(); // Don't trigger pill tooltip
+        handleEurToggle();
       });
     }
 
