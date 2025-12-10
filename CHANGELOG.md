@@ -3,10 +3,21 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
+-
+
+## v1.0.0-rc.28.2 (2025-12-10)
 ### Infrastructure
 - **Cloudflare Workers Paid Plan**: Upgraded from free tier due to KV storage and request limits
   - Enables larger history datasets and more frequent updates
   - Supports chunked daily storage for issuance, network, and taostats history
+
+### Fixed
+- **Currency Toggle Visibility**: Larger button with better contrast
+  - Increased size: `padding: 3px 8px`, `font-size: 0.85em`
+  - Light Mode support with proper dark-on-light colors
+- **Mobile Price Pill**: More compact layout for narrow screens
+  - Tighter gap and padding
+  - Smaller but visible currency toggle
 
 ## v1.0.0-rc.28.1 (2025-12-10)
 ### Documentation

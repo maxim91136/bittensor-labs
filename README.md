@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem.
 
-**Latest release:** `v1.0.0-rc.28.1` — see [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.28.2` — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 > 🚀 **RC28 Highlights**:
 > - Real-time prices from Binance API (<1s delay)
