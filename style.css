@@ -648,6 +648,23 @@ body.light-bg #maxSupplyScribble {
   color: #22c55e;
 }
 
+/* Mobile: compact currency toggle */
+@media (max-width: 480px) {
+  .pill-currency-toggle {
+    padding: 1px 4px;
+    font-size: 0.7em;
+    margin-left: 2px;
+  }
+  .price-pill {
+    gap: 4px;
+    padding-left: 10px;
+    padding-right: 8px;
+  }
+  .price-pill .price-change {
+    font-size: 0.8em;
+  }
+}
+
 /* Subtle [pill me] hint for tooltip discovery */
 .pill-tap-hint {
   position: absolute;
