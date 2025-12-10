@@ -2,7 +2,7 @@ name: Fetch Network Data
 
 on:
   schedule:
-    - cron: '7,22,37,52 * * * *' # every 15 Minuten, versetzt
+    - cron: '2,7,12,17,22,27,32,37,42,47,52,57 * * * *' # every 5 minutes, +2 offset
   workflow_dispatch:
     inputs:
       replace_history:
