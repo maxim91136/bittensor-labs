@@ -19,8 +19,8 @@ def fetch_metrics() -> Dict[str, Any]:
         block = None
 
     try:
-        # SDK v10.0: get_subnets() → get_all_subnet_netuids()
-        subnets = subtensor.get_all_subnet_netuids()
+        # SDK v10.0: get_subnets() → get_all_subnets_netuid()
+        subnets = subtensor.get_all_subnets_netuid()
         total_subnets = len(subnets)
     except Exception as e:
         print(f"Subnet fetch failed: {e}", file=sys.stderr)

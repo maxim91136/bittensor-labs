@@ -317,8 +317,8 @@ def fetch_top_subnets() -> Dict[str, object]:
 
     subtensor = bt.Subtensor(network=NETWORK)
     try:
-        # SDK v10.0: get_subnets() → get_all_subnet_netuids()
-        subnets = subtensor.get_all_subnet_netuids()
+        # SDK v10.0: get_subnets() → get_all_subnets_netuid()
+        subnets = subtensor.get_all_subnets_netuid()
         # Normalize subnets into a Python list to avoid numpy/scalar issues
         try:
             subnets = list(subnets)
