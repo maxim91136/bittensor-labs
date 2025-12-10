@@ -3626,9 +3626,12 @@ document.addEventListener('DOMContentLoaded', function() {
           // Get the second-to-last snapshot (previous state)
           if (history.length >= 2) {
             const prevSnapshot = history[history.length - 2];
-            const prevSubnets = prevSnapshot.top_subnets || [];
+            // History stores in 'entries' array with 'id' for netuid
+            const prevSubnets = prevSnapshot.entries || prevSnapshot.top_subnets || [];
             prevSubnets.forEach((s, idx) => {
-              prevRankMap[s.netuid] = idx + 1;
+              // Use 'id' from history (netuid as string) or 'netuid'
+              const netuid = s.id || s.netuid;
+              if (netuid) prevRankMap[parseInt(netuid)] = idx + 1;
             });
           }
         }
@@ -3716,7 +3719,8 @@ document.addEventListener('DOMContentLoaded', function() {
           // Get the second-to-last snapshot (previous state)
           if (history.length >= 2) {
             const prevSnapshot = history[history.length - 2];
-            const prevValidators = prevSnapshot.top_validators || [];
+            // History stores in 'entries' array with 'id' for hotkey
+            const prevValidators = prevSnapshot.entries || prevSnapshot.top_validators || [];
             prevValidators.forEach((v, idx) => {
               // Use 'id' (hotkey) from history snapshot
               const key = v.id || v.hotkey;
