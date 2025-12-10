@@ -2301,7 +2301,14 @@ body.light-bg .fng-card.fng-red .barometer-class {
   display: none;
 }
 
-/* ---- Time Range Toggle ---- */
+/* ---- Chart Controls (2-row layout) ---- */
+.chart-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
 .time-range-toggle {
   display: flex;
   gap: clamp(4px, 1vw, 6px);
@@ -2334,30 +2341,61 @@ body.light-bg .fng-card.fng-red .barometer-class {
   background: var(--glow);
 }
 
-/* Chart toggle buttons (EUR, BTC) */
+/* Chart toggle buttons (EUR, BTC, ETH, SOL) */
 .chart-toggles {
   display: inline-flex;
   gap: clamp(4px, 1vw, 6px);
-  margin-left: 12px;
-  padding-left: 12px;
-  border-left: 1px solid #333;
+  background: rgba(255,255,255,0.06);
+  padding: 3px;
+  border-radius: 10px;
 }
 
-/* Mobile: wrap time buttons and move toggles to new row */
+/* Make toggle buttons more visible in inactive state */
+.chart-toggles .time-btn {
+  color: #888;
+  border: 1px solid transparent;
+  font-weight: 700;
+}
+.chart-toggles .time-btn:hover {
+  color: #bbb;
+  background: rgba(255,255,255,0.08);
+}
+
+/* EUR toggle active state */
+#eurToggle.active {
+  color: #fbbf24 !important;
+  background: rgba(251, 191, 36, 0.2) !important;
+  border-color: rgba(251, 191, 36, 0.4);
+}
+
+/* Comparison toggle colors when active */
+.time-btn.compare-toggle.active[id="btcToggle"] {
+  color: #f7931a !important;
+  background: rgba(247, 147, 26, 0.25) !important;
+  border-color: rgba(247, 147, 26, 0.5);
+}
+.time-btn.compare-toggle.active[id="ethToggle"] {
+  color: #a8b5ff !important;
+  background: rgba(98, 126, 234, 0.25) !important;
+  border-color: rgba(98, 126, 234, 0.5);
+}
+.time-btn.compare-toggle.active[id="solToggle"] {
+  color: #14f195 !important;
+  background: rgba(20, 241, 149, 0.2) !important;
+  border-color: rgba(20, 241, 149, 0.4);
+}
+
+/* Mobile: wrap time buttons and toggles */
 @media (max-width: 600px) {
+  .chart-controls {
+    align-items: center;
+  }
   .time-range-toggle {
     flex-wrap: wrap;
     justify-content: center;
   }
   .chart-toggles {
-    width: 100%;
     justify-content: center;
-    margin-left: 0;
-    padding-left: 0;
-    padding-top: 8px;
-    margin-top: 4px;
-    border-left: none;
-    border-top: 1px solid #333;
   }
 }
 

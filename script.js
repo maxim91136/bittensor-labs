@@ -386,6 +386,8 @@ let lastPrice = null;
 let currentPriceRange = localStorage.getItem('priceRange') || '3';
 let isLoadingPrice = false;
 let showBtcComparison = localStorage.getItem('showBtcComparison') === 'true';
+let showEthComparison = localStorage.getItem('showEthComparison') === 'true';
+let showSolComparison = localStorage.getItem('showSolComparison') === 'true';
 let showEurPrices = localStorage.getItem('showEurPrices') === 'true';
 let eurUsdRate = null; // Cached EUR/USD exchange rate
 // Track whether main dashboard init has completed
@@ -1725,6 +1727,66 @@ async function fetchBtcPriceHistory(range = '7') {
   }
 }
 
+// ETH price history for TAO vs ETH comparison
+async function fetchEthPriceHistory(range = '7') {
+  const key = normalizeRange(range);
+  const isMax = key === 'max';
+  const days = isMax ? 1000 : (parseInt(key, 10) || 7);
+  const cacheKey = `eth_${key}`;
+  const cached = getCachedPrice?.(cacheKey);
+  if (cached) return cached;
+
+  // Binance (free, extensive history)
+  try {
+    const interval = (!isMax && days <= 7) ? '1h' : '1d';
+    const limit = (!isMax && days <= 7) ? days * 24 : Math.min(days, 1000);
+    const endpoint = `${BINANCE_API}/klines?symbol=ETHUSDT&interval=${interval}&limit=${limit}`;
+    const res = await fetch(endpoint, { cache: 'no-store' });
+    if (res.ok) {
+      const klines = await res.json();
+      if (klines?.length) {
+        const prices = klines.map(k => [k[0], parseFloat(k[4])]);
+        if (window._debug) console.debug(`ETH price history from Binance (${key}):`, prices.length, 'points');
+        setCachedPrice?.(cacheKey, prices);
+        return prices;
+      }
+    }
+  } catch (e) {
+    if (window._debug) console.debug('ETH price history fetch failed:', e);
+  }
+  return null;
+}
+
+// SOL price history for TAO vs SOL comparison
+async function fetchSolPriceHistory(range = '7') {
+  const key = normalizeRange(range);
+  const isMax = key === 'max';
+  const days = isMax ? 1000 : (parseInt(key, 10) || 7);
+  const cacheKey = `sol_${key}`;
+  const cached = getCachedPrice?.(cacheKey);
+  if (cached) return cached;
+
+  // Binance (free, extensive history)
+  try {
+    const interval = (!isMax && days <= 7) ? '1h' : '1d';
+    const limit = (!isMax && days <= 7) ? days * 24 : Math.min(days, 1000);
+    const endpoint = `${BINANCE_API}/klines?symbol=SOLUSDT&interval=${interval}&limit=${limit}`;
+    const res = await fetch(endpoint, { cache: 'no-store' });
+    if (res.ok) {
+      const klines = await res.json();
+      if (klines?.length) {
+        const prices = klines.map(k => [k[0], parseFloat(k[4])]);
+        if (window._debug) console.debug(`SOL price history from Binance (${key}):`, prices.length, 'points');
+        setCachedPrice?.(cacheKey, prices);
+        return prices;
+      }
+    }
+  } catch (e) {
+    if (window._debug) console.debug('SOL price history fetch failed:', e);
+  }
+  return null;
+}
+
 // Fetch EUR/USD exchange rate from Binance
 async function fetchEurUsdRate() {
   if (eurUsdRate) return eurUsdRate;
@@ -2978,10 +3040,16 @@ function startAutoRefresh() {
 })();
 
 // ===== Initialization of Price Chart =====
-function createPriceChart(priceHistory, range, btcHistory = null) {
+function createPriceChart(priceHistory, range, comparisonData = {}) {
   const canvas = document.getElementById('priceChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+
+  // Extract comparison histories
+  const { btcHistory, ethHistory, solHistory } = comparisonData;
+  const hasAnyComparison = (showBtcComparison && btcHistory?.length) ||
+                           (showEthComparison && ethHistory?.length) ||
+                           (showSolComparison && solHistory?.length);
 
   // Format labels based on timeframe
   const isMax = range === 'max';
@@ -3017,28 +3085,33 @@ function createPriceChart(priceHistory, range, btcHistory = null) {
   // Build datasets
   const datasets = [];
 
-  // If BTC comparison enabled, normalize both to % change
-  if (showBtcComparison && btcHistory && btcHistory.length > 0) {
-    // Normalize TAO: % change from first value
-    const taoStart = priceHistory[0]?.[1] || 1;
-    const taoNormalized = priceHistory.map(([_, price]) => ((price - taoStart) / taoStart) * 100);
-
-    // Align BTC data to TAO timestamps
-    const btcMap = new Map(btcHistory.map(([ts, price]) => [Math.floor(ts / 60000), price]));
-    const btcAligned = priceHistory.map(([ts]) => {
+  // Helper: align comparison data to TAO timestamps
+  function alignToTao(history) {
+    if (!history?.length) return null;
+    const map = new Map(history.map(([ts, price]) => [Math.floor(ts / 60000), price]));
+    return priceHistory.map(([ts]) => {
       const key = Math.floor(ts / 60000);
-      // Find closest BTC price within 30 min window
       for (let i = 0; i <= 30; i++) {
-        if (btcMap.has(key - i)) return btcMap.get(key - i);
-        if (btcMap.has(key + i)) return btcMap.get(key + i);
+        if (map.has(key - i)) return map.get(key - i);
+        if (map.has(key + i)) return map.get(key + i);
       }
       return null;
     });
+  }
 
-    // Normalize BTC: % change from first valid value
-    const btcStartIdx = btcAligned.findIndex(v => v !== null);
-    const btcStart = btcAligned[btcStartIdx] || 1;
-    const btcNormalized = btcAligned.map(price => price !== null ? ((price - btcStart) / btcStart) * 100 : null);
+  // Helper: normalize to % change from first valid value
+  function normalizeToPercent(aligned) {
+    if (!aligned) return null;
+    const startIdx = aligned.findIndex(v => v !== null);
+    const start = aligned[startIdx] || 1;
+    return aligned.map(price => price !== null ? ((price - start) / start) * 100 : null);
+  }
+
+  // If any comparison enabled, normalize all to % change
+  if (hasAnyComparison) {
+    // Normalize TAO: % change from first value
+    const taoStart = priceHistory[0]?.[1] || 1;
+    const taoNormalized = priceHistory.map(([_, price]) => ((price - taoStart) / taoStart) * 100);
 
     datasets.push({
       label: 'TAO %',
@@ -3051,17 +3124,53 @@ function createPriceChart(priceHistory, range, btcHistory = null) {
       yAxisID: 'y'
     });
 
-    datasets.push({
-      label: 'BTC %',
-      data: btcNormalized,
-      borderColor: '#f7931a',
-      backgroundColor: 'rgba(247,147,26,0.05)',
-      tension: 0.2,
-      pointRadius: 0,
-      fill: false,
-      borderDash: [5, 5],
-      yAxisID: 'y'
-    });
+    // Add BTC comparison
+    if (showBtcComparison && btcHistory?.length) {
+      const btcNormalized = normalizeToPercent(alignToTao(btcHistory));
+      datasets.push({
+        label: 'BTC %',
+        data: btcNormalized,
+        borderColor: '#f7931a',
+        backgroundColor: 'rgba(247,147,26,0.05)',
+        tension: 0.2,
+        pointRadius: 0,
+        fill: false,
+        borderDash: [5, 5],
+        yAxisID: 'y'
+      });
+    }
+
+    // Add ETH comparison
+    if (showEthComparison && ethHistory?.length) {
+      const ethNormalized = normalizeToPercent(alignToTao(ethHistory));
+      datasets.push({
+        label: 'ETH %',
+        data: ethNormalized,
+        borderColor: '#627eea',
+        backgroundColor: 'rgba(98,126,234,0.05)',
+        tension: 0.2,
+        pointRadius: 0,
+        fill: false,
+        borderDash: [5, 5],
+        yAxisID: 'y'
+      });
+    }
+
+    // Add SOL comparison
+    if (showSolComparison && solHistory?.length) {
+      const solNormalized = normalizeToPercent(alignToTao(solHistory));
+      datasets.push({
+        label: 'SOL %',
+        data: solNormalized,
+        borderColor: '#14f195',
+        backgroundColor: 'rgba(20,241,149,0.05)',
+        tension: 0.2,
+        pointRadius: 0,
+        fill: false,
+        borderDash: [5, 5],
+        yAxisID: 'y'
+      });
+    }
   } else {
     // Standard TAO price chart (USD or EUR)
     const conversionRate = showEurPrices && eurUsdRate ? (1 / eurUsdRate) : 1;
@@ -3078,7 +3187,7 @@ function createPriceChart(priceHistory, range, btcHistory = null) {
     });
   }
 
-  const showLegend = showBtcComparison && btcHistory && btcHistory.length > 0;
+  const showLegend = hasAnyComparison;
   const currencySymbol = (!showLegend && showEurPrices) ? '€' : '$';
 
   window.priceChart = new Chart(ctx, {
@@ -3342,9 +3451,14 @@ async function initDashboard() {
   // Pre-fetch EUR rate if EUR display is enabled
   if (showEurPrices) await fetchEurUsdRate();
   const priceHistory = await fetchPriceHistory(currentPriceRange);
-  const btcHistory = showBtcComparison ? await fetchBtcPriceHistory(currentPriceRange) : null;
+  // Fetch comparison data in parallel
+  const [btcHistory, ethHistory, solHistory] = await Promise.all([
+    showBtcComparison ? fetchBtcPriceHistory(currentPriceRange) : null,
+    showEthComparison ? fetchEthPriceHistory(currentPriceRange) : null,
+    showSolComparison ? fetchSolPriceHistory(currentPriceRange) : null
+  ]);
   if (priceHistory) {
-    createPriceChart(priceHistory, currentPriceRange, btcHistory);
+    createPriceChart(priceHistory, currentPriceRange, { btcHistory, ethHistory, solHistory });
   }
     startHalvingCountdown();
     startAutoRefresh();
@@ -3600,9 +3714,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Load data and redraw chart
         const priceHistory = await fetchPriceHistory(currentPriceRange);
-        const btcHistory = showBtcComparison ? await fetchBtcPriceHistory(currentPriceRange) : null;
+        const [btcHistory, ethHistory, solHistory] = await Promise.all([
+          showBtcComparison ? fetchBtcPriceHistory(currentPriceRange) : null,
+          showEthComparison ? fetchEthPriceHistory(currentPriceRange) : null,
+          showSolComparison ? fetchSolPriceHistory(currentPriceRange) : null
+        ]);
         if (priceHistory) {
-          createPriceChart(priceHistory, currentPriceRange, btcHistory);
+          createPriceChart(priceHistory, currentPriceRange, { btcHistory, ethHistory, solHistory });
         }
         // Hide skeleton
         if (priceCard) priceCard.classList.remove('loading');
@@ -3632,9 +3750,13 @@ document.addEventListener('DOMContentLoaded', () => {
         if (priceCard) priceCard.classList.add('loading');
 
         const priceHistory = await fetchPriceHistory(currentPriceRange);
-        const btcHistory = showBtcComparison ? await fetchBtcPriceHistory(currentPriceRange) : null;
+        const [btcHistory, ethHistory, solHistory] = await Promise.all([
+          showBtcComparison ? fetchBtcPriceHistory(currentPriceRange) : null,
+          showEthComparison ? fetchEthPriceHistory(currentPriceRange) : null,
+          showSolComparison ? fetchSolPriceHistory(currentPriceRange) : null
+        ]);
         if (priceHistory) {
-          createPriceChart(priceHistory, currentPriceRange, btcHistory);
+          createPriceChart(priceHistory, currentPriceRange, { btcHistory, ethHistory, solHistory });
         }
 
         if (priceCard) priceCard.classList.remove('loading');
@@ -3670,9 +3792,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (priceCard) priceCard.classList.add('loading');
 
       const priceHistory = await fetchPriceHistory(currentPriceRange);
-      const btcHistory = showBtcComparison ? await fetchBtcPriceHistory(currentPriceRange) : null;
+      const [btcHistory, ethHistory, solHistory] = await Promise.all([
+        showBtcComparison ? fetchBtcPriceHistory(currentPriceRange) : null,
+        showEthComparison ? fetchEthPriceHistory(currentPriceRange) : null,
+        showSolComparison ? fetchSolPriceHistory(currentPriceRange) : null
+      ]);
       if (priceHistory) {
-        createPriceChart(priceHistory, currentPriceRange, btcHistory);
+        createPriceChart(priceHistory, currentPriceRange, { btcHistory, ethHistory, solHistory });
       }
 
       if (priceCard) priceCard.classList.remove('loading');
@@ -3694,6 +3820,58 @@ document.addEventListener('DOMContentLoaded', () => {
       pillCurrencyToggle.addEventListener('click', (e) => {
         e.stopPropagation(); // Don't trigger pill tooltip
         handleEurToggle();
+      });
+    }
+
+    // ETH comparison toggle button
+    const ethToggle = document.getElementById('ethToggle');
+    if (ethToggle) {
+      if (showEthComparison) ethToggle.classList.add('active');
+      ethToggle.addEventListener('click', async () => {
+        showEthComparison = !showEthComparison;
+        localStorage.setItem('showEthComparison', showEthComparison);
+        ethToggle.classList.toggle('active', showEthComparison);
+
+        const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
+        if (priceCard) priceCard.classList.add('loading');
+
+        const priceHistory = await fetchPriceHistory(currentPriceRange);
+        const [btcHistory, ethHistory, solHistory] = await Promise.all([
+          showBtcComparison ? fetchBtcPriceHistory(currentPriceRange) : null,
+          showEthComparison ? fetchEthPriceHistory(currentPriceRange) : null,
+          showSolComparison ? fetchSolPriceHistory(currentPriceRange) : null
+        ]);
+        if (priceHistory) {
+          createPriceChart(priceHistory, currentPriceRange, { btcHistory, ethHistory, solHistory });
+        }
+
+        if (priceCard) priceCard.classList.remove('loading');
+      });
+    }
+
+    // SOL comparison toggle button
+    const solToggle = document.getElementById('solToggle');
+    if (solToggle) {
+      if (showSolComparison) solToggle.classList.add('active');
+      solToggle.addEventListener('click', async () => {
+        showSolComparison = !showSolComparison;
+        localStorage.setItem('showSolComparison', showSolComparison);
+        solToggle.classList.toggle('active', showSolComparison);
+
+        const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
+        if (priceCard) priceCard.classList.add('loading');
+
+        const priceHistory = await fetchPriceHistory(currentPriceRange);
+        const [btcHistory, ethHistory, solHistory] = await Promise.all([
+          showBtcComparison ? fetchBtcPriceHistory(currentPriceRange) : null,
+          showEthComparison ? fetchEthPriceHistory(currentPriceRange) : null,
+          showSolComparison ? fetchSolPriceHistory(currentPriceRange) : null
+        ]);
+        if (priceHistory) {
+          createPriceChart(priceHistory, currentPriceRange, { btcHistory, ethHistory, solHistory });
+        }
+
+        if (priceCard) priceCard.classList.remove('loading');
       });
     }
 

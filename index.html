@@ -12,9 +12,9 @@
   <!-- Favicon -->
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0%25' stop-color='%2322c55e'/><stop offset='100%25' stop-color='%2316a34a'/></linearGradient></defs><circle cx='12' cy='12' r='3' fill='url(%23g)'/><path d='M12 12L4 4M12 12L20 4M12 12L4 20M12 12L20 20' stroke='%2322c55e' stroke-width='1.5' opacity='0.4'/><circle cx='4' cy='4' r='2' fill='%23ff6b35'/><circle cx='20' cy='4' r='2' fill='%23ff6b35'/><circle cx='4' cy='20' r='2' fill='%23ff6b35'/><circle cx='20' cy='20' r='2' fill='%23ff6b35'/></svg>" type="image/svg+xml" />
 
-  <link rel="preload" href="style.css?v=16.13" as="style" />
+  <link rel="preload" href="style.css?v=16.15" as="style" />
   <link rel="preload" href="assets/miner-map-thumb-light.png" as="image" />
-  <link rel="stylesheet" href="style.css?v=16.13" />
+  <link rel="stylesheet" href="style.css?v=16.15" />
   <link rel="stylesheet" href="market-conditions.css" />
   <!-- Handwritten header note font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -472,19 +472,23 @@
     <section class="dashboard-card loading" aria-labelledby="price-heading">
       <div class="card-header">
         <h2 id="price-heading">TAO Price History</h2>
-        <div class="time-range-toggle">
-          <button class="time-btn" data-range="1">1D</button>
-          <button class="time-btn active" data-range="3">3D</button>
-          <button class="time-btn" data-range="7">7D</button>
-          <button class="time-btn" data-range="30">30D</button>
-          <button class="time-btn" data-range="60">60D</button>
-          <button class="time-btn" data-range="90">90D</button>
-          <button class="time-btn" data-range="365">1Y</button>
-          <button class="time-btn" data-range="max">Max</button>
-          <span class="chart-toggles">
+        <div class="chart-controls">
+          <div class="time-range-toggle">
+            <button class="time-btn" data-range="1">1D</button>
+            <button class="time-btn active" data-range="3">3D</button>
+            <button class="time-btn" data-range="7">7D</button>
+            <button class="time-btn" data-range="30">30D</button>
+            <button class="time-btn" data-range="60">60D</button>
+            <button class="time-btn" data-range="90">90D</button>
+            <button class="time-btn" data-range="365">1Y</button>
+            <button class="time-btn" data-range="max">Max</button>
+          </div>
+          <div class="chart-toggles">
             <button id="eurToggle" class="time-btn" title="Show prices in EUR">EUR</button>
-            <button id="btcToggle" class="time-btn" title="Compare TAO vs BTC performance">BTC</button>
-          </span>
+            <button id="btcToggle" class="time-btn compare-toggle" title="Compare TAO vs BTC">BTC</button>
+            <button id="ethToggle" class="time-btn compare-toggle" title="Compare TAO vs ETH">ETH</button>
+            <button id="solToggle" class="time-btn compare-toggle" title="Compare TAO vs SOL">SOL</button>
+          </div>
         </div>
       </div>
       <div class="chart-container">
