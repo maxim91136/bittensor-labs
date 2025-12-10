@@ -374,6 +374,7 @@ document.addEventListener('terminalBootDone', () => {
 
 // ===== API Configuration =====
 const API_BASE = '/api';
+const BINANCE_API = 'https://api.binance.com/api/v3';
 const COINGECKO_API = 'https://api.coingecko.com/api/v3';
 const REFRESH_INTERVAL = 60000;
 const PRICE_CACHE_TTL = 300000;
@@ -385,6 +386,8 @@ let lastPrice = null;
 let currentPriceRange = localStorage.getItem('priceRange') || '3';
 let isLoadingPrice = false;
 let showBtcComparison = localStorage.getItem('showBtcComparison') === 'true';
+let showEurPrices = localStorage.getItem('showEurPrices') === 'true';
+let eurUsdRate = null; // Cached EUR/USD exchange rate
 // Track whether main dashboard init has completed
 window._dashboardInitialized = false;
 // Guard to prevent concurrent init runs
@@ -1463,6 +1466,7 @@ function animatePriceChange(element, newPrice) {
 function normalizeRange(raw) {
   const r = String(raw ?? '').trim().toLowerCase();
   if (r === '1y' || r === '1yr' || r === 'year') return '365';
+  if (r === 'max' || r === 'all') return 'max';
   return r;
 }
 
@@ -1587,27 +1591,55 @@ async function fetchPriceHistory(range = '7') {
   const key = normalizeRange(range);
   const cached = getCachedPrice?.(key);
   if (cached) return cached;
-  
-  // Try Taostats first (preferred source)
-  try {
-    const taostatsEndpoint = `${API_BASE}/price_history?range=${key}`;
-    const res = await fetch(taostatsEndpoint, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      if (data?.prices?.length) {
-        if (window._debug) console.debug(`Price history from Taostats (${key}d):`, data.prices.length, 'points');
-        setCachedPrice?.(key, data.prices);
-        return data.prices;
+
+  const isMax = key === 'max';
+  const days = isMax ? 1000 : parseInt(key, 10);
+
+  // Try Taostats first (preferred source, skip for max)
+  if (!isMax) {
+    try {
+      const taostatsEndpoint = `${API_BASE}/price_history?range=${key}`;
+      const res = await fetch(taostatsEndpoint, { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.prices?.length) {
+          if (window._debug) console.debug(`Price history from Taostats (${key}d):`, data.prices.length, 'points');
+          setCachedPrice?.(key, data.prices);
+          return data.prices;
+        }
       }
+    } catch (e) {
+      if (window._debug) console.debug('Taostats price history failed, trying Binance:', e);
     }
-  } catch (e) {
-    if (window._debug) console.debug('Taostats price history failed, trying CoinGecko:', e);
   }
-  
-  // Fallback to CoinGecko for ranges it supports
-  // CoinGecko supports: any days value, we use it for 1, 3, 7, 30, 60, 90, 365
-  const cgDays = parseInt(key, 10);
-  if (cgDays && cgDays > 0) {
+
+  // Try Binance (free, 600+ days history since TAO listing April 2024)
+  if (days && days > 0) {
+    try {
+      // Binance intervals: 1h for short ranges, 1d for longer (max 1000 candles)
+      const interval = (!isMax && days <= 7) ? '1h' : '1d';
+      const limit = (!isMax && days <= 7) ? days * 24 : Math.min(days, 1000);
+      const endpoint = `${BINANCE_API}/klines?symbol=TAOUSDT&interval=${interval}&limit=${limit}`;
+      const res = await fetch(endpoint, { cache: 'no-store' });
+      if (res.ok) {
+        const klines = await res.json();
+        if (klines?.length) {
+          // Convert Binance klines to [timestamp, price] format
+          // Kline format: [open_time, open, high, low, close, volume, ...]
+          const prices = klines.map(k => [k[0], parseFloat(k[4])]); // [timestamp_ms, close_price]
+          if (window._debug) console.debug(`Price history from Binance (${key}):`, prices.length, 'points');
+          setCachedPrice?.(key, prices);
+          return prices;
+        }
+      }
+    } catch (e) {
+      if (window._debug) console.debug('Binance price history failed, trying CoinGecko:', e);
+    }
+  }
+
+  // Fallback to CoinGecko (limited to 365 days on free tier)
+  if (days && days > 0) {
+    const cgDays = Math.min(days, 365); // CoinGecko free tier limit
     const interval = cgDays <= 7 ? '' : '&interval=daily';
     const endpoint = `${COINGECKO_API}/coins/bittensor/market_chart?vs_currency=usd&days=${cgDays}${interval}`;
     try {
@@ -1615,36 +1647,78 @@ async function fetchPriceHistory(range = '7') {
       if (!res.ok) return null;
       const data = await res.json();
       if (!data?.prices?.length) return null;
-      if (window._debug) console.debug(`Price history from CoinGecko (${key}d):`, data.prices.length, 'points');
+      if (window._debug) console.debug(`Price history from CoinGecko (${key}):`, data.prices.length, 'points');
       setCachedPrice?.(key, data.prices);
       return data.prices;
     } catch { return null; }
   }
-  
+
   return null;
 }
 
 // BTC price history for TAO vs BTC comparison
 async function fetchBtcPriceHistory(range = '7') {
-  const key = parseInt(range, 10) || 7;
+  const key = normalizeRange(range);
+  const isMax = key === 'max';
+  const days = isMax ? 1000 : (parseInt(key, 10) || 7);
   const cacheKey = `btc_${key}`;
   const cached = getCachedPrice?.(cacheKey);
   if (cached) return cached;
 
-  const interval = key <= 7 ? '' : '&interval=daily';
-  const endpoint = `${COINGECKO_API}/coins/bitcoin/market_chart?vs_currency=usd&days=${key}${interval}`;
+  // Try Binance first (free, extensive history)
+  try {
+    const interval = (!isMax && days <= 7) ? '1h' : '1d';
+    const limit = (!isMax && days <= 7) ? days * 24 : Math.min(days, 1000);
+    const endpoint = `${BINANCE_API}/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`;
+    const res = await fetch(endpoint, { cache: 'no-store' });
+    if (res.ok) {
+      const klines = await res.json();
+      if (klines?.length) {
+        const prices = klines.map(k => [k[0], parseFloat(k[4])]);
+        if (window._debug) console.debug(`BTC price history from Binance (${key}):`, prices.length, 'points');
+        setCachedPrice?.(cacheKey, prices);
+        return prices;
+      }
+    }
+  } catch (e) {
+    if (window._debug) console.debug('Binance BTC failed, trying CoinGecko:', e);
+  }
+
+  // Fallback to CoinGecko
+  const cgDays = Math.min(days, 365);
+  const cgInterval = cgDays <= 7 ? '' : '&interval=daily';
+  const endpoint = `${COINGECKO_API}/coins/bitcoin/market_chart?vs_currency=usd&days=${cgDays}${cgInterval}`;
   try {
     const res = await fetch(endpoint, { cache: 'no-store' });
     if (!res.ok) return null;
     const data = await res.json();
     if (!data?.prices?.length) return null;
-    if (window._debug) console.debug(`BTC price history (${key}d):`, data.prices.length, 'points');
+    if (window._debug) console.debug(`BTC price history from CoinGecko (${key}):`, data.prices.length, 'points');
     setCachedPrice?.(cacheKey, data.prices);
     return data.prices;
   } catch (e) {
     if (window._debug) console.debug('BTC price history fetch failed:', e);
     return null;
   }
+}
+
+// Fetch EUR/USD exchange rate from Binance
+async function fetchEurUsdRate() {
+  if (eurUsdRate) return eurUsdRate;
+  try {
+    const res = await fetch(`${BINANCE_API}/ticker/price?symbol=EURUSDT`, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      eurUsdRate = parseFloat(data.price);
+      if (window._debug) console.debug('EUR/USD rate from Binance:', eurUsdRate);
+      return eurUsdRate;
+    }
+  } catch (e) {
+    if (window._debug) console.debug('EUR/USD rate fetch failed:', e);
+  }
+  // Fallback rate if API fails
+  eurUsdRate = 0.92;
+  return eurUsdRate;
 }
 
 async function fetchCirculatingSupply() {
@@ -2939,10 +3013,12 @@ function createPriceChart(priceHistory, range, btcHistory = null) {
       yAxisID: 'y'
     });
   } else {
-    // Standard TAO price chart (USD)
-    const data = priceHistory.map(([_, price]) => price);
+    // Standard TAO price chart (USD or EUR)
+    const conversionRate = showEurPrices && eurUsdRate ? (1 / eurUsdRate) : 1;
+    const data = priceHistory.map(([_, price]) => price * conversionRate);
+    const currencyLabel = showEurPrices ? 'TAO Price (EUR)' : 'TAO Price (USD)';
     datasets.push({
-      label: 'TAO Price',
+      label: currencyLabel,
       data,
       borderColor: '#22c55e',
       backgroundColor: 'rgba(34,197,94,0.1)',
@@ -2953,6 +3029,7 @@ function createPriceChart(priceHistory, range, btcHistory = null) {
   }
 
   const showLegend = showBtcComparison && btcHistory && btcHistory.length > 0;
+  const currencySymbol = (!showLegend && showEurPrices) ? '€' : '$';
 
   window.priceChart = new Chart(ctx, {
     type: 'line',
@@ -2973,7 +3050,7 @@ function createPriceChart(priceHistory, range, btcHistory = null) {
               if (showLegend) {
                 return `${context.dataset.label}: ${val >= 0 ? '+' : ''}${val.toFixed(2)}%`;
               }
-              return `$${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+              return `${currencySymbol}${val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             }
           }
         }
@@ -2987,7 +3064,7 @@ function createPriceChart(priceHistory, range, btcHistory = null) {
             color: '#888',
             callback: function(value) {
               if (showLegend) return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
-              return `$${value.toLocaleString()}`;
+              return `${currencySymbol}${value.toLocaleString()}`;
             }
           }
         }
@@ -3197,6 +3274,8 @@ async function initDashboard() {
   }
 
   const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
+  // Pre-fetch EUR rate if EUR display is enabled
+  if (showEurPrices) await fetchEurUsdRate();
   const priceHistory = await fetchPriceHistory(currentPriceRange);
   const btcHistory = showBtcComparison ? await fetchBtcPriceHistory(currentPriceRange) : null;
   if (priceHistory) {
@@ -3451,6 +3530,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const priceCard = btn.closest('.dashboard-card');
         if (priceCard) priceCard.classList.add('loading');
 
+        // Fetch EUR rate if needed
+        if (showEurPrices && !eurUsdRate) await fetchEurUsdRate();
+
         // Load data and redraw chart
         const priceHistory = await fetchPriceHistory(currentPriceRange);
         const btcHistory = showBtcComparison ? await fetchBtcPriceHistory(currentPriceRange) : null;
@@ -3481,6 +3563,36 @@ document.addEventListener('DOMContentLoaded', () => {
         btcToggle.classList.toggle('active', showBtcComparison);
 
         // Reload chart with/without BTC
+        const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
+        if (priceCard) priceCard.classList.add('loading');
+
+        const priceHistory = await fetchPriceHistory(currentPriceRange);
+        const btcHistory = showBtcComparison ? await fetchBtcPriceHistory(currentPriceRange) : null;
+        if (priceHistory) {
+          createPriceChart(priceHistory, currentPriceRange, btcHistory);
+        }
+
+        if (priceCard) priceCard.classList.remove('loading');
+      });
+    }
+
+    // EUR currency toggle button
+    const eurToggle = document.getElementById('eurToggle');
+    if (eurToggle) {
+      // Set initial state from localStorage
+      if (showEurPrices) eurToggle.classList.add('active');
+
+      eurToggle.addEventListener('click', async () => {
+        showEurPrices = !showEurPrices;
+        localStorage.setItem('showEurPrices', showEurPrices);
+        eurToggle.classList.toggle('active', showEurPrices);
+
+        // Fetch EUR rate if enabling
+        if (showEurPrices && !eurUsdRate) {
+          await fetchEurUsdRate();
+        }
+
+        // Reload chart with EUR conversion
         const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
         if (priceCard) priceCard.classList.add('loading');
 
