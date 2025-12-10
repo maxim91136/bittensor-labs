@@ -315,7 +315,7 @@ def fetch_top_subnets() -> Dict[str, object]:
     if taostats_error:
         print(f'DEBUG: taostats_last_error={taostats_error}')
 
-    subtensor = bt.subtensor(network=NETWORK)
+    subtensor = bt.Subtensor(network=NETWORK)
     try:
         subnets = subtensor.get_subnets()
         # Normalize subnets into a Python list to avoid numpy/scalar issues
@@ -577,7 +577,7 @@ def fetch_top_subnets() -> Dict[str, object]:
                 auto_onchain = (not taostats_map and not TAOSTATS_API_KEY)
                 if stake is None and (USE_ONCHAIN_STAKE_FALLBACK or auto_onchain):
                     try:
-                        subtensor = subtensor if 'subtensor' in locals() else bt.subtensor(network=NETWORK)
+                        subtensor = subtensor if 'subtensor' in locals() else bt.Subtensor(network=NETWORK)
                         uids_to_check = entry.get('_uids') or []
                         # If we stored uids list, restrict it to avoid many queries
                         if isinstance(uids_to_check, list):

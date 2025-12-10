@@ -11,7 +11,7 @@ NETWORK = os.getenv("NETWORK", "finney")
 
 def fetch_metrics() -> Dict[str, Any]:
     """Fetch Bittensor network metrics: block, subnets, validators, neurons, emission"""
-    subtensor = bt.subtensor(network=NETWORK)
+    subtensor = bt.Subtensor(network=NETWORK)
     try:
         block = subtensor.get_current_block()
     except Exception as e:
