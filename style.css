@@ -1698,6 +1698,7 @@ body.light-bg .fng-card.fng-red .barometer-class {
   display: grid;
   grid-template-columns: repeat(4, 1fr); /* 2 rows, 4 columns */
   gap: var(--gap-md);
+  margin-top: var(--space-lg);
   margin-bottom: var(--space-lg);
   animation: fadeInUp 0.8s ease-out 0.1s both;
 }
