@@ -1550,8 +1550,29 @@ async function fetchStakingApr() {
 }
 
 async function fetchTaoPrice() {
+  // Try Binance first (real-time, <1s delay)
+  try {
+    const binanceRes = await fetch(`${BINANCE_API}/ticker/24hr?symbol=TAOUSDT`, { cache: 'no-store' });
+    if (binanceRes.ok) {
+      const ticker = await binanceRes.json();
+      if (ticker?.lastPrice) {
+        if (window._debug) console.debug('TAO price from Binance:', ticker.lastPrice);
+        return {
+          price: parseFloat(ticker.lastPrice),
+          change24h: parseFloat(ticker.priceChangePercent),
+          volume_24h: parseFloat(ticker.quoteVolume), // USDT volume
+          last_updated: new Date().toISOString(),
+          _source: 'binance'
+        };
+      }
+    }
+  } catch (e) {
+    if (window._debug) console.debug('Binance ticker failed, trying Taostats:', e);
+  }
+
+  // Fallback to Taostats
   const taostats = await fetchTaostats();
-  
+
   // Try to get price_24h_pct from our aggregates as fallback
   let aggregatesPriceChange = null;
   try {
@@ -1562,7 +1583,7 @@ async function fetchTaoPrice() {
   } catch (e) {
     // ignore
   }
-  
+
   if (taostats && taostats.price) {
     return {
       price: taostats.price,
@@ -1572,6 +1593,8 @@ async function fetchTaoPrice() {
       _source: 'taostats'
     };
   }
+
+  // Last fallback: CoinGecko
   const url = 'https://api.coingecko.com/api/v3/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true';
   try {
     const res = await fetch(url);
@@ -1795,10 +1818,10 @@ function updateTaoPrice(priceData) {
       parts.push(`60d: ${formatPercent(p60d)}`);
       parts.push(`90d: ${formatPercent(p90d)}`);
           if (parts.length) {
-            const source = (window._taostats && window._taostats._source) ? window._taostats._source : 'Taostats';
+            const priceSource = window._priceSource || 'taostats';
             const lines = ['Price changes:'];
             parts.forEach(p => lines.push(p));
-            lines.push(`Source: ${source}`);
+            lines.push(`Source: ${priceSource}`);
             if (window._lastUpdated) lines.push(`Last updated: ${new Date(window._lastUpdated).toLocaleString()}`);
             pill.setAttribute('data-tooltip', lines.join('\n'));
       } else {
@@ -2471,16 +2494,17 @@ async function refreshDashboard() {
   // Expose taostats globally for tooltips and other UI pieces
   window._taostats = taostats ?? null;
 
-  // LAST UPDATE from Taostats - set BEFORE updateNetworkStats/updateTaoPrice so tooltips have access
+  // LAST UPDATE - set BEFORE updateNetworkStats/updateTaoPrice so tooltips have access
   const lastUpdateEl = document.getElementById('lastUpdate');
   let lastUpdated = null;
-  if (taoPrice && taoPrice._source === 'taostats' && taoPrice.last_updated) {
+  if (taoPrice && taoPrice.last_updated) {
     lastUpdated = taoPrice.last_updated;
-  } else if (taoPrice && taoPrice._source === 'taostats' && taoPrice._timestamp) {
+  } else if (taoPrice && taoPrice._timestamp) {
     lastUpdated = taoPrice._timestamp;
   }
-  // Expose lastUpdated globally for tooltips BEFORE other updates
+  // Expose lastUpdated and price source globally for tooltips BEFORE other updates
   window._lastUpdated = lastUpdated;
+  window._priceSource = taoPrice?._source || null;
   if (window._debug) console.log('DEBUG lastUpdated:', lastUpdated, 'taoPrice.last_updated:', taoPrice?.last_updated, 'source:', taoPrice?._source);
 
   updateNetworkStats(networkData);
@@ -3111,12 +3135,13 @@ async function initDashboard() {
 
   // Set lastUpdated BEFORE updates so tooltips have access (same as refreshDashboard)
   let lastUpdated = null;
-  if (taoPrice && taoPrice._source === 'taostats' && taoPrice.last_updated) {
+  if (taoPrice && taoPrice.last_updated) {
     lastUpdated = taoPrice.last_updated;
-  } else if (taoPrice && taoPrice._source === 'taostats' && taoPrice._timestamp) {
+  } else if (taoPrice && taoPrice._timestamp) {
     lastUpdated = taoPrice._timestamp;
   }
   window._lastUpdated = lastUpdated;
+  window._priceSource = taoPrice?._source || null;
 
   await updateNetworkStats(networkData);
   updateTaoPrice(taoPrice);
