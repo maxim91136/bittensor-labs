@@ -3798,6 +3798,40 @@ body.light-bg .map-preview-card .map-attribution {
   }
 }
 
+@media (max-width: 600px) {
+  .validators-display-table {
+    font-size: 0.82em;
+  }
+
+  .validators-display-table th,
+  .validators-display-table td {
+    padding: 10px 3px;
+  }
+
+  .validators-display-table .rank-col {
+    min-width: 45px;
+  }
+}
+
+@media (max-width: 480px) {
+  .validators-display-table {
+    font-size: 0.75em;
+  }
+
+  .validators-display-table th,
+  .validators-display-table td {
+    padding: 8px 2px;
+  }
+
+  .validators-display-table .rank-col {
+    min-width: 40px;
+  }
+
+  .validators-display-table .rank-new {
+    font-size: 0.7em;
+  }
+}
+
 /* ===== Top Wallets Card ===== */
 .top-wallets-card {
   animation: fadeInUp 0.8s ease-out 0.3s both;
@@ -4053,14 +4087,39 @@ body.light-bg .map-preview-card .map-attribution {
   }
 }
 
-@media (max-width: 480px) {
-  .validators-display-table {
+@media (max-width: 600px) {
+  .validators-display-table,
+  .wallets-display-table {
     font-size: 0.82em;
   }
 
+  .validators-display-table .rank-col,
+  .wallets-display-table .rank-col {
+    min-width: 45px;
+  }
+}
+
+@media (max-width: 480px) {
+  .validators-display-table,
+  .wallets-display-table {
+    font-size: 0.75em;
+  }
+
   .validators-display-table th,
-  .validators-display-table td {
+  .validators-display-table td,
+  .wallets-display-table th,
+  .wallets-display-table td {
     padding: 8px 3px;
+  }
+
+  .validators-display-table .rank-col,
+  .wallets-display-table .rank-col {
+    min-width: 40px;
+  }
+
+  .validators-display-table .rank-new,
+  .wallets-display-table .rank-new {
+    font-size: 0.7em;
   }
 }
 
