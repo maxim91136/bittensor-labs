@@ -3786,51 +3786,6 @@ body.light-bg .map-preview-card .map-attribution {
   text-shadow: none;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .validators-display-table {
-    font-size: 0.88em;
-  }
-
-  .validators-display-table th,
-  .validators-display-table td {
-    padding: 10px 5px;
-  }
-}
-
-@media (max-width: 600px) {
-  .validators-display-table {
-    font-size: 0.82em;
-  }
-
-  .validators-display-table th,
-  .validators-display-table td {
-    padding: 10px 3px;
-  }
-
-  .validators-display-table .rank-col {
-    min-width: 45px;
-  }
-}
-
-@media (max-width: 480px) {
-  .validators-display-table {
-    font-size: 0.75em;
-  }
-
-  .validators-display-table th,
-  .validators-display-table td {
-    padding: 8px 2px;
-  }
-
-  .validators-display-table .rank-col {
-    min-width: 40px;
-  }
-
-  .validators-display-table .rank-new {
-    font-size: 0.7em;
-  }
-}
 
 /* ===== Top Wallets Card ===== */
 .top-wallets-card {
@@ -4075,12 +4030,16 @@ body.light-bg .map-preview-card .map-attribution {
   text-shadow: none;
 }
 
-/* Responsive */
+/* ===== Responsive Styles für 5-spaltige Tabellen (Validators & Wallets) ===== */
 @media (max-width: 768px) {
+  .validators-display-table,
   .wallets-display-table {
     font-size: 0.88em;
+    table-layout: auto;
   }
 
+  .validators-display-table th,
+  .validators-display-table td,
   .wallets-display-table th,
   .wallets-display-table td {
     padding: 10px 5px;
@@ -4093,9 +4052,27 @@ body.light-bg .map-preview-card .map-attribution {
     font-size: 0.82em;
   }
 
+  .validators-display-table th,
+  .validators-display-table td,
+  .wallets-display-table th,
+  .wallets-display-table td {
+    padding: 10px 3px;
+  }
+
+  /* Rank-Spalte schmaler auf Mobile */
+  .validators-display-table th:nth-child(1),
+  .validators-display-table td:nth-child(1),
+  .wallets-display-table th:nth-child(1),
+  .wallets-display-table td:nth-child(1) {
+    width: auto;
+    min-width: 50px;
+    max-width: 70px;
+  }
+
   .validators-display-table .rank-col,
   .wallets-display-table .rank-col {
-    min-width: 45px;
+    min-width: 50px;
+    max-width: 70px;
   }
 }
 
@@ -4109,12 +4086,23 @@ body.light-bg .map-preview-card .map-attribution {
   .validators-display-table td,
   .wallets-display-table th,
   .wallets-display-table td {
-    padding: 8px 3px;
+    padding: 8px 2px;
+  }
+
+  /* Rank-Spalte noch schmaler auf sehr kleinen Screens */
+  .validators-display-table th:nth-child(1),
+  .validators-display-table td:nth-child(1),
+  .wallets-display-table th:nth-child(1),
+  .wallets-display-table td:nth-child(1) {
+    width: auto;
+    min-width: 45px;
+    max-width: 60px;
   }
 
   .validators-display-table .rank-col,
   .wallets-display-table .rank-col {
-    min-width: 40px;
+    min-width: 45px;
+    max-width: 60px;
   }
 
   .validators-display-table .rank-new,
