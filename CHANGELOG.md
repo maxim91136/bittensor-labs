@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.28.3 (2025-12-11)
+### Added
+- **ETH & SOL Comparison**: Compare TAO performance against ETH and SOL (in addition to BTC)
+  - New toggle buttons: BTC (orange), ETH (gray), SOL (purple)
+  - All comparisons use normalized percentage view
+  - States persisted to localStorage
+
+### Changed
+- **Price Chart Position**: Moved to #2 (after Market Conditions, before Stat Cards)
+  - More prominent placement for the most-used feature
+- **Chart Toggle Colors**: Distinct colors with borders for better visibility
+  - BTC: Orange (#f7931a)
+  - ETH: Gray (#b0b0b0, darker #555 in Light Mode)
+  - SOL: Purple (#9945ff)
+  - EUR: Gold (#fbbf24)
+
+### Fixed
+- **ETH Light Mode**: Darker gray (#555) for better contrast in Light Mode
+
 ## v1.0.0-rc.28.2 (2025-12-10)
 ### Infrastructure
 - **Cloudflare Workers Paid Plan**: Upgraded from free tier due to KV storage and request limits

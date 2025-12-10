@@ -8,11 +8,11 @@ Started: November 3, 2025
 
 This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem.
 
-**Latest release:** `v1.0.0-rc.28.2` — see [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.28.3` — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 > 🚀 **RC28 Highlights**:
 > - Real-time prices from Binance API (<1s delay)
-> - TAO vs BTC comparison toggle
+> - TAO vs BTC/ETH/SOL comparison toggles
 > - EUR currency support (pill + chart)
 > - Max price range (600+ days history)
 
@@ -28,7 +28,7 @@ This project provides a compact dashboard for visualizing and monitoring key Bit
 
 ### 📈 Price Chart (RC28+)
 - **Multiple time ranges**: 1D, 7D, 30D, 90D, Max (~600 days)
-- **TAO vs BTC comparison**: Toggle to compare performance side-by-side
+- **Multi-asset comparison**: Compare TAO vs BTC, ETH, and SOL performance
 - **EUR currency support**: View prices in Euros with live conversion
 - **Data sources**: Binance (primary), Taostats, CoinGecko (fallbacks)
 - **Smart labels**: Automatic date formatting based on time range
