@@ -2946,16 +2946,28 @@ function createPriceChart(priceHistory, range, btcHistory = null) {
   const ctx = canvas.getContext('2d');
 
   // Format labels based on timeframe
-  const rangeNum = parseInt(range, 10) || 7;
+  const isMax = range === 'max';
+  const rangeNum = isMax ? priceHistory.length : (parseInt(range, 10) || 7);
   const labels = priceHistory.map(([timestamp]) => {
     const date = new Date(timestamp);
     if (rangeNum <= 1) {
+      // 1 day: show time only
       return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
     } else if (rangeNum <= 3) {
+      // 2-3 days: show date + time
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
              date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    } else {
+    } else if (rangeNum <= 30) {
+      // Up to 30 days: M/D format
       return `${date.getMonth()+1}/${date.getDate()}`;
+    } else if (rangeNum <= 180) {
+      // 31-180 days: "Jan 15" format
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    } else {
+      // 180+ days (Max): "Apr '24" format
+      const month = date.toLocaleDateString('en-US', { month: 'short' });
+      const year = String(date.getFullYear()).slice(-2);
+      return `${month} '${year}`;
     }
   });
 
@@ -3056,7 +3068,16 @@ function createPriceChart(priceHistory, range, btcHistory = null) {
         }
       },
       scales: {
-        x: { display: true, grid: { display: false }, ticks: { color: '#888' } },
+        x: {
+          display: true,
+          grid: { display: false },
+          ticks: {
+            color: '#888',
+            maxTicksLimit: isMax ? 12 : (rangeNum <= 7 ? 7 : 15),
+            autoSkip: true,
+            maxRotation: 0
+          }
+        },
         y: {
           display: true,
           grid: { color: '#222' },
