@@ -429,8 +429,8 @@ def fetch_top_subnets() -> Dict[str, object]:
             except Exception:
                 netuid_i = netuid
 
-            # SDK v10.0: subtensor.metagraph() → bt.Metagraph class
-            metagraph = bt.Metagraph(netuid=netuid_i, network=NETWORK, lite=True)
+            # SDK v10.0: use subtensor.metagraph() method
+            metagraph = subtensor.metagraph(netuid=netuid_i, mechid=0)
 
             # Normalize `uids` into a plain Python list. Some metagraphs
             # return numpy arrays or other sequences which are ambiguous

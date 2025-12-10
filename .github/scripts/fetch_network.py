@@ -31,8 +31,8 @@ def fetch_metrics() -> Dict[str, Any]:
     total_neurons = 0
     for netuid in subnets:
         try:
-            # SDK v10.0: metagraph() → Metagraph class
-            metagraph = bt.Metagraph(netuid=netuid, network=NETWORK, lite=True)
+            # SDK v10.0: use subtensor.metagraph() method
+            metagraph = subtensor.metagraph(netuid=netuid, mechid=0)
             # Count validators
             if hasattr(metagraph, 'validator_permit'):
                 total_validators += sum(1 for uid in metagraph.uids if metagraph.validator_permit[uid])
