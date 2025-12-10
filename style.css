@@ -3493,7 +3493,7 @@ body.light-bg .map-preview-card .map-attribution {
   color: #888;
 }
 
-/* ===== Responsive Styles für Subnets-Tabelle (4 Spalten) ===== */
+/* ===== Responsive Styles für Subnets-Tabelle (5 Spalten) ===== */
 @media (max-width: 768px) {
   .subnets-display-table {
     font-size: 0.88em;
@@ -3503,10 +3503,6 @@ body.light-bg .map-preview-card .map-attribution {
   .subnets-display-table th,
   .subnets-display-table td {
     padding: 10px 5px;
-  }
-
-  .subnets-display-table .sn-id {
-    display: none;
   }
 }
 
