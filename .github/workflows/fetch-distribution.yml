@@ -19,16 +19,17 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests bittensor
 
-      - name: Fetch distribution from Taostats
+      - name: Fetch distribution (SDK + Taostats hybrid)
         id: fetch
         env:
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
+          NETWORK: finney
         run: |
           python .github/scripts/fetch_distribution.py > /tmp/distribution.json
           echo "Distribution summary:"
-          cat /tmp/distribution.json | jq '{total_wallets, sample_size, percentiles}'
+          cat /tmp/distribution.json | jq '{total_wallets, total_wallets_source, sample_size, _source, percentiles}'
 
       - name: Write to Cloudflare KV
         env:

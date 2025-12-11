@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
-Fetch TAO Distribution Statistics from Taostats API.
-Calculates holder percentiles and wallet size brackets.
+Fetch TAO Distribution Statistics - Hybrid SDK/Taostats approach.
+- Uses Bittensor SDK for total wallet count (NumStakingColdkeys)
+- Uses Taostats API for top wallet balances (sample)
+- Calculates holder percentiles and wallet size brackets
 
-Rate limits: 5 requests/min, 10k requests/month
-Strategy: Fetch top 10k wallets (10 pages), run daily
+Rate limits (Taostats): 5 requests/min, 10k requests/month
+Strategy: Fetch top 2k wallets (10 pages), run weekly
 """
 
 import os
@@ -14,23 +16,79 @@ import time
 import requests
 from datetime import datetime, timezone
 
+# Try to import bittensor SDK
+try:
+    import bittensor as bt
+    HAS_BITTENSOR = True
+except ImportError:
+    HAS_BITTENSOR = False
+    print("⚠️ Bittensor SDK not available, using Taostats-only mode", file=sys.stderr)
+
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
 ACCOUNT_URL = "https://api.taostats.io/api/account/latest/v1"
+NETWORK = os.getenv("NETWORK", "finney")
 
 # Brackets matching @RBS_HODL format
 BRACKETS = [100000, 50000, 10000, 1000, 500, 250, 100, 50, 25, 10, 5, 1, 0.1]
 PERCENTILES = [10, 5, 3, 1]  # Top X%
 
-# Global to store total wallet count from API
+# Global to store total wallet count
 total_wallet_count = 0
+sdk_wallet_count = None  # From SDK if available
 
 
-def fetch_wallets(max_pages=10, page_size=1000):
+def fetch_wallet_count_from_sdk():
+    """
+    Fetch total staking coldkeys count directly from blockchain via SDK.
+    This gives us accurate count without relying on Taostats.
+    """
+    global sdk_wallet_count
+
+    if not HAS_BITTENSOR:
+        print("⚠️ SDK not available for wallet count", file=sys.stderr)
+        return None
+
+    try:
+        print(f"🔗 Connecting to {NETWORK} via SDK...", file=sys.stderr)
+        subtensor = bt.Subtensor(network=NETWORK)
+
+        if hasattr(subtensor, 'substrate') and subtensor.substrate is not None:
+            # Query NumStakingColdkeys - total count of active staking wallets
+            try:
+                result = subtensor.substrate.query('SubtensorModule', 'NumStakingColdkeys')
+                if result and result.value is not None:
+                    sdk_wallet_count = int(result.value)
+                    print(f"✅ SDK: NumStakingColdkeys = {sdk_wallet_count:,}", file=sys.stderr)
+                    return sdk_wallet_count
+            except Exception as e:
+                print(f"⚠️ NumStakingColdkeys query failed: {e}", file=sys.stderr)
+
+            # Fallback: Try to get account count from System storage
+            try:
+                # This counts all accounts with any data (slower)
+                result = subtensor.substrate.query('System', 'AccountCount')
+                if result and result.value is not None:
+                    sdk_wallet_count = int(result.value)
+                    print(f"✅ SDK: System.AccountCount = {sdk_wallet_count:,}", file=sys.stderr)
+                    return sdk_wallet_count
+            except Exception as e:
+                print(f"⚠️ AccountCount query failed: {e}", file=sys.stderr)
+
+        print("⚠️ SDK connected but no wallet count available", file=sys.stderr)
+        return None
+
+    except Exception as e:
+        print(f"❌ SDK connection failed: {e}", file=sys.stderr)
+        return None
+
+
+def fetch_wallets(max_pages=100, page_size=200):
     """
     Fetch wallets from Taostats API with pagination.
     Returns sorted list of balances (TAO, descending).
 
-    Uses 10 pages × 1000 = 10k wallets, enough for percentiles.
+    Taostats API returns max 200 per page.
+    100 pages = 20k wallets = enough for Top 10% of ~200k total.
     Respects rate limits: 13s between requests (5/min safe)
     """
     global total_wallet_count
@@ -46,6 +104,7 @@ def fetch_wallets(max_pages=10, page_size=1000):
 
     all_balances = []
     page = 1
+    last_rank = 0
 
     try:
         while page <= max_pages:
@@ -74,12 +133,26 @@ def fetch_wallets(max_pages=10, page_size=1000):
                 balance = float(acc.get("balance_total", 0)) / 1e9
                 if balance > 0:  # Only count non-zero balances
                     all_balances.append(balance)
+                # Track last rank to estimate total
+                rank = acc.get("rank", 0)
+                if rank > last_rank:
+                    last_rank = rank
 
-            # Get total from pagination
+            # Get total from pagination (if available)
             pagination = data.get("pagination", {})
-            total_wallet_count = pagination.get("total_count", len(all_balances))
+            api_total = pagination.get("total_count", 0)
 
-            if page >= pagination.get("total_pages", 1):
+            # Use API total if available and reasonable, otherwise estimate
+            # @RBS_HODL shows ~195k wallets as of Nov 2025
+            if api_total > len(all_balances):
+                total_wallet_count = api_total
+            elif last_rank > len(all_balances):
+                total_wallet_count = last_rank
+            else:
+                # Fallback estimate based on known data
+                total_wallet_count = 200000
+
+            if page >= pagination.get("total_pages", max_pages):
                 print(f"✅ Reached last page", file=sys.stderr)
                 break
 
@@ -90,7 +163,7 @@ def fetch_wallets(max_pages=10, page_size=1000):
                 print(f"   ⏳ Rate limit pause (13s)...", file=sys.stderr)
                 time.sleep(13)
 
-        print(f"✅ Fetched {len(all_balances)} wallets (total in network: {total_wallet_count:,})", file=sys.stderr)
+        print(f"✅ Fetched {len(all_balances)} wallets (estimated total: {total_wallet_count:,})", file=sys.stderr)
         return sorted(all_balances, reverse=True)
 
     except Exception as e:
@@ -144,20 +217,36 @@ def calculate_percentiles(balances, total_network_wallets):
 
 
 def main():
-    print("🚀 TAO Distribution Calculator", file=sys.stderr)
-    print("=" * 40, file=sys.stderr)
-    print("Rate limit aware: 10 pages, 13s between requests", file=sys.stderr)
-    print("=" * 40, file=sys.stderr)
+    print("🚀 TAO Distribution Calculator (Hybrid SDK/Taostats)", file=sys.stderr)
+    print("=" * 50, file=sys.stderr)
 
-    # Fetch wallets (10 pages = 10k wallets max)
+    # Step 1: Try to get total wallet count from SDK (blockchain)
+    print("\n📊 Step 1: Fetching wallet count from blockchain...", file=sys.stderr)
+    sdk_count = fetch_wallet_count_from_sdk()
+
+    # Step 2: Fetch top wallets from Taostats (for balance data)
+    print("\n📊 Step 2: Fetching top wallets from Taostats...", file=sys.stderr)
+    print("Rate limit aware: 10 pages, 13s between requests", file=sys.stderr)
     balances = fetch_wallets(max_pages=10)
 
     if not balances:
         print("❌ No wallet data fetched", file=sys.stderr)
         sys.exit(1)
 
-    # Use global total from API for accurate percentages
-    total_wallets = total_wallet_count if total_wallet_count > 0 else len(balances)
+    # Determine total wallets: prefer SDK > Taostats API > estimate
+    if sdk_count and sdk_count > 0:
+        total_wallets = sdk_count
+        total_source = "sdk"
+        print(f"✅ Using SDK wallet count: {total_wallets:,}", file=sys.stderr)
+    elif total_wallet_count > 0:
+        total_wallets = total_wallet_count
+        total_source = "taostats"
+        print(f"✅ Using Taostats wallet count: {total_wallets:,}", file=sys.stderr)
+    else:
+        # Fallback estimate based on known data (~200k as of late 2025)
+        total_wallets = 200000
+        total_source = "estimate"
+        print(f"⚠️ Using estimated wallet count: {total_wallets:,}", file=sys.stderr)
 
     # Calculate brackets
     brackets = calculate_brackets(balances, total_wallets)
@@ -169,10 +258,11 @@ def main():
     now_iso = datetime.now(timezone.utc).isoformat()
     result = {
         "total_wallets": total_wallets,
+        "total_wallets_source": total_source,  # "sdk", "taostats", or "estimate"
         "sample_size": len(balances),
         "percentiles": percentiles,
         "brackets": brackets,
-        "_source": "taostats",
+        "_source": "hybrid-sdk-taostats" if total_source == "sdk" else "taostats",
         "_timestamp": now_iso,
         "last_updated": now_iso
     }
