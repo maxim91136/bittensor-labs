@@ -1,0 +1,51 @@
+name: Fetch TAO Distribution
+
+on:
+  schedule:
+    # Run weekly on Sunday at 03:00 UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+
+jobs:
+  fetch-distribution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30  # 10 pages × 13s delay + buffer
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Fetch distribution from Taostats
+        id: fetch
+        env:
+          TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
+        run: |
+          python .github/scripts/fetch_distribution.py > /tmp/distribution.json
+          echo "Distribution summary:"
+          cat /tmp/distribution.json | jq '{total_wallets, sample_size, percentiles}'
+
+      - name: Write to Cloudflare KV
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+        run: |
+          KV_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/distribution"
+
+          CURL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$KV_URL" \
+            -H "Authorization: Bearer $CF_API_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data-binary @/tmp/distribution.json || true)
+
+          if [ "$CURL_STATUS" = "200" ]; then
+            echo "✅ Distribution written to KV successfully"
+          else
+            echo "❌ Failed to write to KV (HTTP $CURL_STATUS)"
+            exit 1
+          fi
