@@ -77,17 +77,26 @@ def calculate_gini(values: List[float]) -> float:
     return round(max(0.0, min(1.0, gini)), 4)
 
 
-def calculate_nakamoto(values: List[float], threshold: float = 0.51) -> int:
+def calculate_nakamoto(values: List[float], threshold: float = 0.51, total: float = None) -> int:
     """
     Calculate Nakamoto coefficient - minimum entities to control threshold (default 51%).
 
     Returns the count of top entities needed to exceed the threshold.
+
+    Args:
+        values: List of stakes/shares (will be sorted descending)
+        threshold: Control threshold (default 0.51 = 51%)
+        total: Optional total to calculate against. If None, uses sum(values).
+               IMPORTANT: For validators, pass actual total_stake, not just sum of top N!
     """
     if not values:
         return 0
 
     sorted_desc = sorted(values, reverse=True)
-    total = sum(sorted_desc)
+
+    # Use provided total, or fall back to sum of values
+    if total is None or total <= 0:
+        total = sum(sorted_desc)
 
     if total == 0:
         return len(sorted_desc)
@@ -244,14 +253,14 @@ def analyze_validators(validator_data: Dict) -> Dict:
     if stakes:
         # Calculate metrics
         gini = calculate_gini(stakes)
-        nakamoto = calculate_nakamoto(stakes)
-        top_10_conc = calculate_top_concentration(stakes, 10)
+        # IMPORTANT: Use total_stake from API, not just sum of top 100!
+        # This gives the TRUE Nakamoto coefficient against all network stake
+        nakamoto = calculate_nakamoto(stakes, total=total_stake)
 
         result["gini"] = gini
         result["nakamoto_coefficient"] = nakamoto
-        result["top_10_concentration"] = top_10_conc
 
-        # Composite validator score (Nakamoto + Gini only, concentration removed as misleading with limited data)
+        # Composite validator score (Nakamoto + Gini only)
         gini_score = score_from_gini(gini)
         nakamoto_score = score_from_nakamoto(nakamoto, max_good=50)  # 50 validators for 51% is good
 
@@ -410,7 +419,7 @@ def main():
         "subnet_analysis": subnet_analysis,
         "last_updated": now_iso,
         "_source": "decentralization_calculator",
-        "_version": "1.2.0"
+        "_version": "1.3.0"
     }
 
     # Save to KV
