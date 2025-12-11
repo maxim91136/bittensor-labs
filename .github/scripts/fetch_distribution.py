@@ -6,7 +6,7 @@ Fetch TAO Distribution Statistics - Hybrid SDK/Taostats approach.
 - Calculates holder percentiles and wallet size brackets
 
 Rate limits (Taostats): 5 requests/min, 10k requests/month
-Strategy: Fetch top 5k wallets (25 pages), run weekly (~6 min)
+Strategy: Dynamic pages (25-100) based on SDK wallet count, run weekly
 """
 
 import os
@@ -225,11 +225,20 @@ def main():
     sdk_count = fetch_wallet_count_from_sdk()
 
     # Step 2: Fetch top wallets from Taostats (for balance data)
-    # Need enough wallets to cover Top 10% - with ~43k wallets that's ~4,300
-    # 25 pages × 200 = 5,000 wallets = sufficient coverage
-    print("\n📊 Step 2: Fetching top wallets from Taostats...", file=sys.stderr)
-    print("Rate limit aware: 25 pages, 13s between requests (~5 min)", file=sys.stderr)
-    balances = fetch_wallets(max_pages=25)
+    # Dynamically calculate pages needed for Top 10% coverage
+    # Formula: ceil(total_wallets * 0.12 / 200) with 12% safety margin
+    if sdk_count and sdk_count > 0:
+        wallets_needed = int(sdk_count * 0.12)  # 12% for safety margin
+        pages_needed = max(25, min(100, (wallets_needed // 200) + 1))
+    else:
+        wallets_needed = 10000  # Assume ~100k wallets if SDK fails
+        pages_needed = 50
+
+    estimated_time = pages_needed * 13 // 60
+    print(f"\n📊 Step 2: Fetching top wallets from Taostats...", file=sys.stderr)
+    print(f"Dynamic pages: {pages_needed} (~{wallets_needed:,} wallets for Top 10%+)", file=sys.stderr)
+    print(f"Rate limit aware: ~{estimated_time} min", file=sys.stderr)
+    balances = fetch_wallets(max_pages=pages_needed)
 
     if not balances:
         print("❌ No wallet data fetched", file=sys.stderr)
