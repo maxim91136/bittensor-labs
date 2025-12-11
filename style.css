@@ -2463,6 +2463,16 @@ body.light-bg .time-btn.chart-type-toggle.active {
   color: #22c55e;
 }
 
+/* Price chart info badge - position outside of button area */
+section[aria-labelledby="price-heading"] > .info-badge {
+  top: 12px;
+  right: 12px;
+  z-index: 10;
+}
+section[aria-labelledby="price-heading"] .chart-controls {
+  padding-right: 28px; /* Make room for info badge */
+}
+
 /* Inline info badge for TAOTensor card header to avoid overlap with other controls */
 /* TAO Tensor Law header no longer shows an inline info-badge; remove styling here. */
 /* No inline info badge in the TAO Tensor Law header; was removed intentionally. */
