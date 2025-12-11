@@ -522,6 +522,62 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
       </div>
     </section>
 
+  <!-- TAO Distribution Card -->
+    <section class="dashboard-card distribution-card" aria-labelledby="distribution-card-heading">
+      <div class="card-header">
+        <h2 id="distribution-card-heading">TAO Distribution</h2>
+        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="How much TAO you need to be in the Top X%. Data updates weekly due to API rate limits. Source: taostats.io">i</span>
+      </div>
+      <div class="distribution-content">
+        <div class="percentile-section">
+          <h3 class="distribution-subtitle">Percentile Thresholds</h3>
+          <div class="percentile-grid" id="percentileGrid">
+            <div class="percentile-item">
+              <span class="percentile-label">Top 1%</span>
+              <span class="percentile-value" id="percentile1">—</span>
+            </div>
+            <div class="percentile-item">
+              <span class="percentile-label">Top 3%</span>
+              <span class="percentile-value" id="percentile3">—</span>
+            </div>
+            <div class="percentile-item">
+              <span class="percentile-label">Top 5%</span>
+              <span class="percentile-value" id="percentile5">—</span>
+            </div>
+            <div class="percentile-item">
+              <span class="percentile-label">Top 10%</span>
+              <span class="percentile-value" id="percentile10">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="brackets-section">
+          <h3 class="distribution-subtitle">Wallet Brackets</h3>
+          <div class="brackets-list" id="bracketsList">
+            <div class="bracket-item">
+              <span class="bracket-threshold">&gt; 10,000 τ</span>
+              <span class="bracket-count" id="bracket10000">—</span>
+            </div>
+            <div class="bracket-item">
+              <span class="bracket-threshold">&gt; 1,000 τ</span>
+              <span class="bracket-count" id="bracket1000">—</span>
+            </div>
+            <div class="bracket-item">
+              <span class="bracket-threshold">&gt; 100 τ</span>
+              <span class="bracket-count" id="bracket100">—</span>
+            </div>
+            <div class="bracket-item">
+              <span class="bracket-threshold">&gt; 10 τ</span>
+              <span class="bracket-count" id="bracket10">—</span>
+            </div>
+          </div>
+        </div>
+        <div class="distribution-footer">
+          <span class="distribution-meta" id="distributionMeta">Sample: — wallets</span>
+          <span class="distribution-update" id="distributionUpdate">Updated: —</span>
+        </div>
+      </div>
+    </section>
+
       <div class="last-update" id="lastUpdate"></div>
 
     <!-- Container for Fear & Greed and Miner Map Cards -->

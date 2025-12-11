@@ -4567,11 +4567,80 @@ document.addEventListener('DOMContentLoaded', function() {
 
   loadTopWalletsDisplay();
 
+  // Load TAO Distribution data
+  async function loadDistribution() {
+    try {
+      const res = await fetch('/api/distribution', { cache: 'no-store' });
+      if (!res.ok) {
+        console.warn('Distribution API returned', res.status);
+        return;
+      }
+      const data = await res.json();
+      if (!data || !data.percentiles) return;
+
+      // Update percentile values
+      const percentiles = data.percentiles;
+      if (percentiles['1']) {
+        const el = document.getElementById('percentile1');
+        if (el) el.textContent = `≥ ${percentiles['1'].threshold.toLocaleString(undefined, { maximumFractionDigits: 0 })} τ`;
+      }
+      if (percentiles['3']) {
+        const el = document.getElementById('percentile3');
+        if (el) el.textContent = `≥ ${percentiles['3'].threshold.toLocaleString(undefined, { maximumFractionDigits: 0 })} τ`;
+      }
+      if (percentiles['5']) {
+        const el = document.getElementById('percentile5');
+        if (el) el.textContent = `≥ ${percentiles['5'].threshold.toLocaleString(undefined, { maximumFractionDigits: 0 })} τ`;
+      }
+      if (percentiles['10']) {
+        const el = document.getElementById('percentile10');
+        if (el) el.textContent = `≥ ${percentiles['10'].threshold.toLocaleString(undefined, { maximumFractionDigits: 0 })} τ`;
+      }
+
+      // Update bracket counts
+      const brackets = data.brackets;
+      if (brackets) {
+        const bracket10000 = document.getElementById('bracket10000');
+        if (bracket10000 && brackets['10000']) {
+          bracket10000.textContent = `${brackets['10000'].count.toLocaleString()} (${brackets['10000'].percentage}%)`;
+        }
+        const bracket1000 = document.getElementById('bracket1000');
+        if (bracket1000 && brackets['1000']) {
+          bracket1000.textContent = `${brackets['1000'].count.toLocaleString()} (${brackets['1000'].percentage}%)`;
+        }
+        const bracket100 = document.getElementById('bracket100');
+        if (bracket100 && brackets['100']) {
+          bracket100.textContent = `${brackets['100'].count.toLocaleString()} (${brackets['100'].percentage}%)`;
+        }
+        const bracket10 = document.getElementById('bracket10');
+        if (bracket10 && brackets['10']) {
+          bracket10.textContent = `${brackets['10'].count.toLocaleString()} (${brackets['10'].percentage}%)`;
+        }
+      }
+
+      // Update meta info
+      const metaEl = document.getElementById('distributionMeta');
+      if (metaEl && data.sample_size) {
+        metaEl.textContent = `Sample: ${data.sample_size.toLocaleString()} wallets`;
+      }
+      const updateEl = document.getElementById('distributionUpdate');
+      if (updateEl && data.last_updated) {
+        const date = new Date(data.last_updated);
+        updateEl.textContent = `Updated: ${date.toLocaleDateString()}`;
+      }
+    } catch (err) {
+      console.warn('Failed to load distribution:', err);
+    }
+  }
+
+  loadDistribution();
+
   // Also refresh when refreshDashboard is called
   const currentRefresh = window.refreshDashboard;
   window.refreshDashboard = async function() {
     await currentRefresh.call(this);
     loadTopWalletsDisplay();
+    loadDistribution();
   };
 });
 

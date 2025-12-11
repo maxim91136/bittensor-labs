@@ -4457,3 +4457,123 @@ body.light-bg .tooltip-chip.partial {
   animation: failure-glitch 0.3s ease-in-out;
 }
 
+
+/* --- Distribution Card --- */
+.distribution-card {
+  grid-column: span 1;
+}
+
+.distribution-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.distribution-subtitle {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #a1a1a1);
+  margin-bottom: 0.75rem;
+}
+
+/* Percentile Grid */
+.percentile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.percentile-item {
+  display: flex;
+  flex-direction: column;
+  padding: 0.75rem;
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  border-radius: 8px;
+}
+
+.percentile-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-secondary, #a1a1a1);
+  margin-bottom: 0.25rem;
+}
+
+.percentile-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-primary, #22c55e);
+}
+
+/* Brackets List */
+.brackets-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bracket-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  border-left: 3px solid rgba(34, 197, 94, 0.4);
+}
+
+.bracket-threshold {
+  font-size: 0.85rem;
+  color: var(--text-primary, #fff);
+  font-weight: 500;
+}
+
+.bracket-count {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #a1a1a1);
+}
+
+/* Distribution Footer */
+.distribution-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.7rem;
+  color: var(--text-tertiary, #666);
+}
+
+/* Light mode adjustments */
+body.light-bg .percentile-item {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+body.light-bg .bracket-item {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-bg .distribution-footer {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Responsive */
+@media (min-width: 768px) {
+  .percentile-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  
+  .brackets-list {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  
+  .bracket-item {
+    flex: 1 1 calc(50% - 0.25rem);
+  }
+}
