@@ -1,0 +1,35 @@
+name: Fetch Decentralization Score
+
+on:
+  # Run daily at 04:00 UTC (after other data fetches)
+  schedule:
+    - cron: '0 4 * * *'
+  # Manual trigger
+  workflow_dispatch:
+  # Run after distribution workflow completes
+  workflow_run:
+    workflows: ["Fetch TAO Distribution"]
+    types:
+      - completed
+
+jobs:
+  fetch-decentralization:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Calculate Decentralization Score
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_KV_NAMESPACE_ID }}
+        run: |
+          python .github/scripts/fetch_decentralization.py
