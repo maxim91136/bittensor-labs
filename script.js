@@ -389,6 +389,8 @@ let showBtcComparison = localStorage.getItem('showBtcComparison') === 'true';
 let showEthComparison = localStorage.getItem('showEthComparison') === 'true';
 let showSolComparison = localStorage.getItem('showSolComparison') === 'true';
 let showEurPrices = localStorage.getItem('showEurPrices') === 'true';
+let showCandleChart = localStorage.getItem('showCandleChart') === 'true';
+let showVolume = localStorage.getItem('showVolume') === 'true';
 let eurUsdRate = null; // Cached EUR/USD exchange rate
 // Track whether main dashboard init has completed
 window._dashboardInitialized = false;
@@ -1629,8 +1631,9 @@ async function fetchPriceHistory(range = '7') {
         const data = await res.json();
         if (data?.prices?.length) {
           if (window._debug) console.debug(`Price history from Taostats (${key}d):`, data.prices.length, 'points');
-          setCachedPrice?.(key, data.prices);
-          return data.prices;
+          const result = { prices: data.prices, ohlcv: null, volume: null, source: 'taostats' };
+          setCachedPrice?.(key, result);
+          return result;
         }
       }
     } catch (e) {
@@ -1649,12 +1652,24 @@ async function fetchPriceHistory(range = '7') {
       if (res.ok) {
         const klines = await res.json();
         if (klines?.length) {
-          // Convert Binance klines to [timestamp, price] format
           // Kline format: [open_time, open, high, low, close, volume, ...]
+          // Return both formats: prices array for line chart, ohlcv for candle chart
           const prices = klines.map(k => [k[0], parseFloat(k[4])]); // [timestamp_ms, close_price]
+          const ohlcv = klines.map(k => ({
+            x: k[0],
+            o: parseFloat(k[1]),
+            h: parseFloat(k[2]),
+            l: parseFloat(k[3]),
+            c: parseFloat(k[4])
+          }));
+          const volume = klines.map(k => ({
+            x: k[0],
+            y: parseFloat(k[5])
+          }));
           if (window._debug) console.debug(`Price history from Binance (${key}):`, prices.length, 'points');
-          setCachedPrice?.(key, prices);
-          return prices;
+          const result = { prices, ohlcv, volume, source: 'binance' };
+          setCachedPrice?.(key, result);
+          return result;
         }
       }
     } catch (e) {
@@ -1673,8 +1688,9 @@ async function fetchPriceHistory(range = '7') {
       const data = await res.json();
       if (!data?.prices?.length) return null;
       if (window._debug) console.debug(`Price history from CoinGecko (${key}):`, data.prices.length, 'points');
-      setCachedPrice?.(key, data.prices);
-      return data.prices;
+      const result = { prices: data.prices, ohlcv: null, volume: null, source: 'coingecko' };
+      setCachedPrice?.(key, result);
+      return result;
     } catch { return null; }
   }
 
@@ -3040,10 +3056,18 @@ function startAutoRefresh() {
 })();
 
 // ===== Initialization of Price Chart =====
-function createPriceChart(priceHistory, range, comparisonData = {}) {
+function createPriceChart(priceHistoryData, range, comparisonData = {}) {
   const canvas = document.getElementById('priceChart');
   if (!canvas) return;
   const ctx = canvas.getContext('2d');
+
+  // Handle new object format { prices, ohlcv, volume } or legacy array format
+  const priceHistory = Array.isArray(priceHistoryData) ? priceHistoryData : priceHistoryData?.prices;
+  const ohlcvData = priceHistoryData?.ohlcv || null;
+  const volumeData = priceHistoryData?.volume || null;
+  const dataSource = priceHistoryData?.source || 'unknown';
+
+  if (!priceHistory?.length) return;
 
   // Extract comparison histories
   const { btcHistory, ethHistory, solHistory } = comparisonData;
@@ -3176,37 +3200,166 @@ function createPriceChart(priceHistory, range, comparisonData = {}) {
   } else {
     // Standard TAO price chart (USD or EUR)
     const conversionRate = showEurPrices && eurUsdRate ? (1 / eurUsdRate) : 1;
-    const data = priceHistory.map(([_, price]) => price * conversionRate);
     const currencyLabel = showEurPrices ? 'TAO Price (EUR)' : 'TAO Price (USD)';
-    datasets.push({
-      label: currencyLabel,
-      data,
-      borderColor: '#22c55e',
-      backgroundColor: 'rgba(34,197,94,0.1)',
-      tension: 0.2,
-      pointRadius: 0,
-      fill: true
-    });
+
+    // Check if candlestick mode and OHLCV data available
+    if (showCandleChart && ohlcvData?.length) {
+      // Candlestick chart data format
+      const candleData = ohlcvData.map(d => ({
+        x: d.x,
+        o: d.o * conversionRate,
+        h: d.h * conversionRate,
+        l: d.l * conversionRate,
+        c: d.c * conversionRate
+      }));
+      datasets.push({
+        label: currencyLabel,
+        data: candleData,
+        color: {
+          up: '#22c55e',
+          down: '#ef4444',
+          unchanged: '#888'
+        },
+        borderColor: {
+          up: '#22c55e',
+          down: '#ef4444',
+          unchanged: '#888'
+        }
+      });
+    } else {
+      // Line chart (default)
+      const data = priceHistory.map(([_, price]) => price * conversionRate);
+      datasets.push({
+        label: currencyLabel,
+        data,
+        borderColor: '#22c55e',
+        backgroundColor: 'rgba(34,197,94,0.1)',
+        tension: 0.2,
+        pointRadius: 0,
+        fill: true
+      });
+    }
   }
 
   const showLegend = hasAnyComparison;
   const currencySymbol = (!showLegend && showEurPrices) ? '€' : '$';
 
+  // Determine chart type
+  const useCandlestick = showCandleChart && ohlcvData?.length && !hasAnyComparison;
+  const chartType = useCandlestick ? 'candlestick' : 'line';
+
+  // Add volume bars if enabled and data available
+  if (showVolume && volumeData?.length && !hasAnyComparison) {
+    // Find max volume for scaling
+    const maxVol = Math.max(...volumeData.map(v => v.y));
+    const volumeScaled = useCandlestick
+      ? volumeData.map(v => ({ x: v.x, y: v.y }))
+      : volumeData.map((v, i) => v.y);
+
+    datasets.push({
+      label: 'Volume',
+      data: volumeScaled,
+      type: 'bar',
+      backgroundColor: 'rgba(100, 116, 139, 0.3)',
+      borderColor: 'rgba(100, 116, 139, 0.5)',
+      borderWidth: 1,
+      yAxisID: 'yVolume',
+      order: 2 // Draw behind price
+    });
+  }
+
+  // Configure scales based on chart type
+  const scales = useCandlestick ? {
+    x: {
+      type: 'time',
+      time: {
+        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month')),
+        displayFormats: {
+          hour: 'HH:mm',
+          day: 'MMM d',
+          week: 'MMM d',
+          month: "MMM ''yy"
+        }
+      },
+      grid: { display: false },
+      ticks: { color: '#888', maxRotation: 0 }
+    },
+    y: {
+      display: true,
+      position: 'left',
+      grid: { color: '#222' },
+      ticks: {
+        color: '#888',
+        callback: function(value) {
+          return `${currencySymbol}${value.toLocaleString()}`;
+        }
+      }
+    }
+  } : {
+    x: {
+      display: true,
+      grid: { display: false },
+      ticks: {
+        color: '#888',
+        maxTicksLimit: isMax ? 12 : (rangeNum <= 7 ? 7 : 15),
+        autoSkip: true,
+        maxRotation: 0
+      }
+    },
+    y: {
+      display: true,
+      grid: { color: '#222' },
+      ticks: {
+        color: '#888',
+        callback: function(value) {
+          if (showLegend) return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
+          return `${currencySymbol}${value.toLocaleString()}`;
+        }
+      }
+    }
+  };
+
+  // Add volume scale if needed
+  if (showVolume && volumeData?.length && !hasAnyComparison) {
+    scales.yVolume = {
+      display: false,
+      position: 'right',
+      grid: { display: false },
+      min: 0,
+      max: Math.max(...volumeData.map(v => v.y)) * 4 // Scale down volume to 25% of chart height
+    };
+  }
+
   window.priceChart = new Chart(ctx, {
-    type: 'line',
-    data: { labels, datasets },
+    type: chartType,
+    data: useCandlestick ? { datasets } : { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: showLegend,
+          display: showLegend || (showVolume && volumeData?.length),
           position: 'top',
           labels: { color: '#aaa', font: { size: 11 } }
         },
         tooltip: {
           callbacks: {
             label: function(context) {
+              // Volume tooltip
+              if (context.dataset.label === 'Volume') {
+                return `Vol: ${context.parsed.y?.toLocaleString() || 'N/A'}`;
+              }
+              // Candlestick tooltip
+              if (useCandlestick && context.raw?.o !== undefined) {
+                const d = context.raw;
+                return [
+                  `O: ${currencySymbol}${d.o.toFixed(2)}`,
+                  `H: ${currencySymbol}${d.h.toFixed(2)}`,
+                  `L: ${currencySymbol}${d.l.toFixed(2)}`,
+                  `C: ${currencySymbol}${d.c.toFixed(2)}`
+                ];
+              }
+              // Line chart tooltip
               const val = context.parsed.y;
               if (showLegend) {
                 return `${context.dataset.label}: ${val >= 0 ? '+' : ''}${val.toFixed(2)}%`;
@@ -3216,29 +3369,7 @@ function createPriceChart(priceHistory, range, comparisonData = {}) {
           }
         }
       },
-      scales: {
-        x: {
-          display: true,
-          grid: { display: false },
-          ticks: {
-            color: '#888',
-            maxTicksLimit: isMax ? 12 : (rangeNum <= 7 ? 7 : 15),
-            autoSkip: true,
-            maxRotation: 0
-          }
-        },
-        y: {
-          display: true,
-          grid: { color: '#222' },
-          ticks: {
-            color: '#888',
-            callback: function(value) {
-              if (showLegend) return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`;
-              return `${currencySymbol}${value.toLocaleString()}`;
-            }
-          }
-        }
-      }
+      scales
     }
   });
 }
@@ -3859,6 +3990,58 @@ document.addEventListener('DOMContentLoaded', () => {
         showSolComparison = !showSolComparison;
         localStorage.setItem('showSolComparison', showSolComparison);
         solToggle.classList.toggle('active', showSolComparison);
+
+        const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
+        if (priceCard) priceCard.classList.add('loading');
+
+        const priceHistory = await fetchPriceHistory(currentPriceRange);
+        const [btcHistory, ethHistory, solHistory] = await Promise.all([
+          showBtcComparison ? fetchBtcPriceHistory(currentPriceRange) : null,
+          showEthComparison ? fetchEthPriceHistory(currentPriceRange) : null,
+          showSolComparison ? fetchSolPriceHistory(currentPriceRange) : null
+        ]);
+        if (priceHistory) {
+          createPriceChart(priceHistory, currentPriceRange, { btcHistory, ethHistory, solHistory });
+        }
+
+        if (priceCard) priceCard.classList.remove('loading');
+      });
+    }
+
+    // Candle chart toggle
+    const candleToggle = document.getElementById('candleToggle');
+    if (candleToggle) {
+      if (showCandleChart) candleToggle.classList.add('active');
+      candleToggle.addEventListener('click', async () => {
+        showCandleChart = !showCandleChart;
+        localStorage.setItem('showCandleChart', showCandleChart);
+        candleToggle.classList.toggle('active', showCandleChart);
+
+        const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
+        if (priceCard) priceCard.classList.add('loading');
+
+        const priceHistory = await fetchPriceHistory(currentPriceRange);
+        const [btcHistory, ethHistory, solHistory] = await Promise.all([
+          showBtcComparison ? fetchBtcPriceHistory(currentPriceRange) : null,
+          showEthComparison ? fetchEthPriceHistory(currentPriceRange) : null,
+          showSolComparison ? fetchSolPriceHistory(currentPriceRange) : null
+        ]);
+        if (priceHistory) {
+          createPriceChart(priceHistory, currentPriceRange, { btcHistory, ethHistory, solHistory });
+        }
+
+        if (priceCard) priceCard.classList.remove('loading');
+      });
+    }
+
+    // Volume bars toggle
+    const volumeToggle = document.getElementById('volumeToggle');
+    if (volumeToggle) {
+      if (showVolume) volumeToggle.classList.add('active');
+      volumeToggle.addEventListener('click', async () => {
+        showVolume = !showVolume;
+        localStorage.setItem('showVolume', showVolume);
+        volumeToggle.classList.toggle('active', showVolume);
 
         const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
         if (priceCard) priceCard.classList.add('loading');

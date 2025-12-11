@@ -20,7 +20,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-chart-financial@0.2.1/dist/chartjs-chart-financial.min.js" defer></script>
   <script src="glitch.js" defer></script>
   <script src="script.js" defer></script>
   <script src="market-conditions.js" defer></script>
@@ -203,6 +206,9 @@
           <button id="btcToggle" class="time-btn compare-toggle" title="Compare TAO vs BTC">BTC</button>
           <button id="ethToggle" class="time-btn compare-toggle" title="Compare TAO vs ETH">ETH</button>
           <button id="solToggle" class="time-btn compare-toggle" title="Compare TAO vs SOL">SOL</button>
+          <span class="toggle-separator">|</span>
+          <button id="candleToggle" class="time-btn chart-type-toggle" title="Toggle Candlestick Chart">Candle</button>
+          <button id="volumeToggle" class="time-btn chart-type-toggle" title="Toggle Volume Bars">Vol</button>
         </div>
       </div>
     </div>

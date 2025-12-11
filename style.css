@@ -2393,6 +2393,29 @@ body.light-bg .time-btn.compare-toggle.active[id="ethToggle"] {
   border-color: rgba(85, 85, 85, 0.4);
 }
 
+/* Toggle separator */
+.toggle-separator {
+  color: rgba(255, 255, 255, 0.3);
+  font-size: 0.9em;
+  margin: 0 2px;
+  user-select: none;
+}
+body.light-bg .toggle-separator {
+  color: rgba(0, 0, 0, 0.25);
+}
+
+/* Chart type toggles (Candle, Volume) - cyan accent */
+.time-btn.chart-type-toggle.active {
+  color: #22d3ee !important;
+  background: rgba(34, 211, 238, 0.2) !important;
+  border-color: rgba(34, 211, 238, 0.5);
+}
+body.light-bg .time-btn.chart-type-toggle.active {
+  color: #0891b2 !important;
+  background: rgba(8, 145, 178, 0.15) !important;
+  border-color: rgba(8, 145, 178, 0.4);
+}
+
 /* Mobile: wrap time buttons and toggles */
 @media (max-width: 600px) {
   .chart-controls {
