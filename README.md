@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem.
 
-**Latest release:** `v1.0.0-rc.29` — see [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.29.1` — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 > 🚀 **RC29 Highlights**:
 > - Professional Candlestick Charts (OHLC)

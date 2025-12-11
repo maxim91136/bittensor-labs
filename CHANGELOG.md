@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.29.1 (2025-12-11)
+### Added
+- **Info Badge for Price Chart**: Detailed tooltip explaining all chart features
+  - Time ranges, EUR toggle, Compare mode, Candle/Vol toggles
+  - Note about Candle/Vol limitations in Compare mode
+
+### Fixed
+- **Toggle Stability**: Shared `refreshPriceChart()` with locking prevents double-click issues
+- **Candle/Vol for All Timeframes**: Skip Taostats when OHLCV needed, go direct to Binance
+- **Auto-Disable Candle/Vol**: When Compare mode (BTC/ETH/SOL) activated, Candle/Vol auto-disable
+- **Price Pill Currency Toggle**: Moved closer to price change (margin 6px → 2px)
+- **Info Badge Position**: Added padding to chart controls for proper badge placement
+
 ## v1.0.0-rc.29 (2025-12-11)
 ### Added
 - **Candlestick Chart**: Professional OHLC candlestick visualization
