@@ -226,13 +226,13 @@ def main():
 
     # Step 2: Fetch top wallets from Taostats (for balance data)
     # Dynamically calculate pages needed for Top 10% coverage
+    # Based on estimated TOTAL wallets (~195k+), not just staking wallets
     # Formula: ceil(total_wallets * 0.12 / 200) with 12% safety margin
-    if sdk_count and sdk_count > 0:
-        wallets_needed = int(sdk_count * 0.12)  # 12% for safety margin
-        pages_needed = max(25, min(100, (wallets_needed // 200) + 1))
-    else:
-        wallets_needed = 10000  # Assume ~100k wallets if SDK fails
-        pages_needed = 50
+    # Target: Top 10% of ~200k wallets = 20k wallets = 100 pages
+    # Runtime: 100 pages × 13s = ~22 min (within 30min timeout)
+    estimated_total = 200000
+    wallets_needed = int(estimated_total * 0.10)  # 20k for Top 10%
+    pages_needed = 100  # Fixed at 100 pages for predictable runtime
 
     estimated_time = pages_needed * 13 // 60
     print(f"\n📊 Step 2: Fetching top wallets from Taostats...", file=sys.stderr)
@@ -244,20 +244,23 @@ def main():
         print("❌ No wallet data fetched", file=sys.stderr)
         sys.exit(1)
 
-    # Determine total wallets: prefer SDK > Taostats API > estimate
-    if sdk_count and sdk_count > 0:
-        total_wallets = sdk_count
-        total_source = "sdk"
-        print(f"✅ Using SDK wallet count: {total_wallets:,}", file=sys.stderr)
-    elif total_wallet_count > 0:
+    # Determine total wallets for percentile calculation
+    # IMPORTANT: Use Taostats total_count (ALL wallets with balance)
+    # NOT SDK NumStakingColdkeys (only staking wallets)
+    # @RBS_HODL uses ~195k total wallets, not ~43k staking wallets
+    if total_wallet_count > 0:
         total_wallets = total_wallet_count
         total_source = "taostats"
-        print(f"✅ Using Taostats wallet count: {total_wallets:,}", file=sys.stderr)
+        print(f"✅ Using Taostats total wallet count: {total_wallets:,}", file=sys.stderr)
     else:
-        # Fallback estimate based on known data (~200k as of late 2025)
-        total_wallets = 200000
+        # Fallback estimate based on @RBS_HODL data (~195k as of Nov 2025)
+        total_wallets = 195000
         total_source = "estimate"
         print(f"⚠️ Using estimated wallet count: {total_wallets:,}", file=sys.stderr)
+
+    # SDK staking count is additional info, not for percentile calculation
+    if sdk_count and sdk_count > 0:
+        print(f"ℹ️  SDK staking wallets: {sdk_count:,} (subset of total)", file=sys.stderr)
 
     # Calculate brackets
     brackets = calculate_brackets(balances, total_wallets)
@@ -269,11 +272,12 @@ def main():
     now_iso = datetime.now(timezone.utc).isoformat()
     result = {
         "total_wallets": total_wallets,
-        "total_wallets_source": total_source,  # "sdk", "taostats", or "estimate"
+        "total_wallets_source": total_source,  # "taostats" or "estimate"
+        "staking_wallets": sdk_count if sdk_count else None,  # SDK NumStakingColdkeys
         "sample_size": len(balances),
         "percentiles": percentiles,
         "brackets": brackets,
-        "_source": "hybrid-sdk-taostats" if total_source == "sdk" else "taostats",
+        "_source": "taostats",
         "_timestamp": now_iso,
         "last_updated": now_iso
     }
