@@ -4634,7 +4634,56 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
+  // Load Decentralization Score
+  async function loadDecentralization() {
+    try {
+      const res = await fetch('/api/decentralization');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data || data.error) return;
+
+      // Main score
+      const scoreEl = document.getElementById('decentralizationScore');
+      const ratingEl = document.getElementById('decentralizationRating');
+      const barEl = document.getElementById('decentralizationBar');
+
+      if (scoreEl) scoreEl.textContent = data.score ?? '—';
+      if (ratingEl) {
+        const rating = (data.rating || '').toLowerCase();
+        ratingEl.textContent = data.rating || '—';
+        ratingEl.className = 'score-rating ' + rating;
+      }
+      if (barEl) barEl.style.width = (data.score || 0) + '%';
+
+      // Component scores
+      const walletEl = document.getElementById('walletScore');
+      const validatorEl = document.getElementById('validatorScore');
+      const subnetEl = document.getElementById('subnetScore');
+
+      if (walletEl) walletEl.textContent = data.components?.wallet_score ?? '—';
+      if (validatorEl) validatorEl.textContent = data.components?.validator_score ?? '—';
+      if (subnetEl) subnetEl.textContent = data.components?.subnet_score ?? '—';
+
+      // Nakamoto coefficients
+      const valNakEl = document.getElementById('validatorNakamoto');
+      const subNakEl = document.getElementById('subnetNakamoto');
+
+      if (valNakEl) valNakEl.textContent = data.validator_analysis?.nakamoto_coefficient ?? '—';
+      if (subNakEl) subNakEl.textContent = data.subnet_analysis?.nakamoto_coefficient ?? '—';
+
+      // Update timestamp
+      const updateEl = document.getElementById('decentralizationUpdate');
+      if (updateEl && data.last_updated) {
+        const date = new Date(data.last_updated);
+        updateEl.textContent = `Updated: ${date.toLocaleDateString()}`;
+      }
+    } catch (err) {
+      console.warn('Failed to load decentralization:', err);
+    }
+  }
+
   loadDistribution();
+  loadDecentralization();
 
   // Also refresh when refreshDashboard is called
   const currentRefresh = window.refreshDashboard;
@@ -4642,6 +4691,7 @@ document.addEventListener('DOMContentLoaded', function() {
     await currentRefresh.call(this);
     loadTopWalletsDisplay();
     loadDistribution();
+    loadDecentralization();
   };
 });
 

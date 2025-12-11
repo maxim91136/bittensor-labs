@@ -579,6 +579,53 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
       </div>
     </section>
 
+    <!-- Decentralization Score Card -->
+    <section class="dashboard-card decentralization-card" aria-labelledby="decentralization-card-heading">
+      <div class="card-header">
+        <h2 id="decentralization-card-heading">Network Decentralization</h2>
+        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Composite score measuring network decentralization across wallets, validators, and subnets. Higher = more decentralized. Updates daily.">i</span>
+      </div>
+      <div class="decentralization-content">
+        <div class="decentralization-score-section">
+          <div class="decentralization-main-score">
+            <span class="score-value" id="decentralizationScore">—</span>
+            <span class="score-max">/100</span>
+          </div>
+          <div class="score-rating" id="decentralizationRating">—</div>
+          <div class="score-bar-container">
+            <div class="score-bar" id="decentralizationBar" style="width: 0%"></div>
+          </div>
+        </div>
+        <div class="decentralization-components">
+          <div class="component-item">
+            <span class="component-label">Wallets</span>
+            <span class="component-score" id="walletScore">—</span>
+          </div>
+          <div class="component-item">
+            <span class="component-label">Validators</span>
+            <span class="component-score" id="validatorScore">—</span>
+          </div>
+          <div class="component-item">
+            <span class="component-label">Subnets</span>
+            <span class="component-score" id="subnetScore">—</span>
+          </div>
+        </div>
+        <div class="nakamoto-section">
+          <div class="nakamoto-item">
+            <span class="nakamoto-label">Validator Nakamoto</span>
+            <span class="nakamoto-value" id="validatorNakamoto">—</span>
+          </div>
+          <div class="nakamoto-item">
+            <span class="nakamoto-label">Subnet Nakamoto</span>
+            <span class="nakamoto-value" id="subnetNakamoto">—</span>
+          </div>
+        </div>
+        <div class="decentralization-footer">
+          <span class="decentralization-update" id="decentralizationUpdate">Updated: —</span>
+        </div>
+      </div>
+    </section>
+
       <div class="last-update" id="lastUpdate"></div>
 
     <!-- Container for Fear & Greed and Miner Map Cards -->

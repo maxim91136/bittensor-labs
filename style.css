@@ -4595,3 +4595,155 @@ body.light-bg .distribution-footer {
   opacity: 1;
   text-decoration: underline;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DECENTRALIZATION SCORE CARD
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.decentralization-card {
+  max-width: 420px;
+}
+
+.decentralization-content {
+  padding: 0 1rem 1rem;
+}
+
+.decentralization-score-section {
+  text-align: center;
+  margin-bottom: 1.2rem;
+}
+
+.decentralization-main-score {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.2rem;
+}
+
+.decentralization-main-score .score-value {
+  font-size: 3rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+  line-height: 1;
+}
+
+.decentralization-main-score .score-max {
+  font-size: 1.2rem;
+  color: var(--text-muted);
+}
+
+.score-rating {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 0.3rem;
+  color: var(--accent-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.score-bar-container {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  margin-top: 0.8rem;
+  overflow: hidden;
+}
+
+.score-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #ef4444 0%, #f59e0b 35%, #22c55e 65%, #22c55e 100%);
+  border-radius: 4px;
+  transition: width 0.8s ease-out;
+}
+
+.decentralization-components {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.component-item {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 8px;
+  padding: 0.7rem 0.5rem;
+  text-align: center;
+}
+
+.component-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.3rem;
+}
+
+.component-score {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.nakamoto-section {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+  padding-top: 0.8rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nakamoto-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+}
+
+.nakamoto-label {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.nakamoto-value {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.decentralization-footer {
+  text-align: center;
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.decentralization-update {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* Rating colors */
+.score-rating.excellent { color: #22c55e; }
+.score-rating.good { color: #84cc16; }
+.score-rating.moderate { color: #f59e0b; }
+.score-rating.concerning { color: #f97316; }
+.score-rating.poor { color: #ef4444; }
+
+/* Light mode adjustments */
+body.light-bg .decentralization-card .component-item {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+body.light-bg .decentralization-card .nakamoto-item {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-bg .score-bar-container {
+  background: rgba(0, 0, 0, 0.1);
+}
