@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem.
 
-**Latest release:** `v1.0.0-rc.29.1` — see [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.29.2` — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 > 🚀 **RC29 Highlights**:
 > - Professional Candlestick Charts (OHLC)
@@ -32,6 +32,7 @@ This project provides a compact dashboard for visualizing and monitoring key Bit
 - **Multiple time ranges**: 1D, 7D, 30D, 90D, Max (~600 days)
 - **Multi-asset comparison**: Compare TAO vs BTC, ETH, and SOL performance
 - **EUR currency support**: View prices in Euros with live conversion
+- **Smart Toggle Logic**: Candle/Volume and Compare modes are mutually exclusive
 - **Data sources**: Binance (primary), Taostats, CoinGecko (fallbacks)
 
 ### 🎯 Market Conditions Intelligence (RC25+)
