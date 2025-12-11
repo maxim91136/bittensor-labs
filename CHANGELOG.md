@@ -5,6 +5,29 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.29 (2025-12-11)
+### Added
+- **Candlestick Chart**: Professional OHLC candlestick visualization
+  - Toggle between Line and Candle chart modes
+  - Green candles for up, red for down
+  - Full OHLC tooltip (Open, High, Low, Close)
+  - Uses Binance kline data (TAO only, not in Compare mode)
+- **Volume Bars**: Trading volume visualization below price chart
+  - Scaled to 25% of chart height for clean display
+  - Gray bars with subtle transparency
+  - Separate y-axis for volume data
+- **Chart.js Financial Plugin**: Added professional charting dependencies
+  - Luxon date library for time axis
+  - chartjs-adapter-luxon for Chart.js integration
+  - chartjs-chart-financial for candlestick rendering
+
+### Changed
+- **fetchPriceHistory**: Now returns `{ prices, ohlcv, volume, source }` object
+  - Full OHLCV data from Binance API
+  - Backwards compatible with legacy array format
+- **Chart Type Toggles**: New cyan accent color for Candle/Vol buttons
+  - Visual separator between comparison and chart type toggles
+
 ## v1.0.0-rc.28.3 (2025-12-11)
 ### Added
 - **ETH & SOL Comparison**: Compare TAO performance against ETH and SOL (in addition to BTC)

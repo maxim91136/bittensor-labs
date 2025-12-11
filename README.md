@@ -8,13 +8,13 @@ Started: November 3, 2025
 
 This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem.
 
-**Latest release:** `v1.0.0-rc.28.3` — see [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.29` — see [CHANGELOG.md](CHANGELOG.md) for details.
 
-> 🚀 **RC28 Highlights**:
-> - Real-time prices from Binance API (<1s delay)
+> 🚀 **RC29 Highlights**:
+> - Professional Candlestick Charts (OHLC)
+> - Volume Bars visualization
 > - TAO vs BTC/ETH/SOL comparison toggles
-> - EUR currency support (pill + chart)
-> - Max price range (600+ days history)
+> - Real-time prices from Binance API (<1s delay)
 
 ## Features
 
@@ -26,12 +26,13 @@ This project provides a compact dashboard for visualizing and monitoring key Bit
 - **Total Issuance** from on-chain data via Bittensor SDK
 - **Active Neurons** count across all subnets
 
-### 📈 Price Chart (RC28+)
+### 📈 Price Chart (RC29+)
+- **Candlestick Chart**: Professional OHLC visualization with green/red candles
+- **Volume Bars**: Trading volume displayed below price chart
 - **Multiple time ranges**: 1D, 7D, 30D, 90D, Max (~600 days)
 - **Multi-asset comparison**: Compare TAO vs BTC, ETH, and SOL performance
 - **EUR currency support**: View prices in Euros with live conversion
 - **Data sources**: Binance (primary), Taostats, CoinGecko (fallbacks)
-- **Smart labels**: Automatic date formatting based on time range
 
 ### 🎯 Market Conditions Intelligence (RC25+)
 Real-time market analysis card combining multiple data sources into actionable intelligence:
