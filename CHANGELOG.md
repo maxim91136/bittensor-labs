@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.1 (2025-12-11)
+### Fixed
+- **API Status Tooltip**: Added missing Binance to data sources list
+  - Binance provides real-time price, candlesticks, volume data
+
 ## v1.0.0-rc.30 (2025-12-11)
 ### Added
 - **TAO Distribution Card**: New dashboard card showing wealth distribution metrics
