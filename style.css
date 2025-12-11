@@ -4577,3 +4577,21 @@ body.light-bg .distribution-footer {
     flex: 1 1 calc(50% - 0.25rem);
   }
 }
+
+/* Distribution Credit Link */
+.distribution-credit {
+  font-size: 0.65rem;
+  color: var(--text-tertiary, #555);
+}
+
+.distribution-credit a {
+  color: var(--accent-primary, #22c55e);
+  text-decoration: none;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+
+.distribution-credit a:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
