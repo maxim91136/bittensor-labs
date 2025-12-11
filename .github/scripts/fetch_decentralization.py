@@ -321,10 +321,11 @@ def calculate_composite_score(wallet_analysis: Dict, validator_analysis: Dict, s
     validator_score = validator_analysis.get("validator_score", 50)
     subnet_score = subnet_analysis.get("subnet_score", 50)
 
+    # Weighting: Subnets are TAO's core differentiator
     composite = (
-        wallet_score * 0.40 +
-        validator_score * 0.35 +
-        subnet_score * 0.25
+        wallet_score * 0.30 +
+        validator_score * 0.30 +
+        subnet_score * 0.40
     )
 
     # Determine rating
@@ -344,11 +345,11 @@ def calculate_composite_score(wallet_analysis: Dict, validator_analysis: Dict, s
         "rating": rating,
         "components": {
             "wallet_score": wallet_score,
-            "wallet_weight": 0.40,
+            "wallet_weight": 0.30,
             "validator_score": validator_score,
-            "validator_weight": 0.35,
+            "validator_weight": 0.30,
             "subnet_score": subnet_score,
-            "subnet_weight": 0.25
+            "subnet_weight": 0.40
         }
     }
 
@@ -410,7 +411,7 @@ def main():
         "subnet_analysis": subnet_analysis,
         "last_updated": now_iso,
         "_source": "decentralization_calculator",
-        "_version": "1.0.0"
+        "_version": "1.1.0"
     }
 
     # Save to KV
