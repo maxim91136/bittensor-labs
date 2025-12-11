@@ -251,13 +251,12 @@ def analyze_validators(validator_data: Dict) -> Dict:
         result["nakamoto_coefficient"] = nakamoto
         result["top_10_concentration"] = top_10_conc
 
-        # Composite validator score
+        # Composite validator score (Nakamoto + Gini only, concentration removed as misleading with limited data)
         gini_score = score_from_gini(gini)
         nakamoto_score = score_from_nakamoto(nakamoto, max_good=50)  # 50 validators for 51% is good
-        conc_score = (1 - top_10_conc) * 100
 
-        # Weight: Nakamoto most important, then Gini, then concentration
-        validator_score = (nakamoto_score * 0.4 + gini_score * 0.35 + conc_score * 0.25)
+        # Weight: Nakamoto most important (55%), Gini secondary (45%)
+        validator_score = (nakamoto_score * 0.55 + gini_score * 0.45)
         result["validator_score"] = round(validator_score, 1)
     else:
         result["validator_score"] = 50.0
@@ -411,7 +410,7 @@ def main():
         "subnet_analysis": subnet_analysis,
         "last_updated": now_iso,
         "_source": "decentralization_calculator",
-        "_version": "1.1.0"
+        "_version": "1.2.0"
     }
 
     # Save to KV
