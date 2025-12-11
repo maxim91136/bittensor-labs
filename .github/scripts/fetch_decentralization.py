@@ -418,6 +418,42 @@ def main():
     data = json.dumps(result).encode('utf-8')
     put_to_kv(cf_acc, cf_token, cf_ns, 'decentralization_score', data)
 
+    # Save to history (append daily entry)
+    print("📜 Updating history...", file=sys.stderr)
+    today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+    history_entry = {
+        "date": today,
+        "score": composite["composite_score"],
+        "rating": composite["rating"],
+        "wallet_score": wallet_analysis.get("wallet_score"),
+        "validator_score": validator_analysis.get("validator_score"),
+        "subnet_score": subnet_analysis.get("subnet_score"),
+        "validator_nakamoto": validator_analysis.get("nakamoto_coefficient"),
+        "subnet_nakamoto": subnet_analysis.get("nakamoto_coefficient"),
+    }
+
+    # Fetch existing history
+    history = get_from_kv(cf_acc, cf_token, cf_ns, 'decentralization_history') or {"entries": []}
+    entries = history.get("entries", [])
+
+    # Update or append today's entry (avoid duplicates)
+    existing_dates = {e.get("date") for e in entries}
+    if today in existing_dates:
+        entries = [e if e.get("date") != today else history_entry for e in entries]
+    else:
+        entries.append(history_entry)
+
+    # Keep last 365 days
+    entries = sorted(entries, key=lambda x: x.get("date", ""), reverse=True)[:365]
+
+    history_data = {
+        "entries": entries,
+        "last_updated": now_iso,
+        "_source": "decentralization_calculator"
+    }
+    put_to_kv(cf_acc, cf_token, cf_ns, 'decentralization_history', json.dumps(history_data).encode('utf-8'))
+    print(f"   History: {len(entries)} entries", file=sys.stderr)
+
     # Output JSON
     print(json.dumps(result, indent=2))
 
