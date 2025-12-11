@@ -6,7 +6,7 @@ Fetch TAO Distribution Statistics - Hybrid SDK/Taostats approach.
 - Calculates holder percentiles and wallet size brackets
 
 Rate limits (Taostats): 5 requests/min, 10k requests/month
-Strategy: Fetch top 2k wallets (10 pages), run weekly
+Strategy: Fetch top 5k wallets (25 pages), run weekly (~6 min)
 """
 
 import os
@@ -225,9 +225,11 @@ def main():
     sdk_count = fetch_wallet_count_from_sdk()
 
     # Step 2: Fetch top wallets from Taostats (for balance data)
+    # Need enough wallets to cover Top 10% - with ~43k wallets that's ~4,300
+    # 25 pages × 200 = 5,000 wallets = sufficient coverage
     print("\n📊 Step 2: Fetching top wallets from Taostats...", file=sys.stderr)
-    print("Rate limit aware: 10 pages, 13s between requests", file=sys.stderr)
-    balances = fetch_wallets(max_pages=10)
+    print("Rate limit aware: 25 pages, 13s between requests (~5 min)", file=sys.stderr)
+    balances = fetch_wallets(max_pages=25)
 
     if not balances:
         print("❌ No wallet data fetched", file=sys.stderr)
