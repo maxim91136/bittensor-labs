@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.29.2 (2025-12-11)
+### Fixed
+- **Mobile Pill Spacing**: Tighter gap between halving and price pills on mobile
+  - Gap: 14px → 8px (480px), 6px → 5px (400px)
+  - Compact price pill padding and currency toggle
+- **Toggle Mutual Exclusion**: Bidirectional exclusion now complete
+  - Compare → disables Candle + Volume (existing)
+  - Candle → disables Compare (new)
+  - Volume → disables Compare (new)
+- **Time Range Toggle Preservation**: Switching timeframes no longer resets Candle/Volume/Compare toggle states
+- **Easter Egg Frequency**: Reduced visual noise
+  - Matrix glitch: every refresh → every 3rd refresh
+  - "Wake up, Neo": on page load → after 5th refresh, positioned bottom-left
+
 ## v1.0.0-rc.29.1 (2025-12-11)
 ### Added
 - **Info Badge for Price Chart**: Detailed tooltip explaining all chart features
