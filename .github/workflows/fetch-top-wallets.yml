@@ -1,4 +1,4 @@
-name: Fetch Top Wallets
+name: [taostats] Wallets
 
 on:
   schedule:

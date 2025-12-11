@@ -1,4 +1,4 @@
-name: Fetch TAO Distribution
+name: [taostats] TAO Distribution
 
 on:
   schedule:

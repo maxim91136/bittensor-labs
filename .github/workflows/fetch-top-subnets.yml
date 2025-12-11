@@ -1,4 +1,4 @@
-name: Fetch Top Subnets
+name: [taostats] Subnets
 
 on:
   schedule:

@@ -1,4 +1,4 @@
-name: Fetch Fear & Greed Index
+name: [altme] Fear & Greed Index
 
 on:
   schedule:

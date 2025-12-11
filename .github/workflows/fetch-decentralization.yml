@@ -1,4 +1,4 @@
-name: Fetch Decentralization Score
+name: [kv] Decentralization Score
 
 on:
   # Run daily at 04:00 UTC (after other data fetches)
@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
   # Run after distribution workflow completes
   workflow_run:
-    workflows: ["Fetch TAO Distribution"]
+    workflows: ["[taostats] TAO Distribution"]
     types:
       - completed
 

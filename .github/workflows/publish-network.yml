@@ -1,4 +1,4 @@
-name: Fetch Network Data
+name: [sdk] Network Stats
 
 on:
   schedule:

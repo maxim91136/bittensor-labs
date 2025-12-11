@@ -1,4 +1,4 @@
-name: Fetch Price History
+name: [coingecko] Price History
 
 on:
   schedule:

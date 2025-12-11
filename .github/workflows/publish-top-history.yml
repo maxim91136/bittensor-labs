@@ -1,4 +1,4 @@
-name: Publish Top History
+name: [kv] Top History
 
 on:
   schedule:

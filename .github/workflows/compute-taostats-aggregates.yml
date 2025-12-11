@@ -1,4 +1,4 @@
-name: Compute Taostats Aggregates
+name: [kv] Taostats Aggregates
 
 on:
   schedule:

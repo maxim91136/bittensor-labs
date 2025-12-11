@@ -1,4 +1,4 @@
-name: Fetch Block Time
+name: [taostats] Block Time
 
 on:
   schedule:

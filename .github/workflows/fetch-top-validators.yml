@@ -1,4 +1,4 @@
-name: Fetch Top Validators
+name: [taostats] Validators
 
 on:
   schedule:
