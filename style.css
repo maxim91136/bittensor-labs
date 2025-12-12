@@ -1708,11 +1708,12 @@ body.light-bg .fng-card.fng-red .barometer-class {
   align-items: center;
 }
 
-/* Position "Last:" absolutely in top-right corner */
+/* Position "Last Halving:" centered at top */
 .halving-date-row {
   position: absolute;
   top: 4px;
-  right: 10px;
+  left: 50%;
+  transform: translateX(-50%);
   display: flex;
   align-items: center;
   gap: 3px;
