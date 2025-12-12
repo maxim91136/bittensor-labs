@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.17 (2025-12-12)
+### Code Quality
+- **UI Helpers Module**: Extracted small utilities to `js/modules/uiHelpers.js` (~70 lines)
+  - script.js reduced from 1373 → 1326 lines (-47 lines)
+  - Sound toggle button initialization
+  - Fear & Greed badge responsive positioning
+
+### Summary
+- **Total modularization progress**: script.js 4969 → 1326 lines (-73%)
+
 ## v1.0.0-rc.30.16 (2025-12-12)
 ### Code Quality
 - **Theme Toggle Module**: Extracted light/dark mode to `js/modules/themeToggle.js` (~185 lines)
