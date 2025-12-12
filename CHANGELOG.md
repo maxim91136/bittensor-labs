@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.12 (2025-12-12)
+### Code Quality
+- **Refresh Controls Module**: Extracted auto-refresh system to `js/modules/refreshControls.js` (~204 lines)
+  - script.js reduced from 2312 → 2161 lines (-151 lines)
+  - `startAutoRefresh()` - Timer management with countdown
+  - `toggleRefreshPause()` - Triple-click pause/resume
+  - `renderRefreshIndicator()` - Circular countdown UI
+  - `ensureAutoRefreshStarted()` - Failsafe startup
+  - System Failure Easter egg integration
+
+### Summary
+- **Total modularization progress**: script.js 4969 → 2161 lines (-56%)
+
 ## v1.0.0-rc.30.11 (2025-12-12)
 ### Code Quality
 - **Tooltip Manager Module**: Extracted tooltip system to `js/modules/tooltipManager.js` (~302 lines)

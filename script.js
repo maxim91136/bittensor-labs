@@ -31,10 +31,6 @@ import {
   initAllSeasonalEffects
 } from './js/modules/seasonalEffects.js';
 import {
-  showSystemFailureEasterEgg,
-  triggerNeoEasterEgg
-} from './js/modules/easterEggs.js';
-import {
   updateFearAndGreed
 } from './js/modules/fearAndGreed.js';
 import {
@@ -57,6 +53,11 @@ import {
 import {
   setupDynamicTooltips
 } from './js/modules/tooltipManager.js';
+import {
+  initRefreshControls,
+  startAutoRefresh,
+  ensureAutoRefreshStarted
+} from './js/modules/refreshControls.js';
 
 // ===== State Management =====
 let lastPrice = null;
@@ -843,149 +844,8 @@ async function refreshDashboard() {
   }
 }
 
-// ===== Auto-refresh with countdown circle =====
-const REFRESH_SECONDS = 60;
-let refreshCountdown = REFRESH_SECONDS;
-let refreshTimer = null;
-let refreshPaused = false;
-let refreshClickTimestamps = [];
-let autoRefreshCount = 0; // Track number of auto-refreshes for Easter egg timing
-
-function renderRefreshIndicator() {
-  const el = document.getElementById('refresh-indicator');
-  if (!el) return;
-
-  // If paused, show "System failure" state
-  if (refreshPaused) {
-    el.innerHTML = `
-      <span class="failure-text">SYS_FAIL</span>
-    `;
-    el.title = 'System failure - Triple-click to resume';
-    el.classList.add('system-failure');
-    el.style.cursor = 'pointer';
-    return;
-  }
-
-  el.classList.remove('system-failure');
-  const progress = (refreshCountdown / REFRESH_SECONDS);
-  el.innerHTML = `
-    <svg viewBox="0 0 20 20">
-      <circle cx="10" cy="10" r="8" stroke="#222" stroke-width="2.2" fill="none"/>
-      <circle cx="10" cy="10" r="8" stroke="#22c55e" stroke-width="2.2" fill="none"
-        stroke-dasharray="${2 * Math.PI * 8}" stroke-dashoffset="${2 * Math.PI * 8 * (1 - progress)}"
-        style="transition: stroke-dashoffset 0.5s;"/>
-    </svg>
-    <span class="refresh-label">${refreshCountdown}</span>
-  `;
-  el.title = `Auto-refresh in ${refreshCountdown}s - Triple-click to pause`;
-  el.style.cursor = 'pointer';
-}
-
-function handleRefreshClick() {
-  const now = Date.now();
-  refreshClickTimestamps.push(now);
-
-  // Keep only clicks within last 600ms
-  refreshClickTimestamps = refreshClickTimestamps.filter(t => now - t < 600);
-
-  // Triple-click detection
-  if (refreshClickTimestamps.length >= 3) {
-    refreshClickTimestamps = [];
-    toggleRefreshPause();
-    return;
-  }
-
-  // Single click - reset countdown and refresh (if not paused)
-  if (!refreshPaused) {
-    refreshCountdown = REFRESH_SECONDS;
-    refreshDashboard();
-    renderRefreshIndicator();
-  }
-}
-
-function toggleRefreshPause() {
-  refreshPaused = !refreshPaused;
-
-  if (refreshPaused) {
-    // Stop the timer
-    if (refreshTimer) {
-      clearInterval(refreshTimer);
-      refreshTimer = null;
-    }
-    // Play glitch effect for dramatic "crash"
-    if (typeof window.showMatrixGlitch === 'function') {
-      window.showMatrixGlitch({ duration: 800, intensity: 3 });
-    }
-    MatrixSound.play('glitch');
-    renderRefreshIndicator();
-    // Show Matrix-style "SYSTEM FAILURE" Easter Egg
-    showSystemFailureEasterEgg({
-      setRefreshPaused: (val) => { refreshPaused = val; },
-      setRefreshCountdown: (val) => { refreshCountdown = val; },
-      REFRESH_SECONDS,
-      renderRefreshIndicator,
-      startAutoRefresh,
-      MatrixSound
-    });
-  } else {
-    // Resume - restart the auto-refresh
-    refreshCountdown = REFRESH_SECONDS;
-    renderRefreshIndicator();
-    startAutoRefresh();
-    MatrixSound.play('refresh-beep');
-  }
-}
-
-
-function startAutoRefresh() {
-  if (refreshPaused) return;
-  renderRefreshIndicator();
-  if (refreshTimer) clearInterval(refreshTimer);
-  refreshTimer = setInterval(() => {
-    if (refreshPaused) return;
-    refreshCountdown--;
-    if (refreshCountdown <= 0) {
-      refreshCountdown = REFRESH_SECONDS;
-      autoRefreshCount++;
-      // Trigger Matrix glitch only every 3rd auto-refresh
-      if (autoRefreshCount % 3 === 0) {
-        try {
-          if (typeof window.showMatrixGlitch === 'function') {
-            window.showMatrixGlitch({ duration: 360, intensity: 1 });
-          }
-        } catch (e) {
-          if (window._debug) console.warn('showMatrixGlitch failed', e);
-        }
-      }
-      // Trigger "Wake up, Neo" Easter egg after 5th refresh (once)
-      if (autoRefreshCount === 5) {
-        triggerNeoEasterEgg(MatrixSound);
-      }
-      MatrixSound.play('refresh-beep');
-      refreshDashboard();
-    }
-    renderRefreshIndicator();
-  }, 1000);
-  const el = document.getElementById('refresh-indicator');
-  if (el) {
-    el.onclick = handleRefreshClick;
-  }
-}
-
-// Initialize refresh indicator click handler on DOM ready
-(function initRefreshControls() {
-  function setup() {
-    const refreshIndicator = document.getElementById('refresh-indicator');
-    if (refreshIndicator) {
-      refreshIndicator.onclick = handleRefreshClick;
-    }
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setup);
-  } else {
-    setup();
-  }
-})();
+// Initialize refresh controls with callbacks
+initRefreshControls({ refreshDashboard, MatrixSound });
 
 // ===== Initialization =====
 async function initDashboard() {
@@ -2275,17 +2135,6 @@ document.addEventListener('terminalBootDone', async () => {
     if (window._debug) console.warn('terminalBootDone handler error', err);
   }
 });
-
-// Ensure auto-refresh runs even if init failed (so periodic retries happen)
-function ensureAutoRefreshStarted() {
-  try {
-    if (typeof refreshTimer === 'undefined' || refreshTimer === null) {
-      startAutoRefresh();
-    }
-  } catch (e) {
-    if (window._debug) console.warn('ensureAutoRefreshStarted error', e);
-  }
-}
 
 // After terminal boot, double-check key UI elements and trigger a refresh if still empty
 document.addEventListener('terminalBootDone', () => {
