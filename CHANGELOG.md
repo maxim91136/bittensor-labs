@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.15 (2025-12-12)
+### Code Quality
+- **Top Displays Modules**: Extracted ranking display cards to 3 new modules (~460 lines total)
+  - script.js reduced from 1954 → 1536 lines (-418 lines)
+  - `js/modules/topSubnetsDisplay.js` - Top 10 subnets with ranking changes
+  - `js/modules/topValidatorsDisplay.js` - Top 10 validators with ranking changes
+  - `js/modules/topWalletsDisplay.js` - Top wallets, distribution, and decentralization
+
+### Summary
+- **Total modularization progress**: script.js 4969 → 1536 lines (-69%)
+
 ## v1.0.0-rc.30.14 (2025-12-12)
 ### Code Quality
 - **Price Display Module**: Extracted price UI functions to `js/modules/priceDisplay.js` (~183 lines)

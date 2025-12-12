@@ -68,6 +68,15 @@ import {
   updateTaoPrice as _updateTaoPrice,
   updateMarketCapAndFDV
 } from './js/modules/priceDisplay.js';
+import {
+  initTopSubnetsDisplay
+} from './js/modules/topSubnetsDisplay.js';
+import {
+  initTopValidatorsDisplay
+} from './js/modules/topValidatorsDisplay.js';
+import {
+  initTopWalletsDisplay
+} from './js/modules/topWalletsDisplay.js';
 
 // ===== State Management =====
 let lastPrice = null;
@@ -1417,469 +1426,42 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // ===== Top Subnets Display Card (Main Grid) =====
+let _refreshTopSubnets = null;
 document.addEventListener('DOMContentLoaded', function() {
-  const displayTable = document.getElementById('topSubnetsDisplayTable');
-  const displayList = document.getElementById('topSubnetsDisplayList');
-
-  if (!displayTable || !displayList) return;
-
-  // Load and display top 10 subnets with ranking changes
-  async function loadTopSubnetsDisplay() {
-    try {
-      // Fetch current data and history in parallel
-      const [currentRes, historyRes] = await Promise.all([
-        fetch('/api/top_subnets'),
-        fetch('/api/top_subnets_history?limit=96')  // ~24h of history at 15min intervals
-      ]);
-
-      if (!currentRes.ok) throw new Error('Failed to fetch top subnets');
-      const currentData = await currentRes.json();
-      const topSubnets = currentData.top_subnets || [];
-
-      if (topSubnets.length === 0) {
-        displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No subnet data available</td></tr>';
-        return;
-      }
-
-      // Build previous ranking map from history
-      let prevRankMap = {}; // netuid -> previous rank (1-based)
-      try {
-        if (historyRes.ok) {
-          const historyData = await historyRes.json();
-          const history = historyData.history || [];
-          // Get the oldest snapshot in history (for 24h comparison)
-          if (history.length >= 1) {
-            const prevSnapshot = history[0];  // First = oldest
-            // History stores in 'entries' array with 'id' for netuid
-            const prevSubnets = prevSnapshot.entries || prevSnapshot.top_subnets || [];
-            prevSubnets.forEach((s, idx) => {
-              // Use 'id' from history (netuid as string) or 'netuid'
-              const netuid = s.id || s.netuid;
-              if (netuid) prevRankMap[parseInt(netuid)] = idx + 1;
-            });
-          }
-        }
-      } catch (e) {
-        console.warn('Could not load subnet history for ranking:', e);
-      }
-
-      // Display TOP 10 with ranking changes
-      const rows = topSubnets.slice(0, 10).map((subnet, idx) => {
-        const rank = idx + 1;
-        const netuid = subnet.netuid;
-        const name = subnet.subnet_name || subnet.taostats_name || `SN${netuid}`;
-        const share = ((subnet.taostats_emission_share || 0) * 100).toFixed(2);
-        const daily = (subnet.estimated_emission_daily || 0).toFixed(2);
-
-        // Calculate rank change
-        let changeHtml = '';
-        const prevRank = prevRankMap[netuid];
-
-        if (prevRank === undefined && Object.keys(prevRankMap).length > 0) {
-          changeHtml = ' <span class="rank-new">NEW</span>';
-        } else if (prevRank > rank) {
-          const diff = prevRank - rank;
-          changeHtml = ` <span class="rank-up">▲${diff}</span>`;
-        } else if (prevRank < rank) {
-          const diff = rank - prevRank;
-          changeHtml = ` <span class="rank-down">▼${diff}</span>`;
-        }
-
-        return `<tr>
-          <td class="rank-col">${rank}${changeHtml}</td>
-          <td class="subnet-col"><span class="sn-id">SN${netuid}</span> ${name}</td>
-          <td class="share-col">${share}%</td>
-          <td class="daily-col">${daily}τ</td>
-        </tr>`;
-      }).join('');
-
-      displayList.innerHTML = rows;
-    } catch (err) {
-      console.error('Error loading top subnets for display:', err);
-      displayList.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:20px;">Error loading subnet data</td></tr>';
-    }
+  _refreshTopSubnets = initTopSubnetsDisplay();
+  if (_refreshTopSubnets) {
+    const originalRefreshDashboard = window.refreshDashboard;
+    window.refreshDashboard = async function() {
+      await originalRefreshDashboard.call(this);
+      _refreshTopSubnets();
+    };
   }
-
-  loadTopSubnetsDisplay();
-
-  // Refresh on network data update
-  const originalRefreshDashboard = window.refreshDashboard;
-  window.refreshDashboard = async function() {
-    await originalRefreshDashboard.call(this);
-    loadTopSubnetsDisplay();
-  };
 });
 
 // ===== Top Validators Display =====
+let _refreshTopValidators = null;
 document.addEventListener('DOMContentLoaded', function() {
-  const displayTable = document.getElementById('topValidatorsDisplayTable');
-  const displayList = document.getElementById('topValidatorsDisplayList');
-
-  if (!displayTable || !displayList) return;
-
-  async function loadTopValidatorsDisplay() {
-    try {
-      // Fetch current data and history in parallel
-      const [currentRes, historyRes] = await Promise.all([
-        fetch('/api/top_validators'),
-        fetch('/api/top_validators_history?limit=96')  // ~24h of history
-      ]);
-
-      if (!currentRes.ok) throw new Error('Failed to fetch top validators');
-      const data = await currentRes.json();
-
-      const topValidators = data.top_validators || [];
-      if (topValidators.length === 0) {
-        displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No validator data available</td></tr>';
-        return;
-      }
-
-      // Build previous ranking map from history
-      let prevRankMap = {}; // hotkey/id -> previous rank (1-based)
-      try {
-        if (historyRes.ok) {
-          const historyData = await historyRes.json();
-          const history = historyData.history || [];
-          // Get the oldest snapshot in history (for 24h comparison)
-          if (history.length >= 1) {
-            const prevSnapshot = history[0];  // First = oldest
-            // History stores in 'entries' array with 'id' for hotkey
-            const prevValidators = prevSnapshot.entries || prevSnapshot.top_validators || [];
-            prevValidators.forEach((v, idx) => {
-              // Use 'id' (hotkey) from history snapshot
-              const key = v.id || v.hotkey;
-              if (key) prevRankMap[key] = idx + 1;
-            });
-          }
-        }
-      } catch (e) {
-        console.warn('Could not load validator history for ranking:', e);
-      }
-
-      // Display TOP 10 with ranking changes
-      const rows = topValidators.slice(0, 10).map((v, idx) => {
-        const rank = idx + 1;
-        const hotkey = v.hotkey;
-        const name = v.name || `Validator ${rank}`;
-        const stake = v.stake_formatted || '—';
-        const dominance = v.dominance != null ? `${v.dominance}%` : '—';
-        const nominators = v.nominators != null ? v.nominators.toLocaleString() : '—';
-
-        // Calculate rank change
-        let changeHtml = '';
-        const prevRank = prevRankMap[hotkey];
-
-        if (prevRank === undefined && Object.keys(prevRankMap).length > 0) {
-          changeHtml = ' <span class="rank-new">NEW</span>';
-        } else if (prevRank > rank) {
-          const diff = prevRank - rank;
-          changeHtml = ` <span class="rank-up">▲${diff}</span>`;
-        } else if (prevRank < rank) {
-          const diff = rank - prevRank;
-          changeHtml = ` <span class="rank-down">▼${diff}</span>`;
-        }
-
-        return `<tr>
-          <td class="rank-col">${rank}${changeHtml}</td>
-          <td class="validator-col">${name}</td>
-          <td class="stake-col">${stake}</td>
-          <td class="dominance-col">${dominance}</td>
-          <td class="nominators-col">${nominators}</td>
-        </tr>`;
-      }).join('');
-
-      displayList.innerHTML = rows;
-    } catch (err) {
-      console.error('Error loading top validators:', err);
-      displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Error loading validator data</td></tr>';
-    }
+  _refreshTopValidators = initTopValidatorsDisplay();
+  if (_refreshTopValidators) {
+    const origRefresh = window.refreshDashboard;
+    window.refreshDashboard = async function() {
+      await origRefresh.call(this);
+      _refreshTopValidators();
+    };
   }
-
-  loadTopValidatorsDisplay();
-
-  // Refresh on network data update
-  const origRefresh = window.refreshDashboard;
-  window.refreshDashboard = async function() {
-    await origRefresh.call(this);
-    loadTopValidatorsDisplay();
-  };
 });
 
 // ===== Top Wallets Display =====
+let _refreshTopWallets = null;
 document.addEventListener('DOMContentLoaded', function() {
-  const displayTable = document.getElementById('topWalletsDisplayTable');
-  const displayList = document.getElementById('topWalletsDisplayList');
-
-  if (!displayTable || !displayList) return;
-
-  async function loadTopWalletsDisplay() {
-    try {
-      // Fetch current data and history in parallel
-      const [currentRes, historyRes] = await Promise.all([
-        fetch('/api/top_wallets'),
-        fetch('/api/top_wallets_history?limit=96')  // ~24h of history
-      ]);
-
-      if (!currentRes.ok) throw new Error('Failed to fetch top wallets');
-      const data = await currentRes.json();
-
-      const wallets = data.wallets || [];
-      if (wallets.length === 0) {
-        displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">No wallet data available</td></tr>';
-        return;
-      }
-
-      // Build previous ranking map from history
-      let prevRankMap = {}; // address/id -> previous rank (1-based)
-      try {
-        if (historyRes.ok) {
-          const historyData = await historyRes.json();
-          const history = historyData.history || [];
-          // Get the oldest snapshot in history (for 24h comparison)
-          if (history.length >= 1) {
-            const prevSnapshot = history[0];  // First = oldest
-            // History stores in 'entries' or 'top_wallets' array
-            const prevWallets = prevSnapshot.entries || prevSnapshot.top_wallets || [];
-            prevWallets.forEach((w, idx) => {
-              // Use 'id' (address) from history snapshot
-              const key = w.id || w.address;
-              if (key) prevRankMap[key] = idx + 1;
-            });
-          }
-        }
-      } catch (e) {
-        console.warn('Could not load wallet history for ranking:', e);
-      }
-
-      // Display TOP 10 with ranking changes
-      const rows = wallets.slice(0, 10).map((w, idx) => {
-        const rank = idx + 1;
-        const address = w.address;
-        const identity = w.identity || null;
-        const addressShort = w.address_short || 'Unknown';
-        const balance = w.balance_total != null ? `${w.balance_total.toLocaleString(undefined, {maximumFractionDigits: 0})} τ` : '—';
-        const dominance = w.dominance != null ? `${w.dominance.toFixed(2)}%` : '—';
-        const stakedPercent = w.staked_percent != null ? `${w.staked_percent.toFixed(1)}%` : '—';
-
-        // Calculate rank change
-        let changeHtml = '';
-        const prevRank = prevRankMap[address];
-
-        if (prevRank === undefined && Object.keys(prevRankMap).length > 0) {
-          changeHtml = ' <span class="rank-new">NEW</span>';
-        } else if (prevRank > rank) {
-          const diff = prevRank - rank;
-          changeHtml = ` <span class="rank-up">▲${diff}</span>`;
-        } else if (prevRank < rank) {
-          const diff = rank - prevRank;
-          changeHtml = ` <span class="rank-down">▼${diff}</span>`;
-        }
-
-        // Show identity if available, otherwise just address
-        const walletDisplay = identity
-          ? `<span class="wallet-identity">${identity}</span><span class="wallet-address">${addressShort}</span>`
-          : `<span class="wallet-address wallet-address-only">${addressShort}</span>`;
-
-        return `<tr>
-          <td class="rank-col">${rank}${changeHtml}</td>
-          <td class="wallet-col">${walletDisplay}</td>
-          <td class="balance-col">${balance}</td>
-          <td class="dominance-col">${dominance}</td>
-          <td class="staked-col">${stakedPercent}</td>
-        </tr>`;
-      }).join('');
-
-      displayList.innerHTML = rows;
-    } catch (err) {
-      console.error('Error loading top wallets:', err);
-      displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Error loading wallet data</td></tr>';
-    }
+  _refreshTopWallets = initTopWalletsDisplay();
+  if (_refreshTopWallets) {
+    const currentRefresh = window.refreshDashboard;
+    window.refreshDashboard = async function() {
+      await currentRefresh.call(this);
+      _refreshTopWallets.refreshAll();
+    };
   }
-
-  loadTopWalletsDisplay();
-
-  // Load TAO Distribution data
-  async function loadDistribution() {
-    try {
-      const res = await fetch('/api/distribution', { cache: 'no-store' });
-      if (!res.ok) {
-        console.warn('Distribution API returned', res.status);
-        return;
-      }
-      const data = await res.json();
-      if (!data || !data.percentiles) return;
-
-      // Update percentile values
-      const percentiles = data.percentiles;
-      if (percentiles['1']) {
-        const el = document.getElementById('percentile1');
-        if (el) el.textContent = `≥ ${percentiles['1'].threshold.toLocaleString(undefined, { maximumFractionDigits: 0 })} τ`;
-      }
-      if (percentiles['3']) {
-        const el = document.getElementById('percentile3');
-        if (el) el.textContent = `≥ ${percentiles['3'].threshold.toLocaleString(undefined, { maximumFractionDigits: 0 })} τ`;
-      }
-      if (percentiles['5']) {
-        const el = document.getElementById('percentile5');
-        if (el) el.textContent = `≥ ${percentiles['5'].threshold.toLocaleString(undefined, { maximumFractionDigits: 0 })} τ`;
-      }
-      if (percentiles['10']) {
-        const el = document.getElementById('percentile10');
-        if (el) el.textContent = `≥ ${percentiles['10'].threshold.toLocaleString(undefined, { maximumFractionDigits: 0 })} τ`;
-      }
-
-      // Update bracket counts
-      const brackets = data.brackets;
-      if (brackets) {
-        const bracket10000 = document.getElementById('bracket10000');
-        if (bracket10000 && brackets['10000']) {
-          bracket10000.textContent = `${brackets['10000'].count.toLocaleString()} (${brackets['10000'].percentage}%)`;
-        }
-        const bracket1000 = document.getElementById('bracket1000');
-        if (bracket1000 && brackets['1000']) {
-          bracket1000.textContent = `${brackets['1000'].count.toLocaleString()} (${brackets['1000'].percentage}%)`;
-        }
-        const bracket100 = document.getElementById('bracket100');
-        if (bracket100 && brackets['100']) {
-          bracket100.textContent = `${brackets['100'].count.toLocaleString()} (${brackets['100'].percentage}%)`;
-        }
-        const bracket10 = document.getElementById('bracket10');
-        if (bracket10 && brackets['10']) {
-          bracket10.textContent = `${brackets['10'].count.toLocaleString()} (${brackets['10'].percentage}%)`;
-        }
-      }
-
-      // Update meta info
-      const metaEl = document.getElementById('distributionMeta');
-      if (metaEl && data.sample_size) {
-        metaEl.textContent = `Sample: ${data.sample_size.toLocaleString()} wallets`;
-      }
-      const updateEl = document.getElementById('distributionUpdate');
-      if (updateEl && data.last_updated) {
-        const date = new Date(data.last_updated);
-        updateEl.textContent = `Updated: ${date.toLocaleDateString()}`;
-      }
-    } catch (err) {
-      console.warn('Failed to load distribution:', err);
-    }
-  }
-
-  // Load Decentralization Score
-  async function loadDecentralization() {
-    try {
-      const res = await fetch('/api/decentralization');
-      if (!res.ok) return;
-      const data = await res.json();
-      if (!data || data.error) return;
-
-      // Helper to format numbers with K suffix
-      const formatK = (n) => {
-        if (n >= 1000) return (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k';
-        return n.toLocaleString();
-      };
-
-      // Helper to set element text
-      const setEl = (id, val) => {
-        const el = document.getElementById(id);
-        if (el) el.textContent = val;
-      };
-
-      // Main score
-      const scoreEl = document.getElementById('decentralizationScore');
-      const ratingEl = document.getElementById('decentralizationRating');
-      const barEl = document.getElementById('decentralizationBar');
-
-      if (scoreEl) scoreEl.textContent = data.score ?? '—';
-      if (ratingEl) {
-        const rating = (data.rating || '').toLowerCase();
-        ratingEl.textContent = data.rating || '—';
-        ratingEl.className = 'score-rating ' + rating;
-      }
-      if (barEl) barEl.style.width = (data.score || 0) + '%';
-
-      // Score description - plain language explanation
-      const descEl = document.getElementById('decentralizationDescription');
-      if (descEl) {
-        const score = data.score || 0;
-        let desc = '';
-        if (score >= 80) desc = 'Network is well distributed with healthy decentralization';
-        else if (score >= 65) desc = 'Good distribution with room for improvement';
-        else if (score >= 50) desc = 'Moderate concentration - validator stake is highly centralized';
-        else if (score >= 35) desc = 'Concerning concentration - few entities control majority';
-        else desc = 'High centralization risk - immediate attention needed';
-        descEl.textContent = desc;
-      }
-
-      // Component scores
-      setEl('walletScore', data.components?.wallet_score ?? '—');
-      setEl('validatorScore', data.components?.validator_score ?? '—');
-      setEl('subnetScore', data.components?.subnet_score ?? '—');
-
-      // Helper to get Nakamoto context
-      const getNakamotoContext = (n) => {
-        if (n == null) return { text: '', cls: '' };
-        if (n <= 3) return { text: 'Critical', cls: 'critical' };
-        if (n <= 7) return { text: 'Low', cls: 'low' };
-        if (n <= 15) return { text: 'Moderate', cls: 'moderate' };
-        return { text: 'Good', cls: 'good' };
-      };
-
-      // Validator metrics
-      const va = data.validator_analysis || {};
-      setEl('validatorNakamoto', va.nakamoto_coefficient ?? '—');
-      const vCtx = getNakamotoContext(va.nakamoto_coefficient);
-      const vCtxEl = document.getElementById('validatorNakamotoContext');
-      if (vCtxEl && vCtx.text) {
-        vCtxEl.textContent = vCtx.text;
-        vCtxEl.className = 'metric-context ' + vCtx.cls;
-      }
-      setEl('validatorGini', va.gini != null ? va.gini.toFixed(3) : '—');
-      setEl('validatorTop10', va.top_10_concentration != null ? (va.top_10_concentration * 100).toFixed(0) + '%' : '—');
-      setEl('totalValidators', va.total_validators ?? '—');
-
-      // Subnet metrics
-      const sa = data.subnet_analysis || {};
-      setEl('subnetNakamoto', sa.nakamoto_coefficient ?? '—');
-      const sCtx = getNakamotoContext(sa.nakamoto_coefficient);
-      const sCtxEl = document.getElementById('subnetNakamotoContext');
-      if (sCtxEl && sCtx.text) {
-        sCtxEl.textContent = sCtx.text;
-        sCtxEl.className = 'metric-context ' + sCtx.cls;
-      }
-      setEl('subnetHHI', sa.emission_hhi != null ? sa.emission_hhi.toFixed(4) : '—');
-      setEl('subnetTop5', sa.top_5_emission_concentration != null ? (sa.top_5_emission_concentration * 100).toFixed(1) + '%' : '—');
-      setEl('totalSubnets', sa.total_subnets ?? '—');
-
-      // Wallet metrics
-      const wa = data.wallet_analysis || {};
-      const whales = wa.whales_10k_plus || {};
-      setEl('whaleCount', whales.count ?? '—');
-      setEl('whalePercent', whales.percentage != null ? whales.percentage.toFixed(2) + '%' : '—');
-      setEl('top1Threshold', wa.top_1_percent?.threshold_tao != null ? wa.top_1_percent.threshold_tao.toFixed(0) + ' τ' : '—');
-      setEl('totalWallets', wa.total_wallets != null ? formatK(wa.total_wallets) : '—');
-
-      // Update timestamp
-      const updateEl = document.getElementById('decentralizationUpdate');
-      if (updateEl && data.last_updated) {
-        const date = new Date(data.last_updated);
-        updateEl.textContent = `Updated: ${date.toLocaleDateString()}`;
-      }
-    } catch (err) {
-      console.warn('Failed to load decentralization:', err);
-    }
-  }
-
-  loadDistribution();
-  loadDecentralization();
-
-  // Also refresh when refreshDashboard is called
-  const currentRefresh = window.refreshDashboard;
-  window.refreshDashboard = async function() {
-    await currentRefresh.call(this);
-    loadTopWalletsDisplay();
-    loadDistribution();
-    loadDecentralization();
-  };
 });
 
 // Old Top Subnets Tooltip handler removed - now uses standard data-tooltip
