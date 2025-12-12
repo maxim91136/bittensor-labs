@@ -72,7 +72,7 @@
   text-align: center;
 }
 
-/* Signal Metric: Value + Label only, no icon */
+/* Signal Metric: Label on top (SIGNAL), value below (Caution) */
 .market-metric#marketSignal {
   flex-direction: column;
   align-items: center;
@@ -85,14 +85,14 @@
 }
 
 .market-metric#marketSignal .metric-label {
-  font-size: 0.75em;
+  font-size: 0.85em;
   margin: 0;
-  order: 2;
+  order: 1;
 }
 
 .market-metric#marketSignal .metric-value {
-  font-size: 1.8em;
-  order: 1;
+  font-size: 2em;
+  order: 2;
   margin: 0;
 }
 
