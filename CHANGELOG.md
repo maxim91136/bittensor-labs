@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.9 (2025-12-12)
+### Code Quality
+- **Price Chart Module**: Extracted chart logic to `js/modules/priceChart.js` (~420 lines)
+  - script.js reduced from 3197 → 2877 lines (-320 lines)
+  - `createPriceChart()` - Chart creation with line/candlestick modes
+  - `refreshPriceChart()` - Async chart refresh with locking
+  - `setChartConfig()/getChartConfig()` - Config state management
+  - Supports BTC/ETH/SOL comparison overlays, EUR conversion, volume bars
+
+### Summary
+- **Total modularization progress**: script.js 4969 → 2877 lines (-42%)
+
 ## v1.0.0-rc.30.8 (2025-12-12)
 ### Code Quality
 - **Volume Signal Module**: Extracted Ampelsystem to `js/modules/volumeSignal.js` (~601 lines)
