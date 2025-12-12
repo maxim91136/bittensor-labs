@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.16 (2025-12-12)
+### Code Quality
+- **Theme Toggle Module**: Extracted light/dark mode to `js/modules/themeToggle.js` (~185 lines)
+  - script.js reduced from 1536 → 1373 lines (-163 lines)
+  - Safari/PWA fallback styles
+  - Miner map and FNG spoon image swapping
+
+### Summary
+- **Total modularization progress**: script.js 4969 → 1373 lines (-72%)
+
 ## v1.0.0-rc.30.15 (2025-12-12)
 ### Code Quality
 - **Top Displays Modules**: Extracted ranking display cards to 3 new modules (~460 lines total)
