@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.7 (2025-12-12)
+### Code Quality
+- **Fear & Greed Module**: Extracted F&G UI logic to `js/modules/fearAndGreed.js` (~195 lines)
+  - script.js reduced from 3995 → 3800 lines (-195 lines)
+  - `mapFngToClass()` - CSS class mapping
+  - `animateSpoonNeedle()` - Spoon gauge animation
+  - `testSpoonGauge()` - Console test helper
+  - `updateFearAndGreed()` - Main update function
+
 ## v1.0.0-rc.30.6 (2025-12-12)
 ### Code Quality
 - **Major Module Extraction**: script.js reduced from 4969 → 3995 lines (-974 lines, -20%)
