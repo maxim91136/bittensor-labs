@@ -1792,6 +1792,19 @@ body.light-bg .fng-card.fng-red .barometer-class {
   gap: 4px;
 }
 
+.dtao-badge {
+  height: 10px;
+  width: auto;
+  opacity: 0.5;
+  margin-left: 2px;
+  filter: brightness(1.2);
+  transition: opacity 0.3s ease;
+}
+
+.stat-card:hover .dtao-badge {
+  opacity: 0.8;
+}
+
 /* Small API status badge placed before the API status text */
 .api-status-badge {
   display: inline-block;
@@ -2949,6 +2962,15 @@ header.site-header.light-bg {
   border: 1px solid #c0c0c0 !important;
   box-shadow: 0 1px 1px #0001;
   backdrop-filter: none !important;
+}
+
+.stat-card.light-bg .dtao-badge {
+  filter: brightness(0) saturate(100%) invert(0);
+  opacity: 0.4;
+}
+
+.stat-card.light-bg:hover .dtao-badge {
+  opacity: 0.6;
 }
 
 /* Specifically style card action buttons (e.g., 'Open full') for Light Mode so text is visible */
