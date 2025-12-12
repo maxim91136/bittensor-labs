@@ -635,6 +635,79 @@ def fetch_metrics() -> Dict[str, Any]:
                     pass
     except Exception as e:
         print(f"⚠️  Failed while trying to save issuance_history: {str(e)}", file=sys.stderr)
+
+    # =====================================================================
+    # HALVING DETECTION: Check if any threshold was crossed and persist to KV
+    # =====================================================================
+    try:
+        cf_account = os.getenv('CF_ACCOUNT_ID')
+        cf_token = os.getenv('CF_API_TOKEN')
+        cf_kv_ns = os.getenv('CF_KV_NAMESPACE_ID') or os.getenv('CF_METRICS_NAMESPACE_ID')
+
+        if cf_account and cf_token and cf_kv_ns and total_issuance_human is not None:
+            thresholds = result.get('halvingThresholds', [])
+
+            # Load existing halving history from KV
+            halving_history = []
+            try:
+                kv_url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/storage/kv/namespaces/{cf_kv_ns}/values/halving_history"
+                req = urllib.request.Request(kv_url, method='GET', headers={'Authorization': f'Bearer {cf_token}'})
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    if resp.status == 200:
+                        halving_history = json.loads(resp.read())
+                        if not isinstance(halving_history, list):
+                            halving_history = []
+            except urllib.error.HTTPError as e:
+                if getattr(e, 'code', None) == 404:
+                    halving_history = []  # No history yet
+                else:
+                    print(f"⚠️  Failed to read halving_history from KV: HTTP {getattr(e, 'code', None)}", file=sys.stderr)
+            except Exception as e:
+                print(f"⚠️  Failed to read halving_history from KV: {e}", file=sys.stderr)
+
+            # Check which thresholds are already recorded
+            recorded_thresholds = {h.get('threshold') for h in halving_history}
+
+            # Detect newly crossed thresholds
+            new_halvings = []
+            for th in thresholds:
+                if total_issuance_human >= th and th not in recorded_thresholds:
+                    halving_event = {
+                        'threshold': th,
+                        'at': int(datetime.now(timezone.utc).timestamp() * 1000),  # Unix timestamp in ms
+                        'issuance_at_detection': round(total_issuance_human, 2),
+                        'detected_at': datetime.now(timezone.utc).isoformat()
+                    }
+                    new_halvings.append(halving_event)
+                    print(f"🎉 HALVING DETECTED! Threshold {th:,} TAO crossed at {total_issuance_human:,.2f} TAO", file=sys.stderr)
+
+            # Save updated halving history to KV if new halvings detected
+            if new_halvings:
+                halving_history.extend(new_halvings)
+                # Sort by threshold to maintain order
+                halving_history.sort(key=lambda x: x.get('threshold', 0))
+
+                try:
+                    kv_write_url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/storage/kv/namespaces/{cf_kv_ns}/values/halving_history"
+                    data = json.dumps(halving_history).encode('utf-8')
+                    req = urllib.request.Request(kv_write_url, data=data, method='PUT', headers={
+                        'Authorization': f'Bearer {cf_token}',
+                        'Content-Type': 'application/json'
+                    })
+                    with urllib.request.urlopen(req, timeout=15) as resp:
+                        if resp.status in (200, 201):
+                            print(f"✅ Halving history saved to KV ({len(halving_history)} events)", file=sys.stderr)
+                except Exception as e:
+                    print(f"❌ Failed to save halving_history to KV: {e}", file=sys.stderr)
+
+            # Add last halving info to result for frontend
+            if halving_history:
+                result['last_halving'] = halving_history[-1]
+            else:
+                result['last_halving'] = None
+    except Exception as e:
+        print(f"⚠️  Halving detection error: {e}", file=sys.stderr)
+
     return result
 
 if __name__ == "__main__":

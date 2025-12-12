@@ -568,6 +568,13 @@ body.light-bg #maxSupplyScribble {
     font-size: 0.88em;
     padding: 4px 6px;
   }
+  /* Hide date label on very small screens, keep value compact */
+  .halving-date-label {
+    display: none;
+  }
+  .halving-date-row {
+    font-size: 0.65em;
+  }
 }
 
 .logo {
@@ -1688,6 +1695,36 @@ body.light-bg .fng-card.fng-red .barometer-class {
 .halving-countdown {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
+}
+
+/* Halving pill two-row layout */
+.halving-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.halving-countdown-row {
+  display: flex;
+  align-items: center;
+}
+
+.halving-date-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72em;
+  opacity: 0.75;
+}
+
+.halving-date-label {
+  color: var(--text-muted, #888);
+}
+
+.halving-date-value {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
 }
 
 /* ---- Dashboard (Container Query Ready) ---- */
@@ -3020,6 +3057,12 @@ body.light-bg .embed-overlay-mobile {
   color: #000 !important;
   -webkit-text-fill-color: #000 !important; /* Safari / iOS fallback */
   font-weight: 800 !important; /* stronger weight for better legibility */
+}
+.halving-pill.light-bg .halving-date-label {
+  color: #666 !important;
+}
+.halving-pill.light-bg .halving-date-value {
+  color: #333 !important;
 }
 .price-change.light-bg.positive {
   color: #15803d !important;

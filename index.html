@@ -114,10 +114,18 @@
   <!-- Pills grouped in a single row -->
     <div class="pills-row">
       <div class="halving-pill" translate="no" data-tooltip="Next halving: —">
-    <span class="halving-icon" style="font-size:1.7em; font-family:'Segoe UI',Arial,sans-serif; font-weight:bold; animation: halving-pulse 2.5s infinite; display:flex; align-items:center; justify-content:center;">½&nbsp;</span>
-    <span class="halving-text" aria-hidden="true" style="margin-right:6px; opacity:0.85; font-size:0.9em;">≈</span>
-      <span id="halvingCountdown" class="pill-value">Calculating...</span>
-      <span class="pill-tap-hint" aria-hidden="true">[pill me]</span>
+        <span class="halving-icon" style="font-size:1.7em; font-family:'Segoe UI',Arial,sans-serif; font-weight:bold; animation: halving-pulse 2.5s infinite; display:flex; align-items:center; justify-content:center;">½&nbsp;</span>
+        <div class="halving-content">
+          <div class="halving-countdown-row">
+            <span class="halving-text" aria-hidden="true" style="margin-right:6px; opacity:0.85; font-size:0.9em;">≈</span>
+            <span id="halvingCountdown" class="pill-value">Calculating...</span>
+          </div>
+          <div class="halving-date-row">
+            <span class="halving-date-label">Last:</span>
+            <span id="lastHalvingDate" class="halving-date-value">-</span>
+          </div>
+        </div>
+        <span class="pill-tap-hint" aria-hidden="true">[pill me]</span>
       </div>
       <div class="price-pill" id="taoPricePill" translate="no">
         <span class="price-icon tao-logo">

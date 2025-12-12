@@ -60,7 +60,8 @@ import {
   startHalvingCountdown,
   generateHalvingThresholds,
   findNextThresholdIndex,
-  rotateToThreshold
+  rotateToThreshold,
+  saveLastHalving
 } from './js/modules/halvingCountdown.js';
 import {
   buildApiStatusHtml,
@@ -461,10 +462,11 @@ async function updateNetworkStats(data) {
     : ((window._prevHalvingSupply !== undefined) ? window._prevHalvingSupply : (window._prevCircSupply ?? null));
   const crossing = prevHalvingSupplyForCrossing !== null && prevHalvingSupplyForCrossing < HALVING_SUPPLY && supplyForHalving >= HALVING_SUPPLY;
   if (crossing) {
-    // record last halving with timestamp (ms)
-    window._lastHalving = { threshold: HALVING_SUPPLY, at: Date.now() };
-    window.halvingJustHappened = { threshold: HALVING_SUPPLY, at: new Date() };
-    window.halvingDate = new Date();
+    // record last halving with timestamp (ms) and persist to localStorage
+    const halvingTimestamp = Date.now();
+    saveLastHalving(HALVING_SUPPLY, halvingTimestamp);
+    window.halvingJustHappened = { threshold: HALVING_SUPPLY, at: new Date(halvingTimestamp) };
+    window.halvingDate = new Date(halvingTimestamp);
     // UI: quick animation on pill, if present
     const pill = document.querySelector('.halving-pill');
     if (pill) {

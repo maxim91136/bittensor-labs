@@ -1,12 +1,124 @@
 // ===== Halving Countdown Module (ES6) =====
 // Countdown timer and threshold calculations for TAO halving events
 
+const HALVING_STORAGE_KEY = 'bittensor_last_halving';
+const HALVING_API_URL = '/api/halving';
+
+/**
+ * Fetch halving data from backend API
+ * @returns {Promise<Object|null>} Last halving data or null
+ */
+export async function fetchHalvingFromAPI() {
+  try {
+    const resp = await fetch(HALVING_API_URL);
+    if (!resp.ok) return null;
+
+    const data = await resp.json();
+    if (data && data.last_halving && data.last_halving.at) {
+      window._lastHalving = data.last_halving;
+      // Also cache in localStorage for offline/fast access
+      try {
+        localStorage.setItem(HALVING_STORAGE_KEY, JSON.stringify(data.last_halving));
+      } catch (e) { /* ignore */ }
+      updateLastHalvingDisplay();
+      return data.last_halving;
+    }
+  } catch (e) {
+    console.warn('Failed to fetch halving from API:', e);
+  }
+  return null;
+}
+
+/**
+ * Load last halving data from localStorage (fallback)
+ * @returns {Object|null} { threshold, at } or null
+ */
+export function loadLastHalvingFromStorage() {
+  try {
+    const stored = localStorage.getItem(HALVING_STORAGE_KEY);
+    if (stored) {
+      const data = JSON.parse(stored);
+      if (data && data.at) {
+        window._lastHalving = data;
+        return data;
+      }
+    }
+  } catch (e) {
+    console.warn('Failed to load last halving from localStorage:', e);
+  }
+  return null;
+}
+
+/**
+ * Load last halving data - tries API first, falls back to localStorage
+ * @returns {Object|null} { threshold, at } or null
+ */
+export function loadLastHalving() {
+  // First try localStorage for instant display
+  loadLastHalvingFromStorage();
+  updateLastHalvingDisplay();
+
+  // Then fetch from API to get authoritative data
+  fetchHalvingFromAPI().catch(() => {});
+
+  return window._lastHalving || null;
+}
+
+/**
+ * Save halving event to localStorage
+ * @param {number} threshold - The threshold that was crossed
+ * @param {number} timestamp - Unix timestamp (ms) when it happened
+ */
+export function saveLastHalving(threshold, timestamp) {
+  try {
+    const data = { threshold, at: timestamp };
+    localStorage.setItem(HALVING_STORAGE_KEY, JSON.stringify(data));
+    window._lastHalving = data;
+    updateLastHalvingDisplay();
+  } catch (e) {
+    console.warn('Failed to save last halving to localStorage:', e);
+  }
+}
+
+/**
+ * Format timestamp as compact UTC date string
+ * @param {number} timestamp - Unix timestamp (ms)
+ * @returns {string} Formatted date e.g. "Dec 27 '25 14:35"
+ */
+function formatHalvingDateUTC(timestamp) {
+  const d = new Date(timestamp);
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const month = months[d.getUTCMonth()];
+  const day = d.getUTCDate();
+  const year = String(d.getUTCFullYear()).slice(-2); // '25' instead of '2025'
+  const hours = String(d.getUTCHours()).padStart(2, '0');
+  const mins = String(d.getUTCMinutes()).padStart(2, '0');
+  return `${month} ${day} '${year} ${hours}:${mins}`;
+}
+
+/**
+ * Update the last halving date display element
+ */
+export function updateLastHalvingDisplay() {
+  const el = document.getElementById('lastHalvingDate');
+  if (!el) return;
+
+  if (window._lastHalving && window._lastHalving.at) {
+    el.textContent = formatHalvingDateUTC(window._lastHalving.at);
+  } else {
+    el.textContent = '-';
+  }
+}
+
 /**
  * Start the halving countdown timer
  * Updates every second
  */
 export function startHalvingCountdown() {
   if (window.halvingInterval) clearInterval(window.halvingInterval);
+  // Load persisted halving data and update display
+  loadLastHalving();
+  updateLastHalvingDisplay();
   updateHalvingCountdown();
   window.halvingInterval = setInterval(updateHalvingCountdown, 1000);
 }

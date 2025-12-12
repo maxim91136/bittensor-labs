@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.18 (2025-12-12)
+### Features
+- **Halving Date Tracking**: Show last halving date (UTC) in the halving pill
+  - New "Last:" row displays "-" before halving, date after (e.g., "Dec 27, 2025 14:35 UTC")
+  - Backend detection in `fetch_network.py` - persists halving events to Cloudflare KV
+  - New `/api/halving` endpoint to serve halving history
+  - Frontend fetches from API with localStorage fallback
+  - Mobile-optimized: label hidden on small screens (<400px)
+
 ## v1.0.0-rc.30.17 (2025-12-12)
 ### Code Quality
 - **UI Helpers Module**: Extracted small utilities to `js/modules/uiHelpers.js` (~70 lines)
