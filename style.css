@@ -2301,6 +2301,32 @@ body.light-bg .fng-card.fng-red .barometer-class {
   line-height: 1.5;
 }
 
+.footer-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+  opacity: 0.6;
+  transition: opacity 0.3s ease;
+}
+
+.footer-brand:hover {
+  opacity: 1;
+}
+
+.footer-brand span {
+  font-size: var(--text-xs);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.footer-bittensor-logo {
+  height: 16px;
+  width: auto;
+  opacity: 0.9;
+  filter: brightness(1.1);
+}
+
 .site-footer .data-sources,
 .site-footer .separator,
 .site-footer .badge-demo,
@@ -3042,6 +3068,15 @@ body.light-bg .embed-overlay-mobile {
 /* Keep links brand-colored while other text goes dark */
 .site-footer.light-bg a {
   color: var(--brand) !important;
+}
+
+.site-footer.light-bg .footer-brand span {
+  color: rgba(0, 0, 0, 0.6) !important;
+}
+
+.site-footer.light-bg .footer-bittensor-logo {
+  filter: brightness(0) saturate(100%) invert(0);
+  opacity: 0.7;
 }
 .last-update.light-bg {
   color: #222 !important;
