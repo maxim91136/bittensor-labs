@@ -6,7 +6,7 @@
 ## Overview
 Started: November 3, 2025
 
-A Matrix-styled terminal interface for exploring Bittensor network metrics. Track TAO price, halving countdown, network stats, and market conditions with a unique terminal aesthetic.
+A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving countdown, network stats, and market conditions with a unique terminal aesthetic.
 
 **Latest release:** `v1.0.0-rc.30.8` — see [CHANGELOG.md](CHANGELOG.md) for details.
 
@@ -159,7 +159,7 @@ Track position changes across all Top 10 cards with visual indicators:
 ## Installation
 
 ```bash
-git clone https://github.com/your-username/bittensor-labs.git
+git clone https://github.com/maxim91136/bittensor-labs.git
 cd bittensor-labs
 npm install
 ```
@@ -178,17 +178,13 @@ Pull requests and issues are welcome! Please follow the guidelines in CONTRIBUTI
 
 ## CI & Releases
 
-This repository uses a simple, manual release process. The smoke-test and release drafter workflows were intentionally removed in favor of a deterministic, human-controlled process. For a detailed step-by-step checklist, see `RELEASE_CHECKLIST.md`.
+This repository uses a simple, manual release process:
 
-Quick Release Checklist (summary):
-
-- 1) Ensure CI checks on `main` have passed and the site is stable.
-- 2) Update `CHANGELOG.md` and the `VERSION` file if bumping the version.
-- 3) Create a tag locally and push (e.g., `git tag -a v1.0.0 -m "Release v1.0.0" && git push origin v1.0.0`).
-- 4) Create the GitHub Release via the UI or the `gh` CLI: `gh release create v1.0.0 --title "v1.0.0" --notes-file CHANGELOG.md`.
-- 5) Wait for GitHub Pages/CI deployments to finish, then verify the production site and API endpoints.
-
-If you need the full step-by-step tasks and validation points, open `RELEASE_CHECKLIST.md`.
+1. Update `VERSION` file
+2. Update `CHANGELOG.md`
+3. Update version in `README.md`
+4. Create git tag and push: `git tag v1.0.0 && git push && git push --tags`
+5. Create GitHub Release: `gh release create v1.0.0 --title "v1.0.0" --latest`
 
 For debugging in the client, set `window._debug = true` in the browser console to get debug logs about halving calculation and fallback behavior.
 
@@ -202,7 +198,7 @@ For questions or feedback, please open an [Issue](https://github.com/maxim91136/
 
 ## Disclaimer & Data Sources
 
-This dashboard is an independent, community-run project provided for informational purposes only and is not affiliated with, endorsed by, or certified by the Opentensor Foundation.
+This terminal is an independent, community-run project provided for informational purposes only and is not affiliated with, endorsed by, or certified by the Opentensor Foundation.
 
 - Primary data is acquired on-chain via the repository's network API (`/api/network`).
 - **Price data** is sourced from Binance API (real-time, <1s delay) with Taostats and CoinGecko as fallbacks.
@@ -302,7 +298,7 @@ If you want me to also back up additional KV keys or other datasets, I can add m
 	 - `CF_WORKER_WRITE_TOKEN` (optional): The write token if configured in the Worker `HISTORY_WRITE_TOKEN`. If not provided, the workflow will POST without a token (Worker must allow unauthenticated writes).
 	 - `ALLOW_KV_PUT_FALLBACK` (optional): set to `true` to allow client-side PUT fallback if the Worker POST fails (default: false). If you want strict server-only appends, do not set this or set to `false`.
 - A new scheduled workflow `backup-taostats-r2` runs every 3 hours and will fetch `taostats_history` from KV and upload a timestamped copy to R2. To enable the R2 upload set `ENABLE_R2=true` and the R2 credentials mentioned above.
- - A new per-run archival step in the `publish-taostats` workflow optionally uploads a timestamped entry to R2 for each fetch (if `ENABLE_R2=true`), so we can retain as much history as possible in R2 while keeping the recent history compact in KV. This ensures the dashboard can display long-term history later even if KV has size limits.
+ - A new per-run archival step in the `publish-taostats` workflow optionally uploads a timestamped entry to R2 for each fetch (if `ENABLE_R2=true`), so we can retain as much history as possible in R2 while keeping the recent history compact in KV. This ensures the terminal can display long-term history later even if KV has size limits.
  - (Previously) A daily consolidation job aggregated `taostats_entry-` files into daily files. Consolidation has now been removed.
 - The history file stores a compact array of entries: `{ _timestamp, price, volume_24h }`. The collector keeps a bounded number of entries (default 10,000) which can be adjusted with `HISTORY_MAX_ENTRIES` environment variable.
 
