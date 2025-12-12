@@ -622,14 +622,13 @@ body.light-bg #maxSupplyScribble {
 .price-pill {
   display: flex;
   align-items: center;
-  gap: clamp(6px, 1.5vw, 10px);
+  gap: clamp(6px, 1.5vw, 8px);
   /* EIGENSTÄNDIG: Komplett getrennt von stat-card CSS-Variablen */
-  padding: clamp(6px, 1.4vw, 10px) clamp(12px, 2.5vw, 16px);
+  padding: clamp(8px, 1.5vw, 12px) clamp(12px, 2.5vw, 16px);
   background: linear-gradient(135deg, rgba(14,165,255,0.08), rgba(14,165,255,0.02));
   border: 1px solid rgba(14,165,255,0.45);
   border-radius: 22px;
-  /* Match halving pill sizing */
-  font-size: clamp(0.9rem, 2.2vw, 1.05rem);
+  font-size: clamp(0.85rem, 2vw, 0.95rem);
   font-weight: 800;
   color: var(--text);
   transition: box-shadow 0.3s ease;
@@ -642,14 +641,14 @@ body.light-bg #maxSupplyScribble {
 .pill-currency-toggle {
   background: rgba(255,255,255,0.15);
   border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 5px;
+  border-radius: 4px;
   color: #aaa;
-  font-size: 1em;
+  font-size: 0.9em;
   font-weight: 700;
-  padding: 4px 10px;
+  padding: 4px 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-left: 4px;
+  margin-left: 3px;
 }
 .pill-currency-toggle:hover {
   background: rgba(255,255,255,0.25);
