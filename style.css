@@ -162,13 +162,12 @@
 }
 #bgToggleBtn,
 #soundToggleBtn {
-  position: fixed;
-  top: 18px;
-  z-index: 200;
+  position: relative;
+  z-index: 10;
   background: var(--surface);
   border-radius: 50%;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,34 +179,21 @@
   user-select: none;
   pointer-events: auto;
 }
-#bgToggleBtn {
-  right: 18px;
-}
-#soundToggleBtn {
-  right: 62px;
-}
+/* Mobile adjustments for toggle buttons */
 @media (max-width: 700px) {
-  #bgToggleBtn {
-    top: 12px;
-    right: 12px;
-    width: 34px;
-    height: 34px;
-  }
+  #bgToggleBtn,
   #soundToggleBtn {
-    top: 12px;
-    right: 50px;
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
   }
   #soundToggleBtn #soundMusicNote {
     font-size: 14px;
   }
-  /* Hide SVG icons on mobile */
+  /* Hide SVG icons on mobile, show music note */
   #soundOnIcon,
   #soundOffIcon {
     display: none !important;
   }
-  /* Show music note */
   #soundMusicNote {
     display: inline !important;
   }
