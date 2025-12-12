@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.3.1 (2025-12-12)
+### Documentation
+- **README Update**: Comprehensive documentation for RC30 features
+  - Added TAO Distribution Analysis section with percentile rankings
+  - Added Network Decentralization Score section with all metrics explained
+  - Updated RC30 highlights to reflect current feature set
+  - Updated latest release version
+
 ## v1.0.0-rc.30.3 (2025-12-11)
 ### Fixed
 - **Nakamoto Coefficient Calculation**: Critical fix for validator Nakamoto

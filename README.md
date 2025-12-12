@@ -8,13 +8,13 @@ Started: November 3, 2025
 
 This project provides a compact dashboard for visualizing and monitoring key Bittensor metrics. It is designed for anyone interested in understanding the Bittensor ecosystem.
 
-**Latest release:** `v1.0.0-rc.29.2` — see [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.30.3.1` — see [CHANGELOG.md](CHANGELOG.md) for details.
 
-> 🚀 **RC29 Highlights**:
-> - Professional Candlestick Charts (OHLC)
-> - Volume Bars visualization
-> - TAO vs BTC/ETH/SOL comparison toggles
-> - Real-time prices from Binance API (<1s delay)
+> 🚀 **RC30 Highlights**:
+> - **TAO Distribution**: See what percentile you're in (Top 1% = 395τ, Top 10% = 25τ)
+> - **Decentralization Score**: Institutional-grade metrics (Nakamoto Coefficient, Gini Index, HHI)
+> - **Network Health**: Validator & Subnet decentralization analysis
+> - **Critical Fix**: Nakamoto Coefficient now uses total network stake (was showing 3, now correctly shows 7)
 
 ## Features
 
@@ -34,6 +34,52 @@ This project provides a compact dashboard for visualizing and monitoring key Bit
 - **EUR currency support**: View prices in Euros with live conversion
 - **Smart Toggle Logic**: Candle/Volume and Compare modes are mutually exclusive
 - **Data sources**: Binance (primary), Taostats, CoinGecko (fallbacks)
+
+### 📊 TAO Distribution Analysis (RC30+)
+Institutional-grade wealth distribution metrics:
+
+**Percentile Rankings**:
+- Find out where you rank among all TAO holders
+- Top 1% threshold: 395 τ
+- Top 10% threshold: 25 τ
+- Top 50% threshold: 1 τ
+
+**Distribution Metrics**:
+- **Gini Coefficient**: Measures wealth inequality (0 = perfect equality, 1 = total inequality)
+- **Total Wallets**: Track the growth of the TAO holder base
+- **Decentralization Score**: Comprehensive analysis of wallet distribution
+
+**Data Quality**:
+- Based on real on-chain wallet data
+- Updated weekly from Taostats API
+- Transparent sample counts and timestamps
+
+### 🎯 Network Decentralization Score (RC30+)
+First institutional-grade decentralization analysis for Bittensor:
+
+**Composite Score** (0-100):
+- Combines Wallets (30%), Validators (30%), and Subnets (40%)
+- Color-coded thresholds: Critical (<40), Low (40-60), Moderate (60-80), High (80+)
+
+**Key Metrics**:
+- **Nakamoto Coefficient**: Minimum entities needed to control 51% of stake
+  - Higher is better (more decentralized)
+  - Separate calculations for Validators and Subnets
+- **Gini Index**: Inequality measure (0 = perfect equality, 1 = total inequality)
+  - Lower is better (more equal distribution)
+- **HHI (Herfindahl-Hirschman Index)**: Market concentration (0-10,000)
+  - Lower is better (less concentrated)
+
+**Three Pillars**:
+1. **Wallets**: TAO holder distribution analysis
+2. **Validators**: Stake concentration among validators
+3. **Subnets**: Emission distribution across subnets
+
+**Visual Features**:
+- Score gauge with threshold indicators
+- Historical tracking (shows trend over time)
+- Expandable details with plain-language explanations
+- Last updated timestamps
 
 ### 🎯 Market Conditions Intelligence (RC25+)
 Real-time market analysis card combining multiple data sources into actionable intelligence:
