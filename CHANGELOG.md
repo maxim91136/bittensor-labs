@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.5 (2025-12-12)
+### Added
+- **Favicon**: Proper SVG favicon file
+  - Created `assets/favicon.svg` from header brand-mark icon
+  - Network node design: green center, orange corners, connection lines
+  - Replaced inline data URI with external file
+
+### Changed
+- **Learn Card Redesign**: "Wanna learn more about Bittensor?"
+  - Added LearnBittensor.org button with purple gradient and book icon
+  - Handwritten intro: "Your journey begins here..."
+  - Documentary intro: "...and dive deep with the documentary"
+  - Removed second video (kept only "The Incentive Layer" documentary)
+  - Added subtle divider between sections
+
 ## v1.0.0-rc.30.4 (2025-12-12)
 ### Changed
 - **Rebranding**: Dashboard → Terminal

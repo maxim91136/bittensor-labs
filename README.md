@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal interface for exploring Bittensor network metrics. Track TAO price, halving countdown, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.30.4` — see [CHANGELOG.md](CHANGELOG.md) for details.
+**Latest release:** `v1.0.0-rc.30.5` — see [CHANGELOG.md](CHANGELOG.md) for details.
 
 > 🚀 **RC30 Highlights**:
 > - **TAO Distribution**: See what percentile you're in (Top 1% = 395τ, Top 10% = 25τ)
