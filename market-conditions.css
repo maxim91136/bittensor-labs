@@ -76,15 +76,18 @@
 .market-metric#marketSignal {
   flex-direction: row;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  gap: 6px;
 }
 .market-metric#marketSignal .metric-icon {
   margin-right: 0;
   font-size: 1.6em;
 }
 .market-metric#marketSignal .metric-label {
-  margin-right: 0.5em;
+  margin-right: 0.3em;
 }
+
+.market-metric {
   transition: all 0.2s ease;
 }
 
@@ -402,7 +405,7 @@
   }
 
   .market-metric#marketSignal {
-    gap: 8px;
+    gap: 5px;
   }
 
   .market-metric#marketSignal .metric-icon {
