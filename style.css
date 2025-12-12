@@ -2510,15 +2510,20 @@ section[aria-labelledby="price-heading"] .chart-controls {
 /* No inline info badge in the TAO Tensor Law header; was removed intentionally. */
 
 .refresh-logo-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
   align-items: center;
-  gap: 8px;
+  width: 100%;
 }
 
-/* On mobile, reduce gap even more */
+.refresh-logo-row .logo-section {
+  justify-self: center;
+}
+
+/* On mobile, adjust grid columns */
 @media (max-width: 600px) {
   .refresh-logo-row {
-    gap: 4px;
+    grid-template-columns: 40px 1fr 40px;
   }
 }
 
@@ -2526,8 +2531,7 @@ section[aria-labelledby="price-heading"] .chart-controls {
 .refresh-indicator {
   width: 30px;
   height: 30px;
-  margin-right: 10px;
-  margin-left: 8px;
+  margin: 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
