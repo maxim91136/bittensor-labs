@@ -1727,16 +1727,22 @@ body.light-bg .fng-card.fng-red .barometer-class {
   font-weight: 600;
 }
 
-/* Hide pill-tap-hint in halving pill (conflicts with date row) */
+/* Reposition pill-tap-hint in halving pill for two-row layout */
 .halving-pill .pill-tap-hint {
-  display: none;
+  bottom: 2px;
 }
 
 /* Wider halving pill on tablet/desktop for two-row layout */
 @media (min-width: 600px) {
   .halving-pill {
-    min-width: 200px;
-    padding: 10px 18px;
+    min-width: 240px;
+    padding: 12px 20px 18px 20px;
+  }
+}
+
+@media (min-width: 900px) {
+  .halving-pill {
+    min-width: 280px;
   }
 }
 
