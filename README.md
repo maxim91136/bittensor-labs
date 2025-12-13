@@ -11,6 +11,7 @@ A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO pric
 **Latest release:** `v1.0.0-rc.30.37` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🚀 **RC30 Highlights**:
+> - **Decentralization Score 2.0** 🧪: Separates Technical (CEX/validators) vs Economic (ownership) decentralization
 > - **7 Data Sources**: Bittensor SDK, Taostats, Binance, CoinGecko, CoinMarketCap, Alternative.me, DexScreener
 > - **Tooltip Transparency**: Every stat card shows Source + Last Updated timestamp
 > - **TAO Distribution**: See what percentile you're in (Top 1% = 395τ, Top 10% = 25τ)
@@ -83,6 +84,28 @@ First institutional-grade decentralization analysis for Bittensor:
 - Historical tracking (shows trend over time)
 - Expandable details with plain-language explanations
 - Last updated timestamps
+
+### 🧪 Decentralization Score 2.0 (RC30.37+)
+Experimental model separating **Technical** vs **Economic** decentralization:
+
+**Three Scores**:
+- **TDS (Technical)**: Who controls the keys? CEX holdings + validator concentration
+- **EDS (Economic)**: Who owns the tokens? Wallet distribution + subnet strength
+- **Hybrid**: Combined score (50% TDS + 50% EDS)
+
+**Why Two Models?**
+- A protocol can be **technically centralized** (CEX custody, few validators) but **economically decentralized** (broad ownership)
+- Classic score mixes everything → hides CEX/validator risk
+- Score 2.0 exposes it: "EDS 67 but TDS 32" tells a clearer story
+
+**Technical Metrics (TDS)**:
+- CEX Holdings % (Binance, Coinbase, etc.)
+- Validator Top10 concentration
+
+**Economic Metrics (EDS)**:
+- Wallet distribution (35%)
+- Subnet score (35%)
+- Gini + Stake spread (30%)
 
 ### 🎯 Market Conditions Intelligence (RC25+)
 Real-time market analysis card combining multiple data sources into actionable intelligence:

@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.38 (2025-12-13)
+### Documentation
+- **Decentralization Score 2.0**: Added comprehensive README documentation
+  - First-of-its-kind dual-model scoring system
+  - Separates Technical vs Economic decentralization
+  - Full calculation breakdown for TDS/EDS/Hybrid
+
+## v1.0.0-rc.30.37 (2025-12-13)
+### Features
+- **Decentralization Score 2.0**: New experimental dual-model scoring system 🧪
+  - **Technical Decentralization Score (TDS)**: Who controls the network
+    - CEX Holdings (50%): Exchange concentration from identified wallets
+    - Validator Top10 (50%): Top 10 validator stake concentration
+  - **Economic Decentralization Score (EDS)**: Who owns the wealth
+    - Wallet Distribution (35%): Gini-based wealth distribution
+    - Subnet Health (35%): Active subnet participation
+    - Gini Coefficient (15%): Income inequality measure
+    - Stake Spread (15%): Stake distribution factor
+  - **Hybrid Score**: 50% TDS + 50% EDS combined
+  - Gold "Experimental" badge to indicate new model
+
+## v1.0.0-rc.30.36 (2025-12-13)
+### UI
+- **Market Conditions Card**: Removed empty icon spans for unified label alignment
+  - Signal, Volume 24H, Price 24H, Trend labels now aligned
+
 ## v1.0.0-rc.30.35 (2025-12-13)
 ### UI
 - **Precision Formatting**: Unified 2 decimal places across all values
