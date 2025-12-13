@@ -16,7 +16,8 @@ import {
   fetchNetworkData,
   fetchTaostats,
   fetchCmcData,
-  fetchDexData
+  fetchDexData,
+  fetchFearAndGreed
 } from './js/modules/api.js';
 import {
   updateAthAtlPills,
@@ -620,10 +621,11 @@ async function updateApiStatusTooltip(networkData, taostats, taoPrice) {
     const infoBadge = document.querySelector('#apiStatusCard .info-badge');
     if (!infoBadge) return;
 
-    const fearAndGreed = window._fearAndGreed || null;
-    const [cmcData, dexData] = await Promise.all([
+    // Fetch all additional data sources in parallel
+    const [cmcData, dexData, fearAndGreed] = await Promise.all([
       fetchCmcData().catch(() => null),
-      fetchDexData().catch(() => null)
+      fetchDexData().catch(() => null),
+      fetchFearAndGreed().catch(() => null)
     ]);
     const html = buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGreed, dexData, cmcData });
     infoBadge.setAttribute('data-tooltip', html);
