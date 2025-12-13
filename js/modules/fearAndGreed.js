@@ -161,7 +161,8 @@ export async function updateFearAndGreed() {
     // If timestamp is unix seconds, convert to ms
     lastTs = Number(lastTs) * 1000;
   }
-  const sourceStr = 'alternative.me';
+  // Show actual source (CMC or alternative.me)
+  const sourceStr = data._source === 'coinmarketcap' ? 'CoinMarketCap' : 'alternative.me';
   const updatedText = lastTs ? new Date(lastTs).toLocaleString() : '—';
   const tooltipText = `Source: ${sourceStr}\n\nLast updated: ${updatedText}`;
   try { if (infoBadge) infoBadge.setAttribute('data-tooltip', tooltipText); } catch (e) {}

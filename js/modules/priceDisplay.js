@@ -8,7 +8,7 @@ import { formatPercent, formatCompact, readPercentValue } from './utils.js';
  * @param {Object} options - Data sources status
  * @returns {string} HTML string for tooltip
  */
-export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGreed }) {
+export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGreed, dexData, cmcData }) {
   function chip(status) {
     const cls = status === 'ok' ? 'ok' : (status === 'partial' ? 'partial' : 'error');
     const label = status === 'ok' ? 'OK' : (status === 'partial' ? 'Partial' : 'Error');
@@ -41,11 +41,31 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
     coingeckoStatus = 'partial';
   }
 
-  // Fear & Greed (alternative.me)
+  // CoinMarketCap (F&G, global metrics, TAO quote)
+  let cmcStatus = 'error';
+  if (cmcData) {
+    const hasFng = cmcData.fear_and_greed && cmcData.fear_and_greed.value !== undefined;
+    const hasGlobal = cmcData.global_metrics && cmcData.global_metrics.btc_dominance !== undefined;
+    cmcStatus = (hasFng && hasGlobal) ? 'ok' : (hasFng || hasGlobal ? 'partial' : 'error');
+  }
+
+  // DexScreener (wTAO DEX pairs)
+  let dexStatus = 'error';
+  if (dexData) {
+    const hasPairs = dexData.pairs && dexData.pairs.length > 0;
+    const hasVolume = dexData.total_volume_24h !== undefined && dexData.total_volume_24h > 0;
+    dexStatus = (hasPairs && hasVolume) ? 'ok' : (hasPairs || hasVolume ? 'partial' : 'error');
+  }
+
+  // Fear & Greed source detection
   let fngStatus = 'error';
+  let fngSource = 'Alternative.me';
   if (fearAndGreed && fearAndGreed.current) {
     const hasValue = fearAndGreed.current.value !== undefined && fearAndGreed.current.value !== null;
     fngStatus = hasValue ? 'ok' : 'partial';
+    if (fearAndGreed._source === 'coinmarketcap') {
+      fngSource = 'CMC';
+    }
   }
 
   // Bittensor SDK / network API
@@ -53,12 +73,13 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
 
   const lines = [];
   lines.push('<div>Status of all data sources powering the dashboard</div>');
-  // Order: Bittensor SDK (network), Taostats, Binance, CoinGecko, Alternative.me
+  // Order: Bittensor SDK, Taostats, Binance, CoinGecko, CMC, DexScreener
   lines.push('<div style="margin-top:8px">' + chip(networkStatus) + ' Bittensor SDK</div>');
   lines.push('<div>' + chip(taostatsStatus) + ' Taostats</div>');
   lines.push('<div>' + chip(binanceStatus) + ' Binance</div>');
   lines.push('<div>' + chip(coingeckoStatus) + ' CoinGecko</div>');
-  lines.push('<div>' + chip(fngStatus) + ' Alternative.me (F&G)</div>');
+  lines.push('<div>' + chip(cmcStatus) + ' CoinMarketCap</div>');
+  lines.push('<div>' + chip(dexStatus) + ' DexScreener (wTAO)</div>');
   return lines.join('');
 }
 

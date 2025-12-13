@@ -2,8 +2,8 @@ name: Fetch DEX Data
 
 on:
   schedule:
-    # Run every 6 hours (conservative - DEX API has 1M credits/month)
-    - cron: '30 */6 * * *'
+    # Run every 15 minutes (DexScreener has no API key, 300 req/min limit)
+    - cron: '*/15 * * * *'
   workflow_dispatch:
 
 jobs:

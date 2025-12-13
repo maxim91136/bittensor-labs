@@ -93,23 +93,10 @@ export async function fetchTaostatsAggregates() {
 }
 
 /**
- * Fetch Fear & Greed Index data with CMC fallback
+ * Fetch Fear & Greed Index data (CMC primary, Alternative.me fallback)
  */
 export async function fetchFearAndGreed() {
-  // Primary: Alternative.me via our API (includes CMC fallback on backend)
-  try {
-    const res = await fetch('/api/fear_and_greed_index', { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      if (data && data.current && data.current.value !== undefined) {
-        return data;
-      }
-    }
-  } catch (e) {
-    if (window._debug) console.debug('fetchFearAndGreed primary failed', e);
-  }
-
-  // Fallback: CMC data via our API
+  // Primary: CMC data via our API (more frequent updates)
   try {
     const res = await fetch('/api/cmc?type=fng', { cache: 'no-store' });
     if (res.ok) {
@@ -125,8 +112,49 @@ export async function fetchFearAndGreed() {
       }
     }
   } catch (e) {
-    if (window._debug) console.debug('fetchFearAndGreed CMC fallback failed', e);
+    if (window._debug) console.debug('fetchFearAndGreed CMC primary failed', e);
+  }
+
+  // Fallback: Alternative.me via our API
+  try {
+    const res = await fetch('/api/fear_and_greed_index', { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data.current && data.current.value !== undefined) {
+        return data;
+      }
+    }
+  } catch (e) {
+    if (window._debug) console.debug('fetchFearAndGreed Alternative.me fallback failed', e);
   }
 
   return null;
+}
+
+/**
+ * Fetch CMC data (global metrics, season, TAO quote)
+ */
+export async function fetchCmcData() {
+  try {
+    const res = await fetch('/api/cmc', { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    if (window._debug) console.debug('fetchCmcData failed', e);
+    return null;
+  }
+}
+
+/**
+ * Fetch DEX data (wTAO pairs from DexScreener)
+ */
+export async function fetchDexData() {
+  try {
+    const res = await fetch('/api/dex', { cache: 'no-store' });
+    if (!res.ok) return null;
+    return await res.json();
+  } catch (e) {
+    if (window._debug) console.debug('fetchDexData failed', e);
+    return null;
+  }
 }

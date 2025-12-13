@@ -14,7 +14,9 @@ import {
 } from './js/modules/utils.js';
 import {
   fetchNetworkData,
-  fetchTaostats
+  fetchTaostats,
+  fetchCmcData,
+  fetchDexData
 } from './js/modules/api.js';
 import {
   updateAthAtlPills,
@@ -731,7 +733,12 @@ async function refreshDashboard() {
     const infoBadge = document.querySelector('#apiStatusCard .info-badge');
     if (infoBadge) {
       const fearAndGreed = window._fearAndGreed || null;
-      const html = buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGreed });
+      // Fetch CMC and DEX data for status display (non-blocking)
+      const [cmcData, dexData] = await Promise.all([
+        fetchCmcData().catch(() => null),
+        fetchDexData().catch(() => null)
+      ]);
+      const html = buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGreed, dexData, cmcData });
       infoBadge.setAttribute('data-tooltip', html);
       infoBadge.setAttribute('data-tooltip-html', 'true');
     }
