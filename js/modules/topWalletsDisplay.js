@@ -357,12 +357,13 @@ export async function loadExperimentalDecentralization() {
     }
 
     // Calculate EDS (Economic Decentralization Score)
-    // Based on ownership distribution metrics
+    // Based on ownership distribution metrics + subnet strength
     let eds = null;
-    let edsComponents = { gini: null, stakeSpread: null };
+    let edsComponents = { gini: null, stakeSpread: null, subnets: null };
 
-    // Use wallet_score as proxy for ownership distribution
+    // Use wallet_score and subnet_score as proxies
     const walletScore = decData.components?.wallet_score ?? null;
+    const subnetScore = decData.components?.subnet_score ?? null;
 
     // Gini: 0 = perfect equality (100), 1 = perfect inequality (0)
     if (valGini !== null) {
@@ -374,23 +375,39 @@ export async function loadExperimentalDecentralization() {
       edsComponents.stakeSpread = 100 - (valTop10 * 100);
     }
 
-    // EDS calculation: weighted average
+    // Subnets score
+    if (subnetScore !== null) {
+      edsComponents.subnets = subnetScore;
+    }
+
+    // EDS calculation: weighted average including subnets
+    // Wallets 35% + Subnets 35% + Gini 15% + Spread 15%
+    let edsSum = 0;
+    let edsWeight = 0;
+
     if (walletScore !== null) {
-      let edsSum = walletScore * 0.5;  // Wallet distribution
-      let edsWeight = 0.5;
+      edsSum += walletScore * 0.35;
+      edsWeight += 0.35;
+    }
 
-      if (valGini !== null) {
-        const giniScore = (1 - valGini) * 100;  // Convert: lower gini = higher score
-        edsSum += giniScore * 0.25;
-        edsWeight += 0.25;
-      }
+    if (subnetScore !== null) {
+      edsSum += subnetScore * 0.35;
+      edsWeight += 0.35;
+    }
 
-      if (valTop10 !== null) {
-        const spreadScore = 100 - (valTop10 * 100);
-        edsSum += spreadScore * 0.25;
-        edsWeight += 0.25;
-      }
+    if (valGini !== null) {
+      const giniScore = (1 - valGini) * 100;  // Convert: lower gini = higher score
+      edsSum += giniScore * 0.15;
+      edsWeight += 0.15;
+    }
 
+    if (valTop10 !== null) {
+      const spreadScore = 100 - (valTop10 * 100);
+      edsSum += spreadScore * 0.15;
+      edsWeight += 0.15;
+    }
+
+    if (edsWeight > 0) {
       eds = Math.round(edsSum / edsWeight);
     }
 
