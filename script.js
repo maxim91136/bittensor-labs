@@ -518,7 +518,17 @@ async function updateNetworkStats(data) {
           data.halving_estimates.slice(0, 3).forEach(h => {
           const step = h.step !== undefined ? `#${h.step}` : '';
           const t = formatNumber(h.threshold);
-          const eta = h.eta ? new Date(h.eta).toLocaleDateString() : 'N/A';
+          // Format ETA as UTC date+time: DD.MM.YY HH:MM UTC
+          let eta = 'N/A';
+          if (h.eta) {
+            const d = new Date(h.eta);
+            const day = String(d.getUTCDate()).padStart(2, '0');
+            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+            const year = String(d.getUTCFullYear()).slice(-2);
+            const hours = String(d.getUTCHours()).padStart(2, '0');
+            const mins = String(d.getUTCMinutes()).padStart(2, '0');
+            eta = `${day}.${month}.${year} ${hours}:${mins} UTC`;
+          }
           const used = h.emission_used !== undefined ? `${formatExact(h.emission_used)} TAO/day` : 'N/A';
           halvingLines.push(`${step} ${t} → ${eta} → ${used}`);
         });
