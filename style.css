@@ -5006,6 +5006,183 @@ body.light-bg .score-bar-container {
   background: rgba(0, 0, 0, 0.1);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   EXPERIMENTAL DECENTRALIZATION SCORE CARD
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.decentralization-card-experimental {
+  /* Inherits from .dashboard-card */
+}
+
+.decentralization-card-experimental .card-header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.exp-badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.2rem 0.5rem;
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.4);
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.decentralization-exp-content {
+  padding: 0 1.5rem 1.5rem;
+}
+
+/* Three Score Grid */
+.exp-scores-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.exp-score-item {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 10px;
+  padding: 1.2rem 0.8rem;
+  text-align: center;
+}
+
+.exp-score-item.hybrid {
+  background: rgba(99, 102, 241, 0.1);
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.exp-score-label {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.exp-score-sublabel {
+  display: block;
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  margin-bottom: 0.5rem;
+}
+
+.exp-score-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.exp-score-item.hybrid .exp-score-value {
+  color: #818cf8;
+}
+
+/* Details Grid - 2 columns */
+.exp-details-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.2rem;
+  margin-bottom: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.exp-column {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 8px;
+  padding: 0.8rem;
+}
+
+.exp-column-header {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.6rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.exp-metric {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.35rem 0;
+  font-size: 0.78rem;
+}
+
+.exp-metric span:first-child {
+  color: var(--text-muted);
+}
+
+.exp-metric span:last-child {
+  color: var(--text-primary);
+  font-weight: 500;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.exp-footer {
+  text-align: right;
+  padding-top: 0.5rem;
+}
+
+.exp-update {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .exp-scores-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .exp-score-item {
+    padding: 0.8rem 0.4rem;
+  }
+
+  .exp-score-label {
+    font-size: 0.75rem;
+  }
+
+  .exp-score-value {
+    font-size: 1.5rem;
+  }
+
+  .exp-details-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+}
+
+/* Light mode */
+body.light-bg .exp-score-item {
+  background: rgba(34, 197, 94, 0.1);
+}
+
+body.light-bg .exp-score-item.hybrid {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+body.light-bg .exp-column {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.light-bg .exp-badge {
+  background: rgba(251, 191, 36, 0.15);
+  color: #b45309;
+  border-color: rgba(251, 191, 36, 0.5);
+}
+
 /* Learn Bittensor Button */
 .learn-btn:hover {
   transform: translateY(-2px);

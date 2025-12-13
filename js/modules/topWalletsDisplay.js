@@ -267,6 +267,165 @@ export async function loadDecentralization() {
 }
 
 /**
+ * Load Experimental Decentralization Score (TDS/EDS/Hybrid)
+ * Separates Technical (control) vs Economic (ownership) decentralization
+ */
+export async function loadExperimentalDecentralization() {
+  try {
+    // Fetch decentralization data and top wallets in parallel
+    const [decRes, walletsRes] = await Promise.all([
+      fetch('/api/decentralization'),
+      fetch('/api/top_wallets')
+    ]);
+
+    if (!decRes.ok) return;
+    const decData = await decRes.json();
+    if (!decData || decData.error) return;
+
+    // Parse wallet data for CEX calculation
+    let cexHoldingsPercent = null;
+    let totalSupplyInWallets = 0;
+    let cexSupply = 0;
+
+    if (walletsRes.ok) {
+      const walletsData = await walletsRes.json();
+      const wallets = walletsData.wallets || [];
+
+      // Known CEX identifiers (case-insensitive)
+      const cexNames = ['binance', 'coinbase', 'kraken', 'okx', 'bybit', 'kucoin', 'gate.io', 'htx', 'bitfinex', 'crypto.com'];
+
+      wallets.forEach(w => {
+        const balance = w.balance_total || 0;
+        totalSupplyInWallets += balance;
+
+        // Check if wallet is a CEX
+        const identity = (w.identity || '').toLowerCase();
+        if (identity && cexNames.some(cex => identity.includes(cex))) {
+          cexSupply += balance;
+        }
+      });
+
+      if (totalSupplyInWallets > 0) {
+        cexHoldingsPercent = (cexSupply / totalSupplyInWallets) * 100;
+      }
+    }
+
+    // Extract metrics from existing data
+    const va = decData.validator_analysis || {};
+    const wa = decData.wallet_analysis || {};
+
+    // Validator Top10 concentration (0-1 scale)
+    const valTop10 = va.top_10_concentration ?? null;
+    const valGini = va.gini ?? null;
+
+    // Calculate TDS (Technical Decentralization Score)
+    // Lower CEX holdings = better, Lower validator concentration = better
+    let tds = null;
+    let tdsComponents = { cex: null, valConc: null };
+
+    if (cexHoldingsPercent !== null || valTop10 !== null) {
+      let tdsSum = 0;
+      let tdsWeight = 0;
+
+      // CEX Holdings: 0% = 100 score, 50%+ = 0 score
+      if (cexHoldingsPercent !== null) {
+        const cexScore = Math.max(0, 100 - (cexHoldingsPercent * 2));
+        tdsSum += cexScore * 0.5;
+        tdsWeight += 0.5;
+        tdsComponents.cex = cexHoldingsPercent;
+      }
+
+      // Validator Top10: 0% = 100 score, 100% = 0 score
+      if (valTop10 !== null) {
+        const valScore = Math.max(0, 100 - (valTop10 * 100));
+        tdsSum += valScore * 0.5;
+        tdsWeight += 0.5;
+        tdsComponents.valConc = valTop10 * 100;
+      }
+
+      if (tdsWeight > 0) {
+        tds = Math.round(tdsSum / tdsWeight);
+      }
+    }
+
+    // Calculate EDS (Economic Decentralization Score)
+    // Based on ownership distribution metrics
+    let eds = null;
+    let edsComponents = { gini: null, stakeSpread: null };
+
+    // Use wallet_score as proxy for ownership distribution
+    const walletScore = decData.components?.wallet_score ?? null;
+
+    // Gini: 0 = perfect equality (100), 1 = perfect inequality (0)
+    if (valGini !== null) {
+      edsComponents.gini = valGini;
+    }
+
+    // Stake spread: inverse of top10 concentration
+    if (valTop10 !== null) {
+      edsComponents.stakeSpread = 100 - (valTop10 * 100);
+    }
+
+    // EDS calculation: weighted average
+    if (walletScore !== null) {
+      let edsSum = walletScore * 0.5;  // Wallet distribution
+      let edsWeight = 0.5;
+
+      if (valGini !== null) {
+        const giniScore = (1 - valGini) * 100;  // Convert: lower gini = higher score
+        edsSum += giniScore * 0.25;
+        edsWeight += 0.25;
+      }
+
+      if (valTop10 !== null) {
+        const spreadScore = 100 - (valTop10 * 100);
+        edsSum += spreadScore * 0.25;
+        edsWeight += 0.25;
+      }
+
+      eds = Math.round(edsSum / edsWeight);
+    }
+
+    // Calculate Hybrid Score (weighted average of TDS and EDS)
+    let hybrid = null;
+    if (tds !== null && eds !== null) {
+      hybrid = Math.round((tds * 0.5) + (eds * 0.5));
+    } else if (tds !== null) {
+      hybrid = tds;
+    } else if (eds !== null) {
+      hybrid = eds;
+    }
+
+    // Helper to set element text
+    const setEl = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+
+    // Update UI
+    setEl('tdsScore', tds ?? '—');
+    setEl('edsScore', eds ?? '—');
+    setEl('hybridScore', hybrid ?? '—');
+
+    // Detail metrics
+    setEl('expCexHoldings', tdsComponents.cex !== null ? tdsComponents.cex.toFixed(1) + '%' : '—');
+    setEl('expValTop10', tdsComponents.valConc !== null ? tdsComponents.valConc.toFixed(1) + '%' : '—');
+    setEl('expOwnershipGini', edsComponents.gini !== null ? edsComponents.gini.toFixed(3) : '—');
+    setEl('expStakeSpread', edsComponents.stakeSpread !== null ? edsComponents.stakeSpread.toFixed(1) + '%' : '—');
+
+    // Update timestamp
+    const updateEl = document.getElementById('expDecentralizationUpdate');
+    if (updateEl) {
+      const now = new Date();
+      updateEl.textContent = `Updated: ${now.toLocaleDateString()}`;
+    }
+
+  } catch (err) {
+    console.warn('Failed to load experimental decentralization:', err);
+  }
+}
+
+/**
  * Initialize top wallets display card with distribution and decentralization
  * @returns {Object|null} Object with refresh functions, or null if elements not found
  */
@@ -280,16 +439,19 @@ export function initTopWalletsDisplay() {
   loadTopWalletsDisplay(displayList);
   loadDistribution();
   loadDecentralization();
+  loadExperimentalDecentralization();
 
   // Return refresh functions for external use
   return {
     refreshWallets: () => loadTopWalletsDisplay(displayList),
     refreshDistribution: loadDistribution,
     refreshDecentralization: loadDecentralization,
+    refreshExperimental: loadExperimentalDecentralization,
     refreshAll: () => {
       loadTopWalletsDisplay(displayList);
       loadDistribution();
       loadDecentralization();
+      loadExperimentalDecentralization();
     }
   };
 }

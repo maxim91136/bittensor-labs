@@ -692,6 +692,52 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
       </div>
     </section>
 
+    <!-- Experimental Decentralization Score Card -->
+    <section class="dashboard-card decentralization-card-experimental" aria-labelledby="decentralization-exp-heading">
+      <div class="card-header">
+        <h2 id="decentralization-exp-heading">Decentralization Score 🧪 <span class="exp-badge">Experimental</span></h2>
+        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Experimental model separating Technical (control) vs Economic (ownership) decentralization.&#10;&#10;TDS = Who controls the keys/validators (CEX risk, validator concentration)&#10;EDS = Who owns the tokens economically (beneficial ownership, stake distribution)&#10;&#10;Higher TDS = less custodial/centralized control&#10;Higher EDS = broader economic participation">i</span>
+      </div>
+      <div class="decentralization-exp-content">
+        <!-- Three Scores -->
+        <div class="exp-scores-grid">
+          <div class="exp-score-item">
+            <span class="exp-score-label">TDS</span>
+            <span class="exp-score-sublabel">Technical</span>
+            <span class="exp-score-value" id="tdsScore">—</span>
+          </div>
+          <div class="exp-score-item">
+            <span class="exp-score-label">EDS</span>
+            <span class="exp-score-sublabel">Economic</span>
+            <span class="exp-score-value" id="edsScore">—</span>
+          </div>
+          <div class="exp-score-item hybrid">
+            <span class="exp-score-label">Hybrid</span>
+            <span class="exp-score-sublabel">Combined</span>
+            <span class="exp-score-value" id="hybridScore">—</span>
+          </div>
+        </div>
+
+        <!-- Details Grid -->
+        <div class="exp-details-grid">
+          <div class="exp-column">
+            <div class="exp-column-header">Technical (Control)</div>
+            <div class="exp-metric"><span>CEX Holdings</span><span id="expCexHoldings">—</span></div>
+            <div class="exp-metric"><span>Validator Top10</span><span id="expValTop10">—</span></div>
+          </div>
+          <div class="exp-column">
+            <div class="exp-column-header">Economic (Ownership)</div>
+            <div class="exp-metric"><span>Ownership Gini</span><span id="expOwnershipGini">—</span></div>
+            <div class="exp-metric"><span>Stake Spread</span><span id="expStakeSpread">—</span></div>
+          </div>
+        </div>
+
+        <div class="exp-footer">
+          <span class="exp-update" id="expDecentralizationUpdate">Updated: —</span>
+        </div>
+      </div>
+    </section>
+
     <!-- Container for Fear & Greed and Miner Map Cards -->
     <div class="fng-map-container">
       <!-- Fear & Greed Index -->
