@@ -5,6 +5,7 @@ import { showSystemFailureEasterEgg, triggerNeoEasterEgg } from './easterEggs.js
 
 // Configuration
 const REFRESH_SECONDS = 60;
+const SYSTEM_FAILURE_COOLDOWN_MS = 30000; // 30 seconds cooldown after triggering
 
 // Module state
 let _refreshCountdown = REFRESH_SECONDS;
@@ -12,6 +13,7 @@ let _refreshTimer = null;
 let _refreshPaused = false;
 let _refreshClickTimestamps = [];
 let _autoRefreshCount = 0;
+let _lastSystemFailureTime = 0; // Timestamp of last system failure trigger
 
 // Callbacks (set via init)
 let _refreshDashboard = null;
@@ -99,6 +101,21 @@ export function handleRefreshClick() {
  * Toggle refresh pause state
  */
 export function toggleRefreshPause() {
+  const now = Date.now();
+
+  // If trying to trigger system failure, check cooldown
+  if (!_refreshPaused) {
+    const timeSinceLastFailure = now - _lastSystemFailureTime;
+    if (timeSinceLastFailure < SYSTEM_FAILURE_COOLDOWN_MS) {
+      // Still in cooldown - play a small sound but don't trigger
+      if (_MatrixSound?.play) _MatrixSound.play('refresh-beep');
+      if (window._debug) console.debug(`System failure cooldown: ${Math.ceil((SYSTEM_FAILURE_COOLDOWN_MS - timeSinceLastFailure) / 1000)}s remaining`);
+      return;
+    }
+    // Set the timestamp for this trigger
+    _lastSystemFailureTime = now;
+  }
+
   _refreshPaused = !_refreshPaused;
 
   if (_refreshPaused) {
