@@ -624,7 +624,7 @@ body.light-bg #maxSupplyScribble {
   align-items: center;
   justify-content: space-between;
   gap: clamp(8px, 2vw, 12px);
-  /* EIGENSTÄNDIG: Komplett getrennt von stat-card CSS-Variablen */
+  /* Independent from stat-card CSS variables */
   padding: clamp(8px, 1.5vw, 12px) clamp(16px, 3vw, 22px);
   background: linear-gradient(135deg, rgba(14,165,255,0.08), rgba(14,165,255,0.02));
   border: 1px solid rgba(14,165,255,0.45);
@@ -3792,7 +3792,7 @@ body.light-bg .price-chart-footer {
   color: #888;
 }
 
-/* ===== Responsive Styles für Subnets-Tabelle (5 Spalten) ===== */
+/* ===== Responsive Styles for Subnets Table (5 columns) ===== */
 @media (max-width: 768px) {
   .subnets-display-table {
     font-size: 0.88em;
@@ -4296,7 +4296,7 @@ body.light-bg .price-chart-footer {
   text-shadow: none;
 }
 
-/* ===== Responsive Styles für 5-spaltige Tabellen (Validators & Wallets) ===== */
+/* ===== Responsive Styles for 5-column Tables (Validators & Wallets) ===== */
 @media (max-width: 768px) {
   .validators-display-table,
   .wallets-display-table {
