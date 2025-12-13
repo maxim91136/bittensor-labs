@@ -198,14 +198,17 @@ export function updateTaoPrice(priceData, options = {}) {
   // Callback for market cap update
   if (onPriceUpdate) onPriceUpdate(priceData.price);
 
-  // Price tooltip: show percent changes for available ranges from Taostats
+  // Price tooltip: show percent changes (Binance primary for 24h, Taostats for longer ranges)
   try {
     const pill = document.getElementById('taoPricePill') || document.querySelector('.price-pill');
     if (pill) {
       const ts = window._taostats ?? null;
       const parts = [];
+      // 1h: Taostats only (Binance doesn't provide 1h)
       const p1h = readPercentValue(ts, ['percent_change_1h','percent_change_1hr','pct_change_1h','percent_1h_change','percent_change_1Hour','percent_change_1hr']);
-      const p24 = readPercentValue(ts, ['percent_change_24h','percent_change_24hr','pct_change_24h','percent_24h_change','percent_change_24hr']) ?? priceData.change24h ?? null;
+      // 24h: Binance primary (real-time), Taostats fallback
+      const p24 = priceData.change24h ?? readPercentValue(ts, ['percent_change_24h','percent_change_24hr','pct_change_24h','percent_24h_change','percent_change_24hr']) ?? null;
+      // 7d+: Taostats only
       const p7d = readPercentValue(ts, ['percent_change_7d','percent_change_7day','pct_change_7d','percent_change_7day']);
       const p30d = readPercentValue(ts, ['percent_change_30d','percent_change_30day','pct_change_30d','percent_change_30day']);
       const p60d = readPercentValue(ts, ['percent_change_60d','percent_change_60day','pct_change_60d']);
