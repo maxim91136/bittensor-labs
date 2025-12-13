@@ -571,9 +571,12 @@ body.light-bg #maxSupplyScribble {
   }
   .halving-pill,
   .price-pill {
-    min-width: 85px;
+    min-width: 110px;
     font-size: 0.88em;
-    padding: 4px 6px;
+    padding: 4px 10px;
+  }
+  .price-pill .pill-currency-toggle {
+    margin-left: 6px;
   }
 }
 
@@ -680,12 +683,13 @@ body.light-bg #maxSupplyScribble {
   .pill-currency-toggle {
     padding: 2px 4px;
     font-size: 0.75em;
-    margin-left: 2px;
+    margin-left: 6px;
   }
   .price-pill {
-    gap: 4px;
-    padding-left: 8px;
-    padding-right: 8px;
+    gap: 6px;
+    padding-left: 12px;
+    padding-right: 12px;
+    min-width: 145px;
   }
   .price-pill .price-change {
     font-size: 0.8em;
