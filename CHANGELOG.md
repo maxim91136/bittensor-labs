@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.23 (2025-12-13)
+### Fixes
+- **Stable Countdown Width**: Zero-padded hours/minutes/seconds (e.g., 09h 04m 01s) for consistent pill width
+
 ## v1.0.0-rc.30.22 (2025-12-13)
 ### Features
 - **Price Pill 7d Change**: Display 7-day price change in Price Pill (e.g., "7d +5.0%")
