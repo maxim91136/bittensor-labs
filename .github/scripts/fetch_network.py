@@ -465,9 +465,17 @@ def fetch_metrics() -> Dict[str, Any]:
         emission_30d = emission_7d
 
     # Attach emission values to result (history is saved separately)
+    # 86-day emission (EMA window used by protocol - ~86.8 days)
+    # Only calculate when we have sufficient data (>=60 days minimum for reliability)
+    emission_86d = None
+    rate_86d, sd_86d, samples_86d, days_86d = compute_emission_for_period(history, 86)
+    if rate_86d is not None and days_86d >= 60 and EMISSION_MIN <= rate_86d <= EMISSION_MAX and (sd_86d is None or sd_86d < sd_threshold):
+        emission_86d = rate_86d
+
     result['emission_daily'] = round(emission_daily, 2) if emission_daily is not None else None
     result['emission_7d'] = round(emission_7d, 2) if emission_7d is not None else None
     result['emission_30d'] = round(emission_30d, 2) if emission_30d is not None else None
+    result['emission_86d'] = round(emission_86d, 2) if emission_86d is not None else None
     result['emission_sd_7d'] = round(emission_sd_7d, 2) if emission_sd_7d is not None else None
     result['emission_samples'] = len(per_interval_deltas)
     result['last_issuance_ts'] = history[-1]['ts'] if history else None
@@ -488,12 +496,18 @@ def fetch_metrics() -> Dict[str, Any]:
     # --- Halving projection: compute average net emission from history and ETA to thresholds ---
     projection_method = None
     avg_for_projection = None
-    # Select projection average based on data-availability thresholds (use confidence rules)
-    # - if we have >=7 days of history: use emission_7d
-    # - elif we have >=3 days and a daily estimate: use emission_daily
-    # - elif we have a daily estimate (but <3 days): use daily with low confidence
-    # - else fallback to simple mean of interval deltas if available
-    if days_of_history is not None and days_of_history >= 7 and emission_7d is not None:
+    # Select projection average based on data-availability thresholds
+    # Priority: 86d (protocol EMA) > 30d > 7d > daily
+    # Use the longest reliable window available for most stable predictions
+    if emission_86d is not None:
+        # ~86 day EMA matches protocol's emission smoothing window
+        avg_for_projection = emission_86d
+        projection_method = 'emission_86d'
+    elif days_of_history is not None and days_of_history >= 14 and emission_30d is not None and emission_30d != emission_7d:
+        # Only use 30d if we have real 30d data (not fallback to 7d)
+        avg_for_projection = emission_30d
+        projection_method = 'emission_30d'
+    elif days_of_history is not None and days_of_history >= 7 and emission_7d is not None:
         avg_for_projection = emission_7d
         projection_method = 'emission_7d'
     elif days_of_history is not None and days_of_history >= 3 and emission_daily is not None:
@@ -602,7 +616,11 @@ def fetch_metrics() -> Dict[str, Any]:
     # how many days were effectively used for the projection method
     projection_days_used = None
     try:
-        if projection_method == 'emission_7d':
+        if projection_method == 'emission_86d':
+            projection_days_used = 86
+        elif projection_method == 'emission_30d':
+            projection_days_used = 30
+        elif projection_method == 'emission_7d':
             projection_days_used = 7
         elif projection_method in ('emission_daily', 'emission_daily_low_confidence'):
             # use available days_of_history, at least 1 if present

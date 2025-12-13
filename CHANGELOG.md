@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.39 (2025-12-13)
+### Backend
+- **Halving Projection**: Prepared for longer emission windows
+  - Added `emission_86d` field (protocol EMA ~86.8 days)
+  - Priority: 86d > 30d > 7d > daily (use longest reliable window)
+  - Auto-upgrades when sufficient data available (≥60 days for 86d)
+  - More stable projections for future halvings
+
 ## v1.0.0-rc.30.38 (2025-12-13)
 ### Documentation
 - **Decentralization Score 2.0**: Added comprehensive README documentation
