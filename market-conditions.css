@@ -90,13 +90,10 @@
   gap: 4px;
 }
 
-.market-metric#marketSignal .metric-icon {
-  display: none;
-}
-
 .market-metric#marketSignal .metric-label {
   font-size: 0.85em;
   margin: 0;
+  margin-top: calc(1.2em + 4px); /* Same height as metric-icon + gap */
 }
 
 .market-metric#marketSignal .metric-value {
