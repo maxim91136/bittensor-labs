@@ -287,7 +287,10 @@ async function updateTokenEconomicsCard() {
         '',
         'Source: Bittensor SDK'
       ];
-      if (data._timestamp) {
+      // Use last_issuance_ts (unix seconds) or _timestamp (ISO string)
+      if (data.last_issuance_ts) {
+        lines.push(`Last updated: ${new Date(data.last_issuance_ts * 1000).toLocaleString()}`);
+      } else if (data._timestamp) {
         lines.push(`Last updated: ${new Date(data._timestamp).toLocaleString()}`);
       }
       badge.setAttribute('data-tooltip', lines.join('\n'));
