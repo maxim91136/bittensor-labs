@@ -155,16 +155,27 @@ export async function updateFearAndGreed() {
     }
   } catch (e) { if (window._debug) console.debug('update side status failed', e); }
 
-  // Tooltip: show source + last-updated
-  let lastTs = cur.timestamp || cur._time || null;
-  if (lastTs && typeof lastTs === 'string' && lastTs.length === 10 && !isNaN(Number(lastTs))) {
-    // If timestamp is unix seconds, convert to ms
-    lastTs = Number(lastTs) * 1000;
+  // Tooltip: show sources + last-updated (hybrid: CMC current + Alternative.me historical)
+  let cmcTs = cur.timestamp || null;
+  let altTs = data.yesterday?.timestamp || null;
+
+  // Convert unix seconds to ms if needed
+  if (altTs && typeof altTs === 'string' && altTs.length === 10 && !isNaN(Number(altTs))) {
+    altTs = Number(altTs) * 1000;
   }
-  // Show actual source (CMC or alternative.me)
-  const sourceStr = data._source === 'coinmarketcap' ? 'CoinMarketCap' : 'alternative.me';
-  const updatedText = lastTs ? new Date(lastTs).toLocaleString() : '—';
-  const tooltipText = `Source: ${sourceStr}\n\nLast updated: ${updatedText}`;
+
+  // Build tooltip based on source
+  let tooltipText;
+  if (data._source === 'coinmarketcap') {
+    // Hybrid mode: CMC current + Alternative.me historical
+    const cmcUpdated = cmcTs ? new Date(cmcTs).toLocaleString() : '—';
+    const altUpdated = altTs ? new Date(altTs).toLocaleString() : '—';
+    tooltipText = `Current: CoinMarketCap\nUpdated: ${cmcUpdated}\n\nHistorical: Alternative.me\nUpdated: ${altUpdated}`;
+  } else {
+    // Pure Alternative.me mode
+    const updatedText = altTs ? new Date(altTs).toLocaleString() : '—';
+    tooltipText = `Source: Alternative.me\n\nLast updated: ${updatedText}`;
+  }
   try { if (infoBadge) infoBadge.setAttribute('data-tooltip', tooltipText); } catch (e) {}
 
   // Animate spoon needle along the curved path
