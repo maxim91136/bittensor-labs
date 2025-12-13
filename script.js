@@ -615,11 +615,13 @@ if (document.readyState === 'loading') {
   setupDynamicTooltips({ MatrixSound });
 }
 
-// ===== API Status Tooltip Helper =====
-async function updateApiStatusTooltip(networkData, taostats, taoPrice) {
+// ===== API Status Helper =====
+// Updates both the tooltip AND the status badge using improved classification
+async function updateApiStatus(networkData, taostats, taoPrice) {
   try {
     const infoBadge = document.querySelector('#apiStatusCard .info-badge');
-    if (!infoBadge) return;
+    const apiStatusEl = document.getElementById('apiStatus');
+    const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
 
     // Fetch all additional data sources in parallel
     const [cmcData, dexData, fearAndGreed] = await Promise.all([
@@ -627,11 +629,44 @@ async function updateApiStatusTooltip(networkData, taostats, taoPrice) {
       fetchDexData().catch(() => null),
       fetchFearAndGreed().catch(() => null)
     ]);
-    const html = buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGreed, dexData, cmcData });
-    infoBadge.setAttribute('data-tooltip', html);
-    infoBadge.setAttribute('data-tooltip-html', 'true');
+
+    const result = buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGreed, dexData, cmcData });
+
+    // Update tooltip
+    if (infoBadge) {
+      infoBadge.setAttribute('data-tooltip', result.html);
+      infoBadge.setAttribute('data-tooltip-html', 'true');
+    }
+
+    // Update badge based on overallStatus
+    // Critical APIs (SDK, Taostats, Binance, CMC) → error = red
+    // Non-critical (DexScreener, Alternative.me) → error = yellow warning
+    // All OK (CoinGecko PARTIAL is fine) → green
+    const colorMap = { ok: '#22c55e', warning: '#eab308', error: '#ef4444' };
+    const color = colorMap[result.overallStatus] || '#22c55e';
+
+    if (apiStatusEl) {
+      let badgeText = 'OK';
+      let badgeClass = 'ok';
+      if (result.overallStatus === 'error') {
+        badgeText = 'Error';
+        badgeClass = 'error';
+      } else if (result.overallStatus === 'warning') {
+        badgeText = 'Warning';
+        badgeClass = 'partial';
+      }
+      apiStatusEl.innerHTML = `<span class="api-status-badge ${badgeClass} api-status-large">${badgeText}</span>`;
+    }
+
+    // Update SVG icon colors
+    if (apiStatusIcon) {
+      const circle = apiStatusIcon.querySelector('circle');
+      if (circle) circle.setAttribute('stroke', color);
+      const polyline = apiStatusIcon.querySelector('polyline');
+      if (polyline) polyline.setAttribute('stroke', color);
+    }
   } catch (e) {
-    if (window._debug) console.debug('updateApiStatusTooltip failed', e);
+    if (window._debug) console.debug('updateApiStatus failed', e);
   }
 }
 
@@ -709,48 +744,12 @@ async function refreshDashboard() {
     try { updateFearAndGreed(); } catch (e) { if (window._debug) console.debug('updateFearAndGreed failed', e); }
   }
 
-  // Set API status
-  const apiStatusEl = document.getElementById('apiStatus');
-  const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
-  let statusText = 'All systems ok';
-  let color = '#22c55e'; // green
-  if (!networkData || !taostats) {
-    statusText = 'API error';
-    color = '#ef4444'; // red
-  } else if (!taostats.price || !taostats.volume_24h) {
-    statusText = 'Partial data';
-    color = '#eab308'; // yellow
-  }
-  if (apiStatusEl) {
-    // Show only a single status chip in the card (larger + centered on small screens)
-    const isOk = (color === '#22c55e');
-    let badgeText = 'Error';
-    let badgeClass = 'error';
-    if (isOk) {
-      badgeText = 'OK';
-      badgeClass = 'ok';
-    } else if (statusText === 'Partial data') {
-      badgeText = 'Partial';
-      badgeClass = 'partial';
-    }
-    apiStatusEl.innerHTML = `<span class="api-status-badge ${badgeClass} api-status-large">${badgeText}</span>`;
-  }
-  // Dynamically update SVG colors
-  if (apiStatusIcon) {
-    // Update circle color
-    const circle = apiStatusIcon.querySelector('circle');
-    if (circle) circle.setAttribute('stroke', color);
-    // Update heartbeat line color
-    const polyline = apiStatusIcon.querySelector('polyline');
-    if (polyline) polyline.setAttribute('stroke', color);
-  }
-
   // Update Block Time and Staking APR cards
   await updateBlockTime();
   await updateStakingApr();
 
-  // Update API status tooltip with all sources
-  await updateApiStatusTooltip(networkData, taostats, taoPrice);
+  // Update API status (badge + tooltip) with improved classification
+  await updateApiStatus(networkData, taostats, taoPrice);
 }
 
 // Initialize refresh controls with callbacks
@@ -939,44 +938,8 @@ async function initDashboard() {
     try { updateFearAndGreed(); } catch (e) { if (window._debug) console.debug('init updateFearAndGreed failed', e); }
   }
 
-  // Fill initial API status
-  const apiStatusEl = document.getElementById('apiStatus');
-  const apiStatusIcon = document.querySelector('#apiStatusCard .stat-icon svg');
-  let statusText = 'All systems ok';
-  let color = '#22c55e'; // green
-  if (!networkData || !taostats) {
-    statusText = 'API error';
-    color = '#ef4444'; // red
-  } else if (!taostats.price || !taostats.volume_24h) {
-    statusText = 'Partial data';
-    color = '#eab308'; // yellow
-  }
-  if (apiStatusEl) {
-    // Render only the status chip in the card
-    const isOk = (color === '#22c55e');
-    let badgeText = 'Error';
-    let badgeClass = 'error';
-    if (isOk) {
-      badgeText = 'OK';
-      badgeClass = 'ok';
-    } else if (statusText === 'Partial data') {
-      badgeText = 'Partial';
-      badgeClass = 'partial';
-    }
-    apiStatusEl.innerHTML = `<span class="api-status-badge ${badgeClass} api-status-large">${badgeText}</span>`;
-  }
-  // Dynamically update SVG colors
-  if (apiStatusIcon) {
-    // Update circle color
-    const circle = apiStatusIcon.querySelector('circle');
-    if (circle) circle.setAttribute('stroke', color);
-    // Update heartbeat line color
-    const polyline = apiStatusIcon.querySelector('polyline');
-    if (polyline) polyline.setAttribute('stroke', color);
-  }
-
-  // Update API status tooltip with all sources
-  await updateApiStatusTooltip(networkData, taostats, taoPrice);
+  // Update API status (badge + tooltip) with improved classification
+  await updateApiStatus(networkData, taostats, taoPrice);
 
   const priceCard = document.querySelector('#priceChart')?.closest('.dashboard-card');
   // Pre-fetch EUR rate if EUR display is enabled

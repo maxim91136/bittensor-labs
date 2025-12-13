@@ -6,7 +6,7 @@ import { formatPercent, formatCompact, readPercentValue } from './utils.js';
 /**
  * Build HTML for API status tooltip showing per-source chips
  * @param {Object} options - Data sources status
- * @returns {string} HTML string for tooltip
+ * @returns {Object} { html: string, statuses: Object, overallStatus: 'ok'|'warning'|'error' }
  */
 export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGreed, dexData, cmcData }) {
   function chip(status) {
@@ -67,6 +67,20 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
   // Bittensor SDK / network API
   const networkStatus = networkData ? 'ok' : 'error';
 
+  // Calculate overall status
+  // Critical APIs: SDK, Taostats, Binance, CMC - if any has ERROR → critical (red)
+  // Non-critical: DexScreener, Alternative.me - if ERROR → warning (yellow)
+  // CoinGecko PARTIAL is always OK (fallback)
+  const criticalApis = [networkStatus, taostatsStatus, binanceStatus, cmcStatus];
+  const nonCriticalApis = [dexStatus, altMeStatus];
+
+  let overallStatus = 'ok';
+  if (criticalApis.some(s => s === 'error')) {
+    overallStatus = 'error';
+  } else if (nonCriticalApis.some(s => s === 'error')) {
+    overallStatus = 'warning';
+  }
+
   const lines = [];
   lines.push('<div>Status of all data sources powering the dashboard</div>');
   // Order: Bittensor SDK, Taostats, Binance, CoinGecko, CMC, Alternative.me, DexScreener
@@ -77,7 +91,12 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
   lines.push('<div>' + chip(cmcStatus) + ' CoinMarketCap</div>');
   lines.push('<div>' + chip(altMeStatus) + ' Alternative.me</div>');
   lines.push('<div>' + chip(dexStatus) + ' DexScreener</div>');
-  return lines.join('');
+
+  return {
+    html: lines.join(''),
+    statuses: { networkStatus, taostatsStatus, binanceStatus, coingeckoStatus, cmcStatus, altMeStatus, dexStatus },
+    overallStatus
+  };
 }
 
 /**
