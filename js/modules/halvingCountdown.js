@@ -208,10 +208,10 @@ export function updateHalvingCountdown() {
   }
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-  const minutes = Math.floor((diff / (1000 * 60)) % 60);
-  const seconds = Math.floor((diff / 1000) % 60);
+  const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, '0');
+  const minutes = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, '0');
+  const seconds = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
 
-  // Show days, hours, minutes, and seconds
+  // Show days, hours, minutes, and seconds (h/m/s always 2 digits for stable width)
   el.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
 }
