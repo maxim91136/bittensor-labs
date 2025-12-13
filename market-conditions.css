@@ -114,6 +114,7 @@
 .market-metric .metric-icon {
   font-size: 1.2em;
   line-height: 1;
+  min-height: 1.2em; /* Reserve space even when empty */
 }
 
 .market-metric .metric-label {
