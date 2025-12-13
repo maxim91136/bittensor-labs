@@ -1234,12 +1234,13 @@ document.addEventListener('DOMContentLoaded', () => {
           // Default detailed tooltip (HTML chips) — per-source chips allow quick status scan
           const html = [
             '<div>Status of all data sources powering the dashboard</div>',
-            '<br/>',
-            '<div><span class="tooltip-chip ok">OK</span> Bittensor SDK</div>',
+            '<div style="margin-top:8px"><span class="tooltip-chip ok">OK</span> Bittensor SDK</div>',
             '<div><span class="tooltip-chip ok">OK</span> Taostats</div>',
             '<div><span class="tooltip-chip ok">OK</span> Binance</div>',
             '<div><span class="tooltip-chip ok">OK</span> CoinGecko</div>',
-            '<div><span class="tooltip-chip ok">OK</span> Alternative.me (F&G)</div>'
+            '<div><span class="tooltip-chip ok">OK</span> CoinMarketCap</div>',
+            '<div><span class="tooltip-chip ok">OK</span> Alternative.me</div>',
+            '<div><span class="tooltip-chip ok">OK</span> DexScreener</div>'
           ].join('');
           infoBadge.setAttribute('data-tooltip', html);
           infoBadge.setAttribute('data-tooltip-html', 'true');

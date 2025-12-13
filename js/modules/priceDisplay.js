@@ -49,7 +49,7 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
     cmcStatus = (hasFng && hasGlobal) ? 'ok' : (hasFng || hasGlobal ? 'partial' : 'error');
   }
 
-  // DexScreener (wTAO DEX pairs)
+  // DexScreener (DEX pairs)
   let dexStatus = 'error';
   if (dexData) {
     const hasPairs = dexData.pairs && dexData.pairs.length > 0;
@@ -57,15 +57,11 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
     dexStatus = (hasPairs && hasVolume) ? 'ok' : (hasPairs || hasVolume ? 'partial' : 'error');
   }
 
-  // Fear & Greed source detection
-  let fngStatus = 'error';
-  let fngSource = 'Alternative.me';
-  if (fearAndGreed && fearAndGreed.current) {
-    const hasValue = fearAndGreed.current.value !== undefined && fearAndGreed.current.value !== null;
-    fngStatus = hasValue ? 'ok' : 'partial';
-    if (fearAndGreed._source === 'coinmarketcap') {
-      fngSource = 'CMC';
-    }
+  // Alternative.me (historical F&G data)
+  let altMeStatus = 'error';
+  if (fearAndGreed) {
+    const hasHistorical = fearAndGreed.yesterday || fearAndGreed.last_week || fearAndGreed.last_month;
+    altMeStatus = hasHistorical ? 'ok' : 'partial';
   }
 
   // Bittensor SDK / network API
@@ -73,13 +69,14 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
 
   const lines = [];
   lines.push('<div>Status of all data sources powering the dashboard</div>');
-  // Order: Bittensor SDK, Taostats, Binance, CoinGecko, CMC, DexScreener
+  // Order: Bittensor SDK, Taostats, Binance, CoinGecko, CMC, Alternative.me, DexScreener
   lines.push('<div style="margin-top:8px">' + chip(networkStatus) + ' Bittensor SDK</div>');
   lines.push('<div>' + chip(taostatsStatus) + ' Taostats</div>');
   lines.push('<div>' + chip(binanceStatus) + ' Binance</div>');
   lines.push('<div>' + chip(coingeckoStatus) + ' CoinGecko</div>');
   lines.push('<div>' + chip(cmcStatus) + ' CoinMarketCap</div>');
-  lines.push('<div>' + chip(dexStatus) + ' DexScreener (wTAO)</div>');
+  lines.push('<div>' + chip(altMeStatus) + ' Alternative.me</div>');
+  lines.push('<div>' + chip(dexStatus) + ' DexScreener</div>');
   return lines.join('');
 }
 

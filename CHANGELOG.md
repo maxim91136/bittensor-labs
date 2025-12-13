@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.25 (2025-12-13)
+### Fixes
+- **API Status Tooltip**: Show all 7 data sources on initial page load (was missing CMC/DexScreener)
+- **API Status Tooltip**: Added Alternative.me as separate source, removed "(wTAO)" from DexScreener
+
 ## v1.0.0-rc.30.24 (2025-12-13)
 ### Features
 - **CMC & DexScreener Backend**: New data sources for Fear & Greed and wTAO DEX data
