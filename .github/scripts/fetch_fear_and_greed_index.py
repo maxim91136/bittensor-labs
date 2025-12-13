@@ -1,5 +1,6 @@
 # Fear & Greed Index API fetcher for Bittensor-Labs
-# Fetches the current and historical Fear & Greed Index from alternative.me and writes to Cloudflare KV
+# Fetches the current and historical Fear & Greed Index from alternative.me (primary) or CMC (fallback)
+# and writes to Cloudflare KV
 
 import os
 import sys
@@ -7,15 +8,58 @@ import json
 import requests
 from datetime import datetime, timezone
 
-def fetch_fng():
+def fetch_fng_alternative():
+    """Primary source: Alternative.me"""
     url = "https://api.alternative.me/fng/?limit=30&format=json"
     resp = requests.get(url, timeout=15)
     if resp.status_code != 200:
-        raise Exception(f"API error: {resp.status_code}")
+        raise Exception(f"Alternative.me API error: {resp.status_code}")
     data = resp.json()
     if not data or 'data' not in data:
-        raise Exception("No data in response")
-    return data['data']
+        raise Exception("No data in Alternative.me response")
+    return data['data'], 'alternative.me'
+
+def fetch_fng_cmc(api_key):
+    """Fallback source: CoinMarketCap Fear & Greed Index"""
+    url = "https://pro-api.coinmarketcap.com/v3/fear-and-greed/latest"
+    headers = {
+        "X-CMC_PRO_API_KEY": api_key,
+        "Accept": "application/json"
+    }
+    resp = requests.get(url, headers=headers, timeout=15)
+    if resp.status_code != 200:
+        raise Exception(f"CMC API error: {resp.status_code}")
+    data = resp.json()
+    if not data or 'data' not in data:
+        raise Exception("No data in CMC response")
+    # Convert CMC format to Alternative.me format
+    cmc_data = data['data']
+    converted = [{
+        'value': str(cmc_data.get('value', 50)),
+        'value_classification': cmc_data.get('value_classification', 'Neutral'),
+        'timestamp': str(int(datetime.now(timezone.utc).timestamp()))
+    }]
+    return converted, 'coinmarketcap'
+
+def fetch_fng():
+    """Fetch F&G with fallback: Alternative.me -> CMC"""
+    # Try Alternative.me first
+    try:
+        return fetch_fng_alternative()
+    except Exception as e:
+        print(f"Alternative.me failed: {e}", file=sys.stderr)
+
+    # Fallback to CMC
+    cmc_key = os.getenv('CMC_API_TOKEN')
+    if cmc_key:
+        try:
+            return fetch_fng_cmc(cmc_key)
+        except Exception as e:
+            print(f"CMC fallback failed: {e}", file=sys.stderr)
+    else:
+        print("CMC_API_TOKEN not set, skipping CMC fallback", file=sys.stderr)
+
+    raise Exception("All F&G sources failed")
 
 def parse_fng(data):
     # data: list of dicts, each with value, value_classification, timestamp
@@ -59,18 +103,20 @@ def main():
         print("Missing Cloudflare KV credentials", file=sys.stderr)
         sys.exit(1)
     try:
-        fng_data = fetch_fng()
+        fng_data, source = fetch_fng()
         parsed = parse_fng(fng_data)
         if not parsed:
             print("No FNG data parsed", file=sys.stderr)
             sys.exit(1)
+        # Add source tracking
+        parsed['_source'] = source
         # Write to KV
         key = "fear_and_greed_index"
         ok = put_kv_json(account_id, api_token, namespace_id, key, parsed)
         if not ok:
             print("Failed to write to KV", file=sys.stderr)
             sys.exit(1)
-        print("Fear & Greed Index updated in KV.")
+        print(f"Fear & Greed Index updated in KV (source: {source}).")
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(1)

@@ -1,26 +1,29 @@
-name: altme - Fear & Greed Index
+name: Fetch CMC Data
 
 on:
   schedule:
-    - cron: '15 6,18 * * *'  # twice daily (6:15 and 18:15 UTC) - alternative.me updates once daily
+    # Run every 6 hours (4x daily, well under 333 calls/day limit)
+    - cron: '15 */6 * * *'
   workflow_dispatch:
 
 jobs:
-  fetch-fear-greed-index:
+  fetch-cmc:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+
       - name: Install dependencies
         run: pip install requests
-      - name: Fetch and store Fear & Greed Index
+
+      - name: Fetch CMC data
         env:
+          CMC_API_TOKEN: ${{ secrets.CMC_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_METRICS_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
-          CMC_API_TOKEN: ${{ secrets.CMC_API_TOKEN }}
-        run: python .github/scripts/fetch_fear_and_greed_index.py
+        run: python .github/scripts/fetch_cmc.py

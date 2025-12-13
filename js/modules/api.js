@@ -93,51 +93,39 @@ export async function fetchTaostatsAggregates() {
 }
 
 /**
- * Fetch Fear & Greed Index data with CoinGecko fallback
+ * Fetch Fear & Greed Index data with CMC fallback
  */
 export async function fetchFearAndGreed() {
-  // Primary: Alternative.me via our API
+  // Primary: Alternative.me via our API (includes CMC fallback on backend)
   try {
     const res = await fetch('/api/fear_and_greed_index', { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       if (data && data.current && data.current.value !== undefined) {
-        data._source = 'alternative.me';
         return data;
       }
     }
   } catch (e) {
-    if (window._debug) console.debug('fetchFearAndGreed Alternative.me failed', e);
+    if (window._debug) console.debug('fetchFearAndGreed primary failed', e);
   }
 
-  // Fallback: Derive F&G from CoinGecko global market data
+  // Fallback: CMC data via our API
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/global', { cache: 'no-store' });
+    const res = await fetch('/api/cmc?type=fng', { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
-      const change24h = data?.data?.market_cap_change_percentage_24h_usd;
-      if (change24h !== undefined && change24h !== null) {
-        // Convert market cap change to F&G scale (0-100)
-        // -10% or worse = 10 (Extreme Fear), +10% or better = 90 (Extreme Greed)
-        const fgValue = Math.max(0, Math.min(100, 50 + (change24h * 4)));
-        let classification = 'Neutral';
-        if (fgValue < 25) classification = 'Extreme Fear';
-        else if (fgValue < 45) classification = 'Fear';
-        else if (fgValue < 55) classification = 'Neutral';
-        else if (fgValue < 75) classification = 'Greed';
-        else classification = 'Extreme Greed';
-
+      if (data && data.value !== undefined) {
         return {
           current: {
-            value: Math.round(fgValue),
-            classification: classification
+            value: data.value,
+            value_classification: data.value_classification
           },
-          _source: 'coingecko-derived'
+          _source: 'coinmarketcap'
         };
       }
     }
   } catch (e) {
-    if (window._debug) console.debug('fetchFearAndGreed CoinGecko fallback failed', e);
+    if (window._debug) console.debug('fetchFearAndGreed CMC fallback failed', e);
   }
 
   return null;
