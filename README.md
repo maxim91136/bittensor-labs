@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving countdown, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.30.36` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.30.36.1` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🚀 **RC30 Highlights**:
 > - **7 Data Sources**: Bittensor SDK, Taostats, Binance, CoinGecko, CoinMarketCap, Alternative.me, DexScreener
