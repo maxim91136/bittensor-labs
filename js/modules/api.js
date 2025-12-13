@@ -107,7 +107,8 @@ export async function fetchFearAndGreed() {
       if (data && data.value !== undefined) {
         cmcData = {
           value: data.value,
-          value_classification: data.value_classification
+          value_classification: data.value_classification,
+          timestamp: data.last_updated || data._timestamp || null
         };
       }
     }
