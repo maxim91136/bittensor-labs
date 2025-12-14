@@ -18,14 +18,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python with pip cache
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'  # Cacht pip packages zwischen Runs
+          cache-dependency-path: '.github/requirements-network.txt'
 
-      - name: Install deps
+      - name: Install deps (cached)
         run: |
-          pip install bittensor
+          pip install -r .github/requirements-network.txt
 
       - name: Generate metrics
         env:
