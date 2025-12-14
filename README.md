@@ -8,16 +8,17 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving countdown, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.30.40` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.31` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
-> 🚀 **RC30 Highlights**:
-> - **Decentralization Score 2.0** 🧪: Separates Technical (CEX/validators) vs Economic (ownership) decentralization
+> 🚀 **RC31 Highlights**:
+> - **Halving Projections Redesign**: Multi-method comparison (7d/30d/86d) for all halvings
+> - **Emission Sensitivity**: See how different time windows affect projection accuracy
+> - **Protocol-Ready**: 86-day EMA support when data matures (matches Bittensor's emission smoothing)
+>
+> 📊 **RC30 Features**:
+> - **Decentralization Score 2.0**: Separates Technical vs Economic decentralization
 > - **7 Data Sources**: Bittensor SDK, Taostats, Binance, CoinGecko, CoinMarketCap, Alternative.me, DexScreener
-> - **Tooltip Transparency**: Every stat card shows Source + Last Updated timestamp
-> - **TAO Distribution**: See what percentile you're in (Top 1% = 395τ, Top 10% = 25τ)
-> - **Decentralization Score**: Institutional-grade metrics (Nakamoto Coefficient, Gini Index, HHI)
-> - **Fear & Greed Hybrid**: CMC for current value (frequent updates) + Alternative.me for historical
-> - **Matrix Terminal Badge**: `21_000_000 τ` max supply display in header
+> - **Tooltip Transparency**: Every stat shows Source + Last Updated
 
 ## Features
 

@@ -5,20 +5,20 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
-## v1.0.0-rc.30.40 (2025-12-14)
+## v1.0.0-rc.31 (2025-12-14)
 ### Frontend
-- **Halving Tooltip**: Show 7d vs 30d emission comparison
-  - Both averages with projected halving dates
-  - Clear `← used` marker shows active projection method
-  - Enables users to see sensitivity vs stability trade-off
+- **Halving Projections Redesign**: Multi-method comparison for all halvings
+  - Clean structure: threshold header + indented method lines
+  - Shows 7d, 30d, and 86d (when available) for each halving
+  - Clear `← used` marker on active projection method
+  - Emission rate halves automatically for future halvings
+  - Prepared for protocol's 86-day EMA when data matures
 
-## v1.0.0-rc.30.39 (2025-12-13)
 ### Backend
-- **Halving Projection**: Prepared for longer emission windows
-  - Added `emission_86d` field (protocol EMA ~86.8 days)
-  - Priority: 86d > 30d > 7d > daily (use longest reliable window)
-  - Auto-upgrades when sufficient data available (≥60 days for 86d)
-  - More stable projections for future halvings
+- **Emission Windows**: Added `emission_86d` field
+  - Matches protocol's ~86.8 day EMA smoothing window
+  - Priority: 86d > 30d > 7d > daily (longest reliable)
+  - Auto-upgrades when ≥60 days of data available
 
 ## v1.0.0-rc.30.38 (2025-12-13)
 ### Documentation
