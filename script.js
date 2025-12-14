@@ -545,62 +545,48 @@ async function updateNetworkStats(data) {
     if (data) {
       const method = data.projection_method ?? (data.avg_emission_for_projection ? 'projection' : 'unknown');
       const confidence = data.projection_confidence ?? 'unknown';
-      halvingLines.push(`Halving projection method: ${method}`);
       halvingLines.push(`Halving projection confidence: ${confidence}`);
-      // Show 7d vs 30d emission comparison with projected dates
-      const emission7d = data.emission_7d;
-      const emission30d = data.emission_30d;
-      const remainingForComparison = (remaining !== null && remaining > 0) ? remaining : null;
 
-      // Use last_issuance_ts as base time (matches backend calculation)
+      // Helper to format ETA as ISO UTC date+time
+      const formatEtaFromMs = (etaMs) => {
+        const d = new Date(etaMs);
+        const year = d.getUTCFullYear();
+        const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(d.getUTCDate()).padStart(2, '0');
+        const hours = String(d.getUTCHours()).padStart(2, '0');
+        const mins = String(d.getUTCMinutes()).padStart(2, '0');
+        return `${year}-${month}-${day} ${hours}:${mins} UTC`;
+      };
+
+      // Get emission values for 7d alternative
+      const emission7d = data.emission_7d;
+      const remainingForComparison = (remaining !== null && remaining > 0) ? remaining : null;
       const baseTimeMs = data.last_issuance_ts ? data.last_issuance_ts * 1000 : Date.now();
 
-      if (remainingForComparison && (emission7d || emission30d)) {
-        const formatEta = (rate) => {
-          if (!rate || rate <= 0) return 'N/A';
-          const daysUntil = remainingForComparison / rate;
-          const etaMs = baseTimeMs + daysUntil * 86400000;
-          const d = new Date(etaMs);
-          const year = d.getUTCFullYear();
-          const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-          const day = String(d.getUTCDate()).padStart(2, '0');
-          const hours = String(d.getUTCHours()).padStart(2, '0');
-          const mins = String(d.getUTCMinutes()).padStart(2, '0');
-          return `${year}-${month}-${day} ${hours}:${mins} UTC`;
-        };
-
-        if (emission7d) {
-          const marker7d = method === 'emission_7d' ? ' ← used' : '';
-          halvingLines.push(`7d avg: ${formatExact(emission7d)} TAO/day → ${formatEta(emission7d)}${marker7d}`);
-        }
-        if (emission30d) {
-          const marker30d = method === 'emission_30d' ? ' ← used' : '';
-          halvingLines.push(`30d avg: ${formatExact(emission30d)} TAO/day → ${formatEta(emission30d)}${marker30d}`);
-        }
-      } else if (avg !== null) {
-        // Fallback: show single avg emission if comparison not available
-        halvingLines.push(`Avg emission used: ${formatExact(avg)} TAO/day`);
-      }
-
-      // Include short list of upcoming halving estimates (step, threshold, eta, emission_used)
+      // Include halving projections with 7d alternative for #1
       if (Array.isArray(data.halving_estimates) && data.halving_estimates.length) {
         halvingLines.push('Halving projections:');
-          data.halving_estimates.slice(0, 3).forEach(h => {
+        data.halving_estimates.slice(0, 3).forEach((h, idx) => {
           const step = h.step !== undefined ? `#${h.step}` : '';
           const t = formatNumber(h.threshold);
-          // Format ETA as ISO UTC date+time: YYYY-MM-DD HH:MM UTC
           let eta = 'N/A';
-          if (h.eta) {
-            const d = new Date(h.eta);
-            const year = d.getUTCFullYear();
-            const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-            const day = String(d.getUTCDate()).padStart(2, '0');
-            const hours = String(d.getUTCHours()).padStart(2, '0');
-            const mins = String(d.getUTCMinutes()).padStart(2, '0');
-            eta = `${year}-${month}-${day} ${hours}:${mins} UTC`;
-          }
+          if (h.eta) eta = formatEtaFromMs(new Date(h.eta).getTime());
           const used = h.emission_used !== undefined ? `${formatExact(h.emission_used)} TAO/day` : 'N/A';
-          halvingLines.push(`${step} ${t} → ${eta} → ${used}`);
+
+          // For first halving (#1), show method label and ← used marker
+          if (idx === 0) {
+            const methodLabel = method === 'emission_30d' ? '30d' : method === 'emission_7d' ? '7d' : method.replace('emission_', '');
+            halvingLines.push(`${step} ${t} → ${eta} → ${used} (${methodLabel}) ← used`);
+
+            // Add 7d alternative if different from used method and available
+            if (remainingForComparison && emission7d && method !== 'emission_7d') {
+              const daysUntil7d = remainingForComparison / emission7d;
+              const eta7dMs = baseTimeMs + daysUntil7d * 86400000;
+              halvingLines.push(`         → ${formatEtaFromMs(eta7dMs)} → ${formatExact(emission7d)} TAO/day (7d)`);
+            }
+          } else {
+            halvingLines.push(`${step} ${t} → ${eta} → ${used}`);
+          }
         });
       }
     }
