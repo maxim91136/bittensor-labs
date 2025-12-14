@@ -579,68 +579,62 @@ async function updateNetworkStats(data) {
         data.halving_estimates.slice(0, 3).forEach((h, idx) => {
           const step = h.step !== undefined ? `#${h.step}` : '';
           const t = formatNumber(h.threshold);
-          let eta = 'N/A';
-          if (h.eta) eta = formatEtaFromMs(new Date(h.eta).getTime());
           const usedEmission = h.emission_used;
-          const usedLabel = usedEmission !== undefined ? `${formatExact(usedEmission)} TAO/day` : 'N/A';
+          const usedEtaMs = h.eta ? new Date(h.eta).getTime() : null;
 
-          // Main line with used method
-          const methodLabel = getMethodLabel(method);
-          halvingLines.push(`${step} ${t} → ${eta} → ${usedLabel} (${methodLabel}) ← used`);
+          // Header line: #X threshold
+          halvingLines.push(`${step} ${t}`);
 
-          // Calculate alternatives for this halving
+          // Calculate all method lines for this halving
           // Emission halves with each subsequent halving: divisor = 2^idx
           const divisor = Math.pow(2, idx);
+          const methodLabel = getMethodLabel(method);
 
-          // Build alternatives array (excluding the used method)
-          const alternatives = [];
+          // Build all projections (used method first, then alternatives)
+          const projections = [];
+
+          // Add used method first
+          if (usedEtaMs && usedEmission) {
+            projections.push({
+              label: methodLabel,
+              rate: usedEmission,
+              eta: formatEtaFromMs(usedEtaMs),
+              isUsed: true
+            });
+          }
 
           // 86d alternative (if available and not used)
-          if (emission86d && method !== 'emission_86d') {
+          if (emission86d && method !== 'emission_86d' && usedEmission && usedEtaMs) {
             const rate = emission86d / divisor;
-            // Calculate ETA based on used emission ratio
-            if (usedEmission && usedEmission > 0) {
-              const ratio = usedEmission / rate;
-              const usedEtaMs = h.eta ? new Date(h.eta).getTime() : null;
-              if (usedEtaMs) {
-                const deltaFromBase = usedEtaMs - baseTimeMs;
-                const altEtaMs = baseTimeMs + deltaFromBase * ratio;
-                alternatives.push({ label: '86d', rate, eta: formatEtaFromMs(altEtaMs) });
-              }
-            }
+            const ratio = usedEmission / rate;
+            const deltaFromBase = usedEtaMs - baseTimeMs;
+            const altEtaMs = baseTimeMs + deltaFromBase * ratio;
+            projections.push({ label: '86d', rate, eta: formatEtaFromMs(altEtaMs), isUsed: false });
           }
 
           // 30d alternative (if available and not used)
-          if (emission30d && method !== 'emission_30d') {
+          if (emission30d && method !== 'emission_30d' && usedEmission && usedEtaMs) {
             const rate = emission30d / divisor;
-            if (usedEmission && usedEmission > 0) {
-              const ratio = usedEmission / rate;
-              const usedEtaMs = h.eta ? new Date(h.eta).getTime() : null;
-              if (usedEtaMs) {
-                const deltaFromBase = usedEtaMs - baseTimeMs;
-                const altEtaMs = baseTimeMs + deltaFromBase * ratio;
-                alternatives.push({ label: '30d', rate, eta: formatEtaFromMs(altEtaMs) });
-              }
-            }
+            const ratio = usedEmission / rate;
+            const deltaFromBase = usedEtaMs - baseTimeMs;
+            const altEtaMs = baseTimeMs + deltaFromBase * ratio;
+            projections.push({ label: '30d', rate, eta: formatEtaFromMs(altEtaMs), isUsed: false });
           }
 
           // 7d alternative (if available and not used)
-          if (emission7d && method !== 'emission_7d') {
+          if (emission7d && method !== 'emission_7d' && usedEmission && usedEtaMs) {
             const rate = emission7d / divisor;
-            if (usedEmission && usedEmission > 0) {
-              const ratio = usedEmission / rate;
-              const usedEtaMs = h.eta ? new Date(h.eta).getTime() : null;
-              if (usedEtaMs) {
-                const deltaFromBase = usedEtaMs - baseTimeMs;
-                const altEtaMs = baseTimeMs + deltaFromBase * ratio;
-                alternatives.push({ label: '7d', rate, eta: formatEtaFromMs(altEtaMs) });
-              }
-            }
+            const ratio = usedEmission / rate;
+            const deltaFromBase = usedEtaMs - baseTimeMs;
+            const altEtaMs = baseTimeMs + deltaFromBase * ratio;
+            projections.push({ label: '7d', rate, eta: formatEtaFromMs(altEtaMs), isUsed: false });
           }
 
-          // Add alternative lines
-          alternatives.forEach(alt => {
-            halvingLines.push(`         → ${alt.eta} → ${formatExact(alt.rate)} TAO/day (${alt.label})`);
+          // Format projection lines with aligned labels
+          projections.forEach(p => {
+            const marker = p.isUsed ? ' ← used' : '';
+            const rateFormatted = Math.round(p.rate).toLocaleString();
+            halvingLines.push(`  ${p.label.padEnd(3)}: ${p.eta} (${rateFormatted}/day)${marker}`);
           });
         });
       }
