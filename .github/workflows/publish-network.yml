@@ -23,11 +23,10 @@ jobs:
         with:
           python-version: '3.11'
           cache: 'pip'  # Cacht pip packages zwischen Runs
-          cache-dependency-path: '.github/requirements-network.txt'
+          cache-dependency-path: '.github/requirements-bittensor.txt'
 
       - name: Install deps (cached)
-        run: |
-          pip install -r .github/requirements-network.txt
+        run: pip install -r .github/requirements-bittensor.txt
 
       - name: Generate metrics
         env:
