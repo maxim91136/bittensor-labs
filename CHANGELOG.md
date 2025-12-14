@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.30.40 (2025-12-14)
+### Frontend
+- **Halving Tooltip**: Show 7d vs 30d emission comparison
+  - Both averages with projected halving dates
+  - Clear `← used` marker shows active projection method
+  - Enables users to see sensitivity vs stability trade-off
+
 ## v1.0.0-rc.30.39 (2025-12-13)
 ### Backend
 - **Halving Projection**: Prepared for longer emission windows

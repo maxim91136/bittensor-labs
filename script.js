@@ -547,7 +547,37 @@ async function updateNetworkStats(data) {
       const confidence = data.projection_confidence ?? 'unknown';
       halvingLines.push(`Halving projection method: ${method}`);
       halvingLines.push(`Halving projection confidence: ${confidence}`);
-      if (avg !== null) halvingLines.push(`Avg emission used: ${formatExact(avg)} TAO/day`);
+      // Show 7d vs 30d emission comparison with projected dates
+      const emission7d = data.emission_7d;
+      const emission30d = data.emission_30d;
+      const remainingForComparison = (remaining !== null && remaining > 0) ? remaining : null;
+
+      if (remainingForComparison && (emission7d || emission30d)) {
+        const formatEta = (rate) => {
+          if (!rate || rate <= 0) return 'N/A';
+          const daysUntil = remainingForComparison / rate;
+          const etaMs = Date.now() + daysUntil * 86400000;
+          const d = new Date(etaMs);
+          const year = d.getUTCFullYear();
+          const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+          const day = String(d.getUTCDate()).padStart(2, '0');
+          const hours = String(d.getUTCHours()).padStart(2, '0');
+          const mins = String(d.getUTCMinutes()).padStart(2, '0');
+          return `${year}-${month}-${day} ${hours}:${mins} UTC`;
+        };
+
+        if (emission7d) {
+          const marker7d = method === 'emission_7d' ? ' ← used' : '';
+          halvingLines.push(`7d avg: ${formatExact(emission7d)} TAO/day → ${formatEta(emission7d)}${marker7d}`);
+        }
+        if (emission30d) {
+          const marker30d = method === 'emission_30d' ? ' ← used' : '';
+          halvingLines.push(`30d avg: ${formatExact(emission30d)} TAO/day → ${formatEta(emission30d)}${marker30d}`);
+        }
+      } else if (avg !== null) {
+        // Fallback: show single avg emission if comparison not available
+        halvingLines.push(`Avg emission used: ${formatExact(avg)} TAO/day`);
+      }
 
       // Include short list of upcoming halving estimates (step, threshold, eta, emission_used)
       if (Array.isArray(data.halving_estimates) && data.halving_estimates.length) {

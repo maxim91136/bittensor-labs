@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving countdown, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.30.39` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.30.40` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🚀 **RC30 Highlights**:
 > - **Decentralization Score 2.0** 🧪: Separates Technical (CEX/validators) vs Economic (ownership) decentralization
