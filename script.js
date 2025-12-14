@@ -552,11 +552,14 @@ async function updateNetworkStats(data) {
       const emission30d = data.emission_30d;
       const remainingForComparison = (remaining !== null && remaining > 0) ? remaining : null;
 
+      // Use last_issuance_ts as base time (matches backend calculation)
+      const baseTimeMs = data.last_issuance_ts ? data.last_issuance_ts * 1000 : Date.now();
+
       if (remainingForComparison && (emission7d || emission30d)) {
         const formatEta = (rate) => {
           if (!rate || rate <= 0) return 'N/A';
           const daysUntil = remainingForComparison / rate;
-          const etaMs = Date.now() + daysUntil * 86400000;
+          const etaMs = baseTimeMs + daysUntil * 86400000;
           const d = new Date(etaMs);
           const year = d.getUTCFullYear();
           const month = String(d.getUTCMonth() + 1).padStart(2, '0');
