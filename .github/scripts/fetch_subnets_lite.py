@@ -135,13 +135,13 @@ def fetch_subnets_lite():
         print(f"✅ Found {len(subnets)} subnets", file=sys.stderr)
 
         # Fetch on-chain emissions for all subnets
-        print("📊 Querying on-chain SubnetEmission data...", file=sys.stderr)
+        print("📊 Querying on-chain EmissionValues data...", file=sys.stderr)
         subnet_emissions = {}
         total_emission_raw = 0
 
         try:
             # Query all subnet emissions at once via query_map
-            emissions_map = subtensor.substrate.query_map('SubtensorModule', 'SubnetEmission')
+            emissions_map = subtensor.substrate.query_map('SubtensorModule', 'EmissionValues')
             for netuid_obj, emission_obj in emissions_map:
                 try:
                     netuid = int(netuid_obj.value if hasattr(netuid_obj, 'value') else netuid_obj)
@@ -154,11 +154,11 @@ def fetch_subnets_lite():
 
             print(f"✅ Got emission data for {len(subnet_emissions)} subnets (total_raw: {total_emission_raw})", file=sys.stderr)
         except Exception as e:
-            print(f"⚠️ Failed to query SubnetEmission map: {e}", file=sys.stderr)
+            print(f"⚠️ Failed to query EmissionValues map: {e}", file=sys.stderr)
             # Fall back to individual queries
             for netuid in subnets:
                 try:
-                    emission = subtensor.substrate.query('SubtensorModule', 'SubnetEmission', [netuid])
+                    emission = subtensor.substrate.query('SubtensorModule', 'EmissionValues', [netuid])
                     emission_raw = int(emission.value if hasattr(emission, 'value') else emission)
                     subnet_emissions[int(netuid)] = emission_raw
                     total_emission_raw += emission_raw
