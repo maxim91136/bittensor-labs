@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.5 (2025-12-15)
+### Fixed
+- **Last Halving Tooltip Display**: Complete fix for "Last reached" line in halving tooltip
+  - Backend: Exposed `pre_halving_emission` field in metrics ([fetch_network.py:836](fetch_network.py#L836))
+  - API Function: Added `pre_halving_emission` and `last_halving` to /api/network response ([network.js:83-84](functions/api/network.js#L83-L84))
+  - Frontend: Use `data.last_halving` directly instead of relying on async halving module ([script.js:552](script.js#L552))
+  - Now shows: `Last reached: 10.50M → 2025-12-15 13:31:00 UTC → Avg emission used: 7,193.74 TAO/day` ✓
+
+### Technical
+- Backend exports `pre_halving_emission` (measured 7193.74 τ/day) for accurate display
+- Pages Function passes through `pre_halving_emission` and `last_halving` from KV metrics
+- Frontend preferentially uses API data, falls back to halving module if unavailable
+
 ## v1.0.0-rc.33.4 (2025-12-15)
 ### Fixed
 - **Pre-Halving Emission Display**: Fixed inaccurate "Avg emission used" in last halving tooltip
