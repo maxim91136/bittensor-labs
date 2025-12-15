@@ -524,19 +524,29 @@ def fetch_metrics() -> Dict[str, Any]:
             avg_for_projection = sum(vals) / len(vals)
             projection_method = 'mean_from_intervals'
 
-    def compute_halving_estimates(current_issuance: float, thresholds: List[int], avg_emission_per_day: float, method: str, emission_7d_val: float = None, emission_30d_val: float = None):
+    def compute_halving_estimates(current_issuance: float, thresholds: List[int], avg_emission_per_day: float, method: str, emission_7d_val: float = None, emission_30d_val: float = None, last_halving_ts: int = None):
         """
-        Compute ETAs for a series of halving thresholds by simulating progression.
+        Compute ETAs for a series of halving thresholds using Triple-Precision GPS methodology:
 
-        Adaptive strategy:
-        - Uses 30d emission for long-term stability (default)
-        - Switches to 7d emission when <30 days away from a threshold (accuracy)
-        - Simulates halving: emission halves after each threshold is reached
+        1. Post-Halving (0-7d): Theoretical emission (protocol-defined 7200/2^n)
+           - Zero contamination during data stabilization period
 
-        This produces realistic ETAs for the next and subsequent halvings.
+        2. Long-Range (>30d away): 30d average emission
+           - Stable, noise-resistant for distant horizons
+
+        3. Terminal Approach (<30d away): 7d average emission
+           - Real-time calibration for final precision
+
+        This distance-adaptive precision system ensures:
+        - Clean projections immediately post-halving (theoretical)
+        - Stable long-term forecasts (30d smoothing)
+        - Accurate near-term countdowns (7d responsiveness)
         """
         estimates = []
         now_dt = datetime.now(timezone.utc)
+
+        # Protocol base emission rate (pre-halving #1)
+        PROTOCOL_BASE_EMISSION = 7200.0  # τ/day
 
         # validate inputs
         try:
@@ -586,20 +596,42 @@ def fetch_metrics() -> Dict[str, Any]:
 
             remaining = th_val - cur
 
-            # Adaptive emission selection: use 7d if <30 days away, otherwise use base emission
-            # This gives stable long-term projections (30d) with accurate near-term switching (7d)
+            # ===== Triple-Precision GPS Emission Selection =====
+            # Stage 1: Post-Halving Theoretical (0-7d after last halving)
+            # Stage 2: Long-Range 30d (>30d away from target)
+            # Stage 3: Terminal 7d (<30d away from target)
+
             emission_to_use = emission
             method_used = method
 
-            # Check if we're within 30 days of this threshold
-            days_estimate = remaining / emission if emission > 0 else float('inf')
-            if days_estimate < 30 and emission_7d_val is not None and emission_30d_val is not None and avg_emission_per_day > 0:
-                # We're <30 days away - switch to 7d for accuracy
-                # Scale 7d emission to current halving level (emission gets halved in simulation loop)
-                # ratio = how many halvings have occurred (emission / base)
-                ratio = emission / avg_emission_per_day
-                emission_to_use = emission_7d_val * ratio
-                method_used = 'emission_7d'
+            # Calculate how many halvings have occurred (for theoretical calculation)
+            halvings_completed = step - 1  # step 1 = no halvings yet, step 2 = 1 halving, etc.
+
+            # Stage 1: Check if we're in post-halving stabilization period
+            use_theoretical = False
+            if last_halving_ts is not None:
+                seconds_since_halving = (now_dt.timestamp() - last_halving_ts / 1000.0)
+                days_since_halving = seconds_since_halving / 86400.0
+                if days_since_halving < 7.0:
+                    # Use theoretical emission (protocol-defined, zero contamination)
+                    emission_to_use = PROTOCOL_BASE_EMISSION / (2 ** halvings_completed)
+                    method_used = 'theoretical'
+                    use_theoretical = True
+
+            # Stage 2 & 3: Distance-adaptive selection (if not using theoretical)
+            if not use_theoretical:
+                days_estimate = remaining / emission if emission > 0 else float('inf')
+
+                if days_estimate < 30 and emission_7d_val is not None and avg_emission_per_day > 0:
+                    # Stage 3: Terminal approach (<30d) - use 7d for precision
+                    # Scale 7d emission to current halving level
+                    ratio = emission / avg_emission_per_day
+                    emission_to_use = emission_7d_val * ratio
+                    method_used = 'emission_7d'
+                else:
+                    # Stage 2: Long-range (>30d) - use 30d base emission for stability
+                    emission_to_use = emission
+                    method_used = method
 
             days = remaining / emission_to_use
             eta = now_dt + timedelta(days=days)
@@ -645,13 +677,32 @@ def fetch_metrics() -> Dict[str, Any]:
     except Exception:
         projection_days_used = None
     result['projection_days_used'] = projection_days_used
+
+    # Load halving history to get last_halving timestamp for GPS theoretical emission
+    last_halving_ts = None
+    try:
+        cf_account = os.getenv('CF_ACCOUNT_ID')
+        cf_token = os.getenv('CF_API_TOKEN')
+        cf_kv_ns = os.getenv('CF_KV_NAMESPACE_ID') or os.getenv('CF_METRICS_NAMESPACE_ID')
+        if cf_account and cf_token and cf_kv_ns:
+            kv_url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/storage/kv/namespaces/{cf_kv_ns}/values/halving_history"
+            req = urllib.request.Request(kv_url, method='GET', headers={'Authorization': f'Bearer {cf_token}'})
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                if resp.status == 200:
+                    halving_hist = json.loads(resp.read())
+                    if isinstance(halving_hist, list) and len(halving_hist) > 0:
+                        last_halving_ts = halving_hist[-1].get('at')  # Unix timestamp in ms
+    except Exception:
+        pass  # Ignore errors, last_halving_ts remains None
+
     result['halving_estimates'] = compute_halving_estimates(
         cur_iss,
         result.get('halvingThresholds', []),
         avg_for_projection,
         projection_method,
         emission_7d_val=emission_7d,
-        emission_30d_val=emission_30d
+        emission_30d_val=emission_30d,
+        last_halving_ts=last_halving_ts
     )
 
     # Save the full history to a separate file: normally we only write local `issuance_history.json`
