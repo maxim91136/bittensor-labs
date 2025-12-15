@@ -497,19 +497,19 @@ def fetch_metrics() -> Dict[str, Any]:
     projection_method = None
     avg_for_projection = None
     # Select projection average based on data-availability thresholds
-    # Priority: 7d > 30d > 86d > daily
-    # Use 7d for most accurate near-term projections (more responsive to recent changes)
-    if days_of_history is not None and days_of_history >= 7 and emission_7d is not None:
-        avg_for_projection = emission_7d
-        projection_method = 'emission_7d'
-    elif days_of_history is not None and days_of_history >= 14 and emission_30d is not None and emission_30d != emission_7d:
-        # Only use 30d if we have real 30d data (not fallback to 7d)
+    # Priority: 30d > 86d > 7d > daily
+    # Use 30d for stable long-term projections, adaptive per-threshold logic will use 7d when <30d away
+    if days_of_history is not None and days_of_history >= 14 and emission_30d is not None:
         avg_for_projection = emission_30d
         projection_method = 'emission_30d'
     elif emission_86d is not None:
         # ~86 day EMA matches protocol's emission smoothing window
         avg_for_projection = emission_86d
         projection_method = 'emission_86d'
+    elif days_of_history is not None and days_of_history >= 7 and emission_7d is not None:
+        # Fallback to 7d if we don't have 30d yet
+        avg_for_projection = emission_7d
+        projection_method = 'emission_7d'
     elif days_of_history is not None and days_of_history >= 3 and emission_daily is not None:
         avg_for_projection = emission_daily
         projection_method = 'emission_daily'
@@ -524,15 +524,14 @@ def fetch_metrics() -> Dict[str, Any]:
             avg_for_projection = sum(vals) / len(vals)
             projection_method = 'mean_from_intervals'
 
-    def compute_halving_estimates(current_issuance: float, thresholds: List[int], avg_emission_per_day: float, method: str):
+    def compute_halving_estimates(current_issuance: float, thresholds: List[int], avg_emission_per_day: float, method: str, emission_7d_val: float = None, emission_30d_val: float = None):
         """
         Compute ETAs for a series of halving thresholds by simulating progression.
 
-        Instead of using the same average emission for all thresholds, this simulation:
-        - progresses thresholds in order,
-        - uses the current avg emission until the next threshold is reached,
-        - then advances time to that threshold, sets current issuance to the threshold,
-          and halves the emission for subsequent thresholds.
+        Adaptive strategy:
+        - Uses 30d emission for long-term stability (default)
+        - Switches to 7d emission when <30 days away from a threshold (accuracy)
+        - Simulates halving: emission halves after each threshold is reached
 
         This produces realistic ETAs for the next and subsequent halvings.
         """
@@ -586,11 +585,36 @@ def fetch_metrics() -> Dict[str, Any]:
                 continue
 
             remaining = th_val - cur
-            days = remaining / emission
-            eta = now_dt + timedelta(days=days)
-            estimates.append({'threshold': th_val, 'remaining': round(remaining, 6), 'days': round(days, 3), 'eta': eta.isoformat(), 'method': method, 'emission_used': round(emission, 6), 'step': step})
 
-            # advance simulation: jump to threshold time and issuance, then halve emission
+            # Adaptive emission selection: use 7d if <30 days away, otherwise use base emission
+            # This gives stable long-term projections (30d) with accurate near-term switching (7d)
+            emission_to_use = emission
+            method_used = method
+
+            # Check if we're within 30 days of this threshold
+            days_estimate = remaining / emission if emission > 0 else float('inf')
+            if days_estimate < 30 and emission_7d_val is not None and emission_30d_val is not None:
+                # We're <30 days away - switch to 7d for accuracy
+                # Calculate the ratio to adjust from base emission to 7d
+                # emission_to_use should be the 7d rate at the current halving level
+                # If base emission is 30d at current level, and we want 7d at current level:
+                # Find which level we're at (how many halvings deep) by comparing emission to avg_emission_per_day
+                import math
+                halvings_deep = 0
+                temp_emission = avg_emission_per_day
+                while temp_emission > emission * 1.5:  # Allow some tolerance
+                    temp_emission = temp_emission / 2.0
+                    halvings_deep += 1
+
+                # Now calculate 7d emission at this halving level
+                emission_to_use = emission_7d_val / (2 ** halvings_deep)
+                method_used = 'emission_7d'
+
+            days = remaining / emission_to_use
+            eta = now_dt + timedelta(days=days)
+            estimates.append({'threshold': th_val, 'remaining': round(remaining, 6), 'days': round(days, 3), 'eta': eta.isoformat(), 'method': method_used, 'emission_used': round(emission_to_use, 6), 'step': step})
+
+            # advance simulation: jump to threshold time and issuance, then halve emission (base emission, not the adaptive one)
             now_dt = eta
             cur = th_val
             emission = emission / 2.0 if emission > 0 else emission
@@ -630,7 +654,14 @@ def fetch_metrics() -> Dict[str, Any]:
     except Exception:
         projection_days_used = None
     result['projection_days_used'] = projection_days_used
-    result['halving_estimates'] = compute_halving_estimates(cur_iss, result.get('halvingThresholds', []), avg_for_projection, projection_method)
+    result['halving_estimates'] = compute_halving_estimates(
+        cur_iss,
+        result.get('halvingThresholds', []),
+        avg_for_projection,
+        projection_method,
+        emission_7d_val=emission_7d,
+        emission_30d_val=emission_30d
+    )
 
     # Save the full history to a separate file: normally we only write local `issuance_history.json`
     # if KV read succeeded (so we can safely append). However, CI can set the environment var
