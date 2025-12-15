@@ -567,12 +567,12 @@ def fetch_metrics() -> Dict[str, Any]:
                 estimates.append({'threshold': th, 'remaining': None, 'days': None, 'eta': None, 'method': method, 'emission_used': None, 'step': None})
                 continue
 
-            # If we've already passed this threshold, mark zero and halve emission for next
+            # If we've already passed this threshold, mark zero but DON'T halve emission
+            # (avg_emission_per_day is already the current post-halving rate)
             if cur >= th_val:
                 # emission_used is the emission that was in effect for reaching this threshold
                 estimates.append({'threshold': th_val, 'remaining': 0.0, 'days': 0.0, 'eta': now_dt.isoformat(), 'method': method, 'emission_used': round(emission, 6) if emission is not None else None, 'step': step})
-                if emission > 0:
-                    emission = emission / 2.0
+                # Don't halve - we're using current emission rate which is already post-halving
                 # keep current time and issuance at least at threshold
                 cur = th_val
                 step += 1
@@ -593,21 +593,12 @@ def fetch_metrics() -> Dict[str, Any]:
 
             # Check if we're within 30 days of this threshold
             days_estimate = remaining / emission if emission > 0 else float('inf')
-            if days_estimate < 30 and emission_7d_val is not None and emission_30d_val is not None:
+            if days_estimate < 30 and emission_7d_val is not None and emission_30d_val is not None and avg_emission_per_day > 0:
                 # We're <30 days away - switch to 7d for accuracy
-                # Calculate the ratio to adjust from base emission to 7d
-                # emission_to_use should be the 7d rate at the current halving level
-                # If base emission is 30d at current level, and we want 7d at current level:
-                # Find which level we're at (how many halvings deep) by comparing emission to avg_emission_per_day
-                import math
-                halvings_deep = 0
-                temp_emission = avg_emission_per_day
-                while temp_emission > emission * 1.5:  # Allow some tolerance
-                    temp_emission = temp_emission / 2.0
-                    halvings_deep += 1
-
-                # Now calculate 7d emission at this halving level
-                emission_to_use = emission_7d_val / (2 ** halvings_deep)
+                # Scale 7d emission to current halving level (emission gets halved in simulation loop)
+                # ratio = how many halvings have occurred (emission / base)
+                ratio = emission / avg_emission_per_day
+                emission_to_use = emission_7d_val * ratio
                 method_used = 'emission_7d'
 
             days = remaining / emission_to_use
