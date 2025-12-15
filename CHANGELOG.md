@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.31.1 (2025-12-15)
+### Backend Infrastructure
+- **Cache-Fallback Strategy**: Improved resilience for Taostats downtime
+  - New `kv_fallback.py`: Reads cached data from Cloudflare KV when primary source fails
+  - Better to show stale but accurate data than fresh but wrong data
+  - Replaces inaccurate on-chain emission estimates (Alpha Flow deviated 2.92% vs 6.68%)
+
+- **Subnets**: Fixed fallback behavior
+  - Script now fails (exit 1) when Taostats unavailable
+  - Triggers KV cache fallback instead of neuron-proportional estimates
+  - Ensures accurate emission percentages even during API downtime
+
+- **Validators**: Added KV cache fallback
+  - Falls back to cached data when Taostats fails
+  - Prevents empty validator display during API issues
+
+- **Wallets**: Added KV cache fallback
+  - Falls back to cached data when Taostats fails
+  - Preserves whale metrics during API downtime
+
+- **Smart Cache Management**:
+  - Only fresh Taostats data is uploaded to KV
+  - Cached data skips re-upload (no cache-to-cache writes)
+  - `_cached: true` flag marks fallback data
+
+### Architecture
+- Taostats API (primary - fresh & accurate)
+  → KV Cache (fallback - stale but accurate)
+  → Error (both unavailable)
+
 ## v1.0.0-rc.31 (2025-12-14)
 ### Frontend
 - **Halving Projections Redesign**: Multi-method comparison for all halvings
