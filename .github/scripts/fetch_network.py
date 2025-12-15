@@ -544,6 +544,7 @@ def fetch_metrics() -> Dict[str, Any]:
         """
         estimates = []
         now_dt = datetime.now(timezone.utc)
+        real_now = datetime.now(timezone.utc)  # Keep real time for post-halving checks
 
         # Protocol base emission rate (pre-halving #1)
         PROTOCOL_BASE_EMISSION = 7200.0  # τ/day
@@ -597,9 +598,8 @@ def fetch_metrics() -> Dict[str, Any]:
             remaining = th_val - cur
 
             # ===== Triple-Precision GPS Emission Selection =====
-            # Stage 1: Post-Halving Theoretical (0-7d after last halving)
-            # Stage 2: Long-Range 30d (>30d away from target)
-            # Stage 3: Terminal 7d (<30d away from target)
+            # Use theoretical emission until we have clean (non-contaminated) empirical data
+            # Clean thresholds: 7d average needs 7 days post-halving, 30d needs 30 days post-halving
 
             emission_to_use = emission
             method_used = method
@@ -607,29 +607,44 @@ def fetch_metrics() -> Dict[str, Any]:
             # Calculate how many halvings have occurred (for theoretical calculation)
             halvings_completed = step - 1  # step 1 = no halvings yet, step 2 = 1 halving, etc.
 
-            # Stage 1: Check if we're in post-halving stabilization period
-            use_theoretical = False
+            # Check days since last halving (use REAL time, not simulated time)
+            days_since_halving = None
             if last_halving_ts is not None:
-                seconds_since_halving = (now_dt.timestamp() - last_halving_ts / 1000.0)
+                seconds_since_halving = (real_now.timestamp() - last_halving_ts / 1000.0)
                 days_since_halving = seconds_since_halving / 86400.0
-                if days_since_halving < 7.0:
-                    # Use theoretical emission (protocol-defined, zero contamination)
-                    emission_to_use = PROTOCOL_BASE_EMISSION / (2 ** halvings_completed)
-                    method_used = 'theoretical'
-                    use_theoretical = True
 
-            # Stage 2 & 3: Distance-adaptive selection (if not using theoretical)
-            if not use_theoretical:
+            # Determine emission source based on data cleanliness
+            if days_since_halving is not None and days_since_halving < 7.0:
+                # Stage 1: Post-halving (0-7d) - ALL emissions contaminated
+                # Use theoretical for ALL future halvings
+                emission_to_use = PROTOCOL_BASE_EMISSION / (2 ** halvings_completed)
+                method_used = 'theoretical'
+
+            elif days_since_halving is not None and days_since_halving < 30.0:
+                # Transition period (7-30d): 7d clean, but 30d still contaminated
                 days_estimate = remaining / emission if emission > 0 else float('inf')
 
                 if days_estimate < 30 and emission_7d_val is not None and avg_emission_per_day > 0:
-                    # Stage 3: Terminal approach (<30d) - use 7d for precision
-                    # Scale 7d emission to current halving level
+                    # Terminal approach: 7d is clean, use it
                     ratio = emission / avg_emission_per_day
                     emission_to_use = emission_7d_val * ratio
                     method_used = 'emission_7d'
                 else:
-                    # Stage 2: Long-range (>30d) - use 30d base emission for stability
+                    # Long-range: 30d still contaminated, use theoretical
+                    emission_to_use = PROTOCOL_BASE_EMISSION / (2 ** halvings_completed)
+                    method_used = 'theoretical'
+
+            else:
+                # Normal GPS operation (>30d since halving): both 7d and 30d are clean
+                days_estimate = remaining / emission if emission > 0 else float('inf')
+
+                if days_estimate < 30 and emission_7d_val is not None and avg_emission_per_day > 0:
+                    # Stage 3: Terminal approach (<30d away) - use 7d for precision
+                    ratio = emission / avg_emission_per_day
+                    emission_to_use = emission_7d_val * ratio
+                    method_used = 'emission_7d'
+                else:
+                    # Stage 2: Long-range (>30d away) - use 30d for stability
                     emission_to_use = emission
                     method_used = method
 
