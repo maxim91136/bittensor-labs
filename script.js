@@ -550,11 +550,22 @@ async function updateNetworkStats(data) {
     ];
     if (window._lastHalving) {
       const dt = new Date(window._lastHalving.at);
-      // If avg emission is known, show Threshold -> Date -> Avg emission on one line
+      // Format UTC time explicitly
+      const year = dt.getUTCFullYear();
+      const month = String(dt.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(dt.getUTCDate()).padStart(2, '0');
+      const hours = String(dt.getUTCHours()).padStart(2, '0');
+      const mins = String(dt.getUTCMinutes()).padStart(2, '0');
+      const secs = String(dt.getUTCSeconds()).padStart(2, '0');
+      const dateStr = `${year}-${month}-${day} ${hours}:${mins}:${secs} UTC`;
+
+      // Pre-halving emission: double the current Doug's Cheat emission (if available)
+      // Current emission is post-halving, pre-halving was 2x that
       if (avg !== null) {
-        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} → ${dt.toLocaleString()} → Avg emission used: ${formatExact(avg)} TAO/day`);
+        const preHalvingEmission = avg * 2;
+        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} → ${dateStr} → Avg emission used: ${formatExact(preHalvingEmission)} TAO/day`);
       } else {
-        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} @ ${dt.toLocaleString()}`);
+        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} @ ${dateStr}`);
       }
     }
 
