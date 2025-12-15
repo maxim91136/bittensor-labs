@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.3 (2025-12-15)
+### Documentation
+- **Documentation Cleanup**: Removed obsolete emission_86d references
+  - Cleaned up `HALVING_ESTIMATES.md` method documentation
+  - emission_86d was only used in legacy fallback, not in GPS-based projections
+
+### Frontend
+- **Tooltip Consistency**: Updated "Next stages" GPS tooltip to reflect 7d threshold
+  - Changed from: "Day 30+: Full GPS (distance-adaptive precision)"
+  - Changed to: "Day 30+: Full GPS (<7d: terminal 7d, >7d: stable 30d)"
+  - Now accurately reflects rc.33.2 terminal approach threshold change
+
+### Notes
+- Polish and consistency release on top of rc.33.2
+- All documentation now accurately reflects 7d terminal threshold
+- No functional changes - documentation and UI text only
+
 ## v1.0.0-rc.33.2 (2025-12-15)
 ### Changed
 - **Pre-Halving Throttling**: Automatic switch to 7d MA at 7 days before halving
