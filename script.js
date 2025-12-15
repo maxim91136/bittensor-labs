@@ -605,8 +605,9 @@ async function updateNetworkStats(data) {
           halvingLines.push(`${step} ${t}`);
 
           // Calculate all method lines for this halving
-          // Emission halves with each subsequent halving: divisor = 2^idx
-          const divisor = Math.pow(2, idx);
+          // Emission halves with each subsequent halving: divisor = 2^(step-1)
+          // Use step from backend (absolute halving count), not idx (filtered array index)
+          const divisor = h.step !== undefined ? Math.pow(2, h.step - 1) : Math.pow(2, idx);
           const methodLabel = getMethodLabel(method);
 
           // Build all projections (used method first, then alternatives)
@@ -656,6 +657,12 @@ async function updateNetworkStats(data) {
             halvingLines.push(`  ${p.label.padEnd(3)}: ${p.eta} (${rateFormatted}/day)${marker}`);
           });
         });
+
+        // Add post-halving transparency note
+        if (futureHalvings.length > 0) {
+          halvingLines.push('');
+          halvingLines.push('⚠️ Emission averages stabilizing post-halving.');
+        }
       }
     }
     // Use last_issuance_ts from Network API for timestamp
