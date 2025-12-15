@@ -656,6 +656,12 @@ async function updateNetworkStats(data) {
             halvingLines.push(`  ${p.label.padEnd(3)}: ${p.eta} (${rateFormatted}/day)${marker}`);
           });
         });
+
+        // Add post-halving transparency note if we have future halvings
+        if (futureHalvings.length > 0) {
+          halvingLines.push('');
+          halvingLines.push('⚠️ 7d avg transitioning (pre→post). Stabilizes in ~7d.');
+        }
       }
     }
     // Use last_issuance_ts from Network API for timestamp
