@@ -595,6 +595,13 @@ async function updateNetworkStats(data) {
 
         // Filter out already-reached thresholds (remaining <= 0)
         const futureHalvings = data.halving_estimates.filter(h => h.remaining > 0);
+
+        // Determine how many halvings are already completed
+        // If first future halving is step=2, then halving #1 is done (current_done=1)
+        const currentHalvingsDone = futureHalvings.length > 0 && futureHalvings[0].step !== undefined
+          ? futureHalvings[0].step - 1
+          : 0;
+
         futureHalvings.slice(0, 3).forEach((h, idx) => {
           const step = h.step !== undefined ? `#${h.step}` : '';
           const t = formatNumber(h.threshold);
@@ -604,10 +611,12 @@ async function updateNetworkStats(data) {
           // Header line: #X threshold
           halvingLines.push(`${step} ${t}`);
 
-          // Calculate all method lines for this halving
-          // Emission halves with each subsequent halving: divisor = 2^(step-1)
-          // Use step from backend (absolute halving count), not idx (filtered array index)
-          const divisor = h.step !== undefined ? Math.pow(2, h.step - 1) : Math.pow(2, idx);
+          // Calculate emission divisor for alternatives
+          // We're currently post-halving #{currentHalvingsDone}
+          // For each future halving, count how many more halvings are needed
+          // Example: If done=1 and target step=3, we need 1 more halving (#2) → divisor=2^1=2
+          const halvingsAhead = h.step !== undefined ? h.step - currentHalvingsDone - 1 : idx;
+          const divisor = Math.pow(2, Math.max(0, halvingsAhead));
           const methodLabel = getMethodLabel(method);
 
           // Build all projections (used method first, then alternatives)
