@@ -135,41 +135,39 @@ def fetch_subnets_lite():
         print(f"✅ Found {len(subnets)} subnets", file=sys.stderr)
 
         # Fetch on-chain emissions for all subnets
-        # Note: With dTAO/Taoflow, emission data may not be directly queryable
-        # We'll try PendingEmission as a proxy, or use metagraph dividends
-        print("📊 Querying on-chain emission data via Root Network...", file=sys.stderr)
+        # dTAO/Taoflow: Emissions based on Alpha flow (SubnetAlphaIn - SubnetAlphaOut)
+        print("📊 Querying on-chain emission data via Alpha Flow...", file=sys.stderr)
         subnet_emissions = {}
         total_emission_raw = 0
 
         try:
-            # Try to get Root Network (netuid=0) metagraph which contains dividend info
-            root_metagraph = subtensor.metagraph(netuid=0, mechid=0)
+            # Query SubnetAlphaIn and SubnetAlphaOut for each subnet
+            # Net flow (In - Out) determines emission allocation
+            for netuid in subnets:
+                try:
+                    # Query alpha in-flow
+                    alpha_in = subtensor.substrate.query('SubtensorModule', 'SubnetAlphaIn', [netuid])
+                    alpha_in_val = int(alpha_in.value if hasattr(alpha_in, 'value') else alpha_in) if alpha_in else 0
 
-            # Root network UIDs correspond to subnet IDs
-            # Dividends represent emission allocation
-            if hasattr(root_metagraph, 'dividends') and hasattr(root_metagraph, 'uids'):
-                print(f"✅ Got root metagraph with {len(root_metagraph.uids)} entries", file=sys.stderr)
+                    # Query alpha out-flow
+                    alpha_out = subtensor.substrate.query('SubtensorModule', 'SubnetAlphaOut', [netuid])
+                    alpha_out_val = int(alpha_out.value if hasattr(alpha_out, 'value') else alpha_out) if alpha_out else 0
 
-                for uid in root_metagraph.uids:
-                    try:
-                        # UID in root network = netuid of subnet
-                        netuid = int(uid)
-                        # Dividend is the emission allocation (0-1 range typically)
-                        dividend = float(root_metagraph.dividends[uid]) if hasattr(root_metagraph.dividends[uid], '__float__') else float(root_metagraph.dividends[uid].item()) if hasattr(root_metagraph.dividends[uid], 'item') else 0.0
+                    # Net flow = In - Out (can be negative!)
+                    net_flow = alpha_in_val - alpha_out_val
 
-                        if dividend > 0:
-                            subnet_emissions[netuid] = dividend
-                            total_emission_raw += dividend
-                    except Exception as e:
-                        print(f"⚠️ Failed to parse dividend for UID{uid}: {e}", file=sys.stderr)
-                        continue
+                    if net_flow > 0:
+                        subnet_emissions[int(netuid)] = net_flow
+                        total_emission_raw += net_flow
 
-                print(f"✅ Got emission data for {len(subnet_emissions)} subnets from root network", file=sys.stderr)
-            else:
-                print(f"⚠️ Root metagraph missing dividends/uids attributes", file=sys.stderr)
+                except Exception as e:
+                    print(f"⚠️ Failed to query alpha flow for SN{netuid}: {e}", file=sys.stderr)
+                    continue
+
+            print(f"✅ Got emission data for {len(subnet_emissions)} subnets from alpha flow (total: {total_emission_raw})", file=sys.stderr)
 
         except Exception as e:
-            print(f"⚠️ Failed to query root network emissions: {e}", file=sys.stderr)
+            print(f"⚠️ Failed to query alpha flow emissions: {e}", file=sys.stderr)
             import traceback
             traceback.print_exc()
 
@@ -227,7 +225,7 @@ def fetch_subnets_lite():
             entry['emission_share'] = round(emission_share, 6)
             entry['estimated_emission_daily'] = round(estimated_emission, 6)
             entry['emission_share_percent'] = round(emission_share * 100, 4)
-            entry['ema_source'] = 'root_dividends'
+            entry['ema_source'] = 'alpha_flow_onchain'
             del entry['_emission_raw']
 
         # Subnets WITHOUT dividends get neuron-proportional estimates
