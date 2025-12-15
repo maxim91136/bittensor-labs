@@ -679,7 +679,7 @@ async function updateNetworkStats(data) {
             halvingLines.push('');
             halvingLines.push('Next stages:');
             halvingLines.push('  Day 7-30:  Transition (7d clean, 30d contaminated)');
-            halvingLines.push('  Day 30+:   Full GPS (distance-adaptive precision)');
+            halvingLines.push('  Day 30+:   Full GPS (<7d: terminal 7d, >7d: stable 30d)');
 
           } else if (first.method === 'theoretical') {
             // Theoretical fallback
