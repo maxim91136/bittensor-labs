@@ -13,21 +13,24 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python
+      - name: Set up Python with pip cache
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: '.github/requirements-bittensor.txt'
 
-      - name: Install dependencies
-        run: pip install requests
+      - name: Install dependencies (cached)
+        run: pip install -r .github/requirements-bittensor.txt
 
-      - name: Fetch block time data
+      - name: Fetch block time data (on-chain primary, Taostats fallback)
         id: fetch
         env:
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
+          NETWORK: finney
         run: |
           cd .github/scripts
-          python fetch_block_time.py > block_time_output.json
+          python fetch_block_time_hybrid.py > block_time_output.json
 
           # Check if output is valid JSON with actual data
           if [ -s block_time_output.json ] && jq -e '.avg_block_time' block_time_output.json > /dev/null 2>&1; then
