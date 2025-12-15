@@ -548,8 +548,10 @@ async function updateNetworkStats(data) {
       `Remaining: ${formatExact(remainingSafe)} TAO`,
       `Source: ${halvingSourceLabel}`
     ];
-    if (window._lastHalving) {
-      const dt = new Date(window._lastHalving.at);
+    // Use last_halving from data (API) or fallback to window._lastHalving (halving module)
+    const lastHalving = (data && data.last_halving) || window._lastHalving;
+    if (lastHalving) {
+      const dt = new Date(lastHalving.at);
       // Format UTC time explicitly
       const year = dt.getUTCFullYear();
       const month = String(dt.getUTCMonth() + 1).padStart(2, '0');
@@ -563,9 +565,9 @@ async function updateNetworkStats(data) {
       // Fallback to doubling current emission if not available
       const preHalvingEmission = (data && data.pre_halving_emission) ? data.pre_halving_emission : (avg !== null ? avg * 2 : null);
       if (preHalvingEmission !== null) {
-        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} → ${dateStr} → Avg emission used: ${formatExact(preHalvingEmission)} TAO/day`);
+        halvingLines.push(`Last reached: ${formatNumber(lastHalving.threshold)} → ${dateStr} → Avg emission used: ${formatExact(preHalvingEmission)} TAO/day`);
       } else {
-        halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} @ ${dateStr}`);
+        halvingLines.push(`Last reached: ${formatNumber(lastHalving.threshold)} @ ${dateStr}`);
       }
     }
 
