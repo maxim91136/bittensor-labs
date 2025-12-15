@@ -593,7 +593,9 @@ async function updateNetworkStats(data) {
       if (Array.isArray(data.halving_estimates) && data.halving_estimates.length) {
         halvingLines.push('Halving projections:');
 
-        data.halving_estimates.slice(0, 3).forEach((h, idx) => {
+        // Filter out already-reached thresholds (remaining <= 0)
+        const futureHalvings = data.halving_estimates.filter(h => h.remaining > 0);
+        futureHalvings.slice(0, 3).forEach((h, idx) => {
           const step = h.step !== undefined ? `#${h.step}` : '';
           const t = formatNumber(h.threshold);
           const usedEmission = h.emission_used;
