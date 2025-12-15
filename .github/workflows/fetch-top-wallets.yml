@@ -20,14 +20,32 @@ jobs:
       - name: Install dependencies
         run: pip install requests
 
-      - name: Fetch top wallets from Taostats
+      - name: Fetch wallets (Taostats primary, KV cache fallback)
         id: fetch
         env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
         run: |
-          python .github/scripts/fetch_top_wallets.py > /tmp/top_wallets.json
-          echo "Fetched top wallets:"
-          cat /tmp/top_wallets.json | jq '.wallets[] | {rank, identity, address_short, balance_total, dominance}'
+          # Try Taostats first
+          python .github/scripts/fetch_top_wallets.py > /tmp/top_wallets.json || TAOSTATS_FAILED=1
+
+          # If Taostats failed, use cached KV data
+          if [ "$TAOSTATS_FAILED" = "1" ] || [ ! -s /tmp/top_wallets.json ]; then
+            echo "⚠️ Taostats failed, retrieving cached wallet data from KV..."
+            python .github/scripts/kv_fallback.py top_wallets > /tmp/top_wallets.json || KV_FAILED=1
+
+            if [ "$KV_FAILED" = "1" ] || [ ! -s /tmp/top_wallets.json ]; then
+              echo "❌ Both Taostats and KV cache failed - no wallet data"
+              exit 1
+            fi
+
+            echo "✅ Using cached wallet data (may be stale but accurate)"
+          else
+            echo "✅ Fetched fresh wallet data from Taostats"
+            cat /tmp/top_wallets.json | jq '.wallets[] | {rank, identity, address_short, balance_total, dominance}'
+          fi
 
       - name: Write to Cloudflare KV
         env:
@@ -35,16 +53,21 @@ jobs:
           CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
         run: |
+          # Only upload if we have fresh data (not cached fallback)
+          if grep -q '"_cached": true' /tmp/top_wallets.json; then
+            echo "⚠️ Skipping KV upload - using cached data (no point writing cache back to cache)"
+            exit 0
+          fi
+
           KV_URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/top_wallets"
-          
+
           CURL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X PUT "$KV_URL" \
             -H "Authorization: Bearer $CF_API_TOKEN" \
             -H "Content-Type: application/json" \
             --data-binary @/tmp/top_wallets.json || true)
-          
+
           if [ "$CURL_STATUS" = "200" ]; then
-            echo "✅ Top wallets written to KV successfully"
+            echo "✅ Fresh wallet data written to KV"
           else
-            echo "❌ Failed to write to KV (HTTP $CURL_STATUS)"
-            exit 1
+            echo "⚠️ Failed to write to KV (HTTP $CURL_STATUS)"
           fi

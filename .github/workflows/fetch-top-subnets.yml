@@ -31,7 +31,7 @@ jobs:
         run: |
           python .github/scripts/clear_kv.py
 
-      - name: Fetch subnet data (Taostats primary, on-chain fallback)
+      - name: Fetch subnet data (Taostats primary, KV cache fallback)
         id: fetch_subnets
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
@@ -41,21 +41,27 @@ jobs:
           NETWORK: finney
           DAILY_EMISSION: 7200
         run: |
-          # Try Taostats first (better aggregated emissions data)
+          # Try Taostats first (accurate aggregated emissions)
           python .github/scripts/fetch_top_subnets.py || TAOSTATS_FAILED=1
 
-          # If Taostats failed, use on-chain fallback
+          # If Taostats failed, use cached KV data (stale but accurate)
           if [ "$TAOSTATS_FAILED" = "1" ] || [ ! -f .github/data/top_subnets.json ]; then
-            echo "⚠️ Taostats failed, using on-chain fallback..."
-            python .github/scripts/fetch_subnets_lite.py
-            cp .github/data/subnets_lite.json .github/data/top_subnets.json
+            echo "⚠️ Taostats failed, retrieving cached data from KV..."
+            python .github/scripts/kv_fallback.py top_subnets > .github/data/top_subnets.json || KV_FAILED=1
+
+            if [ "$KV_FAILED" = "1" ] || [ ! -s .github/data/top_subnets.json ]; then
+              echo "❌ Both Taostats and KV cache failed - no data available"
+              exit 1
+            fi
+
+            echo "✅ Using cached subnet data (may be stale but accurate)"
           fi
 
           # Verify we have data
           if [ -f .github/data/top_subnets.json ]; then
-            echo "✅ Subnet data fetched successfully"
+            echo "✅ Subnet data available"
           else
-            echo "❌ Both Taostats and on-chain failed"
+            echo "❌ No subnet data"
             exit 1
           fi
 

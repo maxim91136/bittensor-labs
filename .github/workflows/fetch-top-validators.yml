@@ -23,14 +23,28 @@ jobs:
           python -m pip install --upgrade pip
           # No bittensor needed - using Taostats API only
 
-      - name: Run top validators script
+      - name: Fetch validators (Taostats primary, KV cache fallback)
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
         run: |
-          python .github/scripts/fetch_top_validators.py
+          # Try Taostats first
+          python .github/scripts/fetch_top_validators.py || TAOSTATS_FAILED=1
+
+          # If Taostats failed, use cached KV data
+          if [ "$TAOSTATS_FAILED" = "1" ] || [ ! -f .github/data/top_validators.json ]; then
+            echo "⚠️ Taostats failed, retrieving cached validator data from KV..."
+            python .github/scripts/kv_fallback.py top_validators > .github/data/top_validators.json || KV_FAILED=1
+
+            if [ "$KV_FAILED" = "1" ] || [ ! -s .github/data/top_validators.json ]; then
+              echo "❌ Both Taostats and KV cache failed - no validator data"
+              exit 1
+            fi
+
+            echo "✅ Using cached validator data (may be stale but accurate)"
+          fi
 
       - name: Validate top_validators output
         run: |
