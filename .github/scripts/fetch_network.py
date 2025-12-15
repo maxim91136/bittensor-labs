@@ -497,19 +497,19 @@ def fetch_metrics() -> Dict[str, Any]:
     projection_method = None
     avg_for_projection = None
     # Select projection average based on data-availability thresholds
-    # Priority: 86d (protocol EMA) > 30d > 7d > daily
-    # Use the longest reliable window available for most stable predictions
-    if emission_86d is not None:
-        # ~86 day EMA matches protocol's emission smoothing window
-        avg_for_projection = emission_86d
-        projection_method = 'emission_86d'
+    # Priority: 7d > 30d > 86d > daily
+    # Use 7d for most accurate near-term projections (more responsive to recent changes)
+    if days_of_history is not None and days_of_history >= 7 and emission_7d is not None:
+        avg_for_projection = emission_7d
+        projection_method = 'emission_7d'
     elif days_of_history is not None and days_of_history >= 14 and emission_30d is not None and emission_30d != emission_7d:
         # Only use 30d if we have real 30d data (not fallback to 7d)
         avg_for_projection = emission_30d
         projection_method = 'emission_30d'
-    elif days_of_history is not None and days_of_history >= 7 and emission_7d is not None:
-        avg_for_projection = emission_7d
-        projection_method = 'emission_7d'
+    elif emission_86d is not None:
+        # ~86 day EMA matches protocol's emission smoothing window
+        avg_for_projection = emission_86d
+        projection_method = 'emission_86d'
     elif days_of_history is not None and days_of_history >= 3 and emission_daily is not None:
         avg_for_projection = emission_daily
         projection_method = 'emission_daily'

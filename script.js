@@ -510,9 +510,26 @@ async function updateNetworkStats(data) {
       pill.classList.add('just-halved');
       setTimeout(() => pill.classList.remove('just-halved'), 8000);
     }
-  } else if (remaining !== null && emissionPerDay && emissionPerDay > 0 && remaining > 0) {
-    // Calculate the halving date for the currently active threshold
-    window.halvingDate = rotateToThreshold(thresholds, window._halvingIndex, currentSupplyForHalving, emissionPerDay);
+  } else if (remaining !== null && remaining > 0) {
+    // Use ETA from backend if available (more accurate, uses historical emission data)
+    if (data && Array.isArray(data.halving_estimates) && data.halving_estimates.length > 0) {
+      const nextHalvingEta = data.halving_estimates[0].eta;
+      if (nextHalvingEta) {
+        window.halvingDate = new Date(nextHalvingEta);
+        if (window._debug) console.debug('Using backend ETA for halving:', nextHalvingEta);
+      } else if (emissionPerDay && emissionPerDay > 0) {
+        // Fallback to local calculation if backend ETA missing
+        window.halvingDate = rotateToThreshold(thresholds, window._halvingIndex, currentSupplyForHalving, emissionPerDay);
+        if (window._debug) console.debug('Backend ETA missing, using local calculation');
+      } else {
+        window.halvingDate = null;
+      }
+    } else if (emissionPerDay && emissionPerDay > 0) {
+      // Fallback: no backend estimates available
+      window.halvingDate = rotateToThreshold(thresholds, window._halvingIndex, currentSupplyForHalving, emissionPerDay);
+    } else {
+      window.halvingDate = null;
+    }
   } else {
     window.halvingDate = null;
   }
