@@ -633,110 +633,28 @@ async function updateNetworkStats(data) {
           const usedEmission = h.emission_used;
           const usedEtaMs = h.eta ? new Date(h.eta).getTime() : null;
 
-          // Header line: #X threshold with GPS stage
-          const gpsStageLabel = getGpsStageLabel(h.gps_stage);
-          if (gpsStageLabel) {
-            halvingLines.push(`${step} ${t}    ${gpsStageLabel}`);
-          } else {
-            halvingLines.push(`${step} ${t}`);
-          }
-
-          // Add GPS metadata sub-line
-          const metaItems = [];
-
-          // Method and confidence
+          // Clean single-line format: #X threshold - method - ETA (emission/day)
           const methodLabel = getMethodLabel(h.method || method);
-          if (h.confidence) {
-            const confLabel = getConfidenceLabel(h.confidence);
-            metaItems.push(`${methodLabel} [${confLabel}]`);
-          } else {
-            metaItems.push(methodLabel);
-          }
+          const etaFormatted = usedEtaMs ? formatEtaFromMs(usedEtaMs).split(' ').slice(0, 1).join(' ') : '?'; // Just date, no time
+          const rateFormatted = usedEmission ? Math.round(usedEmission).toLocaleString() : '?';
 
-          // Days since halving (if in post-halving phase)
-          if (h.days_since_halving !== undefined) {
-            metaItems.push(`${h.days_since_halving.toFixed(1)}d since halving`);
-          }
-
-          // Data clean in X days
-          if (h.data_clean_in_days !== undefined && h.data_clean_in_days > 0) {
-            metaItems.push(`Data clean in: ${h.data_clean_in_days.toFixed(1)}d`);
-          }
-
-          // Output metadata line
-          if (metaItems.length > 0) {
-            halvingLines.push(`  └─ ${metaItems.join(' | ')}`);
-          }
-
-          // Calculate emission divisor for alternatives
-          // We're currently post-halving #{currentHalvingsDone}
-          // For each future halving, count how many more halvings are needed
-          // Example: If done=1 and target step=3, we need 1 more halving (#2) → divisor=2^1=2
-          const halvingsAhead = h.step !== undefined ? h.step - currentHalvingsDone - 1 : idx;
-          const divisor = Math.pow(2, Math.max(0, halvingsAhead));
-
-          // Build all projections (used method first, then alternatives)
-          const projections = [];
-
-          // Add used method first
-          if (usedEtaMs && usedEmission) {
-            projections.push({
-              label: methodLabel,
-              rate: usedEmission,
-              eta: formatEtaFromMs(usedEtaMs),
-              isUsed: true
-            });
-          }
-
-          // 86d alternative (if available and not used)
-          if (emission86d && method !== 'emission_86d' && usedEmission && usedEtaMs) {
-            const rate = emission86d / divisor;
-            const ratio = usedEmission / rate;
-            const deltaFromBase = usedEtaMs - baseTimeMs;
-            const altEtaMs = baseTimeMs + deltaFromBase * ratio;
-            projections.push({ label: '86d', rate, eta: formatEtaFromMs(altEtaMs), isUsed: false });
-          }
-
-          // 30d alternative (if available and not used)
-          if (emission30d && method !== 'emission_30d' && usedEmission && usedEtaMs) {
-            const rate = emission30d / divisor;
-            const ratio = usedEmission / rate;
-            const deltaFromBase = usedEtaMs - baseTimeMs;
-            const altEtaMs = baseTimeMs + deltaFromBase * ratio;
-            projections.push({ label: '30d', rate, eta: formatEtaFromMs(altEtaMs), isUsed: false });
-          }
-
-          // 7d alternative (if available and not used)
-          if (emission7d && method !== 'emission_7d' && usedEmission && usedEtaMs) {
-            const rate = emission7d / divisor;
-            const ratio = usedEmission / rate;
-            const deltaFromBase = usedEtaMs - baseTimeMs;
-            const altEtaMs = baseTimeMs + deltaFromBase * ratio;
-            projections.push({ label: '7d', rate, eta: formatEtaFromMs(altEtaMs), isUsed: false });
-          }
-
-          // Format projection lines with aligned labels
-          projections.forEach(p => {
-            const marker = p.isUsed ? ' ← used' : '';
-            const rateFormatted = Math.round(p.rate).toLocaleString();
-            halvingLines.push(`  ${p.label.padEnd(3)}: ${p.eta} (${rateFormatted}/day)${marker}`);
-          });
+          halvingLines.push(`${step} ${t} - ${methodLabel} - ${etaFormatted} (${rateFormatted}/day)`);
         });
 
-        // Add GPS methodology note
-        if (futureHalvings.length > 0) {
+        // Add concise status note
+        if (futureHalvings.length > 0 && futureHalvings[0]) {
+          const first = futureHalvings[0];
           halvingLines.push('');
-          const hasEmpiricalHalved = futureHalvings.some(h => h.method === 'empirical_halved');
-          const hasTheoretical = futureHalvings.some(h => h.method === 'theoretical');
 
-          if (hasEmpiricalHalved) {
-            halvingLines.push('🎯 Doug\'s Cheat: Using ACTUAL pre-halving emission data');
-            halvingLines.push('   Real historical data halved - more accurate than theoretical!');
-          } else if (hasTheoretical) {
-            halvingLines.push('🛰️ Triple-Precision GPS: Distance-adaptive methodology');
-            halvingLines.push('   Using protocol-defined emission until empirical data stabilizes');
+          if (first.method === 'empirical_halved') {
+            // Doug's Cheat is active - show compact status
+            const daysSince = first.days_since_halving !== undefined ? first.days_since_halving.toFixed(1) : '?';
+            const daysUntilClean = first.data_clean_in_days !== undefined ? first.data_clean_in_days.toFixed(1) : '?';
+            halvingLines.push(`🎯 Doug's Cheat active (${daysSince}d post-halving, clean in ${daysUntilClean}d)`);
+          } else if (first.method === 'theoretical') {
+            halvingLines.push('📡 Theoretical emission (historical data unavailable)');
           } else {
-            halvingLines.push('📊 Projection method adapts based on distance and data quality');
+            halvingLines.push('🛰️ GPS: Empirical data clean, using distance-adaptive precision');
           }
         }
       }
