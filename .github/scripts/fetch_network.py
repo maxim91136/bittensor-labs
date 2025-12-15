@@ -603,9 +603,13 @@ def fetch_metrics() -> Dict[str, Any]:
 
             emission_to_use = emission
             method_used = method
+            gps_stage = None
+            confidence = 'medium'
+            data_clean_in_days = None
 
             # Calculate how many halvings have occurred (for theoretical calculation)
             halvings_completed = step - 1  # step 1 = no halvings yet, step 2 = 1 halving, etc.
+            theoretical_for_state = PROTOCOL_BASE_EMISSION / (2 ** halvings_completed)
 
             # Check days since last halving (use REAL time, not simulated time)
             days_since_halving = None
@@ -617,40 +621,75 @@ def fetch_metrics() -> Dict[str, Any]:
             if days_since_halving is not None and days_since_halving < 7.0:
                 # Stage 1: Post-halving (0-7d) - ALL emissions contaminated
                 # Use theoretical for ALL future halvings
-                emission_to_use = PROTOCOL_BASE_EMISSION / (2 ** halvings_completed)
+                emission_to_use = theoretical_for_state
                 method_used = 'theoretical'
+                gps_stage = 'post_halving_stabilization'
+                confidence = 'protocol_defined'
+                data_clean_in_days = 7.0 - days_since_halving
 
             elif days_since_halving is not None and days_since_halving < 30.0:
                 # Transition period (7-30d): 7d clean, but 30d still contaminated
                 days_estimate = remaining / emission if emission > 0 else float('inf')
 
-                if days_estimate < 30 and emission_7d_val is not None and avg_emission_per_day > 0:
-                    # Terminal approach: 7d is clean, use it
-                    ratio = emission / avg_emission_per_day
+                if days_estimate < 30 and emission_7d_val is not None and emission_7d_val > 0:
+                    # Terminal approach: 7d is clean, use it with theoretical-based ratio
+                    ratio = theoretical_for_state / PROTOCOL_BASE_EMISSION
                     emission_to_use = emission_7d_val * ratio
                     method_used = 'emission_7d'
+                    gps_stage = 'terminal_approach_transition'
+                    confidence = 'high'
+                    data_clean_in_days = None  # 7d data already clean
                 else:
                     # Long-range: 30d still contaminated, use theoretical
-                    emission_to_use = PROTOCOL_BASE_EMISSION / (2 ** halvings_completed)
+                    emission_to_use = theoretical_for_state
                     method_used = 'theoretical'
+                    gps_stage = 'long_range_transition'
+                    confidence = 'protocol_defined'
+                    data_clean_in_days = 30.0 - days_since_halving
 
             else:
                 # Normal GPS operation (>30d since halving): both 7d and 30d are clean
                 days_estimate = remaining / emission if emission > 0 else float('inf')
 
-                if days_estimate < 30 and emission_7d_val is not None and avg_emission_per_day > 0:
+                if days_estimate < 30 and emission_7d_val is not None and emission_7d_val > 0:
                     # Stage 3: Terminal approach (<30d away) - use 7d for precision
-                    ratio = emission / avg_emission_per_day
+                    ratio = theoretical_for_state / PROTOCOL_BASE_EMISSION
                     emission_to_use = emission_7d_val * ratio
                     method_used = 'emission_7d'
+                    gps_stage = 'terminal_approach'
+                    confidence = 'high'
                 else:
                     # Stage 2: Long-range (>30d away) - use 30d for stability
                     emission_to_use = emission
                     method_used = method
+                    gps_stage = 'long_range'
+                    confidence = 'high'
 
             days = remaining / emission_to_use
             eta = now_dt + timedelta(days=days)
-            estimates.append({'threshold': th_val, 'remaining': round(remaining, 6), 'days': round(days, 3), 'eta': eta.isoformat(), 'method': method_used, 'emission_used': round(emission_to_use, 6), 'step': step})
+
+            # Build estimate entry with GPS metadata
+            estimate_entry = {
+                'threshold': th_val,
+                'remaining': round(remaining, 6),
+                'days': round(days, 3),
+                'eta': eta.isoformat(),
+                'method': method_used,
+                'emission_used': round(emission_to_use, 6),
+                'step': step,
+                'gps_stage': gps_stage,
+                'confidence': confidence
+            }
+
+            # Add days_since_halving if available
+            if days_since_halving is not None:
+                estimate_entry['days_since_halving'] = round(days_since_halving, 2)
+
+            # Add data_clean_in_days if applicable
+            if data_clean_in_days is not None:
+                estimate_entry['data_clean_in_days'] = round(data_clean_in_days, 2)
+
+            estimates.append(estimate_entry)
 
             # advance simulation: jump to threshold time and issuance, then halve emission (base emission, not the adaptive one)
             now_dt = eta

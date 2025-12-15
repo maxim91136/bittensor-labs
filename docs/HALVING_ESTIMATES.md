@@ -7,14 +7,34 @@ halving_estimates
 ------------------
 An array of objects, one per configured halving threshold. Each object contains:
 
+### Core Fields
 - `threshold` (number): target total issuance for the halving event.
 - `remaining` (number): tokens remaining until the threshold (threshold - current issuance).
 - `days` (number|null): projected days until the threshold at the `emission_used` rate (rounded to 3 decimals), or `null` if projection not possible.
 - `eta` (ISO timestamp|null): estimated date/time when the threshold will be reached, or `null`.
-- `method` (string|null): projection method used (e.g. `emission_daily`, `emission_7d`, `emission_daily_low_confidence`, `mean_from_intervals`).
+- `method` (string|null): projection method used (e.g. `emission_7d`, `emission_30d`, `emission_86d`, `theoretical`).
 - `emission_used` (number|null): the TAO/day emission rate used to calculate the ETA for this specific threshold.
 - `step` (int|null): 1-based index of the halving event (1 = next halving, 2 = following, ...). `null` if the threshold was malformed.
-- `delta` (number|null): difference from previous issuance point (useful to see how much this step adds relative to previous step). Typically equals `threshold - previous_threshold` for planned thresholds or `threshold - current_issuance` for the first step.
+
+### Triple-Precision GPS Metadata
+These fields provide transparency about the GPS (Global Positioning System) methodology used for projection:
+
+- `gps_stage` (string|null): Current GPS stage for this projection:
+  - `'post_halving_stabilization'`: 0-7 days post-halving, all data contaminated
+  - `'terminal_approach_transition'`: 7-30d post-halving, terminal approach (<30d away), using clean 7d data
+  - `'long_range_transition'`: 7-30d post-halving, long-range (>30d away), using theoretical (30d contaminated)
+  - `'terminal_approach'`: >30d post-halving, terminal approach (<30d away), using clean 7d data
+  - `'long_range'`: >30d post-halving, long-range (>30d away), using clean 30d data
+
+- `confidence` (string): Confidence level of the projection:
+  - `'protocol_defined'`: Using theoretical emission (7200/2^n), highest confidence
+  - `'high'`: Using empirical data from clean, sufficient history
+  - `'medium'`: Limited history but usable
+  - `'low'`: Very limited history, projection unreliable
+
+- `days_since_halving` (number|null): Days elapsed since the last halving event (rounded to 2 decimals). Only present during post-halving phases (0-30 days).
+
+- `data_clean_in_days` (number|null): Days remaining until empirical data becomes clean (rounded to 2 decimals). Only present when using theoretical emission due to contamination. `null` when data is already clean.
 
 Projection metadata (top-level fields)
 --------------------------------------
@@ -29,26 +49,133 @@ History diagnostics
 - `per_interval_samples` (int): number of per-interval delta samples computed from the history.
 - `days_of_history` (float|null): approximate days covered by the stored history (e.g. 0.8).
 
-Example `halving_estimates` entry
----------------------------------
+Example `halving_estimates` entries
+------------------------------------
 
-```
+### Example 1: Post-Halving Stabilization (0-7 days)
+Using theoretical emission during data contamination:
+```json
 {
-  "step": 1,
-  "threshold": 10500000.0,
-  "delta": 129636.373871,
-  "remaining": 129636.373871,
-  "days": 18.027,
-  "eta": "2025-12-12T17:41:26.716320+00:00",
-  "method": "emission_daily_low_confidence",
-  "emission_used": 7191.158758
+  "step": 2,
+  "threshold": 15750000.0,
+  "remaining": 5250000.0,
+  "days": 1458.333,
+  "eta": "2029-12-13T01:23:23+00:00",
+  "method": "theoretical",
+  "emission_used": 3600.0,
+  "gps_stage": "post_halving_stabilization",
+  "confidence": "protocol_defined",
+  "days_since_halving": 0.6,
+  "data_clean_in_days": 6.4
 }
 ```
+
+### Example 2: Normal GPS Operation (>30 days post-halving)
+Using empirical 7d data for terminal approach:
+```json
+{
+  "step": 3,
+  "threshold": 18375000.0,
+  "remaining": 2625000.0,
+  "days": 729.167,
+  "eta": "2027-12-10T09:23:23+00:00",
+  "method": "emission_7d",
+  "emission_used": 3600.0,
+  "gps_stage": "terminal_approach",
+  "confidence": "high"
+}
+```
+
+### Example 3: Normal GPS Operation - Long Range
+Using empirical 30d data for long-range projection:
+```json
+{
+  "step": 4,
+  "threshold": 19687500.0,
+  "remaining": 1312500.0,
+  "days": 1458.333,
+  "eta": "2031-12-07T17:23:23+00:00",
+  "method": "emission_30d",
+  "emission_used": 900.0,
+  "gps_stage": "long_range",
+  "confidence": "high"
+}
+```
+
+Triple-Precision GPS Methodology
+---------------------------------
+
+The **Triple-Precision GPS (Global Positioning System)** is a distance-adaptive emission selection methodology that ensures accurate halving projections across all time horizons and data quality states.
+
+### Core Principle
+**"Use theoretical emission until we have clean (non-contaminated) empirical data"**
+
+Post-halving, empirical emission averages are contaminated with pre-halving data:
+- **7d average**: Contaminated for 7 days post-halving
+- **30d average**: Contaminated for 30 days post-halving
+
+### GPS Stages
+
+#### Stage 1: Post-Halving Stabilization (0-7 days)
+- **All projections use theoretical emission** (7200/2^n τ/day)
+- Both 7d and 30d averages are contaminated
+- Confidence: `protocol_defined` (highest)
+- Ensures zero contamination during data stabilization
+
+#### Stage 2: Transition Period (7-30 days)
+- **Terminal approach (<30d away)**: Uses clean 7d empirical data
+- **Long-range (>30d away)**: Uses theoretical (30d still contaminated)
+- Confidence: `high` for 7d, `protocol_defined` for theoretical
+
+#### Stage 3: Normal GPS Operation (>30 days)
+- **Terminal approach (<30d away)**: Uses 7d for real-time precision
+- **Long-range (>30d away)**: Uses 30d for stable noise-resistant forecasts
+- Both data sources are clean
+- Confidence: `high` for both
+
+### Visual Timeline
+```
+Day 0 ━━━━━━━━━━━━ Day 7 ━━━━━━━━━━━━━━━ Day 30 ━━━━━━━━━━▶
+ │                  │                       │
+ │◄── Stage 1 ─────►│◄──── Stage 2 ───────►│◄─── Stage 3 ──▶
+ │                  │                       │
+ │ ALL: Theoretical │ Terminal: 7d ✓       │ Terminal: 7d ✓
+ │                  │ Long-Range: Theoret. │ Long-Range: 30d ✓
+ │                  │                       │
+🎯 Halving!       7d clean            30d clean
+```
+
+### Theoretical Emission Calculation
+```
+theoretical_emission = PROTOCOL_BASE_EMISSION / (2 ^ halvings_completed)
+
+where:
+  PROTOCOL_BASE_EMISSION = 7200 τ/day
+  halvings_completed = step - 1
+```
+
+Examples:
+- Pre-halving #1 (step=1): 7200 / 2^0 = **7200 τ/day**
+- Post-halving #1 (step=2): 7200 / 2^1 = **3600 τ/day**
+- Post-halving #2 (step=3): 7200 / 2^2 = **1800 τ/day**
+- Post-halving #3 (step=4): 7200 / 2^3 = **900 τ/day**
+
+### Ratio Optimization
+During GPS operation, when using empirical data (7d or 30d), the ratio is calculated based on theoretical emission to avoid contamination artifacts:
+
+```javascript
+ratio = theoretical_for_state / PROTOCOL_BASE_EMISSION
+emission_to_use = emission_empirical * ratio
+```
+
+This ensures that even when using empirical data, the scaling is based on clean protocol-defined values.
 
 Notes
 -----
 - `emission_used` is included per-entry so consumers can display or debug the exact rate used for that ETA. The simulation halves the emission after each threshold is reached; therefore the `emission_used` for step N is expected to be approximately half of step N-1.
 - If projection confidence is `low`, consumers may choose to hide ETA values or annotate them as low-confidence.
+- The GPS methodology automatically adapts as time passes post-halving, transitioning from theoretical to empirical data as contamination windows expire.
+- Frontend consumers should display GPS metadata (`gps_stage`, `confidence`, `data_clean_in_days`) to provide transparency about projection methodology.
 
 
 Maintainers: update this doc if the producer script changes the projection fields or their semantics.

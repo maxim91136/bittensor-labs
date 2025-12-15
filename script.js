@@ -581,12 +581,35 @@ async function updateNetworkStats(data) {
       const emission86d = data.emission_86d;
       const baseTimeMs = data.last_issuance_ts ? data.last_issuance_ts * 1000 : Date.now();
 
-      // Determine method label for display
+      // Determine method label for display with GPS indicators
       const getMethodLabel = (m) => {
         if (m === 'emission_86d') return '86d';
         if (m === 'emission_30d') return '30d';
         if (m === 'emission_7d') return '7d';
+        if (m === 'theoretical') return '📡 Theoretical';
         return m ? m.replace('emission_', '') : '?';
+      };
+
+      // Get GPS stage emoji and label
+      const getGpsStageLabel = (stage) => {
+        if (!stage) return null;
+        const stages = {
+          'post_halving_stabilization': '🛰️ Stage 1: Post-Halving Stabilization',
+          'terminal_approach_transition': '🎯 Stage 2: Terminal Approach (Transition)',
+          'long_range_transition': '🛰️ Stage 2: Long-Range (Transition)',
+          'terminal_approach': '🎯 Stage 3: Terminal Approach',
+          'long_range': '🛰️ Stage 2: Long-Range'
+        };
+        return stages[stage] || null;
+      };
+
+      // Get confidence label with visual indicator
+      const getConfidenceLabel = (conf) => {
+        if (conf === 'protocol_defined') return '●●●●● Protocol-Defined';
+        if (conf === 'high') return '●●●●○ High';
+        if (conf === 'medium') return '●●●○○ Medium';
+        if (conf === 'low') return '●●○○○ Low';
+        return conf;
       };
 
       // Include halving projections with all available alternatives
@@ -608,8 +631,40 @@ async function updateNetworkStats(data) {
           const usedEmission = h.emission_used;
           const usedEtaMs = h.eta ? new Date(h.eta).getTime() : null;
 
-          // Header line: #X threshold
-          halvingLines.push(`${step} ${t}`);
+          // Header line: #X threshold with GPS stage
+          const gpsStageLabel = getGpsStageLabel(h.gps_stage);
+          if (gpsStageLabel) {
+            halvingLines.push(`${step} ${t}    ${gpsStageLabel}`);
+          } else {
+            halvingLines.push(`${step} ${t}`);
+          }
+
+          // Add GPS metadata sub-line
+          const metaItems = [];
+
+          // Method and confidence
+          const methodLabel = getMethodLabel(h.method || method);
+          if (h.confidence) {
+            const confLabel = getConfidenceLabel(h.confidence);
+            metaItems.push(`${methodLabel} [${confLabel}]`);
+          } else {
+            metaItems.push(methodLabel);
+          }
+
+          // Days since halving (if in post-halving phase)
+          if (h.days_since_halving !== undefined) {
+            metaItems.push(`${h.days_since_halving.toFixed(1)}d since halving`);
+          }
+
+          // Data clean in X days
+          if (h.data_clean_in_days !== undefined && h.data_clean_in_days > 0) {
+            metaItems.push(`Data clean in: ${h.data_clean_in_days.toFixed(1)}d`);
+          }
+
+          // Output metadata line
+          if (metaItems.length > 0) {
+            halvingLines.push(`  └─ ${metaItems.join(' | ')}`);
+          }
 
           // Calculate emission divisor for alternatives
           // We're currently post-halving #{currentHalvingsDone}
@@ -617,7 +672,6 @@ async function updateNetworkStats(data) {
           // Example: If done=1 and target step=3, we need 1 more halving (#2) → divisor=2^1=2
           const halvingsAhead = h.step !== undefined ? h.step - currentHalvingsDone - 1 : idx;
           const divisor = Math.pow(2, Math.max(0, halvingsAhead));
-          const methodLabel = getMethodLabel(method);
 
           // Build all projections (used method first, then alternatives)
           const projections = [];
@@ -667,10 +721,16 @@ async function updateNetworkStats(data) {
           });
         });
 
-        // Add post-halving transparency note
+        // Add GPS methodology note
         if (futureHalvings.length > 0) {
           halvingLines.push('');
-          halvingLines.push('⚠️ Emission averages stabilizing post-halving.');
+          const hasTheoretical = futureHalvings.some(h => h.method === 'theoretical');
+          if (hasTheoretical) {
+            halvingLines.push('🛰️ Triple-Precision GPS: Distance-adaptive methodology');
+            halvingLines.push('   Using protocol-defined emission until empirical data stabilizes');
+          } else {
+            halvingLines.push('📊 Projection method adapts based on distance and data quality');
+          }
         }
       }
     }
