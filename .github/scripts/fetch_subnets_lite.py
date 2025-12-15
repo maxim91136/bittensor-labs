@@ -208,27 +208,43 @@ def fetch_subnets_lite():
                 print(f"⚠️ Failed to fetch subnet {netuid}: {e}", file=sys.stderr)
                 continue
 
-        # Calculate emission shares based on on-chain emission data
-        # SubnetEmission values are u64 proportions that sum to u64::MAX
-        # We convert to actual TAO/day based on the share
-        for entry in results:
-            emission_raw = entry.get('_emission_raw', 0)
+        # Calculate emission shares - HYBRID MODE:
+        # - Use Root Network dividends for subnets that have them (real on-chain data)
+        # - Use neuron-proportional estimates for subnets without dividends (fallback)
 
-            if total_emission_raw > 0:
-                # Calculate share as proportion of total emissions
-                emission_share = emission_raw / total_emission_raw
-                estimated_emission = emission_share * DAILY_EMISSION
-            else:
-                # Fallback to neuron-based if no emission data
-                emission_share = entry['neurons'] / total_neurons if total_neurons > 0 else 0
-                estimated_emission = emission_share * DAILY_EMISSION
+        # First pass: assign emissions to subnets with Root Network dividends
+        subnets_with_dividends = [e for e in results if e.get('_emission_raw', 0) > 0]
+        subnets_without_dividends = [e for e in results if e.get('_emission_raw', 0) == 0]
+
+        print(f"📊 Hybrid allocation: {len(subnets_with_dividends)} with dividends, {len(subnets_without_dividends)} without", file=sys.stderr)
+
+        # Subnets WITH Root Network dividends get real emissions
+        for entry in subnets_with_dividends:
+            emission_raw = entry.get('_emission_raw', 0)
+            emission_share = emission_raw / total_emission_raw if total_emission_raw > 0 else 0
+            estimated_emission = emission_share * DAILY_EMISSION
 
             entry['emission_share'] = round(emission_share, 6)
             entry['estimated_emission_daily'] = round(estimated_emission, 6)
             entry['emission_share_percent'] = round(emission_share * 100, 4)
-            entry['ema_source'] = 'onchain_emission' if total_emission_raw > 0 else 'neurons_onchain'
+            entry['ema_source'] = 'root_dividends'
+            del entry['_emission_raw']
 
-            # Remove internal field
+        # Subnets WITHOUT dividends get neuron-proportional estimates
+        # (So the Top 10 list isn't full of zeros)
+        neurons_without_dividends = sum(e['neurons'] for e in subnets_without_dividends)
+
+        for entry in subnets_without_dividends:
+            # Very small fallback estimate based on neuron share
+            # Use 1% of daily emission for proportional distribution among non-dividend subnets
+            fallback_pool = DAILY_EMISSION * 0.01  # 72 TAO/day fallback pool
+            neuron_share = entry['neurons'] / neurons_without_dividends if neurons_without_dividends > 0 else 0
+            estimated_emission = neuron_share * fallback_pool
+
+            entry['emission_share'] = round(neuron_share * 0.01, 6)
+            entry['estimated_emission_daily'] = round(estimated_emission, 6)
+            entry['emission_share_percent'] = round(estimated_emission / DAILY_EMISSION * 100, 4)
+            entry['ema_source'] = 'neurons_fallback'
             del entry['_emission_raw']
 
         # Sort by emission
