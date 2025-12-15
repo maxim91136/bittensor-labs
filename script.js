@@ -559,10 +559,10 @@ async function updateNetworkStats(data) {
       const secs = String(dt.getUTCSeconds()).padStart(2, '0');
       const dateStr = `${year}-${month}-${day} ${hours}:${mins}:${secs} UTC`;
 
-      // Pre-halving emission: double the current Doug's Cheat emission (if available)
-      // Current emission is post-halving, pre-halving was 2x that
-      if (avg !== null) {
-        const preHalvingEmission = avg * 2;
+      // Pre-halving emission: use actual measured value from backend (Doug's Cheat)
+      // Fallback to doubling current emission if not available
+      const preHalvingEmission = (data && data.pre_halving_emission) ? data.pre_halving_emission : (avg !== null ? avg * 2 : null);
+      if (preHalvingEmission !== null) {
         halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} → ${dateStr} → Avg emission used: ${formatExact(preHalvingEmission)} TAO/day`);
       } else {
         halvingLines.push(`Last reached: ${formatNumber(window._lastHalving.threshold)} @ ${dateStr}`);

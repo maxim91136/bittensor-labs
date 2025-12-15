@@ -832,6 +832,9 @@ def fetch_metrics() -> Dict[str, Any]:
         pre_halving_emission=pre_halving_emission
     )
 
+    # Expose pre-halving emission to frontend for accurate display
+    result['pre_halving_emission'] = round(pre_halving_emission, 2) if pre_halving_emission is not None else None
+
     # Save the full history to a separate file: normally we only write local `issuance_history.json`
     # if KV read succeeded (so we can safely append). However, CI can set the environment var
     # `FORCE_ISSUANCE_ON_KV_FAIL=1` to force local writing even when the KV read failed (useful when

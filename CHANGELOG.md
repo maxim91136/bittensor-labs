@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.4 (2025-12-15)
+### Fixed
+- **Pre-Halving Emission Display**: Fixed inaccurate "Avg emission used" in last halving tooltip
+  - Was showing: 7,218.03 τ/day (from doubling current emission)
+  - Now shows: 7,193.74 τ/day (actual measured pre-halving emission from Doug's Cheat)
+  - Backend: Exposed `pre_halving_emission` field in API response ([fetch_network.py:836](fetch_network.py#L836))
+  - Frontend: Updated to use backend value instead of doubling ([script.js:564](script.js#L564))
+
+### Technical
+- Added `pre_halving_emission` to result dict for accurate frontend display
+- Frontend now preferentially uses backend `pre_halving_emission`, falls back to doubling if unavailable
+
 ## v1.0.0-rc.33.3 (2025-12-15)
 ### Documentation
 - **Documentation Cleanup**: Removed obsolete emission_86d references
