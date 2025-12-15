@@ -21,10 +21,10 @@ These fields provide transparency about the GPS (Global Positioning System) meth
 
 - `gps_stage` (string|null): Current GPS stage for this projection:
   - `'post_halving_stabilization'`: 0-7 days post-halving, all data contaminated
-  - `'terminal_approach_transition'`: 7-30d post-halving, terminal approach (<30d away), using clean 7d data
-  - `'long_range_transition'`: 7-30d post-halving, long-range (>30d away), using theoretical (30d contaminated)
-  - `'terminal_approach'`: >30d post-halving, terminal approach (<30d away), using clean 7d data
-  - `'long_range'`: >30d post-halving, long-range (>30d away), using clean 30d data
+  - `'terminal_approach_transition'`: 7-30d post-halving, terminal approach (<7d away), using clean 7d data
+  - `'long_range_transition'`: 7-30d post-halving, long-range (>7d away), using theoretical (30d contaminated)
+  - `'terminal_approach'`: >30d post-halving, terminal approach (<7d away), using clean 7d data
+  - `'long_range'`: >30d post-halving, long-range (>7d away), using clean 30d data
 
 - `confidence` (string): Confidence level of the projection:
   - `'empirical_halved'`: Doug's Cheat - using actual pre-halving emission data, highest confidence
@@ -130,13 +130,13 @@ Post-halving, empirical emission averages are contaminated with pre-halving data
 - Fallback to `theoretical` (7200/2^n) if historical data unavailable
 
 #### Stage 2: Transition Period (7-30 days)
-- **Terminal approach (<30d away)**: Uses clean 7d empirical data
-- **Long-range (>30d away)**: Uses theoretical (30d still contaminated)
+- **Terminal approach (<7d away)**: Uses clean 7d empirical data
+- **Long-range (>7d away)**: Uses theoretical (30d still contaminated)
 - Confidence: `high` for 7d, `protocol_defined` for theoretical
 
 #### Stage 3: Normal GPS Operation (>30 days)
-- **Terminal approach (<30d away)**: Uses 7d for real-time precision
-- **Long-range (>30d away)**: Uses 30d for stable noise-resistant forecasts
+- **Terminal approach (<7d away)**: Uses 7d for real-time precision
+- **Long-range (>7d away)**: Uses 30d for stable noise-resistant forecasts
 - Both data sources are clean
 - Confidence: `high` for both
 

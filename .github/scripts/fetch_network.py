@@ -636,7 +636,7 @@ def fetch_metrics() -> Dict[str, Any]:
                 # Transition period (7-30d): 7d clean, but 30d still contaminated
                 days_estimate = remaining / emission if emission > 0 else float('inf')
 
-                if days_estimate < 30 and emission_7d_val is not None and emission_7d_val > 0:
+                if days_estimate < 7 and emission_7d_val is not None and emission_7d_val > 0:
                     # Terminal approach: 7d is clean, use it with halved-emission-based ratio
                     ratio = halved_emission / base_emission
                     emission_to_use = emission_7d_val * ratio
@@ -656,7 +656,7 @@ def fetch_metrics() -> Dict[str, Any]:
                 # Normal GPS operation (>30d since halving): both 7d and 30d are clean
                 days_estimate = remaining / emission if emission > 0 else float('inf')
 
-                if days_estimate < 30 and emission_7d_val is not None and emission_7d_val > 0:
+                if days_estimate < 7 and emission_7d_val is not None and emission_7d_val > 0:
                     # Stage 3: Terminal approach (<30d away) - use 7d for precision
                     ratio = halved_emission / base_emission
                     emission_to_use = emission_7d_val * ratio

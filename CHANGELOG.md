@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.2 (2025-12-15)
+### Changed
+- **Pre-Halving Throttling**: Automatic switch to 7d MA at 7 days before halving
+  - Terminal approach threshold: 30d → 7d
+  - Provides symmetry with post-halving GPS Stage 1 (7d stabilization)
+  - Empirically validated: Halving #1 showed 7d achieved perfect accuracy
+
+### Technical
+- Modified terminal approach threshold in `fetch_network.py` (lines 639, 659)
+- Backwards compatible - no breaking changes
+
 ## v1.0.0-rc.33.1 (2025-12-15)
 ### Documentation
 - **Complete Documentation Overhaul**: Updated README.md and CHANGELOG.md for RC33 release
