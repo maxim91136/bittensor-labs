@@ -12,7 +12,7 @@ An array of objects, one per configured halving threshold. Each object contains:
 - `remaining` (number): tokens remaining until the threshold (threshold - current issuance).
 - `days` (number|null): projected days until the threshold at the `emission_used` rate (rounded to 3 decimals), or `null` if projection not possible.
 - `eta` (ISO timestamp|null): estimated date/time when the threshold will be reached, or `null`.
-- `method` (string|null): projection method used (e.g. `emission_7d`, `emission_30d`, `emission_86d`, `empirical_halved`, `theoretical`).
+- `method` (string|null): projection method used. GPS-based methods: `emission_7d`, `emission_30d`, `empirical_halved`, `theoretical`.
 - `emission_used` (number|null): the TAO/day emission rate used to calculate the ETA for this specific threshold.
 - `step` (int|null): 1-based index of the halving event (1 = next halving, 2 = following, ...). `null` if the threshold was malformed.
 
