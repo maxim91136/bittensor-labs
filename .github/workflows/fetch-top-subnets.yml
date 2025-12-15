@@ -31,24 +31,31 @@ jobs:
         run: |
           python .github/scripts/clear_kv.py
 
-      - name: Fetch subnet data (on-chain primary)
+      - name: Fetch subnet data (Taostats primary, on-chain fallback)
         id: fetch_subnets
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
           NETWORK: finney
           DAILY_EMISSION: 7200
         run: |
-          # Use on-chain lite fetcher as primary (no Taostats dependency)
-          python .github/scripts/fetch_subnets_lite.py
+          # Try Taostats first (better aggregated emissions data)
+          python .github/scripts/fetch_top_subnets.py || TAOSTATS_FAILED=1
 
-          # Copy lite output to main location for compatibility
-          if [ -f .github/data/subnets_lite.json ]; then
+          # If Taostats failed, use on-chain fallback
+          if [ "$TAOSTATS_FAILED" = "1" ] || [ ! -f .github/data/top_subnets.json ]; then
+            echo "⚠️ Taostats failed, using on-chain fallback..."
+            python .github/scripts/fetch_subnets_lite.py
             cp .github/data/subnets_lite.json .github/data/top_subnets.json
-            echo "✅ On-chain subnet data fetched successfully"
+          fi
+
+          # Verify we have data
+          if [ -f .github/data/top_subnets.json ]; then
+            echo "✅ Subnet data fetched successfully"
           else
-            echo "❌ Subnet fetch failed"
+            echo "❌ Both Taostats and on-chain failed"
             exit 1
           fi
 
