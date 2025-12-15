@@ -690,9 +690,13 @@ def fetch_metrics() -> Dict[str, Any]:
             new_halvings = []
             for th in thresholds:
                 if total_issuance_human >= th and th not in recorded_thresholds:
+                    # Use last issuance snapshot timestamp (more accurate than detection time)
+                    # This represents when the on-chain data was captured, closer to actual halving block time
+                    halving_timestamp_ms = result.get('last_issuance_ts', int(datetime.now(timezone.utc).timestamp())) * 1000
+
                     halving_event = {
                         'threshold': th,
-                        'at': int(datetime.now(timezone.utc).timestamp() * 1000),  # Unix timestamp in ms
+                        'at': int(halving_timestamp_ms),  # Unix timestamp in ms from last snapshot
                         'issuance_at_detection': round(total_issuance_human, 2),
                         'detected_at': datetime.now(timezone.utc).isoformat()
                     }
