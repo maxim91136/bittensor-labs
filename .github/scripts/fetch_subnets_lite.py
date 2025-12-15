@@ -123,11 +123,9 @@ def get_subnet_neurons(netuid: int) -> int:
 
 
 def fetch_subnets_lite():
-    """Fetch subnet data using only RPC calls - no external dependencies"""
-    print("🔍 Fetching subnets via direct RPC...", file=sys.stderr)
+    """Fetch subnet data using only on-chain data - no external APIs"""
+    print("🔍 Fetching subnets via on-chain queries...", file=sys.stderr)
 
-    # For MVP: Use simpler approach with bittensor SDK since we already have it in requirements
-    # This avoids complex SCALE encoding for now
     try:
         import bittensor as bt
         subtensor = bt.Subtensor(network=NETWORK)
@@ -135,6 +133,38 @@ def fetch_subnets_lite():
         # Get all subnet IDs
         subnets = list(subtensor.get_all_subnets_netuid())
         print(f"✅ Found {len(subnets)} subnets", file=sys.stderr)
+
+        # Fetch on-chain emissions for all subnets
+        print("📊 Querying on-chain SubnetEmission data...", file=sys.stderr)
+        subnet_emissions = {}
+        total_emission_raw = 0
+
+        try:
+            # Query all subnet emissions at once via query_map
+            emissions_map = subtensor.substrate.query_map('SubtensorModule', 'SubnetEmission')
+            for netuid_obj, emission_obj in emissions_map:
+                try:
+                    netuid = int(netuid_obj.value if hasattr(netuid_obj, 'value') else netuid_obj)
+                    emission_raw = int(emission_obj.value if hasattr(emission_obj, 'value') else emission_obj)
+                    subnet_emissions[netuid] = emission_raw
+                    total_emission_raw += emission_raw
+                except Exception as e:
+                    print(f"⚠️ Failed to parse emission for subnet: {e}", file=sys.stderr)
+                    continue
+
+            print(f"✅ Got emission data for {len(subnet_emissions)} subnets (total_raw: {total_emission_raw})", file=sys.stderr)
+        except Exception as e:
+            print(f"⚠️ Failed to query SubnetEmission map: {e}", file=sys.stderr)
+            # Fall back to individual queries
+            for netuid in subnets:
+                try:
+                    emission = subtensor.substrate.query('SubtensorModule', 'SubnetEmission', [netuid])
+                    emission_raw = int(emission.value if hasattr(emission, 'value') else emission)
+                    subnet_emissions[int(netuid)] = emission_raw
+                    total_emission_raw += emission_raw
+                except Exception as e:
+                    print(f"⚠️ Failed to query emission for SN{netuid}: {e}", file=sys.stderr)
+                    continue
 
         results = []
         total_neurons = 0
@@ -157,25 +187,42 @@ def fetch_subnets_lite():
 
                 total_neurons += neurons
 
+                # Get on-chain emission for this subnet
+                emission_raw = subnet_emissions.get(int(netuid), 0)
+
                 results.append({
                     'netuid': int(netuid),
                     'neurons': neurons,
-                    'validators': validators
+                    'validators': validators,
+                    '_emission_raw': emission_raw
                 })
 
             except Exception as e:
                 print(f"⚠️ Failed to fetch subnet {netuid}: {e}", file=sys.stderr)
                 continue
 
-        # Calculate emission shares based on neuron count
+        # Calculate emission shares based on on-chain emission data
+        # SubnetEmission values are u64 proportions that sum to u64::MAX
+        # We convert to actual TAO/day based on the share
         for entry in results:
-            neuron_share = entry['neurons'] / total_neurons if total_neurons > 0 else 0
-            estimated_emission = neuron_share * DAILY_EMISSION
+            emission_raw = entry.get('_emission_raw', 0)
 
-            entry['neuron_share'] = round(neuron_share, 6)
+            if total_emission_raw > 0:
+                # Calculate share as proportion of total emissions
+                emission_share = emission_raw / total_emission_raw
+                estimated_emission = emission_share * DAILY_EMISSION
+            else:
+                # Fallback to neuron-based if no emission data
+                emission_share = entry['neurons'] / total_neurons if total_neurons > 0 else 0
+                estimated_emission = emission_share * DAILY_EMISSION
+
+            entry['emission_share'] = round(emission_share, 6)
             entry['estimated_emission_daily'] = round(estimated_emission, 6)
-            entry['emission_share_percent'] = round(neuron_share * 100, 4)
-            entry['ema_source'] = 'neurons_onchain'
+            entry['emission_share_percent'] = round(emission_share * 100, 4)
+            entry['ema_source'] = 'onchain_emission' if total_emission_raw > 0 else 'neurons_onchain'
+
+            # Remove internal field
+            del entry['_emission_raw']
 
         # Sort by emission
         results.sort(key=lambda x: x['estimated_emission_daily'], reverse=True)

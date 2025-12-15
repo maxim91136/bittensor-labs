@@ -31,32 +31,25 @@ jobs:
         run: |
           python .github/scripts/clear_kv.py
 
-      - name: Run top subnets script
+      - name: Fetch subnet data (on-chain primary)
         id: fetch_subnets
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
-          TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
+          NETWORK: finney
+          DAILY_EMISSION: 7200
         run: |
-          python .github/scripts/fetch_top_subnets.py
+          # Use on-chain lite fetcher as primary (no Taostats dependency)
+          python .github/scripts/fetch_subnets_lite.py
 
-      - name: Fallback to lite fetcher if main failed
-        if: always()
-        run: |
-          # Check if top_subnets.json exists and has data
-          if [ ! -f .github/data/top_subnets.json ] || [ $(python3 -c "import json; d=json.load(open('.github/data/top_subnets.json')); print(len(d.get('top_subnets', [])))" 2>/dev/null || echo "0") -eq 0 ]; then
-            echo "⚠️ Main fetcher produced no data, trying lite fallback..."
-            python .github/scripts/fetch_subnets_lite.py
-            # Copy lite output to main location if it has data
-            if [ -f .github/data/subnets_lite.json ] && [ $(python3 -c "import json; d=json.load(open('.github/data/subnets_lite.json')); print(len(d.get('top_subnets', [])))" 2>/dev/null || echo "0") -gt 0 ]; then
-              echo "✅ Lite fetcher succeeded, using its data"
-              cp .github/data/subnets_lite.json .github/data/top_subnets.json
-            else
-              echo "❌ Lite fetcher also failed"
-            fi
+          # Copy lite output to main location for compatibility
+          if [ -f .github/data/subnets_lite.json ]; then
+            cp .github/data/subnets_lite.json .github/data/top_subnets.json
+            echo "✅ On-chain subnet data fetched successfully"
           else
-            echo "✅ Main fetcher succeeded, skipping fallback"
+            echo "❌ Subnet fetch failed"
+            exit 1
           fi
 
       - name: Validate top_subnets output (optional enforcement)
