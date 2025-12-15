@@ -524,12 +524,13 @@ def fetch_metrics() -> Dict[str, Any]:
             avg_for_projection = sum(vals) / len(vals)
             projection_method = 'mean_from_intervals'
 
-    def compute_halving_estimates(current_issuance: float, thresholds: List[int], avg_emission_per_day: float, method: str, emission_7d_val: float = None, emission_30d_val: float = None, last_halving_ts: int = None):
+    def compute_halving_estimates(current_issuance: float, thresholds: List[int], avg_emission_per_day: float, method: str, emission_7d_val: float = None, emission_30d_val: float = None, last_halving_ts: int = None, pre_halving_emission: float = None):
         """
         Compute ETAs for a series of halving thresholds using Triple-Precision GPS methodology:
 
-        1. Post-Halving (0-7d): Theoretical emission (protocol-defined 7200/2^n)
+        1. Post-Halving (0-7d): Doug's Cheat - Use actual pre-halving emission / 2^n
            - Zero contamination during data stabilization period
+           - Real emission data instead of theoretical approximation
 
         2. Long-Range (>30d away): 30d average emission
            - Stable, noise-resistant for distant horizons
@@ -538,7 +539,7 @@ def fetch_metrics() -> Dict[str, Any]:
            - Real-time calibration for final precision
 
         This distance-adaptive precision system ensures:
-        - Clean projections immediately post-halving (theoretical)
+        - Clean projections immediately post-halving (Doug's Cheat)
         - Stable long-term forecasts (30d smoothing)
         - Accurate near-term countdowns (7d responsiveness)
         """
@@ -546,8 +547,9 @@ def fetch_metrics() -> Dict[str, Any]:
         now_dt = datetime.now(timezone.utc)
         real_now = datetime.now(timezone.utc)  # Keep real time for post-halving checks
 
-        # Protocol base emission rate (pre-halving #1)
-        PROTOCOL_BASE_EMISSION = 7200.0  # τ/day
+        # Base emission: Use Doug's Cheat (actual pre-halving emission) or fallback to protocol default
+        PROTOCOL_BASE_EMISSION = 7200.0  # τ/day (fallback)
+        base_emission = pre_halving_emission if pre_halving_emission is not None else PROTOCOL_BASE_EMISSION
 
         # validate inputs
         try:
@@ -607,9 +609,9 @@ def fetch_metrics() -> Dict[str, Any]:
             confidence = 'medium'
             data_clean_in_days = None
 
-            # Calculate how many halvings have occurred (for theoretical calculation)
+            # Calculate how many halvings have occurred (for emission calculation)
             halvings_completed = step - 1  # step 1 = no halvings yet, step 2 = 1 halving, etc.
-            theoretical_for_state = PROTOCOL_BASE_EMISSION / (2 ** halvings_completed)
+            halved_emission = base_emission / (2 ** halvings_completed)  # Doug's Cheat: use actual pre-halving emission
 
             # Check days since last halving (use REAL time, not simulated time)
             days_since_halving = None
@@ -618,13 +620,16 @@ def fetch_metrics() -> Dict[str, Any]:
                 days_since_halving = seconds_since_halving / 86400.0
 
             # Determine emission source based on data cleanliness
+            # Method name: Use 'empirical_halved' if we have real pre-halving data, otherwise 'theoretical'
+            halved_method_name = 'empirical_halved' if pre_halving_emission is not None else 'theoretical'
+
             if days_since_halving is not None and days_since_halving < 7.0:
                 # Stage 1: Post-halving (0-7d) - ALL emissions contaminated
-                # Use theoretical for ALL future halvings
-                emission_to_use = theoretical_for_state
-                method_used = 'theoretical'
+                # Use Doug's Cheat: actual pre-halving emission halved
+                emission_to_use = halved_emission
+                method_used = halved_method_name
                 gps_stage = 'post_halving_stabilization'
-                confidence = 'protocol_defined'
+                confidence = 'empirical_halved' if pre_halving_emission is not None else 'protocol_defined'
                 data_clean_in_days = 7.0 - days_since_halving
 
             elif days_since_halving is not None and days_since_halving < 30.0:
@@ -632,19 +637,19 @@ def fetch_metrics() -> Dict[str, Any]:
                 days_estimate = remaining / emission if emission > 0 else float('inf')
 
                 if days_estimate < 30 and emission_7d_val is not None and emission_7d_val > 0:
-                    # Terminal approach: 7d is clean, use it with theoretical-based ratio
-                    ratio = theoretical_for_state / PROTOCOL_BASE_EMISSION
+                    # Terminal approach: 7d is clean, use it with halved-emission-based ratio
+                    ratio = halved_emission / base_emission
                     emission_to_use = emission_7d_val * ratio
                     method_used = 'emission_7d'
                     gps_stage = 'terminal_approach_transition'
                     confidence = 'high'
                     data_clean_in_days = None  # 7d data already clean
                 else:
-                    # Long-range: 30d still contaminated, use theoretical
-                    emission_to_use = theoretical_for_state
-                    method_used = 'theoretical'
+                    # Long-range: 30d still contaminated, use Doug's Cheat
+                    emission_to_use = halved_emission
+                    method_used = halved_method_name
                     gps_stage = 'long_range_transition'
-                    confidence = 'protocol_defined'
+                    confidence = 'empirical_halved' if pre_halving_emission is not None else 'protocol_defined'
                     data_clean_in_days = 30.0 - days_since_halving
 
             else:
@@ -653,7 +658,7 @@ def fetch_metrics() -> Dict[str, Any]:
 
                 if days_estimate < 30 and emission_7d_val is not None and emission_7d_val > 0:
                     # Stage 3: Terminal approach (<30d away) - use 7d for precision
-                    ratio = theoretical_for_state / PROTOCOL_BASE_EMISSION
+                    ratio = halved_emission / base_emission
                     emission_to_use = emission_7d_val * ratio
                     method_used = 'emission_7d'
                     gps_stage = 'terminal_approach'
@@ -732,8 +737,67 @@ def fetch_metrics() -> Dict[str, Any]:
         projection_days_used = None
     result['projection_days_used'] = projection_days_used
 
-    # Load halving history to get last_halving timestamp for GPS theoretical emission
+    # =====================================================================
+    # DOUG'S CHEAT: Calculate pre-halving emission from historical data
+    # Instead of theoretical 7200, use ACTUAL emission before halving
+    # =====================================================================
+    def calculate_pre_halving_emission(hist: List[Dict[str, Any]], halving_ts_ms: int) -> float:
+        """
+        Doug's Cheat: Calculate actual pre-halving emission from issuance history.
+        Takes samples BEFORE the halving event and computes real emission rate.
+
+        Returns emission in TAO/day, or None if insufficient data.
+        """
+        if not hist or halving_ts_ms is None:
+            return None
+
+        halving_ts_sec = halving_ts_ms / 1000.0
+
+        # Get samples before halving (with 1-hour buffer to avoid edge effects)
+        buffer_sec = 3600  # 1 hour
+        pre_halving_samples = [s for s in hist if s.get('ts', 0) < (halving_ts_sec - buffer_sec)]
+
+        if len(pre_halving_samples) < 2:
+            return None
+
+        # Take last 7 days of pre-halving data (or all if less)
+        lookback_sec = 7 * 86400  # 7 days
+        cutoff_ts = halving_ts_sec - buffer_sec - lookback_sec
+        recent_samples = [s for s in pre_halving_samples if s.get('ts', 0) >= cutoff_ts]
+
+        if len(recent_samples) < 2:
+            recent_samples = pre_halving_samples[-min(len(pre_halving_samples), 100):]  # Last 100 samples
+
+        # Calculate per-interval deltas
+        deltas = []
+        for i in range(1, len(recent_samples)):
+            prev = recent_samples[i-1]
+            curr = recent_samples[i]
+            dt = curr['ts'] - prev['ts']
+            if dt <= 0:
+                continue
+            delta_iss = curr['issuance'] - prev['issuance']
+            if delta_iss < 0:
+                continue
+            per_day = delta_iss * (86400.0 / dt)
+            deltas.append(per_day)
+
+        if not deltas:
+            return None
+
+        # Use winsorized mean to remove outliers
+        deltas_sorted = sorted(deltas)
+        trim = int(len(deltas_sorted) * 0.1)
+        if trim >= len(deltas_sorted) // 2:
+            trim = 0
+        trimmed = deltas_sorted[trim:len(deltas_sorted)-trim] if trim > 0 else deltas_sorted
+
+        return sum(trimmed) / len(trimmed) if trimmed else None
+
+    # Load halving history to get last_halving timestamp and calculate pre-halving emission
     last_halving_ts = None
+    pre_halving_emission = None
+
     try:
         cf_account = os.getenv('CF_ACCOUNT_ID')
         cf_token = os.getenv('CF_API_TOKEN')
@@ -746,8 +810,16 @@ def fetch_metrics() -> Dict[str, Any]:
                     halving_hist = json.loads(resp.read())
                     if isinstance(halving_hist, list) and len(halving_hist) > 0:
                         last_halving_ts = halving_hist[-1].get('at')  # Unix timestamp in ms
-    except Exception:
-        pass  # Ignore errors, last_halving_ts remains None
+
+                        # Doug's Cheat: Calculate actual pre-halving emission from history
+                        pre_halving_emission = calculate_pre_halving_emission(history, last_halving_ts)
+                        if pre_halving_emission:
+                            print(f"🎯 Doug's Cheat: Pre-halving emission = {pre_halving_emission:.2f} τ/day (from historical data)", file=sys.stderr)
+                        else:
+                            print(f"⚠️  Could not calculate pre-halving emission from history, falling back to protocol base", file=sys.stderr)
+    except Exception as e:
+        print(f"⚠️  Error loading halving history: {e}", file=sys.stderr)
+        pass  # Ignore errors
 
     result['halving_estimates'] = compute_halving_estimates(
         cur_iss,
@@ -756,7 +828,8 @@ def fetch_metrics() -> Dict[str, Any]:
         projection_method,
         emission_7d_val=emission_7d,
         emission_30d_val=emission_30d,
-        last_halving_ts=last_halving_ts
+        last_halving_ts=last_halving_ts,
+        pre_halving_emission=pre_halving_emission
     )
 
     # Save the full history to a separate file: normally we only write local `issuance_history.json`

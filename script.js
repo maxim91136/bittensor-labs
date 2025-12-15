@@ -586,6 +586,7 @@ async function updateNetworkStats(data) {
         if (m === 'emission_86d') return '86d';
         if (m === 'emission_30d') return '30d';
         if (m === 'emission_7d') return '7d';
+        if (m === 'empirical_halved') return '🎯 Doug\'s Cheat';
         if (m === 'theoretical') return '📡 Theoretical';
         return m ? m.replace('emission_', '') : '?';
       };
@@ -605,6 +606,7 @@ async function updateNetworkStats(data) {
 
       // Get confidence label with visual indicator
       const getConfidenceLabel = (conf) => {
+        if (conf === 'empirical_halved') return '●●●●● Doug\'s Cheat (Empirical)';
         if (conf === 'protocol_defined') return '●●●●● Protocol-Defined';
         if (conf === 'high') return '●●●●○ High';
         if (conf === 'medium') return '●●●○○ Medium';
@@ -724,8 +726,13 @@ async function updateNetworkStats(data) {
         // Add GPS methodology note
         if (futureHalvings.length > 0) {
           halvingLines.push('');
+          const hasEmpiricalHalved = futureHalvings.some(h => h.method === 'empirical_halved');
           const hasTheoretical = futureHalvings.some(h => h.method === 'theoretical');
-          if (hasTheoretical) {
+
+          if (hasEmpiricalHalved) {
+            halvingLines.push('🎯 Doug\'s Cheat: Using ACTUAL pre-halving emission data');
+            halvingLines.push('   Real historical data halved - more accurate than theoretical!');
+          } else if (hasTheoretical) {
             halvingLines.push('🛰️ Triple-Precision GPS: Distance-adaptive methodology');
             halvingLines.push('   Using protocol-defined emission until empirical data stabilizes');
           } else {
