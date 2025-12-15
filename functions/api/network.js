@@ -80,6 +80,8 @@ export async function onRequest(context) {
       days_of_history: m.days_of_history ?? null,
       totalIssuance: m.totalIssuance ?? null,
       totalIssuanceHuman: m.totalIssuanceHuman ?? null,
+      pre_halving_emission: m.pre_halving_emission ?? null,
+      last_halving: m.last_halving ?? null,
       _source: m._source || 'kv-cache'
     }), { status: 200, headers: { ...cors, 'Content-Type': 'application/json' } });
   } catch {
