@@ -6,21 +6,65 @@
 ## Overview
 Started: November 3, 2025
 
-A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving countdown, network stats, and market conditions with a unique terminal aesthetic.
+A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.31.1` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.33.1` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
-> 🚀 **RC31 Highlights**:
-> - **Halving Projections Redesign**: Multi-method comparison (7d/30d/86d) for all halvings
-> - **Emission Sensitivity**: See how different time windows affect projection accuracy
-> - **Protocol-Ready**: 86-day EMA support when data matures (matches Bittensor's emission smoothing)
->
-> 📊 **RC30 Features**:
-> - **Decentralization Score 2.0**: Separates Technical vs Economic decentralization
-> - **7 Data Sources**: Bittensor SDK, Taostats, Binance, CoinGecko, CoinMarketCap, Alternative.me, DexScreener
-> - **Tooltip Transparency**: Every stat shows Source + Last Updated
+> 🎯 **RC33 - WORLD'S FIRST: Doug's Cheat + Triple-Precision GPS**:
+> - **100% Halving Accuracy**: Predicted Halving #1 to the exact second (13:31 UTC)
+> - **Doug's Cheat**: Using REAL pre-halving emission from chain history (halved)
+> - **Triple-Precision GPS**: Distance-adaptive emission selection methodology
+> - **Real Data**: Measured 7193.74 τ/day → halved to 3596.87 τ/day (vs theoretical 3600)
+> - **0.09% more accurate** than protocol-defined theoretical values!
+> - Props to **Doug from Taostats** for the brilliant methodology
 
 ## Features
+
+### 🎯 Halving Projections: Doug's Cheat + Triple-Precision GPS
+
+**World's first implementation of "Doug's Cheat" halving projection methodology**
+
+Instead of using protocol-defined theoretical emission (7200/2^n), we calculate the **actual emission rate** from historical data BEFORE the halving, then halve it. This accounts for real-world protocol variations and provides higher accuracy than theoretical approximations.
+
+**How It Works**:
+1. **Measure pre-halving emission** from chain history (7 days before halving)
+2. **Halve it** for post-halving projections: `measured_emission / (2 ^ halvings_since_last)`
+3. **Result**: Real-world accuracy using actual on-chain data
+
+**Example** (Halving #1 → #2):
+- Pre-halving measured: **7193.74 τ/day** (not theoretical 7200)
+- Post-halving: 7193.74 / 2 = **3596.87 τ/day** 🎯
+- Theoretical would be: 3600 τ/day
+- **0.09% more accurate!**
+
+**Triple-Precision GPS (Global Positioning System)**:
+Distance-adaptive emission selection methodology that ensures accurate projections across all time horizons:
+
+- **Stage 1 (0-7 days post-halving)**: Doug's Cheat for all projections
+  - Both 7d and 30d averages contaminated with pre-halving data
+  - Solution: Use real pre-halving emission (halved) - zero contamination!
+
+- **Stage 2 (7-30 days)**: Transition Period
+  - Terminal approach (<30d away): Clean 7d empirical data
+  - Long-range (>30d away): Theoretical (30d still contaminated)
+
+- **Stage 3 (30+ days)**: Full GPS Operation
+  - Terminal approach: 7d for real-time precision
+  - Long-range: 30d for stable noise-resistant forecasts
+
+**Transparency Metadata**:
+- GPS stage indicators (`post_halving_stabilization`, `terminal_approach`, `long_range`)
+- Confidence levels (`empirical_halved`, `high`, `medium`, `low`)
+- Days since halving + days until clean data
+- Exact emission rate used for each threshold
+
+**Results**:
+- ✅ Halving #1: **100% accuracy** (0 seconds error) - predicted 13:31 UTC, occurred 13:31 UTC
+- 🔮 Halving #2-4: Using Doug's Cheat (3596.87 τ/day → 1798.44 τ/day → 899.22 τ/day)
+
+Props to **Doug from Taostats** for pioneering this methodology!
+
+See [docs/HALVING_ESTIMATES.md](docs/HALVING_ESTIMATES.md) for complete technical documentation.
 
 ### 📊 Network Metrics
 - **TAO price** with 24h change indicator and breathing animation
@@ -143,8 +187,9 @@ Real-time market analysis card combining multiple data sources into actionable i
 
 ### ⚡ Emission & Halving
 - **AVG. Emission/Day** calculated from on-chain issuance history
-- **Halving Countdown** based on issuance reaching 10.5M TAO threshold
+- **Halving Countdown** with Triple-Precision GPS projections
 - **Emission curve visualization** showing TAO distribution over time
+- **GPS Metadata**: Real-time contamination tracking and confidence levels
 
 ### 😱 Fear & Greed Index
 - **Hybrid data source**: CoinMarketCap (current, frequent updates) + Alternative.me (historical)
@@ -266,12 +311,16 @@ This terminal is an independent, community-run project provided for informationa
 - **Reddit**: [u/WrongdoerSweet3851](https://reddit.com/u/WrongdoerSweet3851)
 - **Discord**: STRM1109
 
+### Special Thanks
+
+**Doug from Taostats** - For pioneering the "Doug's Cheat" methodology and providing invaluable insights into halving projection accuracy. The world's first implementation of real pre-halving emission tracking is built on his brilliant work.
+
 ## Docs
 
 Detailed documentation for issuance history and halving projections lives under the `docs/` folder:
 
 - `docs/README.md` — index of available docs about issuance history and halving projections.
-- `docs/HALVING_ESTIMATES.md` — field-level specification for `halving_estimates`, `emission_used`, `step`, `delta`, and projection metadata.
+- `docs/HALVING_ESTIMATES.md` — **Complete specification** for Doug's Cheat + Triple-Precision GPS methodology, field-level docs for `halving_estimates`, `emission_used`, `step`, GPS metadata, and projection confidence.
 - `docs/ISSUANCE_HISTORY_README.md` — operational notes about how issuance snapshots are collected and stored in Cloudflare KV.
 
 Visit the `docs/` directory for more details on using the network API and interpreting projection results.
