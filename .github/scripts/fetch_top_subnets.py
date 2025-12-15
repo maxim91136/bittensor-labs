@@ -544,15 +544,16 @@ def fetch_top_subnets() -> Dict[str, object]:
         taostats_netuids = set()
 
     if not taostats_netuids:
-        # Taostats subnet data was not available. Fall back to neuron-proportional
-        # emission estimates so we still produce a usable `top_subnets` payload
-        # instead of an empty one. Log diagnostic details if present.
-        log_msg = '⚠️ Taostats subnets not available — falling back to neuron-proportional estimates.'
+        # Taostats subnet data was not available.
+        # FAIL here so workflow can use KV cache fallback (stale but accurate)
+        # instead of neuron-proportional estimates (fresh but inaccurate).
+        log_msg = '❌ Taostats subnets not available — failing to allow KV cache fallback.'
         if TAOSTATS_API_KEY:
             log_msg += ' TAOSTATS_API_KEY present but no subnet data returned.'
         if taostats_error:
             log_msg += f' Last error: {taostats_error}'
         print(log_msg, file=sys.stderr)
+        sys.exit(1)  # Fail so workflow uses cached data instead of inaccurate estimates
         # Prefer to weight by `total_stake` (on-chain or metadata) when available;
         # otherwise fallback to neuron_share-based distribution.
         total_weight = 0.0
