@@ -135,36 +135,43 @@ def fetch_subnets_lite():
         print(f"✅ Found {len(subnets)} subnets", file=sys.stderr)
 
         # Fetch on-chain emissions for all subnets
-        print("📊 Querying on-chain EmissionValues data...", file=sys.stderr)
+        # Note: With dTAO/Taoflow, emission data may not be directly queryable
+        # We'll try PendingEmission as a proxy, or use metagraph dividends
+        print("📊 Querying on-chain emission data via Root Network...", file=sys.stderr)
         subnet_emissions = {}
         total_emission_raw = 0
 
         try:
-            # Query all subnet emissions at once via query_map
-            emissions_map = subtensor.substrate.query_map('SubtensorModule', 'EmissionValues')
-            for netuid_obj, emission_obj in emissions_map:
-                try:
-                    netuid = int(netuid_obj.value if hasattr(netuid_obj, 'value') else netuid_obj)
-                    emission_raw = int(emission_obj.value if hasattr(emission_obj, 'value') else emission_obj)
-                    subnet_emissions[netuid] = emission_raw
-                    total_emission_raw += emission_raw
-                except Exception as e:
-                    print(f"⚠️ Failed to parse emission for subnet: {e}", file=sys.stderr)
-                    continue
+            # Try to get Root Network (netuid=0) metagraph which contains dividend info
+            root_metagraph = subtensor.metagraph(netuid=0, mechid=0)
 
-            print(f"✅ Got emission data for {len(subnet_emissions)} subnets (total_raw: {total_emission_raw})", file=sys.stderr)
+            # Root network UIDs correspond to subnet IDs
+            # Dividends represent emission allocation
+            if hasattr(root_metagraph, 'dividends') and hasattr(root_metagraph, 'uids'):
+                print(f"✅ Got root metagraph with {len(root_metagraph.uids)} entries", file=sys.stderr)
+
+                for uid in root_metagraph.uids:
+                    try:
+                        # UID in root network = netuid of subnet
+                        netuid = int(uid)
+                        # Dividend is the emission allocation (0-1 range typically)
+                        dividend = float(root_metagraph.dividends[uid]) if hasattr(root_metagraph.dividends[uid], '__float__') else float(root_metagraph.dividends[uid].item()) if hasattr(root_metagraph.dividends[uid], 'item') else 0.0
+
+                        if dividend > 0:
+                            subnet_emissions[netuid] = dividend
+                            total_emission_raw += dividend
+                    except Exception as e:
+                        print(f"⚠️ Failed to parse dividend for UID{uid}: {e}", file=sys.stderr)
+                        continue
+
+                print(f"✅ Got emission data for {len(subnet_emissions)} subnets from root network", file=sys.stderr)
+            else:
+                print(f"⚠️ Root metagraph missing dividends/uids attributes", file=sys.stderr)
+
         except Exception as e:
-            print(f"⚠️ Failed to query EmissionValues map: {e}", file=sys.stderr)
-            # Fall back to individual queries
-            for netuid in subnets:
-                try:
-                    emission = subtensor.substrate.query('SubtensorModule', 'EmissionValues', [netuid])
-                    emission_raw = int(emission.value if hasattr(emission, 'value') else emission)
-                    subnet_emissions[int(netuid)] = emission_raw
-                    total_emission_raw += emission_raw
-                except Exception as e:
-                    print(f"⚠️ Failed to query emission for SN{netuid}: {e}", file=sys.stderr)
-                    continue
+            print(f"⚠️ Failed to query root network emissions: {e}", file=sys.stderr)
+            import traceback
+            traceback.print_exc()
 
         results = []
         total_neurons = 0
