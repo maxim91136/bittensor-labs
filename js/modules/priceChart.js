@@ -253,9 +253,9 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
 
     // Check if candlestick mode and OHLCV data available
     if (showCandleChart && ohlcvData?.length) {
-      // Candlestick chart data format
-      const candleData = ohlcvData.map(d => ({
-        x: d.x,
+      // Candlestick chart data format (index-based, not timestamp-based)
+      const candleData = ohlcvData.map((d, i) => ({
+        x: i,
         o: d.o * conversionRate,
         h: d.h * conversionRate,
         l: d.l * conversionRate,
@@ -301,9 +301,7 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
   if (showVolume && volumeData?.length && !hasAnyComparison) {
     // Find max volume for scaling
     const maxVol = Math.max(...volumeData.map(v => v.y));
-    const volumeScaled = useCandlestick
-      ? volumeData.map(v => ({ x: v.x, y: v.y }))
-      : volumeData.map((v, i) => v.y);
+    const volumeScaled = volumeData.map((v, i) => v.y);
 
     datasets.push({
       label: 'Volume',
@@ -320,35 +318,13 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
   // Configure scales based on chart type
   const scales = useCandlestick ? {
     x: {
-      type: 'time',
-      time: {
-        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month'))
-      },
+      display: true,
       grid: { display: false },
       ticks: {
         color: '#888',
         maxTicksLimit: isMax ? 12 : (rangeNum === 1 ? 12 : (rangeNum <= 7 ? 7 : 15)),
         autoSkip: true,
-        maxRotation: 0,
-        callback: function(value) {
-          const date = new Date(value);
-          if (rangeNum <= 1) {
-            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-          } else if (rangeNum === 2) {
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
-                   date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-          } else if (rangeNum === 3) {
-            return `${date.getMonth()+1}/${date.getDate()}`;
-          } else if (rangeNum <= 30) {
-            return `${date.getMonth()+1}/${date.getDate()}`;
-          } else if (rangeNum <= 180) {
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-          } else {
-            const month = date.toLocaleDateString('en-US', { month: 'short' });
-            const year = String(date.getFullYear()).slice(-2);
-            return `${month} '${year}`;
-          }
-        }
+        maxRotation: 0
       }
     },
     y: {
@@ -399,7 +375,7 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
 
   window.priceChart = new Chart(ctx, {
     type: chartType,
-    data: useCandlestick ? { datasets } : { labels, datasets },
+    data: { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
