@@ -1,0 +1,37 @@
+name: R2 - Cleanup Old Structure
+
+on:
+  # Manual trigger only - destructive operation
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (true = just show what would be deleted, false = actually delete)'
+        required: true
+        type: boolean
+        default: true
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install requests
+
+      - name: Run R2 cleanup
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          python .github/scripts/cleanup-r2-old-structure.py
