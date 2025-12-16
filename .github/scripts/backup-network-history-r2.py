@@ -71,9 +71,35 @@ if not os.path.isfile(filepath):
     print('File not found:', filepath)
     sys.exit(1)
 
-key_name = os.path.basename(filepath)
-if R2_PREFIX:
-    key_name = f"{R2_PREFIX}/{key_name}"
+# Extract timestamp from filename: network_history-20251216T095000Z.json
+# New structure: network/YYYY/MM/DD/HHMMSS.json
+basename = os.path.basename(filepath)
+try:
+    # Parse timestamp from filename
+    if 'network_history-' in basename:
+        ts_part = basename.replace('network_history-', '').replace('.json', '')
+    else:
+        # Fallback: use current time
+        ts_part = datetime.now(timezone.utc).strftime('%Y%m%dT%H%M%SZ')
+
+    # Parse: 20251216T095000Z -> 2025/12/16/095000
+    from datetime import datetime, timezone
+    dt = datetime.strptime(ts_part.replace('Z', ''), '%Y%m%dT%H%M%S')
+    year = dt.strftime('%Y')
+    month = dt.strftime('%m')
+    day = dt.strftime('%d')
+    time = dt.strftime('%H%M%S')
+
+    # Build structured path
+    key_name = f"network/{year}/{month}/{day}/{time}.json"
+    if R2_PREFIX:
+        key_name = f"{R2_PREFIX}/{key_name}"
+except Exception as e:
+    print(f'⚠️  Could not parse timestamp from filename: {e}', file=sys.stderr)
+    print('   Falling back to flat structure', file=sys.stderr)
+    key_name = os.path.basename(filepath)
+    if R2_PREFIX:
+        key_name = f"{R2_PREFIX}/{key_name}"
 
 print(f'Uploading {filepath} to R2 bucket {R2_BUCKET} as {key_name}...')
 

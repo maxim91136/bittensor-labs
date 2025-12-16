@@ -42,7 +42,7 @@ jobs:
           mv network_history.json "$NEW_FILE"
           echo "Downloaded history to $NEW_FILE"
 
-      - name: Upload history backup to R2
+      - name: Upload history backup to R2 (structured)
         env:
           ENABLE_R2: 'true'
           R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
@@ -53,5 +53,5 @@ jobs:
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         run: |
-          python .github/scripts/backup-network-history-r2.py network_history-*.json
+          python .github/scripts/backup-to-r2.py network_history-*.json
 

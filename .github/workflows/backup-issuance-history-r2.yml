@@ -23,7 +23,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install boto3 requests
 
-      - name: Fetch issuance_history and optionally upload
+      - name: Fetch issuance_history and upload to R2 (structured)
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}

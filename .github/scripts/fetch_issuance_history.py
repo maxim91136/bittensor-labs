@@ -59,10 +59,10 @@ except Exception as e:
     print('Error writing issuance history file:', e)
     sys.exit(1)
 
-# Optionally upload to R2 using the upload script (it will check ENABLE_R2 itself)
+# Optionally upload to R2 using the generic upload script (it will check ENABLE_R2 itself)
 try:
     import subprocess
-    subprocess.run(['python', '.github/scripts/backup-issuance-history-r2.py', filename], check=False)
+    subprocess.run(['python', '.github/scripts/backup-to-r2.py', filename], check=False)
 except Exception as e:
     print('Error invoking upload script:', e)
 
