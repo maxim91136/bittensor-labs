@@ -129,13 +129,10 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
     if (rangeNum <= 1) {
       // 1 day: show time only
       return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    } else if (rangeNum === 2) {
-      // 2 days: show date + time (original format)
+    } else if (rangeNum <= 3) {
+      // 2-3 days: show date + time
       return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
              date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-    } else if (rangeNum === 3) {
-      // 3 days: show compact M/D format (ONLY CHANGE FROM ORIGINAL)
-      return `${date.getMonth()+1}/${date.getDate()}`;
     } else if (rangeNum <= 30) {
       // Up to 30 days: M/D format
       return `${date.getMonth()+1}/${date.getDate()}`;
@@ -325,19 +322,13 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
         unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month')),
         displayFormats: {
           hour: 'HH:mm',
-          day: rangeNum === 3 ? 'M/D' : 'MMM d',
+          day: 'MMM d',
           week: 'MMM d',
           month: "MMM ''yy"
         }
       },
       grid: { display: false },
-      ticks: {
-        source: 'auto',
-        color: '#888',
-        maxTicksLimit: isMax ? 12 : (rangeNum === 1 ? 12 : (rangeNum <= 7 ? 7 : 15)),
-        autoSkip: false,
-        maxRotation: 0
-      }
+      ticks: { color: '#888', maxRotation: 0 }
     },
     y: {
       display: true,
@@ -356,7 +347,7 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
       grid: { display: false },
       ticks: {
         color: '#888',
-        maxTicksLimit: isMax ? 12 : (rangeNum === 1 ? 12 : (rangeNum <= 7 ? 7 : 15)),
+        maxTicksLimit: isMax ? 12 : (rangeNum <= 7 ? 7 : 15),
         autoSkip: true,
         maxRotation: 0
       }
