@@ -45,22 +45,31 @@ MIN_DATA_POINTS = int(os.getenv('MIN_DATA_POINTS', '48'))
 LOOKBACK_DAYS = int(os.getenv('LOOKBACK_DAYS', str(DEFAULT_LOOKBACK_DAYS)))
 
 # Feature weights (tunable parameters)
+# v2.1: Reduced current_rank weight, increased gap/tenure (2025-12-16)
 FEATURE_WEIGHTS = {
-    'current_rank_inverse': 0.15,
-    'rank1_frequency': 0.15,
-    'rank_velocity_weighted': 0.10,
-    'emission_share_current': 0.12,
-    'emission_trend_7d': 0.12,
-    'emission_momentum': 0.11,
-    'share_stability': 0.08,
-    'rank_stability': 0.07,
-    'validator_growth': 0.05,
-    'neuron_growth': 0.05,
+    # Position features (35%)
+    'current_rank_inverse': 0.10,      # ↓ Current position (was too strong)
+    'rank1_frequency': 0.10,           # Historical #1 time
+    'rank_velocity_weighted': 0.05,    # Recent movement
+    'top3_tenure': 0.10,               # ↑ Time in top 3 (both Affine/Chutes high)
+
+    # Emission features (50%)
+    'emission_share_current': 0.15,    # Current share
+    'emission_gap_normalized': 0.20,   # ↑ Gap to leader (MOST critical!)
+    'emission_trend_7d': 0.08,         # Growth trend
+    'emission_momentum': 0.04,         # Acceleration
+    'gap_closing_feasibility': 0.03,   # Can gap be closed?
+
+    # Stability features (15%)
+    'share_stability': 0.08,           # Emission consistency
+    'rank_stability': 0.07,            # Position consistency
 }
 
+# Position penalties (reduced to favor top positions more)
+# Tuned based on backtest showing top-2 switching frequency
 POSITION_PENALTIES = {
-    1: 1.00, 2: 0.85, 3: 0.70, 4: 0.55, 5: 0.45,
-    6: 0.35, 7: 0.25, 8: 0.18, 9: 0.12, 10: 0.08
+    1: 1.00, 2: 0.95, 3: 0.85, 4: 0.70, 5: 0.55,
+    6: 0.42, 7: 0.30, 8: 0.20, 9: 0.12, 10: 0.08
 }
 
 # Cloudflare credentials
@@ -190,9 +199,11 @@ class SubnetFeatureExtractor:
         features['current_emission'] = current['value']
         features['subnet_name'] = current['name']
 
-        # Extract feature groups
+        # Extract feature groups (order matters - gap features need emission features)
         features.update(self._extract_rank_features(snapshots))
         features.update(self._extract_emission_features(snapshots))
+        features.update(self._extract_gap_features(netuid, snapshots, features))
+        features.update(self._extract_tenure_features(snapshots))
 
         return features
 
@@ -300,6 +311,88 @@ class SubnetFeatureExtractor:
 
         return features
 
+    def _extract_gap_features(self, netuid: str, snapshots: List[Dict], existing_features: Dict) -> Dict:
+        """Extract emission gap features relative to current leader."""
+        features = {}
+
+        current_emission = snapshots[-1]['value']
+        current_timestamp = snapshots[-1]['ts_dt']
+
+        # Find current leader (rank #1) emission at same timestamp
+        leader_emission = None
+        for other_netuid, other_snapshots in self._subnet_snapshots.items():
+            for snap in other_snapshots:
+                # Find snapshot at same time with rank #1
+                if abs((snap['ts_dt'] - current_timestamp).total_seconds()) < 3600:  # within 1 hour
+                    if snap['rank'] == 1:
+                        leader_emission = snap['value']
+                        break
+            if leader_emission:
+                break
+
+        if leader_emission is None or leader_emission == 0:
+            # Fallback: If we ARE rank 1, gap is 0
+            if snapshots[-1]['rank'] == 1:
+                features['emission_gap_to_leader'] = 0
+                features['emission_gap_normalized'] = 1.0  # No gap = best score
+            else:
+                # Unknown leader, assume large gap
+                features['emission_gap_to_leader'] = 100
+                features['emission_gap_normalized'] = 0.0
+        else:
+            # Gap in absolute τ/day
+            gap = leader_emission - current_emission
+            features['emission_gap_to_leader'] = max(0, gap)
+
+            # Normalized: 0 = far from leader, 1 = at leader level
+            # Use sigmoid to smooth: e^(-gap/50)
+            # gap=0 → 1.0, gap=50 → 0.37, gap=100 → 0.14
+            features['emission_gap_normalized'] = math.exp(-max(0, gap) / 50.0)
+
+        # Gap closing feasibility
+        # Can current growth trend close the gap in reasonable time?
+        emission_trend = existing_features.get('emission_pct_change_7d', 0)
+        gap_to_leader = features['emission_gap_to_leader']
+
+        if gap_to_leader == 0:
+            # Already leader
+            features['gap_closing_feasibility'] = 1.0
+        elif current_emission == 0 or emission_trend <= 0:
+            # Not growing or zero emissions → can't close gap
+            features['gap_closing_feasibility'] = 0.0
+        else:
+            # Calculate: at current growth rate, how many days to close gap?
+            # growth_per_day = current * (trend/100) / 7
+            growth_per_day = current_emission * (emission_trend / 100.0) / 7.0
+            if growth_per_day > 0:
+                days_to_close = gap_to_leader / growth_per_day
+                # Normalize: 15 days = 1.0, 30 days = 0.5, 60+ days = 0.0
+                features['gap_closing_feasibility'] = max(0, min(1.0, 1.0 - (days_to_close - 15) / 45.0))
+            else:
+                features['gap_closing_feasibility'] = 0.0
+
+        return features
+
+    def _extract_tenure_features(self, snapshots: List[Dict]) -> Dict:
+        """Extract tenure (time in top positions) features."""
+        features = {}
+
+        # Count how many days subnet has been in top 3
+        top3_days = 0
+        prev_date = None
+
+        for snap in snapshots:
+            if snap['rank'] <= 3:
+                current_date = snap['ts_dt'].date()
+                if prev_date is None or current_date != prev_date:
+                    top3_days += 1
+                    prev_date = current_date
+
+        # Normalize: 0-14 days → 0.0-1.0
+        features['top3_tenure'] = min(1.0, top3_days / 14.0)
+
+        return features
+
     def get_all_subnet_ids(self) -> List[str]:
         """Get all unique subnet IDs from history."""
         return list(self._subnet_snapshots.keys())
@@ -355,29 +448,26 @@ class RankPredictionModel:
         return probs
 
     def _calculate_score(self, features: Dict) -> float:
-        """Calculate weighted composite score."""
+        """Calculate weighted composite score with v2 features."""
         components = {}
 
-        # Position components
+        # Position components (40%)
         components['current_rank_inverse'] = 1.0 / max(1, features['current_rank'])
         components['rank1_frequency'] = features.get('rank1_frequency', 0)
-
-        # Rank velocity (positive delta = moving up)
         rank_velocity = (features.get('rank_delta_7d', 0) + features.get('rank_delta_recent', 0)) / 2
         components['rank_velocity_weighted'] = self._sigmoid(rank_velocity / 5.0)
+        components['top3_tenure'] = features.get('top3_tenure', 0)  # NEW
 
-        # Emission components
+        # Emission components (45%)
         components['emission_share_current'] = features.get('emission_share_current', 0) / 100.0
+        components['emission_gap_normalized'] = features.get('emission_gap_normalized', 0)  # NEW
         components['emission_trend_7d'] = self._sigmoid(features.get('emission_pct_change_7d', 0) / 10.0)
         components['emission_momentum'] = self._sigmoid(features.get('emission_momentum', 0) / 5.0)
+        components['gap_closing_feasibility'] = features.get('gap_closing_feasibility', 0)  # NEW
 
-        # Stability components
+        # Stability components (15%)
         components['share_stability'] = features.get('share_stability', 0.5)
         components['rank_stability'] = features.get('rank_stability', 0.5)
-
-        # Growth components (placeholder for future)
-        components['validator_growth'] = 0.5
-        components['neuron_growth'] = 0.5
 
         # Weighted sum
         score = sum(
