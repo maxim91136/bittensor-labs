@@ -319,16 +319,37 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
     x: {
       type: 'time',
       time: {
-        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month')),
-        displayFormats: {
-          hour: 'HH:mm',
-          day: 'MMM d',
-          week: 'MMM d',
-          month: "MMM ''yy"
-        }
+        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month'))
       },
       grid: { display: false },
-      ticks: { color: '#888', maxRotation: 0 }
+      ticks: {
+        color: '#888',
+        maxRotation: 0,
+        autoSkip: true,
+        maxTicksLimit: 15,
+        callback: function(value) {
+          const date = new Date(value);
+          if (rangeNum <= 1) {
+            // 1D: only time
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+          } else if (rangeNum === 3) {
+            // 3D: compact date + time
+            const m = date.getMonth() + 1;
+            const d = date.getDate();
+            const h = String(date.getHours()).padStart(2, '0');
+            const min = String(date.getMinutes()).padStart(2, '0');
+            return `${m}/${d} ${h}:${min}`;
+          } else if (rangeNum <= 90) {
+            // 7D-90D: compact date only
+            return `${date.getMonth() + 1}/${date.getDate()}`;
+          } else {
+            // Max: month + year
+            const month = date.toLocaleDateString('en-US', { month: 'short' });
+            const year = String(date.getFullYear()).slice(-2);
+            return `${month} '${year}`;
+          }
+        }
+      }
     },
     y: {
       display: true,
