@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.6.1 (2025-12-16)
+### Fixed
+- **Block Time Source Label**: Tooltip now shows dynamic source instead of hardcoded "Taostats Block API"
+  - on-chain → "Bittensor SDK (on-chain)" ✓
+  - taostats_fallback → "Taostats Block API (fallback)"
+  - Reflects actual data source used ([uiUpdates.js:46-49](js/modules/uiUpdates.js#L46-L49))
+
 ## v1.0.0-rc.33.6 (2025-12-16)
 ### Fixed
 - **Block Time On-Chain Fetch**: Fixed GenericExtrinsic parsing error preventing block data collection
