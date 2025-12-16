@@ -322,20 +322,33 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
     x: {
       type: 'time',
       time: {
-        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month')),
-        displayFormats: {
-          hour: 'HH:mm',
-          day: rangeNum === 3 ? 'M/D' : 'MMM d',
-          week: 'MMM d',
-          month: "MMM ''yy"
-        }
+        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month'))
       },
       grid: { display: false },
       ticks: {
         color: '#888',
         maxTicksLimit: isMax ? 12 : (rangeNum === 1 ? 12 : (rangeNum <= 7 ? 7 : 15)),
         autoSkip: true,
-        maxRotation: 0
+        maxRotation: 0,
+        callback: function(value) {
+          const date = new Date(value);
+          if (rangeNum <= 1) {
+            return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+          } else if (rangeNum === 2) {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+                   date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+          } else if (rangeNum === 3) {
+            return `${date.getMonth()+1}/${date.getDate()}`;
+          } else if (rangeNum <= 30) {
+            return `${date.getMonth()+1}/${date.getDate()}`;
+          } else if (rangeNum <= 180) {
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+          } else {
+            const month = date.toLocaleDateString('en-US', { month: 'short' });
+            const year = String(date.getFullYear()).slice(-2);
+            return `${month} '${year}`;
+          }
+        }
       }
     },
     y: {
