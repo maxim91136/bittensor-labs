@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.11 (2025-12-16)
+### Fixed
+- **Terminal Boot Reliability**: Improved boot sequence stability and error handling
+  - Added safety checks for missing DOM elements (skips animation if not found)
+  - Reduced forced timeout from 5s to 3s for better UX when hanging
+  - Added try-catch around animation loop to prevent hanging on runtime errors
+  - Better error logging in debug mode ([terminalBoot.js:11-83](js/modules/terminalBoot.js#L11-L83))
+
+### Added
+- **Complete Reddit Proof Links**: Both prediction and result posts now linked
+  - Prediction post: 41 minutes before halving (r/bittensor_/comments/1pn6jwx)
+  - Result post: "called the TAO halving to the minute!" (r/bittensor_/comments/1pni7j2)
+  - Both links with descriptive title attributes for clarity
+
 ## v1.0.0-rc.33.10 (2025-12-16)
 ### Added
 - **Hero Banner Enhancement**: Emphasize FIRST [dynamic] halving achievement
