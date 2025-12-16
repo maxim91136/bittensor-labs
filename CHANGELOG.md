@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.6 (2025-12-16)
+### Fixed
+- **Block Time On-Chain Fetch**: Fixed GenericExtrinsic parsing error preventing block data collection
+  - Was failing: `'GenericExtrinsic' object has no attribute 'get'` (all 25 blocks failing)
+  - Now working: On-chain fetch successfully retrieves 25 blocks with timestamps
+  - No more Taostats fallback needed → eliminates 429 rate-limit errors
+  - Added debug logging to track failure reasons ([fetch_block_time_hybrid.py:44-119](fetch_block_time_hybrid.py#L44-L119))
+
+- **Emission Stat-Card GPS Tracking**: Emission card now tracks Triple-Precision GPS methodology dynamically
+  - Uses `emission_used` from next halving estimate (same data used for projections)
+  - Displays: 3596.87 τ/day (Doug's Cheat) instead of 3603.03 (avg_emission_for_projection)
+  - Tooltip shows current methodology + GPS stage ([script.js:322-333](script.js#L322-L333))
+
+- **Emission Tooltip Transparency**: Info-badge tooltip now shows complete GPS methodology
+  - Displays concrete method: "Doug's Cheat (empirical halved)" / "7d moving average" / "30d moving average"
+  - Shows GPS stage with description: "Stage 1: Post-Halving Stabilization (0-7d)"
+  - Shows confidence level: "empirical_halved" / "high" / "medium"
+  - No more generic "see Halving pill" - all details directly visible ([script.js:357-400](script.js#L357-L400))
+
+### Technical
+- Block time workflow now primary on-chain, Taostats only fallback
+- GenericExtrinsic objects accessed via `.value` attribute instead of `.get()` method
+- Emission stat-card synchronized with halving projection calculations
+- Full GPS methodology transparency across all emission displays
+
 ## v1.0.0-rc.33.5 (2025-12-15)
 ### Fixed
 - **Last Halving Tooltip Display**: Complete fix for "Last reached" line in halving tooltip

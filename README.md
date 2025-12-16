@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.33.5` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.33.6` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🎯 **RC33 - WORLD'S FIRST: Doug's Cheat + Triple-Precision GPS**:
 > - **100% Halving Accuracy**: Predicted Halving #1 to the exact second (13:31 UTC)
