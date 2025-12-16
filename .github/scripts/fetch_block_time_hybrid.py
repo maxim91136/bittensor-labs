@@ -41,6 +41,8 @@ def fetch_block_time_onchain():
 
         # Collect block data with timestamps
         block_data = []
+        failed_reasons = {'no_hash': 0, 'no_block': 0, 'no_extrinsics': 0, 'no_timestamp': 0, 'exception': 0}
+
         for i in range(NUM_BLOCKS):
             block_num = current_block - i
             if block_num < 0:
@@ -49,10 +51,22 @@ def fetch_block_time_onchain():
             try:
                 block_hash = subtensor.substrate.get_block_hash(block_num)
                 if not block_hash:
+                    failed_reasons['no_hash'] += 1
+                    if i < 3:  # Log first 3 failures
+                        print(f"  Block {block_num}: no block_hash", file=sys.stderr)
                     continue
 
                 block = subtensor.substrate.get_block(block_hash=block_hash)
-                if not block or 'extrinsics' not in block:
+                if not block:
+                    failed_reasons['no_block'] += 1
+                    if i < 3:
+                        print(f"  Block {block_num}: get_block returned None", file=sys.stderr)
+                    continue
+
+                if 'extrinsics' not in block:
+                    failed_reasons['no_extrinsics'] += 1
+                    if i < 3:
+                        print(f"  Block {block_num}: no extrinsics key (keys: {list(block.keys())})", file=sys.stderr)
                     continue
 
                 # Find timestamp extrinsic
@@ -70,12 +84,20 @@ def fetch_block_time_onchain():
                         'block': block_num,
                         'timestamp': timestamp
                     })
+                else:
+                    failed_reasons['no_timestamp'] += 1
+                    if i < 3:
+                        print(f"  Block {block_num}: no timestamp extrinsic found", file=sys.stderr)
 
             except Exception as e:
+                failed_reasons['exception'] += 1
+                if i < 3:
+                    print(f"  Block {block_num}: exception {e}", file=sys.stderr)
                 continue
 
         if len(block_data) < 2:
             print(f"❌ Not enough blocks (got {len(block_data)})", file=sys.stderr)
+            print(f"   Failure breakdown: {failed_reasons}", file=sys.stderr)
             return None
 
         block_data.sort(key=lambda x: x['block'])
