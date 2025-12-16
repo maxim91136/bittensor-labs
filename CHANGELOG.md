@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.12 (2025-12-16)
+### Fixed
+- **Price Chart Time Axis (CRITICAL)**: Restored original time axis labels for all ranges except 3D
+  - 1D: Shows time only (unchanged from original)
+  - 2D: Shows "Dec 16 14:30" format (restored - was broken)
+  - 3D: Shows compact "12/16" format (optimized for mobile - ONLY intentional change)
+  - 7D+: Original formatting (unchanged)
+  - maxTicksLimit fully restored to 7 for ranges <= 7d (was incorrectly changed to 4-6)
+- Previous RC broke 1D and 2D charts by applying mobile optimizations to all timeframes
+
 ## v1.0.0-rc.33.11 (2025-12-16)
 ### Fixed
 - **Terminal Boot Reliability**: Improved boot sequence stability and error handling
