@@ -332,9 +332,10 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
       },
       grid: { display: false },
       ticks: {
+        source: 'auto',
         color: '#888',
         maxTicksLimit: isMax ? 12 : (rangeNum === 1 ? 12 : (rangeNum <= 7 ? 7 : 15)),
-        autoSkip: true,
+        autoSkip: false,
         maxRotation: 0
       }
     },
