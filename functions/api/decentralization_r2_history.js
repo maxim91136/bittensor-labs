@@ -6,6 +6,8 @@
  * - days: Number of days to fetch (default: 30, max: 365)
  * - start_date: YYYY-MM-DD (optional)
  * - end_date: YYYY-MM-DD (optional)
+ *
+ * Data source: R2 bucket (kv-backup) with daily snapshots
  */
 export async function onRequest(context) {
   const cors = {
