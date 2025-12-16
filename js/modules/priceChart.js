@@ -331,8 +331,8 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
       ticks: {
         color: '#888',
         maxRotation: 0,
-        autoSkip: false,
-        maxTicksLimit: isMax ? 12 : (rangeNum === 1 ? 12 : (rangeNum <= 7 ? 7 : 15))
+        autoSkip: true,
+        maxTicksLimit: isMax ? 12 : (rangeNum === 1 ? 12 : (rangeNum <= 7 ? 10 : 15))
       }
     },
     y: {
