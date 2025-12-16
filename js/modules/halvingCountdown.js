@@ -179,13 +179,13 @@ export function updateHalvingCountdown() {
   const el = document.getElementById('halvingCountdown');
   if (!el) return;
 
-  // If we just had a halving, show 'Halved!' for the brief animation window
+  // If we just had a halving, show 'Halved!' for the brief animation window (8 seconds)
   if (window._lastHalving && (Date.now() - window._lastHalving.at) < 8000) {
     el.textContent = 'Halved!';
     return;
   }
 
-  // If we recently had a halving and are within the "since" window, show a human-friendly 'since' text
+  // If we recently had a halving and are within 24h, show "Halved X ago"
   if (window._lastHalving && (Date.now() - window._lastHalving.at) < window._showSinceMs) {
     const diffMs = Date.now() - window._lastHalving.at;
     const hrs = Math.floor(diffMs / (1000 * 60 * 60));
@@ -194,6 +194,8 @@ export function updateHalvingCountdown() {
     else el.textContent = `Halved ${mins}m ago`;
     return;
   }
+
+  // After 24h: show countdown to NEXT halving
 
   if (!window.halvingDate) {
     el.textContent = 'Calculating...';

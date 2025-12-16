@@ -494,8 +494,12 @@ async function updateNetworkStats(data) {
   window.halvingThresholds = thresholds;
   // Determine the active threshold index for the current supply
   const currentSupplyForHalving = Number(supplyForHalving ?? 0);
+  // Store previous index for crossing detection
+  const prevHalvingIndex = window._halvingIndex ?? 0;
   window._halvingIndex = findNextThresholdIndex(thresholds, currentSupplyForHalving);
   const HALVING_SUPPLY = thresholds.length ? thresholds[window._halvingIndex] : 10_500_000;
+  // For crossing detection, use the PREVIOUS threshold (not the new one!)
+  const PREV_HALVING_THRESHOLD = thresholds[prevHalvingIndex];
   // Prefer avg_emission_for_projection returned by /api/network for both
   // display and halving projection logic. Fall back to `emission` (static)
   // when projection average is not available.
@@ -542,16 +546,17 @@ async function updateNetworkStats(data) {
   // Compute halving date simply by remaining supply / emission per day
   const remaining = (supplyForHalving !== null && supplyForHalving !== undefined) ? (HALVING_SUPPLY - supplyForHalving) : null;
   // halvingThresholds already generated above
-  // detect crossing: previous < threshold <= current
+  // detect crossing: previous < OLD_threshold <= current (use PREV_HALVING_THRESHOLD!)
   const prevHalvingSupplyForCrossing = (window._prevSupplyForHalving !== undefined && window._prevSupplyForHalving !== null)
     ? window._prevSupplyForHalving
     : ((window._prevHalvingSupply !== undefined) ? window._prevHalvingSupply : (window._prevCircSupply ?? null));
-  const crossing = prevHalvingSupplyForCrossing !== null && prevHalvingSupplyForCrossing < HALVING_SUPPLY && supplyForHalving >= HALVING_SUPPLY;
+  const crossing = prevHalvingSupplyForCrossing !== null && prevHalvingSupplyForCrossing < PREV_HALVING_THRESHOLD && supplyForHalving >= PREV_HALVING_THRESHOLD;
   if (crossing) {
     // record last halving with timestamp (ms) and persist to localStorage
+    // Save the threshold we just CROSSED (not the next one!)
     const halvingTimestamp = Date.now();
-    saveLastHalving(HALVING_SUPPLY, halvingTimestamp);
-    window.halvingJustHappened = { threshold: HALVING_SUPPLY, at: new Date(halvingTimestamp) };
+    saveLastHalving(PREV_HALVING_THRESHOLD, halvingTimestamp);
+    window.halvingJustHappened = { threshold: PREV_HALVING_THRESHOLD, at: new Date(halvingTimestamp) };
     window.halvingDate = new Date(halvingTimestamp);
     // UI: quick animation on pill, if present
     const pill = document.querySelector('.halving-pill');

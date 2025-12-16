@@ -55,7 +55,9 @@ OLD_PATTERNS = [
     r'^top_validators-\d{8}\.json$',                   # top_validators-20251216.json
     r'^top_wallets-\d{8}\.json$',                      # top_wallets-20251216.json
     r'^issuance_history-\d{8}\.json$',                 # issuance_history-20251216.json
+    r'^issuance_history-\d{8}T\d{6}Z\.json$',          # issuance_history-20251216T095000Z.json
     r'^taostats_history-\d{8}\.json$',                 # taostats_history-20251216.json
+    r'^taostats_history-\d{8}T\d{6}Z\.json$',          # taostats_history-20251216T095000Z.json
     r'^taostats_entry-\d{8}T\d{6}Z\.json$',            # taostats_entry-20251216T095000Z.json
     r'^taostats_entry-.*\.json$',                      # taostats_entry-anything.json
     r'^taostats_aggregates-\d{8}\.json$',              # taostats_aggregates-20251216.json
