@@ -344,6 +344,7 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
       type: 'time',
       grid: { display: false },
       ticks: {
+        source: 'data',
         color: '#888',
         maxRotation: 0,
         autoSkip: true,
