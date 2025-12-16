@@ -71,13 +71,31 @@ def fetch_block_time_onchain():
 
                 # Find timestamp extrinsic
                 timestamp = None
-                for ext in block['extrinsics']:
-                    if ext.get('call', {}).get('call_module') == 'Timestamp' and \
-                       ext.get('call', {}).get('call_function') == 'set':
-                        timestamp_ms = ext.get('call', {}).get('call_args', [{}])[0].get('value')
-                        if timestamp_ms:
-                            timestamp = int(timestamp_ms) / 1000
-                            break
+                for idx, ext in enumerate(block['extrinsics']):
+                    # GenericExtrinsic has .value dict attribute
+                    try:
+                        # Access extrinsic data - works with GenericExtrinsic
+                        ext_data = ext.value if hasattr(ext, 'value') else ext
+
+                        # Look for Timestamp.set call
+                        call_data = ext_data.get('call', {})
+                        if isinstance(call_data, dict):
+                            call_module = call_data.get('call_module')
+                            call_function = call_data.get('call_function')
+
+                            if call_module == 'Timestamp' and call_function == 'set':
+                                call_args = call_data.get('call_args', [])
+                                if call_args and len(call_args) > 0:
+                                    arg = call_args[0]
+                                    timestamp_ms = arg.get('value') if isinstance(arg, dict) else arg
+                                    if timestamp_ms:
+                                        timestamp = int(timestamp_ms) / 1000
+                                        break
+                    except Exception as e:
+                        # Debug first extrinsic structure on first block
+                        if i == 0 and idx == 0:
+                            print(f"  Debug: ext type={type(ext)}, hasattr value={hasattr(ext, 'value')}", file=sys.stderr)
+                        continue
 
                 if timestamp:
                     block_data.append({
