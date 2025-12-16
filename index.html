@@ -783,6 +783,21 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
           </div>
         </div>
 
+        <!-- Score History Chart -->
+        <div class="decentralization-history-section">
+          <div class="history-header">
+            <span class="history-title">Score History (7 days)</span>
+            <div class="history-controls">
+              <button class="history-btn active" data-days="7" data-chart-type="exp">7d</button>
+              <button class="history-btn" data-days="30" data-chart-type="exp">30d</button>
+              <button class="history-btn" data-days="90" data-chart-type="exp">90d</button>
+            </div>
+          </div>
+          <div class="chart-container">
+            <canvas id="decentralizationExpChart"></canvas>
+          </div>
+        </div>
+
         <!-- Details Grid -->
         <div class="exp-details-grid">
           <div class="exp-column">

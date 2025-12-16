@@ -85,6 +85,9 @@ import {
   loadDecentralizationHistory
 } from './js/modules/decentralizationChart.js';
 import {
+  loadDecentralizationExpHistory
+} from './js/modules/decentralizationExpChart.js';
+import {
   initThemeToggle
 } from './js/modules/themeToggle.js';
 import {
@@ -1461,29 +1464,39 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 });
 
-// ===== Decentralization Score History Chart =====
+// ===== Decentralization Score History Charts =====
 document.addEventListener('DOMContentLoaded', function() {
-  // Load initial chart (30 days)
+  // Load initial charts
   loadDecentralizationHistory(30);
+  loadDecentralizationExpHistory(7);
 
   // History range button handlers
   const historyBtns = document.querySelectorAll('.history-btn');
   historyBtns.forEach(btn => {
     btn.addEventListener('click', function() {
       const days = parseInt(this.dataset.days);
+      const chartType = this.dataset.chartType; // 'exp' for Dec 2.0, undefined for Dec 1.0
 
-      // Update active state
-      historyBtns.forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
+      // Get the parent section to target buttons within that section only
+      const parentSection = this.closest('.decentralization-history-section');
+      if (parentSection) {
+        const sectionBtns = parentSection.querySelectorAll('.history-btn');
+        sectionBtns.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
 
-      // Update title
-      const titleEl = document.querySelector('.history-title');
-      if (titleEl) {
-        titleEl.textContent = `Score History (${days} days)`;
+        // Update title within this section
+        const titleEl = parentSection.querySelector('.history-title');
+        if (titleEl) {
+          titleEl.textContent = `Score History (${days} days)`;
+        }
       }
 
-      // Load chart
-      loadDecentralizationHistory(days);
+      // Load appropriate chart
+      if (chartType === 'exp') {
+        loadDecentralizationExpHistory(days);
+      } else {
+        loadDecentralizationHistory(days);
+      }
     });
   });
 });
