@@ -1,0 +1,40 @@
+name: Backtest Subnet Predictions
+
+on:
+  workflow_dispatch:
+    inputs:
+      backtest_days:
+        description: 'Interval between test points (days)'
+        required: false
+        default: '14'
+
+jobs:
+  backtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run backtest
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          BACKTEST_DAYS: ${{ github.event.inputs.backtest_days || '14' }}
+        run: |
+          python .github/scripts/backtest_predictions.py
+
+      - name: Upload backtest results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: backtest-results
+          path: .github/data/backtest_results.json
+          retention-days: 30
