@@ -250,8 +250,9 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
 
     // Check if candlestick mode and OHLCV data available
     if (showCandleChart && ohlcvData?.length) {
-      // Candlestick chart data format - use index-based (category scale) like Line chart
+      // Candlestick chart data format
       const candleData = ohlcvData.map(d => ({
+        x: d.x,
         o: d.o * conversionRate,
         h: d.h * conversionRate,
         l: d.l * conversionRate,
@@ -297,8 +298,9 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
   if (showVolume && volumeData?.length && !hasAnyComparison) {
     // Find max volume for scaling
     const maxVol = Math.max(...volumeData.map(v => v.y));
-    // Use index-based data for both Line and Candlestick (category scale)
-    const volumeScaled = volumeData.map(v => v.y);
+    const volumeScaled = useCandlestick
+      ? volumeData.map(v => ({ x: v.x, y: v.y }))
+      : volumeData.map((v, i) => v.y);
 
     datasets.push({
       label: 'Volume',
@@ -312,8 +314,59 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
     });
   }
 
-  // Configure scales - use same category scale for both Line and Candlestick
-  const scales = {
+  // Create timestamp->label mapping for candlestick callback
+  const timestampLabels = new Map();
+  if (useCandlestick && ohlcvData?.length) {
+    ohlcvData.forEach(d => {
+      const date = new Date(d.x);
+      let label;
+      if (rangeNum <= 1) {
+        label = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } else if (rangeNum <= 3) {
+        label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+                date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } else if (rangeNum <= 30) {
+        label = `${date.getMonth()+1}/${date.getDate()}`;
+      } else if (rangeNum <= 180) {
+        label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        const month = date.toLocaleDateString('en-US', { month: 'short' });
+        const year = String(date.getFullYear()).slice(-2);
+        label = `${month} '${year}`;
+      }
+      timestampLabels.set(d.x, label);
+    });
+  }
+
+  // Configure scales based on chart type
+  const scales = useCandlestick ? {
+    x: {
+      type: 'time',
+      grid: { display: false },
+      ticks: {
+        source: 'data',
+        color: '#888',
+        maxRotation: 0,
+        autoSkip: true,
+        maxTicksLimit: isMax ? 12 : (rangeNum <= 7 ? 7 : 15),
+        callback: function(value) {
+          // Use pre-formatted label from map
+          return timestampLabels.get(value) || '';
+        }
+      }
+    },
+    y: {
+      display: true,
+      position: 'left',
+      grid: { color: '#222' },
+      ticks: {
+        color: '#888',
+        callback: function(value) {
+          return `${currencySymbol}${value.toLocaleString()}`;
+        }
+      }
+    }
+  } : {
     x: {
       display: true,
       grid: { display: false },
@@ -350,7 +403,7 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
 
   window.priceChart = new Chart(ctx, {
     type: chartType,
-    data: { labels, datasets },
+    data: useCandlestick ? { datasets } : { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
