@@ -353,10 +353,39 @@ async function updateNetworkStats(data) {
         const emissionBadge = document.querySelector('#emissionCard .info-badge');
         if (emissionBadge) {
           const lines = [];
-          if (data && data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null) {
+
+          // Show GPS methodology if halving estimates available
+          if (data && data.halving_estimates && data.halving_estimates.length > 1) {
+            const nextHalving = data.halving_estimates[1];
+            const method = nextHalving.method || 'unknown';
+            const gpsStage = nextHalving.gps_stage || 'unknown';
+            const confidence = nextHalving.confidence || data.projection_confidence || 'unknown';
+
+            // Method label
+            const methodLabel = method === 'empirical_halved' ? "Doug's Cheat (empirical halved)" :
+                               method.startsWith('emission_') ? `${method.replace('emission_', '')}d moving average` :
+                               method;
+
+            // GPS stage label
+            const stageLabels = {
+              'post_halving_stabilization': 'Stage 1: Post-Halving Stabilization (0-7d)',
+              'terminal_approach_transition': 'Stage 2: Terminal Approach (Transition)',
+              'long_range_transition': 'Stage 2: Long-Range (Transition)',
+              'terminal_approach': 'Stage 3: Terminal Approach (<7d to halving)',
+              'long_range': 'Stage 3: Long-Range (>7d to halving)'
+            };
+            const stageLabel = stageLabels[gpsStage] || gpsStage.replace(/_/g, ' ');
+
+            lines.push('Current emission rate used for halving projections');
+            lines.push('');
+            lines.push(`Method: ${methodLabel}`);
+            lines.push(`GPS: ${stageLabel}`);
+            lines.push(`Confidence: ${confidence}`);
+            lines.push('');
+            lines.push('Source: Bittensor SDK (calculated)');
+          } else if (data && data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null) {
             lines.push('Avg emission rate used for halving projections');
             lines.push('Based on our own issuance history');
-            lines.push('Confidence shown in the Halving pill');
             lines.push('');
             lines.push('Source: Bittensor SDK (calculated)');
           } else if (data && data.emission !== undefined && data.emission !== null) {
@@ -366,6 +395,7 @@ async function updateNetworkStats(data) {
           } else {
             lines.push('Emission: unavailable');
           }
+
           if (data.last_issuance_ts) lines.push(`Last updated: ${new Date(data.last_issuance_ts * 1000).toLocaleString()}`);
           emissionBadge.setAttribute('data-tooltip', lines.join('\n'));
         }
