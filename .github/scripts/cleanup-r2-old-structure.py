@@ -56,6 +56,11 @@ OLD_PATTERNS = [
     r'^top_wallets-\d{8}\.json$',                      # top_wallets-20251216.json
     r'^issuance_history-\d{8}\.json$',                 # issuance_history-20251216.json
     r'^taostats_history-\d{8}\.json$',                 # taostats_history-20251216.json
+    r'^taostats_entry-\d{8}T\d{6}Z\.json$',            # taostats_entry-20251216T095000Z.json
+    r'^taostats_entry-.*\.json$',                      # taostats_entry-anything.json
+    r'^taostats_aggregates-\d{8}\.json$',              # taostats_aggregates-20251216.json
+    r'^distribution-\d{8}\.json$',                     # distribution-20251216.json
+    r'^halving-\d{8}\.json$',                          # halving-20251216.json
 ]
 
 def list_all_objects():
@@ -170,6 +175,14 @@ def main():
                 type_name = 'issuance_history'
             elif 'taostats_history-' in key:
                 type_name = 'taostats_history'
+            elif 'taostats_entry-' in key:
+                type_name = 'taostats_entry'
+            elif 'taostats_aggregates-' in key:
+                type_name = 'taostats_aggregates'
+            elif 'distribution-' in key:
+                type_name = 'distribution'
+            elif 'halving-' in key:
+                type_name = 'halving'
             else:
                 type_name = 'other'
 
