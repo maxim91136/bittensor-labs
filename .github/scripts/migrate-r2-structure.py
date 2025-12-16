@@ -54,7 +54,12 @@ def list_objects(prefix='', max_keys=1000):
         if resp.status_code == 200:
             data = resp.json()
             if data.get('success'):
-                return data.get('result', {}).get('objects', [])
+                result = data.get('result', [])
+                # Handle both formats: direct list or nested dict
+                if isinstance(result, list):
+                    return result
+                elif isinstance(result, dict):
+                    return result.get('objects', [])
     except Exception as e:
         print(f'⚠️  Error listing objects: {e}')
 
