@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.9 (2025-12-16)
+### Changed
+- **Documentation**: Complete doc updates for v1.0.0-rc.33.8 release
+  - Updated VERSION, README, and CHANGELOG to reflect latest release
+  - All changes from v1.0.0-rc.33.8 included (no code changes)
+
 ## v1.0.0-rc.33.8 (2025-12-16)
 ### Fixed
 - **Halving Counter Post-Halving Display**: Fixed critical issue where counter showed "Halved!" indefinitely after 24h post-halving
