@@ -5257,3 +5257,222 @@ body.light-bg .exp-badge {
   box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
   background: linear-gradient(135deg, #7c7ff7, #9d7cf7);
 }
+
+/* ==============================================
+   HALVING PREDICTION HERO BANNER
+   ============================================== */
+.halving-hero-banner {
+  max-width: 1100px;
+  margin: 1.2rem auto 1rem auto;
+  padding: 0 20px;
+}
+
+.hero-content {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.05), rgba(16, 163, 74, 0.03));
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 12px;
+  padding: 1.2rem 1.8rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 16px rgba(34, 197, 94, 0.08);
+}
+
+.hero-content::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #22c55e, transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { opacity: 0.5; }
+  50% { opacity: 1; }
+  100% { opacity: 0.5; }
+}
+
+.hero-icon {
+  font-size: 2rem;
+  margin-bottom: 0.3rem;
+  animation: pulse-icon 2s infinite;
+}
+
+@keyframes pulse-icon {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.hero-title {
+  font-size: clamp(1.3rem, 3vw, 1.8rem);
+  font-weight: 700;
+  color: #22c55e;
+  margin: 0 0 1rem 0;
+  text-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+  letter-spacing: -0.01em;
+}
+
+.hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin: 1.2rem 0 1rem 0;
+  flex-wrap: wrap;
+}
+
+.hero-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 110px;
+}
+
+.hero-stat-label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.hero-stat-value {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.hero-stat.accuracy .hero-stat-value {
+  color: #22c55e;
+  font-size: 1.2rem;
+}
+
+.hero-proof {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.8rem 0 0.6rem 0;
+}
+
+.proof-label {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.hero-proof-links {
+  display: flex;
+  justify-content: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.proof-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 6px;
+  color: #22c55e;
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.proof-link:hover {
+  background: rgba(34, 197, 94, 0.2);
+  border-color: #22c55e;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2);
+}
+
+.proof-link svg {
+  flex-shrink: 0;
+}
+
+.proof-link.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.hero-disclaimer {
+  margin: 1.5rem 0 0 0;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.5;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Light mode adjustments */
+body.light-bg .hero-content {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.12), rgba(16, 163, 74, 0.08));
+  border-color: rgba(34, 197, 94, 0.4);
+}
+
+body.light-bg .hero-title {
+  color: #16a34a;
+}
+
+body.light-bg .proof-link {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.4);
+  color: #16a34a;
+}
+
+body.light-bg .proof-link:hover {
+  background: rgba(34, 197, 94, 0.25);
+  border-color: #16a34a;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .halving-hero-banner {
+    margin: 1.5rem auto 1rem auto;
+  }
+
+  .hero-content {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .hero-title {
+    font-size: 1.6rem;
+    margin-bottom: 1rem;
+  }
+
+  .hero-stats {
+    gap: 1.2rem;
+    margin: 1.5rem 0;
+  }
+
+  .hero-stat {
+    min-width: 120px;
+  }
+
+  .hero-stat-value {
+    font-size: 1.3rem;
+  }
+
+  .hero-stat.accuracy .hero-stat-value {
+    font-size: 1.5rem;
+  }
+
+  .hero-proof {
+    flex-direction: column;
+    gap: 0.8rem;
+  }
+
+  .proof-label {
+    font-size: 0.9rem;
+  }
+}
