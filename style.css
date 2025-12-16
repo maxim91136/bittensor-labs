@@ -5101,22 +5101,22 @@ body.light-bg .score-bar-container {
 }
 
 .decentralization-exp-content {
-  padding: 0 1.5rem 1.5rem;
+  padding: 0 1rem 1rem;
 }
 
 /* Three Score Grid */
 .exp-scores-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
 }
 
 .exp-score-item {
   background: rgba(34, 197, 94, 0.08);
   border: 1px solid rgba(34, 197, 94, 0.2);
-  border-radius: 10px;
-  padding: 1.2rem 0.8rem;
+  border-radius: 8px;
+  padding: 0.8rem 0.5rem;
   text-align: center;
 }
 
@@ -5127,7 +5127,7 @@ body.light-bg .score-bar-container {
 
 .exp-score-label {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.75rem;
   font-weight: 700;
   color: var(--text-primary);
   text-transform: uppercase;
@@ -5136,15 +5136,15 @@ body.light-bg .score-bar-container {
 
 .exp-score-sublabel {
   display: block;
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.03em;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .exp-score-value {
-  font-size: 2rem;
+  font-size: 1.5rem;
   font-weight: 700;
   color: var(--accent-primary);
 }
@@ -5157,34 +5157,34 @@ body.light-bg .score-bar-container {
 .exp-details-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 1.2rem;
-  margin-bottom: 1rem;
-  padding-top: 1rem;
+  gap: 0.8rem;
+  margin-bottom: 0.7rem;
+  padding-top: 0.8rem;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .exp-column {
   background: rgba(255, 255, 255, 0.02);
-  border-radius: 8px;
-  padding: 0.8rem;
+  border-radius: 6px;
+  padding: 0.6rem;
 }
 
 .exp-column-header {
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  margin-bottom: 0.6rem;
-  padding-bottom: 0.4rem;
+  margin-bottom: 0.5rem;
+  padding-bottom: 0.3rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .exp-metric {
   display: flex;
   justify-content: space-between;
-  padding: 0.35rem 0;
-  font-size: 0.78rem;
+  padding: 0.25rem 0;
+  font-size: 0.7rem;
 }
 
 .exp-metric span:first-child {
@@ -5199,11 +5199,11 @@ body.light-bg .score-bar-container {
 
 .exp-footer {
   text-align: right;
-  padding-top: 0.5rem;
+  padding-top: 0.4rem;
 }
 
 .exp-update {
-  font-size: 0.65rem;
+  font-size: 0.6rem;
   color: var(--text-muted);
 }
 
@@ -5211,24 +5211,24 @@ body.light-bg .score-bar-container {
 @media (max-width: 600px) {
   .exp-scores-grid {
     grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
+    gap: 0.4rem;
   }
 
   .exp-score-item {
-    padding: 0.8rem 0.4rem;
+    padding: 0.6rem 0.3rem;
   }
 
   .exp-score-label {
-    font-size: 0.75rem;
+    font-size: 0.7rem;
   }
 
   .exp-score-value {
-    font-size: 1.5rem;
+    font-size: 1.3rem;
   }
 
   .exp-details-grid {
     grid-template-columns: 1fr;
-    gap: 0.8rem;
+    gap: 0.6rem;
   }
 }
 
