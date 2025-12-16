@@ -350,7 +350,7 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
       grid: { display: false },
       ticks: {
         color: '#888',
-        maxTicksLimit: isMax ? 12 : (rangeNum <= 7 ? 7 : 15),
+        maxTicksLimit: isMax ? 12 : (rangeNum === 1 ? 12 : (rangeNum <= 7 ? 7 : 15)),
         autoSkip: true,
         maxRotation: 0
       }
