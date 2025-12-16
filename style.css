@@ -5345,6 +5345,13 @@ body.light-bg .exp-badge {
   font-family: 'JetBrains Mono', monospace;
 }
 
+.hero-stat-block {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: -0.2rem;
+}
+
 .hero-stat.accuracy .hero-stat-value {
   color: #22c55e;
   font-size: 1.2rem;
