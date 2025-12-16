@@ -314,31 +314,44 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
     });
   }
 
-  // Detect mobile/small screens for responsive tick limits
-  const isMobile = canvas.offsetWidth < 500;
-  const mobileTickLimit = rangeNum <= 3 ? 10 : (rangeNum <= 30 ? 15 : 25);
-  const desktopTickLimit = rangeNum <= 7 ? 10 : 15;
-  const tickLimit = isMobile ? mobileTickLimit : desktopTickLimit;
+  // Create timestamp->label mapping for candlestick callback
+  const timestampLabels = new Map();
+  if (useCandlestick && ohlcvData?.length) {
+    ohlcvData.forEach(d => {
+      const date = new Date(d.x);
+      let label;
+      if (rangeNum <= 1) {
+        label = date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } else if (rangeNum <= 3) {
+        label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' +
+                date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+      } else if (rangeNum <= 30) {
+        label = `${date.getMonth()+1}/${date.getDate()}`;
+      } else if (rangeNum <= 180) {
+        label = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } else {
+        const month = date.toLocaleDateString('en-US', { month: 'short' });
+        const year = String(date.getFullYear()).slice(-2);
+        label = `${month} '${year}`;
+      }
+      timestampLabels.set(d.x, label);
+    });
+  }
 
   // Configure scales based on chart type
   const scales = useCandlestick ? {
     x: {
       type: 'time',
-      time: {
-        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 3 ? 'day' : (rangeNum <= 180 ? 'week' : 'month')),
-        displayFormats: {
-          hour: 'HH:mm',
-          day: 'M/d HH:mm',
-          week: 'M/d',
-          month: "MMM 'yy"
-        }
-      },
       grid: { display: false },
       ticks: {
         color: '#888',
         maxRotation: 0,
         autoSkip: true,
-        maxTicksLimit: tickLimit
+        maxTicksLimit: isMax ? 12 : (rangeNum <= 7 ? 7 : 15),
+        callback: function(value) {
+          // Use pre-formatted label from map
+          return timestampLabels.get(value) || '';
+        }
       }
     },
     y: {
