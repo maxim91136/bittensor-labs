@@ -557,20 +557,25 @@ async function updateNetworkStats(data) {
     const halvingTimestamp = Date.now();
     saveLastHalving(PREV_HALVING_THRESHOLD, halvingTimestamp);
     window.halvingJustHappened = { threshold: PREV_HALVING_THRESHOLD, at: new Date(halvingTimestamp) };
-    window.halvingDate = new Date(halvingTimestamp);
     // UI: quick animation on pill, if present
     const pill = document.querySelector('.halving-pill');
     if (pill) {
       pill.classList.add('just-halved');
       setTimeout(() => pill.classList.remove('just-halved'), 8000);
     }
-  } else if (remaining !== null && remaining > 0) {
+    // Don't set halvingDate here - let it fall through to calculate NEXT halving below
+  }
+
+  // Always calculate next halving if we have remaining supply (even after crossing!)
+  if (remaining !== null && remaining > 0) {
     // Use ETA from backend if available (more accurate, uses historical emission data)
     if (data && Array.isArray(data.halving_estimates) && data.halving_estimates.length > 0) {
-      const nextHalvingEta = data.halving_estimates[0].eta;
+      // Find first estimate with remaining > 0 (skip past halvings!)
+      const nextEstimate = data.halving_estimates.find(est => est.remaining > 0);
+      const nextHalvingEta = nextEstimate?.eta;
       if (nextHalvingEta) {
         window.halvingDate = new Date(nextHalvingEta);
-        if (window._debug) console.debug('Using backend ETA for halving:', nextHalvingEta);
+        if (window._debug) console.debug('Using backend ETA for next halving:', nextHalvingEta);
       } else if (emissionPerDay && emissionPerDay > 0) {
         // Fallback to local calculation if backend ETA missing
         window.halvingDate = rotateToThreshold(thresholds, window._halvingIndex, currentSupplyForHalving, emissionPerDay);
