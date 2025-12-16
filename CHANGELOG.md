@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.8 (2025-12-16)
+### Fixed
+- **Halving Counter Post-Halving Display**: Fixed critical issue where counter showed "Halved!" indefinitely after 24h post-halving
+  - Counter now correctly shows countdown to **next** halving after >24h post-halving
+  - Backend integration now picks first future halving estimate (`remaining > 0`) instead of blindly using index 0
+  - Proper counter timeline: 0-8s: "Halved!" → 8s-24h: "Halved X ago" → >24h: Countdown to next
+  - Technical: Fixed `halving_estimates` array indexing and removed `else if` that blocked next halving calculation ([script.js:573-575](script.js#L573-L575))
+- **R2 Cleanup Script Patterns**: Added missing timestamp-based patterns to comprehensive cleanup
+  - Added `taostats_history-*T*Z.json` patterns for timestamped taostats history files
+  - Added `issuance_history-*T*Z.json` patterns for timestamped issuance history files
+  - Ensures complete migration to date-based directory structure ([cleanup-r2-old-structure.py:58-60](cleanup-r2-old-structure.py#L58-L60))
+
+### Changed
+- **Decentralization 2.0 Card Improvements**: TDS/EDS/Hybrid history tracking with interactive charts
+  - More compact card layouts optimized for mobile experience
+  - Enhanced history chart visualization for all three decentralization metrics
+
 ## v1.0.0-rc.33.7 (2025-12-16)
 ### Added
 - **Decentralization Score History Tracking**: Comprehensive history system for Network Decentralization Score 1.0
