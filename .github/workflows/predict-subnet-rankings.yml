@@ -1,0 +1,88 @@
+name: Subnet Ranking Predictions
+
+on:
+  schedule:
+    # Run daily at 2:30 AM UTC (after subnet data updates)
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+    inputs:
+      target_dates:
+        description: 'Target dates (comma-separated ISO format, e.g., 2026-01-01,2026-06-01)'
+        required: false
+        default: ''
+      lookback_days:
+        description: 'Days of history to analyze'
+        required: false
+        default: '28'
+
+jobs:
+  predict:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Run prediction model
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          PREDICTION_TARGET_DATES: ${{ github.event.inputs.target_dates }}
+          LOOKBACK_DAYS: ${{ github.event.inputs.lookback_days || '28' }}
+          MIN_DATA_POINTS: '48'
+        run: |
+          python .github/scripts/predict_subnet_rankings.py
+
+      - name: Validate predictions
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+        run: |
+          python3 - <<'PY'
+          import sys
+          import json
+          import urllib.request
+          import os
+
+          # Fetch prediction from KV to validate
+          account = os.getenv('CF_ACCOUNT_ID')
+          token = os.getenv('CF_API_TOKEN')
+          namespace = os.getenv('CF_KV_NAMESPACE_ID')
+
+          url = f'https://api.cloudflare.com/client/v4/accounts/{account}/storage/kv/namespaces/{namespace}/values/subnet_predictions'
+          req = urllib.request.Request(url, headers={'Authorization': f'Bearer {token}'})
+
+          try:
+              with urllib.request.urlopen(req, timeout=10) as resp:
+                  data = json.loads(resp.read())
+
+              # Validate structure
+              assert '_generated_at' in data, "Missing _generated_at"
+              assert 'predictions_by_date' in data, "Missing predictions_by_date"
+              assert len(data['predictions_by_date']) > 0, "No predictions"
+
+              pred = data['predictions_by_date'][0]
+              assert 'predictions' in pred, "Missing predictions array"
+              assert len(pred['predictions']) > 0, "No subnet predictions"
+
+              # Check probabilities sum to ~1.0
+              total_prob = sum(p['probability'] for p in pred['predictions'])
+              assert 0.99 <= total_prob <= 1.01, f"Probabilities don't sum to 1.0: {total_prob}"
+
+              print(f"✅ Validation passed: {len(pred['predictions'])} subnet predictions")
+              print(f"   Top prediction: Subnet #{pred['predictions'][0]['netuid']} {pred['predictions'][0]['subnet_name']} ({pred['predictions'][0]['probability_pct']})")
+              print(f"   Target date: {pred['target_date']}")
+              print(f"   Confidence: {pred['confidence']}")
+
+          except Exception as e:
+              print(f"❌ Validation failed: {e}", file=sys.stderr)
+              sys.exit(1)
+          PY

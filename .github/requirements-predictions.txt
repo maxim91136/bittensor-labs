@@ -1,0 +1,13 @@
+# Python dependencies for subnet ranking predictions
+# No external packages needed - using only stdlib:
+# - urllib.request for HTTP
+# - json for data handling
+# - math for calculations
+# - datetime for timestamps
+# - collections for data structures
+
+# This file kept for future ML dependencies
+# When adding ML models, add:
+# numpy>=1.24.0
+# scipy>=1.11.0
+# scikit-learn>=1.3.0
