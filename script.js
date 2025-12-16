@@ -318,14 +318,21 @@ async function updateNetworkStats(data) {
     }
     // Show the projection average when available (more accurate for halving)
     if (elements.emission) {
-      // Post-halving: Use Doug's Cheat (pre_halving_emission / 2) for accuracy
-      if (data && data.pre_halving_emission !== undefined && data.pre_halving_emission !== null && data.last_halving) {
-        const dougsCheatEmission = Number(data.pre_halving_emission) / 2;
-        const roundedUp = roundUpTo2(dougsCheatEmission);
+      // Use emission from next halving estimate (GPS-based, tracks current methodology)
+      if (data && data.halving_estimates && data.halving_estimates.length > 1) {
+        const nextHalving = data.halving_estimates[1]; // Next halving (current is [0])
+        const emissionUsed = Number(nextHalving.emission_used);
+        const roundedUp = roundUpTo2(emissionUsed);
         elements.emission.textContent = roundedUp.toFixed(2);
-        elements.emission.title = `Current emission (Doug's Cheat: ${formatExact(data.pre_halving_emission)} / 2) — exact: ${formatExact(dougsCheatEmission)} TAO/day`;
+
+        // Build tooltip with GPS methodology
+        const method = nextHalving.method || 'unknown';
+        const gpsStage = nextHalving.gps_stage || 'unknown';
+        const methodLabel = method === 'empirical_halved' ? "Doug's Cheat" : method.replace('emission_', '') + 'd';
+        const stageLabel = gpsStage.replace(/_/g, ' ');
+        elements.emission.title = `Current emission (${methodLabel}) — GPS: ${stageLabel} — exact: ${formatExact(emissionUsed)} TAO/day`;
       } else if (data && data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null) {
-        // Show rounded-up value to 2 decimal places for display (user requested accuracy)
+        // Fallback to avg_emission_for_projection
         const avgVal = Number(data.avg_emission_for_projection);
         const roundedUp = roundUpTo2(avgVal);
         elements.emission.textContent = roundedUp.toFixed(2);
