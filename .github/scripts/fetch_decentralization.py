@@ -389,6 +389,104 @@ def calculate_composite_score(wallet_analysis: Dict, validator_analysis: Dict, s
     }
 
 
+def calculate_experimental_scores(distribution_data: Dict, validator_data: Dict) -> Dict:
+    """
+    Calculate Experimental Decentralization Scores (TDS/EDS/Hybrid).
+
+    TDS (Technical Decentralization Score) - Who controls the keys
+    - CEX holdings (custodial risk)
+    - Validator concentration (consensus control)
+
+    EDS (Economic Decentralization Score) - Who owns the tokens
+    - Ownership Gini (wealth distribution)
+    - Validator stake spread (economic participation)
+
+    Hybrid - Weighted average of TDS and EDS
+    """
+
+    # Extract data for calculations
+    brackets = distribution_data.get("brackets", {})
+    validators = validator_data.get("top_validators", [])
+    total_stake = validator_data.get("total_stake", 0)
+
+    # CEX holdings percentage (from 1k+ bracket as proxy)
+    bracket_1k = brackets.get("1000", {})
+    cex_percentage = bracket_1k.get("percentage", 0)  # Rough proxy
+
+    # Validator top 10 concentration
+    val_top10_pct = 0
+    if validators and total_stake > 0:
+        top10_stake = sum(v.get("stake", 0) for v in validators[:10])
+        val_top10_pct = top10_stake / total_stake if total_stake > 0 else 0
+
+    # Gini coefficient from validator stakes
+    gini = 0
+    if validators:
+        stakes = [v.get("stake", 0) for v in validators if v.get("stake", 0) > 0]
+        if stakes:
+            gini = calculate_gini(stakes)
+
+    # === TDS Calculation ===
+    tds_components = []
+    tds_weights = []
+
+    # CEX holdings component (lower is better)
+    if cex_percentage is not None:
+        cex_score = max(0, 100 - (cex_percentage * 1000))  # Scale appropriately
+        tds_components.append(cex_score)
+        tds_weights.append(0.5)
+
+    # Validator concentration component (lower is better)
+    if val_top10_pct > 0:
+        val_conc_score = max(0, 100 - (val_top10_pct * 100))
+        tds_components.append(val_conc_score)
+        tds_weights.append(0.5)
+
+    tds = None
+    if tds_components:
+        tds = round(sum(c * w for c, w in zip(tds_components, tds_weights)) / sum(tds_weights))
+
+    # === EDS Calculation ===
+    eds_components = []
+    eds_weights = []
+
+    # Gini coefficient component (lower is better)
+    if gini > 0:
+        gini_score = max(0, 100 - (gini * 100))
+        eds_components.append(gini_score)
+        eds_weights.append(0.5)
+
+    # Validator stake spread (same as TDS validator component)
+    if val_top10_pct > 0:
+        stake_spread_score = max(0, 100 - (val_top10_pct * 100))
+        eds_components.append(stake_spread_score)
+        eds_weights.append(0.5)
+
+    eds = None
+    if eds_components:
+        eds = round(sum(c * w for c, w in zip(eds_components, eds_weights)) / sum(eds_weights))
+
+    # === Hybrid Calculation ===
+    hybrid = None
+    if tds is not None and eds is not None:
+        hybrid = round((tds * 0.5) + (eds * 0.5))
+    elif tds is not None:
+        hybrid = tds
+    elif eds is not None:
+        hybrid = eds
+
+    return {
+        "tds": tds,
+        "eds": eds,
+        "hybrid": hybrid,
+        "components": {
+            "cex_percentage": cex_percentage,
+            "val_top10_pct": round(val_top10_pct, 4) if val_top10_pct else None,
+            "gini": gini
+        }
+    }
+
+
 def main():
     print("🔍 Bittensor Network Decentralization Score Calculator", file=sys.stderr)
     print("=" * 55, file=sys.stderr)
@@ -438,6 +536,13 @@ def main():
     print(f"🎯 Network Decentralization Score: {composite['composite_score']}/100", file=sys.stderr)
     print(f"   Rating: {composite['rating']}", file=sys.stderr)
     print(f"{'='*55}", file=sys.stderr)
+
+    # Calculate experimental scores (TDS/EDS/Hybrid)
+    print("\n🧪 Calculating Experimental Scores (Dec 2.0)...", file=sys.stderr)
+    exp_scores = calculate_experimental_scores(distribution_data or {}, validator_data or {})
+    print(f"   TDS (Technical): {exp_scores.get('tds', 'N/A')}/100", file=sys.stderr)
+    print(f"   EDS (Economic): {exp_scores.get('eds', 'N/A')}/100", file=sys.stderr)
+    print(f"   Hybrid: {exp_scores.get('hybrid', 'N/A')}/100", file=sys.stderr)
 
     # Build result
     now_iso = datetime.now(timezone.utc).isoformat()
@@ -494,6 +599,37 @@ def main():
     put_to_kv(cf_acc, cf_token, cf_ns, 'decentralization_history', json.dumps(history_data).encode('utf-8'))
     print(f"   History: {len(entries)} entries", file=sys.stderr)
 
+    # Save experimental decentralization history (TDS/EDS/Hybrid)
+    print("📜 Updating experimental history (Dec 2.0)...", file=sys.stderr)
+    exp_history_entry = {
+        "date": today,
+        "tds": exp_scores.get("tds"),
+        "eds": exp_scores.get("eds"),
+        "hybrid": exp_scores.get("hybrid"),
+    }
+
+    # Fetch existing experimental history
+    exp_history = get_from_kv(cf_acc, cf_token, cf_ns, 'decentralization_exp_history') or {"entries": []}
+    exp_entries = exp_history.get("entries", [])
+
+    # Update or append today's entry (avoid duplicates)
+    exp_existing_dates = {e.get("date") for e in exp_entries}
+    if today in exp_existing_dates:
+        exp_entries = [e if e.get("date") != today else exp_history_entry for e in exp_entries]
+    else:
+        exp_entries.append(exp_history_entry)
+
+    # Keep last 365 days
+    exp_entries = sorted(exp_entries, key=lambda x: x.get("date", ""), reverse=True)[:365]
+
+    exp_history_data = {
+        "entries": exp_entries,
+        "last_updated": now_iso,
+        "_source": "decentralization_calculator_experimental"
+    }
+    put_to_kv(cf_acc, cf_token, cf_ns, 'decentralization_exp_history', json.dumps(exp_history_data).encode('utf-8'))
+    print(f"   Experimental History: {len(exp_entries)} entries", file=sys.stderr)
+
     # Archive to R2 (long-term storage, opt-in)
     if enable_r2 and r2_bucket:
         print("\n📦 Archiving to R2...", file=sys.stderr)
@@ -519,6 +655,24 @@ def main():
             print(f"   Archived: {r2_path}", file=sys.stderr)
         else:
             print(f"   ⚠️ R2 archival failed (non-fatal)", file=sys.stderr)
+
+        # Archive experimental scores to R2
+        exp_r2_path = f"decentralization_exp/{now.year}/{now.month:02d}/{now.day:02d}.json"
+        exp_snapshot = {
+            "date": today,
+            "timestamp": now_iso,
+            "tds": exp_scores.get("tds"),
+            "eds": exp_scores.get("eds"),
+            "hybrid": exp_scores.get("hybrid"),
+            "components": exp_scores.get("components"),
+            "_source": "decentralization_calculator_experimental",
+            "_version": "1.0.0"
+        }
+        exp_snapshot_data = json.dumps(exp_snapshot, indent=2).encode('utf-8')
+        if put_to_r2(cf_acc, cf_token, r2_bucket, exp_r2_path, exp_snapshot_data):
+            print(f"   Archived experimental: {exp_r2_path}", file=sys.stderr)
+        else:
+            print(f"   ⚠️ Experimental R2 archival failed (non-fatal)", file=sys.stderr)
     else:
         if not enable_r2:
             print("\n⏭️  Skipping R2 archival (ENABLE_R2 not true)", file=sys.stderr)
