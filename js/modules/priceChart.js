@@ -314,6 +314,12 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
     });
   }
 
+  // Detect mobile/small screens for responsive tick limits
+  const isMobile = canvas.offsetWidth < 500;
+  const mobileTickLimit = rangeNum <= 3 ? 10 : (rangeNum <= 30 ? 15 : 25);
+  const desktopTickLimit = rangeNum <= 7 ? 10 : 15;
+  const tickLimit = isMobile ? mobileTickLimit : desktopTickLimit;
+
   // Configure scales based on chart type
   const scales = useCandlestick ? {
     x: {
@@ -332,7 +338,7 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
         color: '#888',
         maxRotation: 0,
         autoSkip: true,
-        maxTicksLimit: 20
+        maxTicksLimit: tickLimit
       }
     },
     y: {
