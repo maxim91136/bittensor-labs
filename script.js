@@ -318,7 +318,13 @@ async function updateNetworkStats(data) {
     }
     // Show the projection average when available (more accurate for halving)
     if (elements.emission) {
-      if (data && data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null) {
+      // Post-halving: Use Doug's Cheat (pre_halving_emission / 2) for accuracy
+      if (data && data.pre_halving_emission !== undefined && data.pre_halving_emission !== null && data.last_halving) {
+        const dougsCheatEmission = Number(data.pre_halving_emission) / 2;
+        const roundedUp = roundUpTo2(dougsCheatEmission);
+        elements.emission.textContent = roundedUp.toFixed(2);
+        elements.emission.title = `Current emission (Doug's Cheat: ${formatExact(data.pre_halving_emission)} / 2) — exact: ${formatExact(dougsCheatEmission)} TAO/day`;
+      } else if (data && data.avg_emission_for_projection !== undefined && data.avg_emission_for_projection !== null) {
         // Show rounded-up value to 2 decimal places for display (user requested accuracy)
         const avgVal = Number(data.avg_emission_for_projection);
         const roundedUp = roundUpTo2(avgVal);
