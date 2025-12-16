@@ -8,6 +8,11 @@ Reads existing KV data (distribution, validators, subnets) and computes:
 - Concentration metrics (Top 10, Top 100)
 - Composite decentralization score
 
+Stores:
+- Current score in KV (fast access)
+- Last 365 days in KV history
+- Daily snapshots in R2 (unlimited archival)
+
 No additional API calls needed - uses cached KV data.
 """
 
@@ -50,6 +55,28 @@ def put_to_kv(account: str, token: str, namespace: str, key: str, data: bytes) -
                 return True
     except Exception as e:
         print(f"⚠️ KV PUT failed: {e}", file=sys.stderr)
+    return False
+
+
+def put_to_r2(account: str, token: str, bucket: str, key: str, data: bytes) -> bool:
+    """
+    Store a file in Cloudflare R2 bucket.
+
+    Uses S3-compatible API via Cloudflare's API gateway.
+    Path structure: decentralization/YYYY/MM/DD.json
+    """
+    url = f'https://api.cloudflare.com/client/v4/accounts/{account}/r2/buckets/{bucket}/objects/{key}'
+    req = urllib.request.Request(url, data=data, method='PUT', headers={
+        'Authorization': f'Bearer {token}',
+        'Content-Type': 'application/json'
+    })
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            if resp.status in (200, 201):
+                print(f"✅ R2 PUT OK ({key})")
+                return True
+    except Exception as e:
+        print(f"⚠️ R2 PUT failed: {e}", file=sys.stderr)
     return False
 
 
@@ -371,6 +398,10 @@ def main():
     cf_token = os.getenv('CF_API_TOKEN')
     cf_ns = os.getenv('CF_KV_NAMESPACE_ID') or os.getenv('CF_METRICS_NAMESPACE_ID')
 
+    # R2 archival (optional, opt-in via ENABLE_R2)
+    enable_r2 = os.getenv('ENABLE_R2', 'false').lower() == 'true'
+    r2_bucket = os.getenv('R2_BUCKET')  # kv-backup bucket
+
     if not all([cf_acc, cf_token, cf_ns]):
         print("❌ Missing Cloudflare KV credentials", file=sys.stderr)
         sys.exit(1)
@@ -462,6 +493,37 @@ def main():
     }
     put_to_kv(cf_acc, cf_token, cf_ns, 'decentralization_history', json.dumps(history_data).encode('utf-8'))
     print(f"   History: {len(entries)} entries", file=sys.stderr)
+
+    # Archive to R2 (long-term storage, opt-in)
+    if enable_r2 and r2_bucket:
+        print("\n📦 Archiving to R2...", file=sys.stderr)
+        now = datetime.now(timezone.utc)
+        r2_path = f"decentralization/{now.year}/{now.month:02d}/{now.day:02d}.json"
+
+        # Full snapshot with all analysis details
+        snapshot = {
+            "date": today,
+            "timestamp": now_iso,
+            "score": composite["composite_score"],
+            "rating": composite["rating"],
+            "components": composite["components"],
+            "wallet_analysis": wallet_analysis,
+            "validator_analysis": validator_analysis,
+            "subnet_analysis": subnet_analysis,
+            "_source": "decentralization_calculator",
+            "_version": "1.3.0"
+        }
+
+        snapshot_data = json.dumps(snapshot, indent=2).encode('utf-8')
+        if put_to_r2(cf_acc, cf_token, r2_bucket, r2_path, snapshot_data):
+            print(f"   Archived: {r2_path}", file=sys.stderr)
+        else:
+            print(f"   ⚠️ R2 archival failed (non-fatal)", file=sys.stderr)
+    else:
+        if not enable_r2:
+            print("\n⏭️  Skipping R2 archival (ENABLE_R2 not true)", file=sys.stderr)
+        else:
+            print("\n⏭️  Skipping R2 archival (R2_BUCKET not set)", file=sys.stderr)
 
     # Output JSON
     print(json.dumps(result, indent=2))

@@ -82,6 +82,9 @@ import {
   initTopWalletsDisplay
 } from './js/modules/topWalletsDisplay.js';
 import {
+  loadDecentralizationHistory
+} from './js/modules/decentralizationChart.js';
+import {
   initThemeToggle
 } from './js/modules/themeToggle.js';
 import {
@@ -1456,6 +1459,33 @@ document.addEventListener('DOMContentLoaded', function() {
       _refreshTopWallets.refreshAll();
     };
   }
+});
+
+// ===== Decentralization Score History Chart =====
+document.addEventListener('DOMContentLoaded', function() {
+  // Load initial chart (30 days)
+  loadDecentralizationHistory(30);
+
+  // History range button handlers
+  const historyBtns = document.querySelectorAll('.history-btn');
+  historyBtns.forEach(btn => {
+    btn.addEventListener('click', function() {
+      const days = parseInt(this.dataset.days);
+
+      // Update active state
+      historyBtns.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+
+      // Update title
+      const titleEl = document.querySelector('.history-title');
+      if (titleEl) {
+        titleEl.textContent = `Score History (${days} days)`;
+      }
+
+      // Load chart
+      loadDecentralizationHistory(days);
+    });
+  });
 });
 
 // Old Top Subnets Tooltip handler removed - now uses standard data-tooltip

@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.7 (2025-12-16)
+### Added
+- **Decentralization Score History Tracking**: Comprehensive history system for Network Decentralization Score 1.0
+  - **Backend R2 Archiving**: Daily snapshots saved to R2 bucket with unlimited retention
+    - Path structure: `decentralization/YYYY/MM/DD.json`
+    - Full snapshot with all analysis details (wallet/validator/subnet metrics)
+    - Optional - gracefully skips if R2_BUCKET_NAME not configured ([fetch_decentralization.py:466-492](fetch_decentralization.py#L466-L492))
+  - **API Endpoint**: New `/api/decentralization_r2_history` for long-range queries
+    - Query params: `days` (7-365), `start_date`, `end_date`
+    - Returns time series with score + component scores
+    - Works alongside existing KV history endpoint ([decentralization_r2_history.js](functions/api/decentralization_r2_history.js))
+  - **Frontend Chart Visualization**: Interactive Chart.js timeline of score evolution
+    - Line chart with 4 series: Network Score + Wallet/Validator/Subnet component scores
+    - Time range buttons: 7d / 30d / 90d
+    - Terminal-style aesthetics (cyan-green primary, red/cyan/orange components)
+    - Auto-load on page load, KV-first with R2 fallback ([decentralizationChart.js](js/modules/decentralizationChart.js))
+  - **Workflow Integration**: R2_BUCKET_NAME secret added to GitHub Actions workflow ([fetch-decentralization.yml:34](fetch-decentralization.yml#L34))
+
+### Changed
+- **Stat-Card Source Labels Unified**: All tooltips now consistently show "Bittensor SDK (on-chain)"
+  - Subnets, Validators, Emission (static), Neurons cards now unified
+  - Emission GPS paths correctly keep "(calculated)" for computed values
+  - Provides clarity on data source across entire dashboard ([script.js:301,314,394,414](script.js#L301))
+
+### Technical
+- R2 bucket integration for decentralization score archival (non-breaking, optional)
+- History chart module with responsive controls and Chart.js rendering
+- Graceful degradation: R2 → KV → Empty (no errors if data unavailable)
+- User must configure: R2 bucket + GitHub secret + Cloudflare Pages R2 binding (METRICS_R2)
+
 ## v1.0.0-rc.33.6.1 (2025-12-16)
 ### Fixed
 - **Block Time Source Label**: Tooltip now shows dynamic source instead of hardcoded "Taostats Block API"

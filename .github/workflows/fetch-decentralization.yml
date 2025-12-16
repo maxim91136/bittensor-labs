@@ -31,5 +31,7 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          ENABLE_R2: 'true'
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: |
           python .github/scripts/fetch_decentralization.py
