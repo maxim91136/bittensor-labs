@@ -298,7 +298,7 @@ async function updateNetworkStats(data) {
       // Update Subnets tooltip with source + timestamp
       const subnetsBadge = document.querySelector('#subnetsCard .info-badge');
       if (subnetsBadge) {
-        const lines = ['Total active subnets in the Bittensor network', '', 'Source: Bittensor SDK'];
+        const lines = ['Total active subnets in the Bittensor network', '', 'Source: Bittensor SDK (on-chain)'];
         if (data.last_issuance_ts) lines.push(`Last updated: ${new Date(data.last_issuance_ts * 1000).toLocaleString()}`);
         subnetsBadge.setAttribute('data-tooltip', lines.join('\n'));
       }
@@ -311,7 +311,7 @@ async function updateNetworkStats(data) {
       // Update Validators tooltip with source + timestamp
       const validatorsBadge = document.querySelector('#validatorsCard .info-badge');
       if (validatorsBadge) {
-        const lines = ['Number of active validators securing the network', '', 'Source: Bittensor SDK'];
+        const lines = ['Number of active validators securing the network', '', 'Source: Bittensor SDK (on-chain)'];
         if (data.last_issuance_ts) lines.push(`Last updated: ${new Date(data.last_issuance_ts * 1000).toLocaleString()}`);
         validatorsBadge.setAttribute('data-tooltip', lines.join('\n'));
       }
@@ -391,7 +391,7 @@ async function updateNetworkStats(data) {
           } else if (data && data.emission !== undefined && data.emission !== null) {
             lines.push('Reported emission rate (static)');
             lines.push('');
-            lines.push('Source: Bittensor SDK');
+            lines.push('Source: Bittensor SDK (on-chain)');
           } else {
             lines.push('Emission: unavailable');
           }
@@ -411,7 +411,7 @@ async function updateNetworkStats(data) {
       // Update Neurons tooltip with source + timestamp
       const neuronsBadge = document.querySelector('#neuronsCard .info-badge');
       if (neuronsBadge) {
-        const lines = ['Total number of neurons in the network', '', 'Source: Bittensor SDK'];
+        const lines = ['Total number of neurons in the network', '', 'Source: Bittensor SDK (on-chain)'];
         if (data.last_issuance_ts) lines.push(`Last updated: ${new Date(data.last_issuance_ts * 1000).toLocaleString()}`);
         neuronsBadge.setAttribute('data-tooltip', lines.join('\n'));
       }
