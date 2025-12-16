@@ -319,7 +319,7 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
     x: {
       type: 'time',
       time: {
-        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month')),
+        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 3 ? 'day' : (rangeNum <= 180 ? 'week' : 'month')),
         displayFormats: {
           hour: 'HH:mm',
           day: 'M/d HH:mm',
@@ -329,11 +329,10 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
       },
       grid: { display: false },
       ticks: {
-        source: 'data',
         color: '#888',
         maxRotation: 0,
         autoSkip: true,
-        maxTicksLimit: 15
+        maxTicksLimit: 20
       }
     },
     y: {
