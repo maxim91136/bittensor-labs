@@ -322,8 +322,8 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
         unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month')),
         displayFormats: {
           hour: 'HH:mm',
-          day: 'MMM d',
-          week: 'MMM d',
+          day: 'M/D',
+          week: 'M/D',
           month: "MMM ''yy"
         }
       },
