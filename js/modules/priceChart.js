@@ -253,9 +253,9 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
 
     // Check if candlestick mode and OHLCV data available
     if (showCandleChart && ohlcvData?.length) {
-      // Candlestick chart data format (index-based, not timestamp-based)
-      const candleData = ohlcvData.map((d, i) => ({
-        x: i,
+      // Candlestick chart data format
+      const candleData = ohlcvData.map(d => ({
+        x: d.x,
         o: d.o * conversionRate,
         h: d.h * conversionRate,
         l: d.l * conversionRate,
@@ -301,7 +301,9 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
   if (showVolume && volumeData?.length && !hasAnyComparison) {
     // Find max volume for scaling
     const maxVol = Math.max(...volumeData.map(v => v.y));
-    const volumeScaled = volumeData.map((v, i) => v.y);
+    const volumeScaled = useCandlestick
+      ? volumeData.map(v => ({ x: v.x, y: v.y }))
+      : volumeData.map((v, i) => v.y);
 
     datasets.push({
       label: 'Volume',
@@ -318,7 +320,16 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
   // Configure scales based on chart type
   const scales = useCandlestick ? {
     x: {
-      display: true,
+      type: 'time',
+      time: {
+        unit: rangeNum <= 1 ? 'hour' : (rangeNum <= 7 ? 'day' : (rangeNum <= 90 ? 'week' : 'month')),
+        displayFormats: {
+          hour: 'HH:mm',
+          day: rangeNum === 3 ? 'M/D' : 'MMM d',
+          week: 'MMM d',
+          month: "MMM ''yy"
+        }
+      },
       grid: { display: false },
       ticks: {
         color: '#888',
@@ -375,7 +386,7 @@ export function createPriceChart(priceHistoryData, range, comparisonData = {}) {
 
   window.priceChart = new Chart(ctx, {
     type: chartType,
-    data: { labels, datasets },
+    data: useCandlestick ? { datasets } : { labels, datasets },
     options: {
       responsive: true,
       maintainAspectRatio: false,
