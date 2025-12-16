@@ -59,8 +59,8 @@ fi
 PREV_TAG=$(git tag --sort=-version:refname | grep -v "^$TAG$" | head -1)
 COMMITS=$(git log "$PREV_TAG".."$TAG" --oneline 2>/dev/null || git log --oneline -10)
 
-# Create GitHub release
-gh release create "$TAG" --title "$TAG" --notes "## Changes in $TAG
+# Create GitHub release (not pre-release, mark as latest)
+gh release create "$TAG" --title "$TAG" --latest --notes "## Changes in $TAG
 
 $COMMITS
 " 2>/dev/null || echo "⚠ Release already exists or gh not available"
