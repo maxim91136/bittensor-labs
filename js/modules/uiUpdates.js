@@ -43,6 +43,10 @@ export async function updateBlockTime() {
     if (badge) {
       const deviation = data.deviation !== undefined ? data.deviation.toFixed(2) : '—';
       const blocksAnalyzed = data.blocks_analyzed || 200;
+      const source = data._source || 'unknown';
+      const sourceLabel = source === 'on-chain' ? 'Bittensor SDK (on-chain)' :
+                         source === 'taostats_fallback' ? 'Taostats Block API (fallback)' :
+                         'Taostats Block API';
       const tooltipLines = [
         `Average time between blocks (last ${blocksAnalyzed} blocks).`,
         `Target: 12.0s`,
@@ -51,7 +55,7 @@ export async function updateBlockTime() {
         `Status: ${status}`,
         '',
         `Calculation: (newest_ts - oldest_ts) / (blocks - 1)`,
-        `Source: Taostats Block API`
+        `Source: ${sourceLabel}`
       ];
       const blockLastUpd = data.last_updated || window._lastUpdated;
       if (blockLastUpd) tooltipLines.push(`Last updated: ${new Date(blockLastUpd).toLocaleString()}`);
