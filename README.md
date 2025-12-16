@@ -8,9 +8,15 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.33.6.1` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.33.8` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
-> 🎯 **RC33 - WORLD'S FIRST: Doug's Cheat + Triple-Precision GPS**:
+> 🎯 **RC33.8 - Post-Halving Fixes & Decentralization 2.0**:
+> - **Halving Counter Post-Halving Fix**: Counter now shows countdown to next halving after >24h (was stuck on "Halved!")
+> - **Backend Integration Fix**: Correctly picks first future halving estimate (`remaining > 0`) from API
+> - **Decentralization 2.0**: TDS/EDS/Hybrid history tracking with interactive charts
+> - **R2 Cleanup**: Complete migration patterns for all old flat-structure files
+>
+> **RC33 Legacy - WORLD'S FIRST: Doug's Cheat + Triple-Precision GPS**:
 > - **100% Halving Accuracy**: Predicted Halving #1 to the exact second (13:31 UTC)
 > - **Doug's Cheat**: Using REAL pre-halving emission from chain history (halved)
 > - **Triple-Precision GPS**: Distance-adaptive emission selection methodology
