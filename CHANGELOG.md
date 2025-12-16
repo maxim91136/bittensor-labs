@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.10 (2025-12-16)
+### Added
+- **Hero Banner Enhancement**: Emphasize FIRST [dynamic] halving achievement
+  - Updated hero title: "We called the FIRST [dynamic] halving to the minute!"
+  - Added Reddit proof link to hero banner (r/bittensor_ community post)
+  - All proof links now active: X, Discord, Reddit
+
 ## v1.0.0-rc.33.9 (2025-12-16)
 ### Changed
 - **Documentation**: Complete doc updates for v1.0.0-rc.33.8 release
