@@ -169,9 +169,10 @@ async def fetch_alpha_data():
                     if "tao_in_pool" in subnet_info and "alpha_in_pool" in subnet_info:
                         subnet_info["pool_liquidity_tao"] = subnet_info["tao_in_pool"] * 2
 
-                    # Calculate market cap if we have price and alpha_out
-                    if subnet_info.get("alpha_price", 0) > 0 and "alpha_out" in subnet_info:
-                        subnet_info["market_cap_tao"] = subnet_info["alpha_price"] * subnet_info["alpha_out"]
+                    # Calculate market cap (total supply × price, matching industry standard)
+                    if subnet_info.get("alpha_price", 0) > 0:
+                        total_alpha = subnet_info.get("alpha_in_pool", 0) + subnet_info.get("alpha_out", 0)
+                        subnet_info["market_cap_tao"] = subnet_info["alpha_price"] * total_alpha
 
                     # Only include subnets with valid price data
                     if subnet_info.get("alpha_price", 0) > 0:
