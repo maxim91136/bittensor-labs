@@ -3899,6 +3899,12 @@ body.light-bg .price-chart-footer {
   letter-spacing: 0.02em;
 }
 
+.subnets-display-table .mcap-usd {
+  color: #22c55e;
+  font-size: 0.85em;
+  font-weight: 500;
+}
+
 /* Change column and rank indicators */
 .subnets-display-table .change-col {
   text-align: center;

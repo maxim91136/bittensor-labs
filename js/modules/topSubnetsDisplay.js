@@ -11,6 +11,16 @@ function formatCompact(num) {
   return num.toFixed(1);
 }
 
+/**
+ * Format USD value compactly
+ */
+function formatUsd(num) {
+  if (!num || num === 0) return '';
+  if (num >= 1000000) return '$' + (num / 1000000).toFixed(1) + 'M';
+  if (num >= 1000) return '$' + (num / 1000).toFixed(0) + 'K';
+  return '$' + num.toFixed(0);
+}
+
 // Module state
 let currentView = 'emissions';
 let proUnlocked = false; // Easter egg: fake paywall
@@ -18,18 +28,20 @@ let cachedData = {
   topSubnets: [],
   alphaPrices: {},
   predictions: [],
-  history: []
+  history: [],
+  taoPrice: null
 };
 
 /**
  * Fetch all required data for all views
  */
 async function fetchAllData() {
-  const [currentRes, historyRes, alphaRes, predictionsRes] = await Promise.all([
+  const [currentRes, historyRes, alphaRes, predictionsRes, taostatsRes] = await Promise.all([
     fetch('/api/top_subnets'),
     fetch('/api/top_subnets_history?limit=96'),
     fetch('/api/alpha_prices'),
-    fetch('/api/subnet_predictions?top_n=20')
+    fetch('/api/subnet_predictions?top_n=20'),
+    fetch('/api/taostats')
   ]);
 
   // Top subnets (emissions)
@@ -57,6 +69,12 @@ async function fetchAllData() {
   if (historyRes.ok) {
     const data = await historyRes.json();
     cachedData.history = data.history || [];
+  }
+
+  // TAO price for USD conversion
+  if (taostatsRes.ok) {
+    const data = await taostatsRes.json();
+    cachedData.taoPrice = data.price || null;
   }
 }
 
@@ -172,10 +190,14 @@ function renderTable(displayList) {
     return;
   }
 
+  const taoPrice = cachedData.taoPrice || 0;
+
   const rows = data.map(item => {
     const alphaPrice = item.alpha.alpha_price ? item.alpha.alpha_price.toFixed(4) : '-';
     const taoInPool = formatCompact(item.alpha.tao_in_pool);
-    const marketCap = formatCompact(item.alpha.market_cap_tao);
+    const marketCapTao = item.alpha.market_cap_tao || 0;
+    const marketCap = formatCompact(marketCapTao);
+    const marketCapUsd = taoPrice ? formatUsd(marketCapTao * taoPrice) : '';
 
     // Rank change indicator (not for hybrid - it uses probability column)
     let changeHtml = '';
@@ -214,7 +236,7 @@ function renderTable(displayList) {
       <td class="daily-col">${item.daily}τ</td>
       <td class="price-col">${alphaPrice}</td>
       <td class="pool-col">${taoInPool === '-' ? '-' : taoInPool + 'τ'}</td>
-      <td class="mcap-col">${marketCap === '-' ? '-' : marketCap + 'τ'}</td>
+      <td class="mcap-col">${marketCap === '-' ? '-' : `${marketCap}τ${marketCapUsd ? ` <span class="mcap-usd">(${marketCapUsd})</span>` : ''}`}</td>
     </tr>`;
   }).join('');
 
