@@ -233,13 +233,19 @@ function renderTable(displayList) {
 
     // For hybrid view: blur rows 4-10 (teaser mode) - unless unlocked
     const isBlurred = currentView === 'hybrid' && item.rank > 3 && !proUnlocked;
-    const rowClass = isBlurred ? 'blurred-row' : '';
+
+    // Alert: Zero emissions in Market Cap view = potential overvaluation
+    const isZeroEmission = currentView === 'mcap' && parseFloat(item.daily) === 0;
+    const rowClass = isBlurred ? 'blurred-row' : (isZeroEmission ? 'zero-emission-row' : '');
+
+    // Warning indicator for zero emission subnets
+    const emissionWarning = isZeroEmission ? ' <span class="emission-warning" title="No emissions - speculative value">⚠️</span>' : '';
 
     return `<tr class="${rowClass}">
       <td class="rank-col">${item.rank}${changeHtml}</td>
-      <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
+      <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}${emissionWarning}</td>
       <td class="${thirdColClass}">${thirdColValue}</td>
-      <td class="daily-col">${item.daily}τ</td>
+      <td class="daily-col">${isZeroEmission ? '<span class="zero-emission">0.00τ</span>' : item.daily + 'τ'}</td>
       <td class="price-col">${alphaPrice === '-' ? '-' : alphaPrice + 'τ'}</td>
       <td class="pool-col">${taoInPool === '-' ? '-' : taoInPool + 'τ'}</td>
       <td class="mcap-col">${marketCap === '-' ? '-' : `${marketCap}τ${marketCapUsd ? ` <span class="mcap-usd">(${marketCapUsd})</span>` : ''}`}</td>

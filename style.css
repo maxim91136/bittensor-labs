@@ -3941,6 +3941,26 @@ body.light-bg .price-chart-footer {
   white-space: nowrap;
 }
 
+/* Zero emission warning (high mcap, no revenue) */
+.subnets-display-table .zero-emission-row {
+  background: rgba(239, 68, 68, 0.08) !important;
+}
+
+.subnets-display-table .zero-emission-row:hover {
+  background: rgba(239, 68, 68, 0.15) !important;
+}
+
+.subnets-display-table .emission-warning {
+  font-size: 0.85em;
+  margin-left: 4px;
+  cursor: help;
+}
+
+.subnets-display-table .zero-emission {
+  color: #ef4444;
+  font-weight: 600;
+}
+
 .subnets-display-table .sn-id {
   color: var(--accent);
   font-weight: 700;
