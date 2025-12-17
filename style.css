@@ -3579,15 +3579,17 @@ body.light-bg .price-chart-footer {
 .top-subnets-card .card-header {
   flex-wrap: wrap;
   gap: 8px;
+  position: relative;
 }
 
 .top-subnets-card .card-header h2 {
-  flex: 0 0 auto;
+  flex: 1 1 auto;
 }
 
 .top-subnets-card .card-header .view-toggle {
-  flex: 1 1 auto;
-  justify-content: center;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 /* View Toggle Buttons */
