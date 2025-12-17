@@ -3630,12 +3630,12 @@ body.light-bg .price-chart-footer {
 /* Larger toggle on tablet+ */
 @media (min-width: 768px) {
   .view-toggle {
-    gap: 3px;
-    padding: 4px;
+    gap: 4px;
+    padding: 5px;
   }
   .view-toggle .toggle-btn {
-    padding: 5px 12px;
-    font-size: 0.75rem;
+    padding: 7px 18px;
+    font-size: 0.85rem;
   }
 }
 
