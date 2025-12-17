@@ -389,82 +389,113 @@ def calculate_composite_score(wallet_analysis: Dict, validator_analysis: Dict, s
     }
 
 
-def calculate_experimental_scores(distribution_data: Dict, validator_data: Dict) -> Dict:
+def calculate_experimental_scores(wallets_data: Dict, validator_data: Dict,
+                                   wallet_analysis: Dict, subnet_analysis: Dict) -> Dict:
     """
     Calculate Experimental Decentralization Scores (TDS/EDS/Hybrid).
 
+    MUST match the frontend calculation in topWalletsDisplay.js!
+
     TDS (Technical Decentralization Score) - Who controls the keys
-    - CEX holdings (custodial risk)
-    - Validator concentration (consensus control)
+    - CEX holdings (identified by exchange names: Binance, Coinbase, etc.)
+    - Validator concentration (top 10 by stake_share)
 
     EDS (Economic Decentralization Score) - Who owns the tokens
-    - Ownership Gini (wealth distribution)
-    - Validator stake spread (economic participation)
+    - Wallet distribution score (35%)
+    - Subnet distribution score (35%)
+    - Validator Gini (15%)
+    - Validator stake spread (15%)
 
     Hybrid - Weighted average of TDS and EDS
     """
 
-    # Extract data for calculations
-    brackets = distribution_data.get("brackets", {})
+    # === Calculate CEX Holdings (matching frontend logic) ===
+    wallets = wallets_data.get("wallets", [])
+    cex_names = ['binance', 'coinbase', 'kraken', 'okx', 'bybit', 'kucoin',
+                 'gate.io', 'htx', 'bitfinex', 'crypto.com']
+
+    total_supply_in_wallets = 0
+    cex_supply = 0
+
+    for w in wallets:
+        balance = w.get("balance_total", 0)
+        total_supply_in_wallets += balance
+
+        # Check if wallet is a CEX by identity name
+        identity = (w.get("identity") or "").lower()
+        if identity and any(cex in identity for cex in cex_names):
+            cex_supply += balance
+
+    cex_holdings_percent = None
+    if total_supply_in_wallets > 0:
+        cex_holdings_percent = (cex_supply / total_supply_in_wallets) * 100
+
+    # === Calculate Validator Top10 concentration (matching frontend logic) ===
     validators = validator_data.get("top_validators", [])
-    total_stake = validator_data.get("total_stake", 0)
+    val_top10_pct = None
+    if validators:
+        # Sum stake_share of top 10 validators (stake_share is 0-1 scale)
+        val_top10_pct = sum(v.get("stake_share", 0) for v in validators[:10])
 
-    # CEX holdings percentage (from 1k+ bracket as proxy)
-    bracket_1k = brackets.get("1000", {})
-    cex_percentage = bracket_1k.get("percentage", 0)  # Rough proxy
-
-    # Validator top 10 concentration
-    val_top10_pct = 0
-    if validators and total_stake > 0:
-        top10_stake = sum(v.get("stake", 0) for v in validators[:10])
-        val_top10_pct = top10_stake / total_stake if total_stake > 0 else 0
-
-    # Gini coefficient from validator stakes
-    gini = 0
+    # === Get Gini from validators ===
+    val_gini = None
     if validators:
         stakes = [v.get("stake", 0) for v in validators if v.get("stake", 0) > 0]
         if stakes:
-            gini = calculate_gini(stakes)
+            val_gini = calculate_gini(stakes)
 
-    # === TDS Calculation ===
-    tds_components = []
-    tds_weights = []
-
-    # CEX holdings component (lower is better)
-    if cex_percentage is not None:
-        cex_score = max(0, 100 - (cex_percentage * 1000))  # Scale appropriately
-        tds_components.append(cex_score)
-        tds_weights.append(0.5)
-
-    # Validator concentration component (lower is better)
-    if val_top10_pct > 0:
-        val_conc_score = max(0, 100 - (val_top10_pct * 100))
-        tds_components.append(val_conc_score)
-        tds_weights.append(0.5)
-
+    # === TDS Calculation (matching frontend) ===
     tds = None
-    if tds_components:
-        tds = round(sum(c * w for c, w in zip(tds_components, tds_weights)) / sum(tds_weights))
 
-    # === EDS Calculation ===
-    eds_components = []
-    eds_weights = []
+    if cex_holdings_percent is not None or val_top10_pct is not None:
+        tds_sum = 0
+        tds_weight = 0
 
-    # Gini coefficient component (lower is better)
-    if gini > 0:
-        gini_score = max(0, 100 - (gini * 100))
-        eds_components.append(gini_score)
-        eds_weights.append(0.5)
+        # CEX Holdings: 0% = 100 score, 50%+ = 0 score
+        if cex_holdings_percent is not None:
+            cex_score = max(0, 100 - (cex_holdings_percent * 2))
+            tds_sum += cex_score * 0.5
+            tds_weight += 0.5
 
-    # Validator stake spread (same as TDS validator component)
-    if val_top10_pct > 0:
-        stake_spread_score = max(0, 100 - (val_top10_pct * 100))
-        eds_components.append(stake_spread_score)
-        eds_weights.append(0.5)
+        # Validator Top10: 0% = 100 score, 100% = 0 score
+        if val_top10_pct is not None:
+            val_score = max(0, 100 - (val_top10_pct * 100))
+            tds_sum += val_score * 0.5
+            tds_weight += 0.5
 
+        if tds_weight > 0:
+            tds = round(tds_sum / tds_weight)
+
+    # === EDS Calculation (matching frontend) ===
+    # Wallets 35% + Subnets 35% + Gini 15% + Spread 15%
     eds = None
-    if eds_components:
-        eds = round(sum(c * w for c, w in zip(eds_components, eds_weights)) / sum(eds_weights))
+
+    wallet_score = wallet_analysis.get("wallet_score")
+    subnet_score = subnet_analysis.get("subnet_score")
+
+    eds_sum = 0
+    eds_weight = 0
+
+    if wallet_score is not None:
+        eds_sum += wallet_score * 0.35
+        eds_weight += 0.35
+
+    if subnet_score is not None:
+        eds_sum += subnet_score * 0.35
+        eds_weight += 0.35
+
+    if val_gini is not None:
+        gini_score = (1 - val_gini) * 100  # Lower gini = higher score
+        eds_sum += gini_score * 0.15
+        eds_weight += 0.15
+
+    if val_top10_pct is not None:
+        spread_score = 100 - (val_top10_pct * 100)
+        eds_sum += spread_score * 0.15
+        eds_weight += 0.15
+
+    if eds_weight > 0:
+        eds = round(eds_sum / eds_weight)
 
     # === Hybrid Calculation ===
     hybrid = None
@@ -480,9 +511,11 @@ def calculate_experimental_scores(distribution_data: Dict, validator_data: Dict)
         "eds": eds,
         "hybrid": hybrid,
         "components": {
-            "cex_percentage": cex_percentage,
-            "val_top10_pct": round(val_top10_pct, 4) if val_top10_pct else None,
-            "gini": gini
+            "cex_holdings_percent": round(cex_holdings_percent, 2) if cex_holdings_percent else None,
+            "val_top10_pct": round(val_top10_pct * 100, 2) if val_top10_pct else None,
+            "val_gini": round(val_gini, 4) if val_gini else None,
+            "wallet_score": wallet_score,
+            "subnet_score": subnet_score
         }
     }
 
@@ -510,6 +543,7 @@ def main():
     distribution_data = get_from_kv(cf_acc, cf_token, cf_ns, 'distribution')
     validator_data = get_from_kv(cf_acc, cf_token, cf_ns, 'top_validators')
     subnet_data = get_from_kv(cf_acc, cf_token, cf_ns, 'top_subnets')
+    wallets_data = get_from_kv(cf_acc, cf_token, cf_ns, 'top_wallets')  # For CEX detection
 
     # Analyze each dimension
     print("\n🔢 Analyzing wallet distribution...", file=sys.stderr)
@@ -539,10 +573,18 @@ def main():
 
     # Calculate experimental scores (TDS/EDS/Hybrid)
     print("\n🧪 Calculating Experimental Scores (Dec 2.0)...", file=sys.stderr)
-    exp_scores = calculate_experimental_scores(distribution_data or {}, validator_data or {})
+    exp_scores = calculate_experimental_scores(
+        wallets_data or {},
+        validator_data or {},
+        wallet_analysis,
+        subnet_analysis
+    )
     print(f"   TDS (Technical): {exp_scores.get('tds', 'N/A')}/100", file=sys.stderr)
     print(f"   EDS (Economic): {exp_scores.get('eds', 'N/A')}/100", file=sys.stderr)
     print(f"   Hybrid: {exp_scores.get('hybrid', 'N/A')}/100", file=sys.stderr)
+    if exp_scores.get("components"):
+        comps = exp_scores["components"]
+        print(f"   Components: CEX={comps.get('cex_holdings_percent')}%, ValTop10={comps.get('val_top10_pct')}%", file=sys.stderr)
 
     # Build result
     now_iso = datetime.now(timezone.utc).isoformat()
