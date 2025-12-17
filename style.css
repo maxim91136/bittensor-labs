@@ -3636,6 +3636,49 @@ body.light-bg .price-chart-footer {
   color: #a855f7;
 }
 
+/* Hybrid teaser: blurred rows */
+.subnets-display-table .blurred-row {
+  filter: blur(4px);
+  opacity: 0.4;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* Pro overlay row */
+.subnets-display-table .pro-overlay-row td {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
+.pro-overlay {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 20px;
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%);
+  border: 1px solid rgba(168, 85, 247, 0.3);
+  border-radius: 6px;
+  margin: 8px 0;
+}
+
+.pro-badge {
+  background: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 4px;
+  letter-spacing: 0.05em;
+}
+
+.pro-text {
+  color: #a855f7;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
 .subnets-table-wrapper {
   overflow-x: auto;
   border-radius: 8px;

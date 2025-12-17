@@ -202,7 +202,11 @@ function renderTable(displayList) {
       thirdColClass = 'share-col';
     }
 
-    return `<tr>
+    // For hybrid view: blur rows 4-10 (teaser mode)
+    const isBlurred = currentView === 'hybrid' && item.rank > 3;
+    const rowClass = isBlurred ? 'blurred-row' : '';
+
+    return `<tr class="${rowClass}">
       <td class="rank-col">${item.rank}${changeHtml}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
       <td class="${thirdColClass}">${thirdColValue}</td>
@@ -213,7 +217,23 @@ function renderTable(displayList) {
     </tr>`;
   }).join('');
 
-  displayList.innerHTML = rows;
+  // Add Pro overlay after row 3 for hybrid view
+  if (currentView === 'hybrid' && data.length > 3) {
+    const proOverlay = `<tr class="pro-overlay-row">
+      <td colspan="7">
+        <div class="pro-overlay">
+          <span class="pro-badge">PRO</span>
+          <span class="pro-text">Unlock full ML predictions</span>
+        </div>
+      </td>
+    </tr>`;
+    // Insert after 3rd row
+    const rowsArray = rows.split('</tr>');
+    rowsArray.splice(3, 0, '</tr>' + proOverlay);
+    displayList.innerHTML = rowsArray.join('</tr>');
+  } else {
+    displayList.innerHTML = rows;
+  }
 }
 
 /**
