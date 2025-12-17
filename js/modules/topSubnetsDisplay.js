@@ -13,6 +13,7 @@ function formatCompact(num) {
 
 // Module state
 let currentView = 'emissions';
+let proUnlocked = false; // Easter egg: fake paywall
 let cachedData = {
   topSubnets: [],
   alphaPrices: {},
@@ -202,8 +203,8 @@ function renderTable(displayList) {
       thirdColClass = 'share-col';
     }
 
-    // For hybrid view: blur rows 4-10 (teaser mode)
-    const isBlurred = currentView === 'hybrid' && item.rank > 3;
+    // For hybrid view: blur rows 4-10 (teaser mode) - unless unlocked
+    const isBlurred = currentView === 'hybrid' && item.rank > 3 && !proUnlocked;
     const rowClass = isBlurred ? 'blurred-row' : '';
 
     return `<tr class="${rowClass}">
@@ -217,11 +218,11 @@ function renderTable(displayList) {
     </tr>`;
   }).join('');
 
-  // Add Pro overlay after row 3 for hybrid view
-  if (currentView === 'hybrid' && data.length > 3) {
+  // Add Pro overlay after row 3 for hybrid view (unless unlocked)
+  if (currentView === 'hybrid' && data.length > 3 && !proUnlocked) {
     const proOverlay = `<tr class="pro-overlay-row">
       <td colspan="7">
-        <div class="pro-overlay">
+        <div class="pro-overlay" id="proOverlayBtn" style="cursor:pointer;">
           <span class="pro-badge">PRO</span>
           <span class="pro-text">Unlock full ML predictions</span>
         </div>
@@ -231,6 +232,15 @@ function renderTable(displayList) {
     const rowsArray = rows.split('</tr>');
     rowsArray.splice(3, 0, '</tr>' + proOverlay);
     displayList.innerHTML = rowsArray.join('</tr>');
+
+    // Add click handler to unlock
+    const overlayBtn = document.getElementById('proOverlayBtn');
+    if (overlayBtn) {
+      overlayBtn.addEventListener('click', () => {
+        proUnlocked = true;
+        renderTable(displayList);
+      });
+    }
   } else {
     displayList.innerHTML = rows;
   }
