@@ -224,7 +224,7 @@ function renderTable(displayList) {
       <td colspan="7">
         <div class="pro-overlay" id="proOverlayBtn" style="cursor:pointer;">
           <span class="pro-badge">PRO</span>
-          <span class="pro-text">Unlock full ML predictions</span>
+          <span class="pro-text">Unlock full ML predictions <span class="pro-joke">(jk, just click - we're open source lol)</span></span>
         </div>
       </td>
     </tr>`;

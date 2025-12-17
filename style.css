@@ -3687,6 +3687,12 @@ body.light-bg .price-chart-footer {
   font-weight: 500;
 }
 
+.pro-joke {
+  font-size: 0.65rem;
+  color: rgba(168, 85, 247, 0.6);
+  font-weight: 400;
+}
+
 .subnets-table-wrapper {
   overflow-x: auto;
   border-radius: 8px;
