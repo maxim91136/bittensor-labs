@@ -33,11 +33,14 @@ export async function loadTopSubnetsDisplay(displayList) {
     // Build alpha prices map by netuid
     let alphaPricesMap = {};
     try {
+      console.log('Alpha API status:', alphaRes.status, alphaRes.ok);
       if (alphaRes.ok) {
         const alphaData = await alphaRes.json();
+        console.log('Alpha data received:', alphaData.total_subnets, 'subnets');
         (alphaData.subnets || []).forEach(s => {
           alphaPricesMap[s.netuid] = s;
         });
+        console.log('Alpha map keys:', Object.keys(alphaPricesMap).slice(0, 10));
       }
     } catch (e) {
       console.warn('Could not load alpha prices:', e);
@@ -80,9 +83,11 @@ export async function loadTopSubnetsDisplay(displayList) {
 
       // Get alpha price data for this subnet
       const alpha = alphaPricesMap[netuid] || {};
+      if (idx === 0) console.log('First subnet alpha lookup:', netuid, alpha);
       const alphaPrice = alpha.alpha_price ? alpha.alpha_price.toFixed(4) : '-';
       const taoInPool = formatCompact(alpha.tao_in_pool);
       const marketCap = formatCompact(alpha.market_cap_tao);
+      if (idx === 0) console.log('First subnet values:', alphaPrice, taoInPool, marketCap);
 
       // Calculate rank change
       let changeHtml = '';
