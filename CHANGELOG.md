@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.17 (2025-12-17)
+### Changed
+- **Unified Card Footer Layout**: Consistent "Last Update" display across all large cards
+  - All 3 leaderboard cards (Subnet Champions, Network Titans, TAO Whales) now show update timestamp
+  - DEC Score 2.0 footer now center-aligned (was right-aligned)
+  - Reduced excessive spacing in DEC Score cards for cleaner, more compact layout
+  - Standardized footer CSS: identical padding, margin, font-size, and opacity across all cards
+
+## v1.0.0-rc.33.16 (2025-12-17)
+### Added
+- **Subnet Champions Prediction Model**: Added to README documentation
+  - Links to methodology docs and YouTube deep-dive
+
+### Fixed
+- **Zero-Emission Warning**: Market Cap view now shows warning for subnets with 0% emission
+
 ## v1.0.0-rc.33.15 (2025-12-17)
 ### Fixed
 - **Score History Chart Data Mismatch**: TDS/EDS/Hybrid history now matches live score cards
