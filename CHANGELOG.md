@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.13 (2025-12-17)
+### Added
+- **Subnet Champions: Alpha Prices & ML Predictions** - Major feature update
+  - New toggle views: Emissions (default), Market Cap, Hybrid (ML predictions)
+  - Alpha price data from Bittensor SDK (price, TAO in pool, market cap)
+  - Hybrid view shows ML-powered probability (→#1) for each subnet
+  - **Easter Egg #3**: PRO teaser overlay with fake paywall - click to unlock!
+    - "[jk, just click → this is open source]" - celebrating open source spirit
+  - Toggle buttons responsive: compact on mobile, larger on tablet/desktop
+
+- **Prediction Backtesting Infrastructure**
+  - New workflow: `backup-backtest-r2.yml` (weekly automated backtests)
+  - Brier score calculation for model probability calibration
+  - Multi-window testing: 7, 14, 30 day prediction horizons
+  - Results stored in R2 with history for trend analysis
+
+### Fixed
+- **Mobile PRO Overlay**: `contain: paint` on blurred rows isolates blur effect from layout
+- Toggle button sizing and centering on all screen sizes
+- Tooltip (info-badge) positioning consistent with other cards
+- Share/Probability column now visible on mobile (Pool column hidden instead)
+
 ## v1.0.0-rc.33.12 (2025-12-16)
 ### Fixed
 - **Price Chart Time Axis (CRITICAL)**: Restored original time axis labels for all ranges except 3D
