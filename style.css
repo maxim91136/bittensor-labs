@@ -3705,18 +3705,27 @@ body.light-bg .price-chart-footer {
   font-weight: 400;
 }
 
-/* Mobile: compact pro overlay */
+/* Mobile: compact pro overlay - prevent width overflow */
 @media (max-width: 600px) {
+  .subnets-display-table .pro-overlay-row td {
+    max-width: 1px; /* trick: force td to not expand table */
+    overflow: hidden;
+  }
+
   .pro-overlay {
     flex-direction: column;
     gap: 4px;
     padding: 8px 10px;
     margin: 4px 0;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   .pro-text {
     font-size: 0.7rem;
     text-align: center;
+    white-space: normal;
+    word-wrap: break-word;
   }
 
   .pro-joke {
