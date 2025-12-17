@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.14 (2025-12-17)
+### Added
+- **USD Values in Market Cap Column**: Shows both TAO and USD values
+  - Format: `319.0Kτ ($78.9M)` - TAO in orange, USD in green
+  - Fetches TAO/USD price from taostats API for real-time conversion
+  - Reveals the micro/nano-cap nature of subnet tokens
+
+### Fixed
+- **Market Cap Calculation**: Now uses Total Supply × Price (industry standard)
+  - Previously: `alpha_out × price` (only circulating)
+  - Now: `(alpha_in_pool + alpha_out) × price` (matches taostats)
+  - Example: Chutes 132Kτ → 319Kτ (correct!)
+- **τ Symbol Consistency**: All TAO-denominated values now show τ suffix
+  - Alpha price column: `0.0813τ` instead of `0.0813`
+  - Pool and MCap columns already had τ
+
 ## v1.0.0-rc.33.13 (2025-12-17)
 ### Added
 - **Subnet Champions: Alpha Prices & ML Predictions** - Major feature update

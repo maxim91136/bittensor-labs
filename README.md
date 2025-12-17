@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.33.13` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.33.14` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🎯 **RC33.8 - Post-Halving Fixes & Decentralization 2.0**:
 > - **Halving Counter Post-Halving Fix**: Counter now shows countdown to next halving after >24h (was stuck on "Halved!")
