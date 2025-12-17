@@ -234,7 +234,7 @@ function renderTable(displayList) {
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
       <td class="${thirdColClass}">${thirdColValue}</td>
       <td class="daily-col">${item.daily}τ</td>
-      <td class="price-col">${alphaPrice}</td>
+      <td class="price-col">${alphaPrice === '-' ? '-' : alphaPrice + 'τ'}</td>
       <td class="pool-col">${taoInPool === '-' ? '-' : taoInPool + 'τ'}</td>
       <td class="mcap-col">${marketCap === '-' ? '-' : `${marketCap}τ${marketCapUsd ? ` <span class="mcap-usd">(${marketCapUsd})</span>` : ''}`}</td>
     </tr>`;
