@@ -119,10 +119,23 @@ function getSortedData() {
       .sort((a, b) => (b.market_cap_tao || 0) - (a.market_cap_tao || 0))
       .slice(0, 10);
 
-    // Enrich with emission data
+    // Build emission map from topSubnets (top 10 by emissions)
     const emissionMap = {};
     cachedData.topSubnets.forEach(s => {
       emissionMap[s.netuid] = s;
+    });
+
+    // Fallback: use predictions data for subnets not in top 10 emissions
+    // (e.g., Gradients might be #54 in emissions but #8 in market cap)
+    cachedData.predictions.forEach(p => {
+      if (!emissionMap[p.netuid]) {
+        emissionMap[p.netuid] = {
+          // emission_share_pct is already in % (e.g., 1.55), divide by 100 for consistency
+          taostats_emission_share: (p.emission_share_pct || 0) / 100,
+          estimated_emission_daily: p.current_emission_daily || 0,
+          subnet_name: p.subnet_name
+        };
+      }
     });
 
     return sorted.map((alpha, idx) => {
