@@ -79,6 +79,13 @@ export async function loadTopValidatorsDisplay(displayList) {
     }).join('');
 
     displayList.innerHTML = rows;
+
+    // Update timestamp
+    const updateEl = document.getElementById('validatorsUpdate');
+    if (updateEl) {
+      const now = new Date();
+      updateEl.textContent = `Updated: ${now.toLocaleDateString('de-DE')}`;
+    }
   } catch (err) {
     console.error('Error loading top validators:', err);
     displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Error loading validator data</td></tr>';

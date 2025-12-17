@@ -314,6 +314,13 @@ export async function loadTopSubnetsDisplay(displayList) {
   try {
     await fetchAllData();
     renderTable(displayList);
+
+    // Update timestamp
+    const updateEl = document.getElementById('subnetsUpdate');
+    if (updateEl) {
+      const now = new Date();
+      updateEl.textContent = `Updated: ${now.toLocaleDateString('de-DE')}`;
+    }
   } catch (err) {
     console.error('Error loading top subnets for display:', err);
     displayList.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">Error loading subnet data</td></tr>';

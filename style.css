@@ -4671,6 +4671,26 @@ body.light-bg .price-chart-footer {
   }
 }
 
+/* ===== Leaderboard Footer (Subnets, Validators, Wallets) ===== */
+.leaderboard-footer {
+  text-align: center;
+  padding-top: 0.5rem;
+  margin-top: 0.3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.leaderboard-update {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.top-subnets-card.light-bg .leaderboard-footer,
+.top-validators-card.light-bg .leaderboard-footer,
+.top-wallets-card.light-bg .leaderboard-footer {
+  border-top-color: rgba(0, 0, 0, 0.08);
+}
+
 /* ===== Modern Tooltip System ===== */
 .modern-tooltip {
   position: fixed;
@@ -5031,12 +5051,12 @@ body.light-bg .distribution-footer {
 }
 
 .decentralization-content {
-  padding: 0 1.5rem 1.5rem;
+  padding: 0 1.5rem 0.8rem;
 }
 
 .decentralization-score-section {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .decentralization-main-score {
@@ -5089,7 +5109,7 @@ body.light-bg .distribution-footer {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1rem;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .component-item {
@@ -5117,8 +5137,8 @@ body.light-bg .distribution-footer {
 
 /* History Chart Section */
 .decentralization-history-section {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.8rem;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid rgba(34, 197, 94, 0.15);
   border-radius: 12px;
@@ -5128,9 +5148,9 @@ body.light-bg .distribution-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
   flex-wrap: wrap;
-  gap: 0.8rem;
+  gap: 0.6rem;
 }
 
 .history-title {
@@ -5238,7 +5258,8 @@ body.light-bg .distribution-footer {
 /* Footer */
 .decentralization-footer {
   text-align: center;
-  padding-top: 0.8rem;
+  padding-top: 0.5rem;
+  margin-top: 0.3rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
@@ -5439,13 +5460,16 @@ body.light-bg .score-bar-container {
 }
 
 .exp-footer {
-  text-align: right;
-  padding-top: 0.4rem;
+  text-align: center;
+  padding-top: 0.5rem;
+  margin-top: 0.3rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .exp-update {
-  font-size: 0.6rem;
+  font-size: 0.72rem;
   color: var(--text-muted);
+  opacity: 0.7;
 }
 
 /* Responsive */

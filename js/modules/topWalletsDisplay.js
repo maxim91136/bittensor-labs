@@ -85,6 +85,13 @@ export async function loadTopWalletsDisplay(displayList) {
     }).join('');
 
     displayList.innerHTML = rows;
+
+    // Update timestamp
+    const updateEl = document.getElementById('walletsUpdate');
+    if (updateEl) {
+      const now = new Date();
+      updateEl.textContent = `Updated: ${now.toLocaleDateString('de-DE')}`;
+    }
   } catch (err) {
     console.error('Error loading top wallets:', err);
     displayList.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:20px;">Error loading wallet data</td></tr>';
