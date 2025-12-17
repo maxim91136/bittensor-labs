@@ -3586,15 +3586,16 @@ body.light-bg .price-chart-footer {
   flex: 1 1 auto;
 }
 
-.top-subnets-card .card-header .view-toggle {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
+/* View Toggle - own row below header */
+.top-subnets-card > .view-toggle {
+  display: flex;
+  justify-content: center;
+  margin: 0 0 12px 0;
 }
 
 /* View Toggle Buttons */
 .view-toggle {
-  display: flex;
+  display: inline-flex;
   gap: 4px;
   background: rgba(0, 0, 0, 0.3);
   padding: 3px;
@@ -4005,8 +4006,8 @@ body.light-bg .price-chart-footer {
     padding: 10px 5px;
   }
 
-  /* Hide Share column on smaller tablets */
-  .subnets-display-table .share-col {
+  /* Hide Pool column on smaller tablets - keep Share/Probability visible */
+  .subnets-display-table .pool-col {
     display: none;
   }
 }
