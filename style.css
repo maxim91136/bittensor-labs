@@ -3626,12 +3626,14 @@ body.light-bg .price-chart-footer {
   box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
 }
 
-/* Probability badge for Hybrid view */
-.rank-prob {
-  font-size: 0.7em;
+/* Probability column for Hybrid view */
+.subnets-display-table .prob-col {
   color: #a855f7;
   font-weight: 600;
-  margin-left: 4px;
+}
+
+.subnets-display-table th.prob-header {
+  color: #a855f7;
 }
 
 .subnets-table-wrapper {

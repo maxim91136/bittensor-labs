@@ -129,10 +129,9 @@ function getSortedData() {
         rank: idx + 1,
         netuid: pred.netuid,
         name: pred.subnet_name || `SN${pred.netuid}`,
-        share: pred.emission_share_pct ? pred.emission_share_pct.toFixed(2) : '-',
+        probability: pred.probability,
         daily: pred.current_emission_daily ? pred.current_emission_daily.toFixed(2) : '-',
         alpha: alpha,
-        probability: pred.probability,
         trend: pred.trend_indicators
       };
     });
@@ -142,11 +141,30 @@ function getSortedData() {
 }
 
 /**
+ * Update table header based on view
+ */
+function updateTableHeader() {
+  const shareHeader = document.querySelector('.subnets-display-table th.share-col');
+  if (!shareHeader) return;
+
+  if (currentView === 'hybrid') {
+    shareHeader.textContent = '→#1';
+    shareHeader.classList.add('prob-header');
+  } else {
+    shareHeader.textContent = 'Share';
+    shareHeader.classList.remove('prob-header');
+  }
+}
+
+/**
  * Render the table rows
  */
 function renderTable(displayList) {
   const data = getSortedData();
   const prevRankMap = buildPrevRankMap();
+
+  // Update header for current view
+  updateTableHeader();
 
   if (data.length === 0) {
     displayList.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">No data available</td></tr>';
@@ -158,27 +176,36 @@ function renderTable(displayList) {
     const taoInPool = formatCompact(item.alpha.tao_in_pool);
     const marketCap = formatCompact(item.alpha.market_cap_tao);
 
-    // Rank change indicator
+    // Rank change indicator (not for hybrid - it uses probability column)
     let changeHtml = '';
     const prevRank = prevRankMap[item.netuid];
 
-    if (currentView === 'hybrid' && item.probability) {
-      // Show probability for hybrid view
-      changeHtml = ` <span class="rank-prob">${(item.probability * 100).toFixed(1)}%</span>`;
-    } else if (prevRank === undefined && Object.keys(prevRankMap).length > 0) {
-      changeHtml = ' <span class="rank-new">NEW</span>';
-    } else if (prevRank > item.rank) {
-      const diff = prevRank - item.rank;
-      changeHtml = ` <span class="rank-up">▲${diff}</span>`;
-    } else if (prevRank < item.rank) {
-      const diff = item.rank - prevRank;
-      changeHtml = ` <span class="rank-down">▼${diff}</span>`;
+    if (currentView !== 'hybrid') {
+      if (prevRank === undefined && Object.keys(prevRankMap).length > 0) {
+        changeHtml = ' <span class="rank-new">NEW</span>';
+      } else if (prevRank > item.rank) {
+        const diff = prevRank - item.rank;
+        changeHtml = ` <span class="rank-up">▲${diff}</span>`;
+      } else if (prevRank < item.rank) {
+        const diff = item.rank - prevRank;
+        changeHtml = ` <span class="rank-down">▼${diff}</span>`;
+      }
+    }
+
+    // Third column: Share (%) or Probability (%) depending on view
+    let thirdColValue, thirdColClass;
+    if (currentView === 'hybrid') {
+      thirdColValue = item.probability ? `${(item.probability * 100).toFixed(1)}%` : '-';
+      thirdColClass = 'share-col prob-col';
+    } else {
+      thirdColValue = `${item.share}%`;
+      thirdColClass = 'share-col';
     }
 
     return `<tr>
       <td class="rank-col">${item.rank}${changeHtml}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
-      <td class="share-col">${item.share}%</td>
+      <td class="${thirdColClass}">${thirdColValue}</td>
       <td class="daily-col">${item.daily}τ</td>
       <td class="price-col">${alphaPrice}</td>
       <td class="pool-col">${taoInPool}</td>
