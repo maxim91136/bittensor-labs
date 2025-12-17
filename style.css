@@ -3586,11 +3586,9 @@ body.light-bg .price-chart-footer {
   flex: 1 1 auto;
 }
 
-/* View Toggle - own row below header */
+/* View Toggle - own row below header, centered */
 .top-subnets-card > .view-toggle {
-  display: flex;
-  justify-content: center;
-  margin: 0 0 8px 0;
+  margin: 0 auto 8px auto;
 }
 
 /* View Toggle Buttons */
