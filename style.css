@@ -3586,14 +3586,10 @@ body.light-bg .price-chart-footer {
   flex: 1 1 auto;
 }
 
-/* View Toggle - own row below header, centered */
-.top-subnets-card {
-  text-align: left;
-}
-
-.top-subnets-card > .view-toggle {
-  display: block;
-  text-align: center;
+/* Toggle wrapper for centering */
+.toggle-wrapper {
+  display: flex;
+  justify-content: center;
   margin-bottom: 10px;
 }
 
