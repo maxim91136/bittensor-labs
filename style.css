@@ -3613,25 +3613,42 @@ body.light-bg .price-chart-footer {
   overflow: hidden;
 }
 
-/* 4-column layout: Rank | Subnet | Share | Daily */
+/* 7-column layout with golden ratio proportions (φ ≈ 1.618)
+   Primary columns (Subnet, MCap) get φ weight, secondary get 1 weight
+   Rank: 5% | Subnet: 26% | Share: 8% | Daily: 13% | Alpha: 13% | Pool: 13% | MCap: 22% */
 .subnets-display-table th:nth-child(1),
 .subnets-display-table td:nth-child(1) {
-  width: 15%;
+  width: 5%;
 }
 
 .subnets-display-table th:nth-child(2),
 .subnets-display-table td:nth-child(2) {
-  width: 35%;
+  width: 26%;
 }
 
 .subnets-display-table th:nth-child(3),
 .subnets-display-table td:nth-child(3) {
-  width: 25%;
+  width: 8%;
 }
 
 .subnets-display-table th:nth-child(4),
 .subnets-display-table td:nth-child(4) {
-  width: 25%;
+  width: 13%;
+}
+
+.subnets-display-table th:nth-child(5),
+.subnets-display-table td:nth-child(5) {
+  width: 13%;
+}
+
+.subnets-display-table th:nth-child(6),
+.subnets-display-table td:nth-child(6) {
+  width: 13%;
+}
+
+.subnets-display-table th:nth-child(7),
+.subnets-display-table td:nth-child(7) {
+  width: 22%;
 }
 
 .subnets-display-table tbody tr {
@@ -3652,30 +3669,8 @@ body.light-bg .price-chart-footer {
   text-overflow: ellipsis;
 }
 
-.subnets-display-table td:nth-child(1) {
-  width: 8%;
-  white-space: nowrap;
-}
-
-.subnets-display-table td:nth-child(2) {
-  width: 10%;
-  white-space: nowrap;
-}
-
-.subnets-display-table td:nth-child(3) {
-  width: 37%;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.subnets-display-table td:nth-child(4) {
-  width: 22%;
-  white-space: nowrap;
-}
-
-.subnets-display-table td:nth-child(5) {
-  width: 23%;
+/* white-space for all td */
+.subnets-display-table td {
   white-space: nowrap;
 }
 
@@ -3713,9 +3708,9 @@ body.light-bg .price-chart-footer {
   letter-spacing: 0.02em;
 }
 
-/* Alpha price columns */
+/* Alpha price columns - all left-aligned */
 .subnets-display-table .price-col {
-  text-align: right;
+  text-align: left;
   color: #3b82f6;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
@@ -3723,14 +3718,14 @@ body.light-bg .price-chart-footer {
 }
 
 .subnets-display-table .pool-col {
-  text-align: right;
+  text-align: left;
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.02em;
 }
 
 .subnets-display-table .mcap-col {
-  text-align: right;
+  text-align: left;
   color: #f59e0b;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
