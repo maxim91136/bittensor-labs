@@ -10,11 +10,12 @@ A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO pric
 
 **Latest release:** `v1.0.0-rc.33.15` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
-> 🎯 **RC33.8 - Post-Halving Fixes & Decentralization 2.0**:
-> - **Halving Counter Post-Halving Fix**: Counter now shows countdown to next halving after >24h (was stuck on "Halved!")
-> - **Backend Integration Fix**: Correctly picks first future halving estimate (`remaining > 0`) from API
-> - **Decentralization 2.0**: TDS/EDS/Hybrid history tracking with interactive charts
-> - **R2 Cleanup**: Complete migration patterns for all old flat-structure files
+> 🏆 **RC33.16 - Subnet Champions Prediction Model**:
+> - **NEW: Subnet Champions Card** with 3 toggle views: Emissions, Market Cap, Hybrid (ML predictions)
+> - **ML Prediction Model**: Probability-based ranking for reaching #1 emission position
+> - **Zero-Emission Warning** ⚠️: Red alerts for high mcap + 0 revenue subnets (e.g., SN5 Hone: 67Kτ mcap, 0 emissions)
+> - **Data Architecture**: TOP_N expanded to 100 for full emission coverage
+> - **Power Law Aware**: UI shows Top 10, backend stores Top 100 for predictions
 >
 > **RC33 Legacy - WORLD'S FIRST: Doug's Cheat + Triple-Precision GPS**:
 > - **100% Halving Accuracy**: Predicted Halving #1 to the exact second (13:31 UTC)
@@ -216,6 +217,36 @@ Track position changes across all Top 10 cards with visual indicators:
 - **Color-Coded Signals**: Green for improvements, Red for drops, Blue for new entries
 - **Compact Display**: Rank + change indicator in single column (e.g., "1 ▲2")
 - **Supported Cards**: Subnets (netuid), Validators (hotkey), Wallets (address)
+
+### 🏆 Subnet Champions - Prediction Model (RC33.16+)
+ML-powered subnet ranking projection model with three analysis views:
+
+**Toggle Views**:
+- **Emissions**: Current emission share ranking (who's earning the most TAO)
+- **Market Cap**: Alpha token market capitalization ranking
+- **Hybrid**: ML prediction probability for reaching #1 position
+
+**Prediction Model Features**:
+- Calculates probability of each subnet reaching #1 emission position
+- Based on historical emission trends, momentum, and rank stability
+- Shows →#1 probability column in Hybrid view
+- "PRO" button easter egg (click to unlock - it's all open source!)
+
+**Zero-Emission Warning** ⚠️:
+In Market Cap view, subnets with high market cap but **zero emissions** are flagged:
+- Red background highlighting for at-risk rows
+- ⚠️ Warning icon next to subnet name
+- Red "0.00τ" in daily emission column
+- Tooltip: "No emissions - speculative value"
+
+This helps identify potentially overvalued subnets - high market cap with no revenue is pure speculation.
+
+**Example**: SN5 Hone has 67K τ market cap but generates 0 τ/day in emissions (due to net TAO outflows under the Taoflow model).
+
+**Data Architecture**:
+- UI shows Top 10 (Power Law: Top 3 = ~60% of emissions)
+- Backend stores Top 100 emitters for prediction coverage
+- Chain data provides all 128+ subnets for alpha prices
 
 ### 🌗 Dark/Light Mode
 - Auto-detects system preference
