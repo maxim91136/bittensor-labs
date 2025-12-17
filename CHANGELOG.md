@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.15 (2025-12-17)
+### Fixed
+- **Score History Chart Data Mismatch**: TDS/EDS/Hybrid history now matches live score cards
+  - Root cause: Workflow used different (wrong) calculation formula vs frontend
+  - Frontend: CEX detection by exchange names (Binance, Coinbase, Kraken, etc.)
+  - Workflow (old): Used bracket percentages as proxy - completely wrong
+  - Now: Workflow uses same CEX name detection + stake_share calculation
+  - TDS: 19 → 32, EDS: 53 → 67, Hybrid: 36 → 50 (now matching frontend)
+  - Components logged: CEX=37.29%, ValTop10=62.0%
+
 ## v1.0.0-rc.33.14 (2025-12-17)
 ### Added
 - **USD Values in Market Cap Column**: Shows both TAO and USD values
