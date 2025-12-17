@@ -90,8 +90,22 @@ def fetch_alpha_data():
             "subnets": []
         }
 
-        for netuid, subnet in all_subnets.items():
+        # Handle both list and dict returns from SDK
+        subnet_list = all_subnets if isinstance(all_subnets, list) else all_subnets.values()
+
+        # Debug: Print first subnet structure
+        if subnet_list:
+            first = list(subnet_list)[0] if hasattr(subnet_list, '__iter__') else subnet_list[0]
+            print(f"📋 Subnet object type: {type(first)}")
+            print(f"📋 Subnet attributes: {[a for a in dir(first) if not a.startswith('_')][:20]}")
+
+        for subnet in subnet_list:
             try:
+                # Extract netuid
+                netuid = getattr(subnet, 'netuid', None)
+                if netuid is None:
+                    continue
+
                 # Extract alpha token data
                 # The structure may vary based on SDK version
                 subnet_info = {
