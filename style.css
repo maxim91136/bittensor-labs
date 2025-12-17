@@ -3713,6 +3713,30 @@ body.light-bg .price-chart-footer {
   letter-spacing: 0.02em;
 }
 
+/* Alpha price columns */
+.subnets-display-table .price-col {
+  text-align: right;
+  color: #3b82f6;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.subnets-display-table .pool-col {
+  text-align: right;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.subnets-display-table .mcap-col {
+  text-align: right;
+  color: #f59e0b;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
 /* Change column and rank indicators */
 .subnets-display-table .change-col {
   text-align: center;
@@ -3825,6 +3849,18 @@ body.light-bg .price-chart-footer {
 
 .top-subnets-card.light-bg .subnets-display-table .daily-col {
   color: #666;
+}
+
+.top-subnets-card.light-bg .subnets-display-table .price-col {
+  color: #2563eb;
+}
+
+.top-subnets-card.light-bg .subnets-display-table .pool-col {
+  color: #666;
+}
+
+.top-subnets-card.light-bg .subnets-display-table .mcap-col {
+  color: #d97706;
 }
 
 .top-subnets-card.light-bg .subnets-display-table tbody tr:first-child {
