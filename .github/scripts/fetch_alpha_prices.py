@@ -18,10 +18,15 @@ from datetime import datetime, timezone
 # Try to import bittensor SDK
 try:
     import bittensor as bt
-    from bittensor.core.async_subtensor import AsyncSubtensor
+    # SDK v10 uses PascalCase imports from bittensor directly
+    from bittensor import AsyncSubtensor
 except ImportError:
-    print("❌ Bittensor SDK not installed. Run: pip install bittensor", file=sys.stderr)
-    sys.exit(1)
+    try:
+        # Fallback for older SDK versions
+        from bittensor.core.async_subtensor import AsyncSubtensor
+    except ImportError:
+        print("❌ Bittensor SDK not installed. Run: pip install bittensor", file=sys.stderr)
+        sys.exit(1)
 
 # Try requests for KV upload
 try:
@@ -68,121 +73,121 @@ async def fetch_alpha_data():
     print(f"🔗 Connecting to {NETWORK}...")
 
     try:
-        # Initialize async subtensor connection (like bagbot does)
-        sub = await AsyncSubtensor.create(network=NETWORK)
-        print(f"✅ Connected to {NETWORK}")
+        # Initialize async subtensor connection using context manager
+        async with AsyncSubtensor(network=NETWORK) as sub:
+            print(f"✅ Connected to {NETWORK}")
 
-        # Get all subnets using async method (this returns price data!)
-        print("📊 Fetching all subnets with alpha data...")
-        all_subnets = await sub.all_subnets()
+            # Get all subnets using async method (this returns DynamicInfo with price data!)
+            print("📊 Fetching all subnets with alpha data...")
+            all_subnets = await sub.all_subnets()
 
-        if not all_subnets:
-            print("❌ No subnet data returned", file=sys.stderr)
-            return None
+            if not all_subnets:
+                print("❌ No subnet data returned", file=sys.stderr)
+                return None
 
-        print(f"✅ Found {len(all_subnets)} subnets")
+            print(f"✅ Found {len(all_subnets)} subnets")
 
-        # Process subnet data
-        alpha_data = {
-            "_timestamp": datetime.now(timezone.utc).isoformat(),
-            "_source": "bittensor-sdk-async",
-            "_network": NETWORK,
-            "subnets": []
-        }
+            # Process subnet data
+            alpha_data = {
+                "_timestamp": datetime.now(timezone.utc).isoformat(),
+                "_source": "bittensor-sdk-async",
+                "_network": NETWORK,
+                "subnets": []
+            }
 
-        # Debug: Print first subnet structure
-        if all_subnets:
-            first = all_subnets[0]
-            print(f"📋 Subnet object type: {type(first)}")
-            attrs = [a for a in dir(first) if not a.startswith('_')]
-            print(f"📋 Subnet attributes: {attrs[:25]}")
+            # Debug: Print first subnet structure
+            if all_subnets:
+                first = all_subnets[0]
+                print(f"📋 Subnet object type: {type(first)}")
+                attrs = [a for a in dir(first) if not a.startswith('_')]
+                print(f"📋 Subnet attributes: {attrs[:25]}")
 
-        for subnet in all_subnets:
-            try:
-                # Extract netuid
-                netuid = getattr(subnet, 'netuid', None)
-                if netuid is None:
+            for subnet in all_subnets:
+                try:
+                    # Extract netuid
+                    netuid = getattr(subnet, 'netuid', None)
+                    if netuid is None:
+                        continue
+
+                    # Skip root subnet (netuid 0)
+                    if netuid == 0:
+                        continue
+
+                    # Extract alpha token data
+                    subnet_info = {
+                        "netuid": netuid,
+                        "name": getattr(subnet, 'subnet_name', None) or f'Subnet {netuid}',
+                    }
+
+                    # Get price (alpha token price in TAO)
+                    if hasattr(subnet, 'price'):
+                        try:
+                            price = float(subnet.price) if subnet.price else 0
+                            subnet_info["alpha_price"] = price
+                        except (ValueError, TypeError):
+                            subnet_info["alpha_price"] = 0
+
+                    # Get TAO in pool
+                    if hasattr(subnet, 'tao_in'):
+                        try:
+                            tao_in = subnet.tao_in
+                            # Handle Balance object
+                            if hasattr(tao_in, 'tao'):
+                                tao_in = float(tao_in.tao)
+                            else:
+                                tao_in = float(tao_in) / 1e9 if tao_in > 1e6 else float(tao_in)
+                            subnet_info["tao_in_pool"] = tao_in
+                        except (ValueError, TypeError):
+                            pass
+
+                    # Get Alpha in pool
+                    if hasattr(subnet, 'alpha_in'):
+                        try:
+                            alpha_in = subnet.alpha_in
+                            # Handle Balance object
+                            if hasattr(alpha_in, 'tao'):
+                                alpha_in = float(alpha_in.tao)
+                            else:
+                                alpha_in = float(alpha_in) / 1e9 if alpha_in > 1e6 else float(alpha_in)
+                            subnet_info["alpha_in_pool"] = alpha_in
+                        except (ValueError, TypeError):
+                            pass
+
+                    # Get Alpha out (total supply)
+                    if hasattr(subnet, 'alpha_out'):
+                        try:
+                            alpha_out = subnet.alpha_out
+                            if hasattr(alpha_out, 'tao'):
+                                alpha_out = float(alpha_out.tao)
+                            else:
+                                alpha_out = float(alpha_out) / 1e9 if alpha_out > 1e6 else float(alpha_out)
+                            subnet_info["alpha_out"] = alpha_out
+                        except (ValueError, TypeError):
+                            pass
+
+                    # Calculate liquidity if we have both
+                    if "tao_in_pool" in subnet_info and "alpha_in_pool" in subnet_info:
+                        subnet_info["pool_liquidity_tao"] = subnet_info["tao_in_pool"] * 2
+
+                    # Calculate market cap if we have price and alpha_out
+                    if subnet_info.get("alpha_price", 0) > 0 and "alpha_out" in subnet_info:
+                        subnet_info["market_cap_tao"] = subnet_info["alpha_price"] * subnet_info["alpha_out"]
+
+                    # Only include subnets with valid price data
+                    if subnet_info.get("alpha_price", 0) > 0:
+                        alpha_data["subnets"].append(subnet_info)
+
+                except Exception as e:
+                    print(f"⚠️ Error processing subnet {netuid}: {e}", file=sys.stderr)
                     continue
 
-                # Skip root subnet (netuid 0)
-                if netuid == 0:
-                    continue
+            # Sort by alpha price descending
+            alpha_data["subnets"].sort(key=lambda x: x.get("alpha_price", 0), reverse=True)
+            alpha_data["total_subnets"] = len(alpha_data["subnets"])
 
-                # Extract alpha token data
-                subnet_info = {
-                    "netuid": netuid,
-                    "name": getattr(subnet, 'subnet_name', None) or f'Subnet {netuid}',
-                }
+            print(f"✅ Processed {alpha_data['total_subnets']} subnets with alpha price data")
 
-                # Get price (alpha token price in TAO)
-                if hasattr(subnet, 'price'):
-                    try:
-                        price = float(subnet.price) if subnet.price else 0
-                        subnet_info["alpha_price"] = price
-                    except (ValueError, TypeError):
-                        subnet_info["alpha_price"] = 0
-
-                # Get TAO in pool
-                if hasattr(subnet, 'tao_in'):
-                    try:
-                        tao_in = subnet.tao_in
-                        # Handle Balance object
-                        if hasattr(tao_in, 'tao'):
-                            tao_in = float(tao_in.tao)
-                        else:
-                            tao_in = float(tao_in) / 1e9 if tao_in > 1e6 else float(tao_in)
-                        subnet_info["tao_in_pool"] = tao_in
-                    except (ValueError, TypeError):
-                        pass
-
-                # Get Alpha in pool
-                if hasattr(subnet, 'alpha_in'):
-                    try:
-                        alpha_in = subnet.alpha_in
-                        # Handle Balance object
-                        if hasattr(alpha_in, 'tao'):
-                            alpha_in = float(alpha_in.tao)
-                        else:
-                            alpha_in = float(alpha_in) / 1e9 if alpha_in > 1e6 else float(alpha_in)
-                        subnet_info["alpha_in_pool"] = alpha_in
-                    except (ValueError, TypeError):
-                        pass
-
-                # Get Alpha out (total supply)
-                if hasattr(subnet, 'alpha_out'):
-                    try:
-                        alpha_out = subnet.alpha_out
-                        if hasattr(alpha_out, 'tao'):
-                            alpha_out = float(alpha_out.tao)
-                        else:
-                            alpha_out = float(alpha_out) / 1e9 if alpha_out > 1e6 else float(alpha_out)
-                        subnet_info["alpha_out"] = alpha_out
-                    except (ValueError, TypeError):
-                        pass
-
-                # Calculate liquidity if we have both
-                if "tao_in_pool" in subnet_info and "alpha_in_pool" in subnet_info:
-                    subnet_info["pool_liquidity_tao"] = subnet_info["tao_in_pool"] * 2
-
-                # Calculate market cap if we have price and alpha_out
-                if subnet_info.get("alpha_price", 0) > 0 and "alpha_out" in subnet_info:
-                    subnet_info["market_cap_tao"] = subnet_info["alpha_price"] * subnet_info["alpha_out"]
-
-                # Only include subnets with valid price data
-                if subnet_info.get("alpha_price", 0) > 0:
-                    alpha_data["subnets"].append(subnet_info)
-
-            except Exception as e:
-                print(f"⚠️ Error processing subnet {netuid}: {e}", file=sys.stderr)
-                continue
-
-        # Sort by alpha price descending
-        alpha_data["subnets"].sort(key=lambda x: x.get("alpha_price", 0), reverse=True)
-        alpha_data["total_subnets"] = len(alpha_data["subnets"])
-
-        print(f"✅ Processed {alpha_data['total_subnets']} subnets with alpha price data")
-
-        return alpha_data
+            return alpha_data
 
     except Exception as e:
         print(f"❌ Failed to fetch alpha data: {e}", file=sys.stderr)
