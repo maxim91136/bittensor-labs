@@ -3587,23 +3587,29 @@ body.light-bg .price-chart-footer {
 }
 
 /* View Toggle - own row below header, centered */
+.top-subnets-card {
+  text-align: left;
+}
+
 .top-subnets-card > .view-toggle {
-  margin: 0 auto 8px auto;
+  display: block;
+  text-align: center;
+  margin-bottom: 10px;
 }
 
 /* View Toggle Buttons */
 .view-toggle {
   display: inline-flex;
-  gap: 1px;
+  gap: 2px;
   background: rgba(0, 0, 0, 0.25);
-  padding: 2px;
-  border-radius: 4px;
+  padding: 3px;
+  border-radius: 5px;
   border: 1px solid rgba(34, 197, 94, 0.15);
 }
 
 .view-toggle .toggle-btn {
-  padding: 2px 5px;
-  font-size: 0.55rem;
+  padding: 4px 8px;
+  font-size: 0.65rem;
   font-weight: 600;
   color: var(--text-muted);
   background: transparent;
