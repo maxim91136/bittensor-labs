@@ -3627,6 +3627,18 @@ body.light-bg .price-chart-footer {
   box-shadow: 0 2px 4px rgba(34, 197, 94, 0.3);
 }
 
+/* Larger toggle on tablet+ */
+@media (min-width: 768px) {
+  .view-toggle {
+    gap: 3px;
+    padding: 4px;
+  }
+  .view-toggle .toggle-btn {
+    padding: 5px 12px;
+    font-size: 0.75rem;
+  }
+}
+
 /* Probability column for Hybrid view */
 .subnets-display-table .prob-col {
   color: #a855f7;
