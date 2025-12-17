@@ -213,8 +213,8 @@ function renderTable(displayList) {
       <td class="${thirdColClass}">${thirdColValue}</td>
       <td class="daily-col">${item.daily}τ</td>
       <td class="price-col">${alphaPrice}</td>
-      <td class="pool-col">${taoInPool}</td>
-      <td class="mcap-col">${marketCap}</td>
+      <td class="pool-col">${taoInPool === '-' ? '-' : taoInPool + 'τ'}</td>
+      <td class="mcap-col">${marketCap === '-' ? '-' : marketCap + 'τ'}</td>
     </tr>`;
   }).join('');
 
