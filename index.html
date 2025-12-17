@@ -516,8 +516,13 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
   <!-- Top Subnets Card -->
     <section class="dashboard-card top-subnets-card" aria-labelledby="top-subnets-card-heading">
       <div class="card-header">
-        <h2 id="top-subnets-card-heading">Subnet Champions by Emissions</h2>
-        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Shows the 10 subnets with highest emission share. Source: taostats.io">i</span>
+        <h2 id="top-subnets-card-heading">Subnet Champions</h2>
+        <div class="view-toggle" id="subnetsViewToggle">
+          <button class="toggle-btn active" data-view="emissions">Emissions</button>
+          <button class="toggle-btn" data-view="mcap">Market Cap</button>
+          <button class="toggle-btn" data-view="hybrid">Hybrid</button>
+        </div>
+        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Shows top 10 subnets. Toggle between Emissions, Market Cap, or Hybrid (prediction model) ranking.">i</span>
       </div>
       <div class="subnets-table-wrapper">
         <table class="subnets-display-table" id="topSubnetsDisplayTable">

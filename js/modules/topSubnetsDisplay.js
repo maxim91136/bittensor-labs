@@ -1,5 +1,5 @@
 // ===== Top Subnets Display Module (ES6) =====
-// Display card showing top 10 subnets with ranking changes and alpha prices
+// Display card showing top 10 subnets with toggle views: Emissions, Market Cap, Hybrid
 
 /**
  * Format large numbers with K/M suffix
@@ -11,6 +11,208 @@ function formatCompact(num) {
   return num.toFixed(1);
 }
 
+// Module state
+let currentView = 'emissions';
+let cachedData = {
+  topSubnets: [],
+  alphaPrices: {},
+  predictions: [],
+  history: []
+};
+
+/**
+ * Fetch all required data for all views
+ */
+async function fetchAllData() {
+  const [currentRes, historyRes, alphaRes, predictionsRes] = await Promise.all([
+    fetch('/api/top_subnets'),
+    fetch('/api/top_subnets_history?limit=96'),
+    fetch('/api/alpha_prices'),
+    fetch('/api/subnet_predictions?top_n=20')
+  ]);
+
+  // Top subnets (emissions)
+  if (currentRes.ok) {
+    const data = await currentRes.json();
+    cachedData.topSubnets = data.top_subnets || [];
+  }
+
+  // Alpha prices (market cap)
+  if (alphaRes.ok) {
+    const data = await alphaRes.json();
+    cachedData.alphaPrices = {};
+    (data.subnets || []).forEach(s => {
+      cachedData.alphaPrices[s.netuid] = s;
+    });
+  }
+
+  // Predictions (hybrid)
+  if (predictionsRes.ok) {
+    const data = await predictionsRes.json();
+    cachedData.predictions = data.predictions || [];
+  }
+
+  // History (for rank changes)
+  if (historyRes.ok) {
+    const data = await historyRes.json();
+    cachedData.history = data.history || [];
+  }
+}
+
+/**
+ * Build previous ranking map from history
+ */
+function buildPrevRankMap() {
+  const prevRankMap = {};
+  if (cachedData.history.length >= 1) {
+    const prevSnapshot = cachedData.history[0];
+    const prevSubnets = prevSnapshot.entries || prevSnapshot.top_subnets || [];
+    prevSubnets.forEach((s, idx) => {
+      const netuid = s.id || s.netuid;
+      if (netuid) prevRankMap[parseInt(netuid)] = idx + 1;
+    });
+  }
+  return prevRankMap;
+}
+
+/**
+ * Get sorted data based on current view
+ */
+function getSortedData() {
+  const alphaPrices = cachedData.alphaPrices;
+
+  if (currentView === 'emissions') {
+    // Use top_subnets data (already sorted by emission)
+    return cachedData.topSubnets.slice(0, 10).map((subnet, idx) => ({
+      rank: idx + 1,
+      netuid: subnet.netuid,
+      name: subnet.subnet_name || subnet.taostats_name || `SN${subnet.netuid}`,
+      share: ((subnet.taostats_emission_share || 0) * 100).toFixed(2),
+      daily: (subnet.estimated_emission_daily || 0).toFixed(2),
+      alpha: alphaPrices[subnet.netuid] || {}
+    }));
+  }
+
+  if (currentView === 'mcap') {
+    // Sort alpha prices by market cap
+    const sorted = Object.values(alphaPrices)
+      .filter(s => s.market_cap_tao && s.market_cap_tao > 0)
+      .sort((a, b) => (b.market_cap_tao || 0) - (a.market_cap_tao || 0))
+      .slice(0, 10);
+
+    // Enrich with emission data
+    const emissionMap = {};
+    cachedData.topSubnets.forEach(s => {
+      emissionMap[s.netuid] = s;
+    });
+
+    return sorted.map((alpha, idx) => {
+      const emission = emissionMap[alpha.netuid] || {};
+      return {
+        rank: idx + 1,
+        netuid: alpha.netuid,
+        name: alpha.name || emission.subnet_name || `SN${alpha.netuid}`,
+        share: ((emission.taostats_emission_share || 0) * 100).toFixed(2),
+        daily: (emission.estimated_emission_daily || 0).toFixed(2),
+        alpha: alpha
+      };
+    });
+  }
+
+  if (currentView === 'hybrid') {
+    // Use prediction probabilities
+    const predictions = cachedData.predictions.slice(0, 10);
+
+    return predictions.map((pred, idx) => {
+      const alpha = alphaPrices[pred.netuid] || {};
+      return {
+        rank: idx + 1,
+        netuid: pred.netuid,
+        name: pred.subnet_name || `SN${pred.netuid}`,
+        share: pred.emission_share_pct ? pred.emission_share_pct.toFixed(2) : '-',
+        daily: pred.current_emission_daily ? pred.current_emission_daily.toFixed(2) : '-',
+        alpha: alpha,
+        probability: pred.probability,
+        trend: pred.trend_indicators
+      };
+    });
+  }
+
+  return [];
+}
+
+/**
+ * Render the table rows
+ */
+function renderTable(displayList) {
+  const data = getSortedData();
+  const prevRankMap = buildPrevRankMap();
+
+  if (data.length === 0) {
+    displayList.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">No data available</td></tr>';
+    return;
+  }
+
+  const rows = data.map(item => {
+    const alphaPrice = item.alpha.alpha_price ? item.alpha.alpha_price.toFixed(4) : '-';
+    const taoInPool = formatCompact(item.alpha.tao_in_pool);
+    const marketCap = formatCompact(item.alpha.market_cap_tao);
+
+    // Rank change indicator
+    let changeHtml = '';
+    const prevRank = prevRankMap[item.netuid];
+
+    if (currentView === 'hybrid' && item.probability) {
+      // Show probability for hybrid view
+      changeHtml = ` <span class="rank-prob">${(item.probability * 100).toFixed(1)}%</span>`;
+    } else if (prevRank === undefined && Object.keys(prevRankMap).length > 0) {
+      changeHtml = ' <span class="rank-new">NEW</span>';
+    } else if (prevRank > item.rank) {
+      const diff = prevRank - item.rank;
+      changeHtml = ` <span class="rank-up">▲${diff}</span>`;
+    } else if (prevRank < item.rank) {
+      const diff = item.rank - prevRank;
+      changeHtml = ` <span class="rank-down">▼${diff}</span>`;
+    }
+
+    return `<tr>
+      <td class="rank-col">${item.rank}${changeHtml}</td>
+      <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
+      <td class="share-col">${item.share}%</td>
+      <td class="daily-col">${item.daily}τ</td>
+      <td class="price-col">${alphaPrice}</td>
+      <td class="pool-col">${taoInPool}</td>
+      <td class="mcap-col">${marketCap}</td>
+    </tr>`;
+  }).join('');
+
+  displayList.innerHTML = rows;
+}
+
+/**
+ * Handle view toggle
+ */
+function setupViewToggle(displayList) {
+  const toggleContainer = document.getElementById('subnetsViewToggle');
+  if (!toggleContainer) return;
+
+  toggleContainer.addEventListener('click', (e) => {
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
+
+    const view = btn.dataset.view;
+    if (view === currentView) return;
+
+    // Update active state
+    toggleContainer.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    // Switch view
+    currentView = view;
+    renderTable(displayList);
+  });
+}
+
 /**
  * Load and display top 10 subnets with ranking changes and alpha prices
  * @param {HTMLElement} displayList - The tbody element to populate
@@ -19,97 +221,8 @@ export async function loadTopSubnetsDisplay(displayList) {
   if (!displayList) return;
 
   try {
-    // Fetch current data, history, and alpha prices in parallel
-    const [currentRes, historyRes, alphaRes] = await Promise.all([
-      fetch('/api/top_subnets'),
-      fetch('/api/top_subnets_history?limit=96'),  // ~24h of history at 15min intervals
-      fetch('/api/alpha_prices')
-    ]);
-
-    if (!currentRes.ok) throw new Error('Failed to fetch top subnets');
-    const currentData = await currentRes.json();
-    const topSubnets = currentData.top_subnets || [];
-
-    // Build alpha prices map by netuid
-    let alphaPricesMap = {};
-    try {
-      if (alphaRes.ok) {
-        const alphaData = await alphaRes.json();
-        (alphaData.subnets || []).forEach(s => {
-          alphaPricesMap[s.netuid] = s;
-        });
-      }
-    } catch (e) {
-      console.warn('Could not load alpha prices:', e);
-    }
-
-    if (topSubnets.length === 0) {
-      displayList.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">No subnet data available</td></tr>';
-      return;
-    }
-
-    // Build previous ranking map from history
-    let prevRankMap = {}; // netuid -> previous rank (1-based)
-    try {
-      if (historyRes.ok) {
-        const historyData = await historyRes.json();
-        const history = historyData.history || [];
-        // Get the oldest snapshot in history (for 24h comparison)
-        if (history.length >= 1) {
-          const prevSnapshot = history[0];  // First = oldest
-          // History stores in 'entries' array with 'id' for netuid
-          const prevSubnets = prevSnapshot.entries || prevSnapshot.top_subnets || [];
-          prevSubnets.forEach((s, idx) => {
-            // Use 'id' from history (netuid as string) or 'netuid'
-            const netuid = s.id || s.netuid;
-            if (netuid) prevRankMap[parseInt(netuid)] = idx + 1;
-          });
-        }
-      }
-    } catch (e) {
-      console.warn('Could not load subnet history for ranking:', e);
-    }
-
-    // Display TOP 10 with ranking changes and alpha prices
-    const rows = topSubnets.slice(0, 10).map((subnet, idx) => {
-      const rank = idx + 1;
-      const netuid = subnet.netuid;
-      const name = subnet.subnet_name || subnet.taostats_name || `SN${netuid}`;
-      const share = ((subnet.taostats_emission_share || 0) * 100).toFixed(2);
-      const daily = (subnet.estimated_emission_daily || 0).toFixed(2);
-
-      // Get alpha price data for this subnet
-      const alpha = alphaPricesMap[netuid] || {};
-      const alphaPrice = alpha.alpha_price ? alpha.alpha_price.toFixed(4) : '-';
-      const taoInPool = formatCompact(alpha.tao_in_pool);
-      const marketCap = formatCompact(alpha.market_cap_tao);
-
-      // Calculate rank change
-      let changeHtml = '';
-      const prevRank = prevRankMap[netuid];
-
-      if (prevRank === undefined && Object.keys(prevRankMap).length > 0) {
-        changeHtml = ' <span class="rank-new">NEW</span>';
-      } else if (prevRank > rank) {
-        const diff = prevRank - rank;
-        changeHtml = ` <span class="rank-up">▲${diff}</span>`;
-      } else if (prevRank < rank) {
-        const diff = rank - prevRank;
-        changeHtml = ` <span class="rank-down">▼${diff}</span>`;
-      }
-
-      return `<tr>
-        <td class="rank-col">${rank}${changeHtml}</td>
-        <td class="subnet-col"><span class="sn-id">SN${netuid}</span> ${name}</td>
-        <td class="share-col">${share}%</td>
-        <td class="daily-col">${daily}τ</td>
-        <td class="price-col">${alphaPrice}</td>
-        <td class="pool-col">${taoInPool}</td>
-        <td class="mcap-col">${marketCap}</td>
-      </tr>`;
-    }).join('');
-
-    displayList.innerHTML = rows;
+    await fetchAllData();
+    renderTable(displayList);
   } catch (err) {
     console.error('Error loading top subnets for display:', err);
     displayList.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">Error loading subnet data</td></tr>';
@@ -125,6 +238,9 @@ export function initTopSubnetsDisplay() {
   const displayList = document.getElementById('topSubnetsDisplayList');
 
   if (!displayTable || !displayList) return null;
+
+  // Setup view toggle buttons
+  setupViewToggle(displayList);
 
   // Initial load
   loadTopSubnetsDisplay(displayList);
