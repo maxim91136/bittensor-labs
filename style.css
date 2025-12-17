@@ -3881,7 +3881,14 @@ body.light-bg .price-chart-footer {
   color: #888;
 }
 
-/* ===== Responsive Styles for Subnets Table (5 columns) ===== */
+/* ===== Responsive Styles for Subnets Table (7 columns) ===== */
+@media (max-width: 900px) {
+  /* Hide Pool column on tablets */
+  .subnets-display-table .pool-col {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .subnets-display-table {
     font-size: 0.88em;
@@ -3891,6 +3898,11 @@ body.light-bg .price-chart-footer {
   .subnets-display-table th,
   .subnets-display-table td {
     padding: 10px 5px;
+  }
+
+  /* Hide Share column on smaller tablets */
+  .subnets-display-table .share-col {
+    display: none;
   }
 }
 
@@ -3923,6 +3935,11 @@ body.light-bg .price-chart-footer {
   .subnets-display-table .rank-col {
     min-width: 45px;
     max-width: 60px;
+  }
+
+  /* Hide Daily column on mobile phones */
+  .subnets-display-table .daily-col {
+    display: none;
   }
 
   .subnets-display-table .rank-new {
