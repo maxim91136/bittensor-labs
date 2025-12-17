@@ -26,7 +26,7 @@ jobs:
           python-version: '3.11'
 
       - name: Install dependencies
-        run: pip install requests
+        run: pip install requests boto3
 
       - name: Run backtest
         env:
@@ -50,6 +50,53 @@ jobs:
               -H "Content-Type: application/json" \
               --data-binary @.github/data/backtest_results.json
             echo "✅ Backtest results uploaded to KV"
+          fi
+
+      - name: Upload results to R2
+        env:
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_PREFIX: ${{ secrets.R2_PREFIX }}
+        run: |
+          if [ -f .github/data/backtest_results.json ]; then
+            python3 << 'EOF'
+          import boto3
+          import os
+          from datetime import datetime, timezone
+
+          endpoint = os.environ.get('R2_ENDPOINT')
+          bucket = os.environ.get('R2_BUCKET')
+          access_key = os.environ.get('R2_ACCESS_KEY_ID')
+          secret_key = os.environ.get('R2_SECRET_ACCESS_KEY')
+          prefix = os.environ.get('R2_PREFIX', '')
+
+          if not all([endpoint, bucket, access_key, secret_key]):
+              print("⚠️ R2 credentials not set, skipping R2 upload")
+              exit(0)
+
+          s3 = boto3.client('s3',
+              endpoint_url=endpoint,
+              aws_access_key_id=access_key,
+              aws_secret_access_key=secret_key
+          )
+
+          # Upload with timestamp for history
+          timestamp = datetime.now(timezone.utc).strftime('%Y-%m-%d')
+          key = f"{prefix}backtest/backtest_results_{timestamp}.json"
+
+          with open('.github/data/backtest_results.json', 'rb') as f:
+              s3.upload_fileobj(f, bucket, key, ExtraArgs={'ContentType': 'application/json'})
+
+          print(f"✅ Uploaded to R2: {key}")
+
+          # Also upload as latest
+          key_latest = f"{prefix}backtest/backtest_results_latest.json"
+          with open('.github/data/backtest_results.json', 'rb') as f:
+              s3.upload_fileobj(f, bucket, key_latest, ExtraArgs={'ContentType': 'application/json'})
+          print(f"✅ Uploaded to R2: {key_latest}")
+          EOF
           fi
 
       - name: Upload backtest results artifact
