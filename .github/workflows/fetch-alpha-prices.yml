@@ -1,0 +1,41 @@
+name: sdk - Alpha Prices
+
+on:
+  schedule:
+    # Run every 30 minutes (alpha prices don't change that fast)
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch-alpha-prices:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-bittensor-${{ hashFiles('**/requirements*.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-bittensor-
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install requests websockets bittensor
+
+      - name: Fetch Alpha Prices
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_METRICS_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          NETWORK: finney
+        run: python .github/scripts/fetch_alpha_prices.py
