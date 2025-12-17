@@ -1,4 +1,4 @@
-name: Backtest Subnet Predictions
+name: Backup Backtest Results to R2
 
 on:
   schedule:
