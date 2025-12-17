@@ -3705,6 +3705,27 @@ body.light-bg .price-chart-footer {
   font-weight: 400;
 }
 
+/* Mobile: compact pro overlay */
+@media (max-width: 600px) {
+  .pro-overlay {
+    flex-direction: column;
+    gap: 4px;
+    padding: 8px 10px;
+    margin: 4px 0;
+  }
+
+  .pro-text {
+    font-size: 0.7rem;
+    text-align: center;
+  }
+
+  .pro-joke {
+    display: block;
+    font-size: 0.55rem;
+    margin-top: 2px;
+  }
+}
+
 .subnets-table-wrapper {
   overflow-x: auto;
   border-radius: 8px;
