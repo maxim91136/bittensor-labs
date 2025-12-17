@@ -3655,6 +3655,7 @@ body.light-bg .price-chart-footer {
   opacity: 0.4;
   user-select: none;
   pointer-events: none;
+  contain: paint; /* isolate blur effect from layout */
 }
 
 /* Pro overlay row */
@@ -3705,33 +3706,40 @@ body.light-bg .price-chart-footer {
   font-weight: 400;
 }
 
-/* Mobile: compact pro overlay - prevent width overflow */
+/* Mobile: compact pro overlay */
 @media (max-width: 600px) {
   .subnets-display-table .pro-overlay-row td {
-    max-width: 1px; /* trick: force td to not expand table */
-    overflow: hidden;
+    position: relative;
   }
 
   .pro-overlay {
     flex-direction: column;
-    gap: 4px;
-    padding: 8px 10px;
+    gap: 6px;
+    padding: 10px 12px;
     margin: 4px 0;
-    max-width: 100%;
-    overflow: hidden;
   }
 
   .pro-text {
     font-size: 0.7rem;
     text-align: center;
-    white-space: normal;
-    word-wrap: break-word;
+    line-height: 1.4;
   }
 
   .pro-joke {
     display: block;
-    font-size: 0.55rem;
-    margin-top: 2px;
+    font-size: 0.6rem;
+    margin-top: 4px;
+    white-space: normal;
+  }
+
+  /* Force table to respect container on mobile */
+  .subnets-table-wrapper {
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .subnets-display-table {
+    min-width: 0;
   }
 }
 
