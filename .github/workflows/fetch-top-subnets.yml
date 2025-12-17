@@ -40,6 +40,7 @@ jobs:
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
           NETWORK: finney
           DAILY_EMISSION: 7200
+          TOP_N: 30  # Store top 30 for broader prediction coverage
         run: |
           # Try Taostats first (accurate aggregated emissions)
           python .github/scripts/fetch_top_subnets.py || TAOSTATS_FAILED=1
