@@ -68,6 +68,42 @@ def write_to_kv(key: str, value: str) -> bool:
         return False
 
 
+def read_from_kv(key: str) -> dict | None:
+    """Read data from Cloudflare KV"""
+    if not all([CF_ACCOUNT_ID, CF_API_TOKEN, CF_METRICS_NAMESPACE_ID]):
+        return None
+
+    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/storage/kv/namespaces/{CF_METRICS_NAMESPACE_ID}/values/{key}"
+    headers = {"Authorization": f"Bearer {CF_API_TOKEN}"}
+
+    try:
+        resp = requests.get(url, headers=headers, timeout=30)
+        if resp.status_code == 200:
+            return resp.json()
+    except Exception as e:
+        print(f"⚠️ KV read error for {key}: {e}", file=sys.stderr)
+    return None
+
+
+def get_emission_map() -> dict:
+    """Build emission map from top_subnets KV data"""
+    emission_map = {}
+
+    # Try top_subnets first (has taostats_emission_share)
+    top_subnets = read_from_kv("top_subnets")
+    if top_subnets and "top_subnets" in top_subnets:
+        for s in top_subnets["top_subnets"]:
+            netuid = s.get("netuid")
+            if netuid:
+                emission_map[netuid] = {
+                    "emission_share": s.get("taostats_emission_share", 0),
+                    "emission_daily": s.get("estimated_emission_daily", 0)
+                }
+        print(f"✅ Loaded emission data for {len(emission_map)} subnets from top_subnets")
+
+    return emission_map
+
+
 async def fetch_alpha_data():
     """Fetch all subnet alpha data from chain using async methods"""
     print(f"🔗 Connecting to {NETWORK}...")
@@ -210,6 +246,20 @@ def main():
         print("❌ Failed to fetch alpha data", file=sys.stderr)
         sys.exit(1)
 
+    # Merge emission data from top_subnets KV
+    print("\n📊 Merging emission data from KV...")
+    emission_map = get_emission_map()
+
+    emission_count = 0
+    for subnet in alpha_data.get("subnets", []):
+        netuid = subnet.get("netuid")
+        if netuid and netuid in emission_map:
+            subnet["emission_share"] = emission_map[netuid]["emission_share"]
+            subnet["emission_daily"] = emission_map[netuid]["emission_daily"]
+            emission_count += 1
+
+    print(f"✅ Merged emission data for {emission_count}/{len(alpha_data.get('subnets', []))} subnets")
+
     # Convert to JSON
     json_data = json.dumps(alpha_data, indent=2)
 
@@ -223,7 +273,8 @@ def main():
         for s in top_5:
             price = s.get('alpha_price', 0)
             name = s.get('name', f"SN{s['netuid']}")
-            print(f"      #{s['netuid']} {name}: τ{price:.6f}")
+            emission = s.get('emission_daily', 0)
+            print(f"      #{s['netuid']} {name}: τ{price:.6f} (emission: {emission:.2f}τ/day)")
 
     # Write to KV
     write_to_kv("alpha_prices", json_data)

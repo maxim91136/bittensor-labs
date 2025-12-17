@@ -119,33 +119,26 @@ function getSortedData() {
       .sort((a, b) => (b.market_cap_tao || 0) - (a.market_cap_tao || 0))
       .slice(0, 10);
 
-    // Build emission map from topSubnets (top 10 by emissions)
-    const emissionMap = {};
+    // alpha_prices now includes emission data merged from top_subnets KV
+    // Fallback to topSubnets for any missing data
+    const topSubnetsMap = {};
     cachedData.topSubnets.forEach(s => {
-      emissionMap[s.netuid] = s;
-    });
-
-    // Fallback: use predictions data for subnets not in top 10 emissions
-    // (e.g., Gradients might be #54 in emissions but #8 in market cap)
-    cachedData.predictions.forEach(p => {
-      if (!emissionMap[p.netuid]) {
-        emissionMap[p.netuid] = {
-          // emission_share_pct is already in % (e.g., 1.55), divide by 100 for consistency
-          taostats_emission_share: (p.emission_share_pct || 0) / 100,
-          estimated_emission_daily: p.current_emission_daily || 0,
-          subnet_name: p.subnet_name
-        };
-      }
+      topSubnetsMap[s.netuid] = s;
     });
 
     return sorted.map((alpha, idx) => {
-      const emission = emissionMap[alpha.netuid] || {};
+      // Primary source: emission data merged into alpha_prices
+      // Fallback: topSubnets data for subnets in top emissions
+      const fallback = topSubnetsMap[alpha.netuid] || {};
+      const emissionShare = alpha.emission_share ?? fallback.taostats_emission_share ?? 0;
+      const emissionDaily = alpha.emission_daily ?? fallback.estimated_emission_daily ?? 0;
+
       return {
         rank: idx + 1,
         netuid: alpha.netuid,
-        name: alpha.name || emission.subnet_name || `SN${alpha.netuid}`,
-        share: ((emission.taostats_emission_share || 0) * 100).toFixed(2),
-        daily: (emission.estimated_emission_daily || 0).toFixed(2),
+        name: alpha.name || fallback.subnet_name || `SN${alpha.netuid}`,
+        share: (emissionShare * 100).toFixed(2),
+        daily: emissionDaily.toFixed(2),
         alpha: alpha
       };
     });
