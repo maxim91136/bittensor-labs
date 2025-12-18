@@ -181,7 +181,7 @@ const TaoDistribution = (function() {
     }
 
     const { percentiles, totalWallets, timestamp } = distributionData;
-    const lastUpdated = new Date(timestamp).toLocaleDateString();
+    const lastUpdated = new Date(timestamp).toLocaleString();
 
     container.innerHTML = `
       <div class="distribution-card">

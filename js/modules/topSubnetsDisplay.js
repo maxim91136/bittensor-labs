@@ -414,7 +414,7 @@ export async function loadTopSubnetsDisplay(displayList) {
     const updateEl = document.getElementById('subnetsUpdate');
     if (updateEl) {
       const now = new Date();
-      updateEl.textContent = `Updated: ${now.toLocaleDateString('de-DE')}`;
+      updateEl.textContent = `Updated: ${now.toLocaleString()}`;
     }
   } catch (err) {
     console.error('Error loading top subnets for display:', err);

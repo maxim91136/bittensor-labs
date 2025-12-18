@@ -84,7 +84,7 @@ export async function loadTopValidatorsDisplay(displayList) {
     const updateEl = document.getElementById('validatorsUpdate');
     if (updateEl) {
       const now = new Date();
-      updateEl.textContent = `Updated: ${now.toLocaleDateString('de-DE')}`;
+      updateEl.textContent = `Updated: ${now.toLocaleString()}`;
     }
   } catch (err) {
     console.error('Error loading top validators:', err);

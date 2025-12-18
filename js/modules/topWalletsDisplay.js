@@ -90,7 +90,7 @@ export async function loadTopWalletsDisplay(displayList) {
     const updateEl = document.getElementById('walletsUpdate');
     if (updateEl) {
       const now = new Date();
-      updateEl.textContent = `Updated: ${now.toLocaleDateString('de-DE')}`;
+      updateEl.textContent = `Updated: ${now.toLocaleString()}`;
     }
   } catch (err) {
     console.error('Error loading top wallets:', err);
@@ -159,7 +159,7 @@ export async function loadDistribution() {
     const updateEl = document.getElementById('distributionUpdate');
     if (updateEl && data.last_updated) {
       const date = new Date(data.last_updated);
-      updateEl.textContent = `Updated: ${date.toLocaleDateString()}`;
+      updateEl.textContent = `Updated: ${date.toLocaleString()}`;
     }
   } catch (err) {
     console.warn('Failed to load distribution:', err);
@@ -266,7 +266,7 @@ export async function loadDecentralization() {
     const updateEl = document.getElementById('decentralizationUpdate');
     if (updateEl && data.last_updated) {
       const date = new Date(data.last_updated);
-      updateEl.textContent = `Updated: ${date.toLocaleDateString()}`;
+      updateEl.textContent = `Updated: ${date.toLocaleString()}`;
     }
   } catch (err) {
     console.warn('Failed to load decentralization:', err);
@@ -449,7 +449,7 @@ export async function loadExperimentalDecentralization() {
     const updateEl = document.getElementById('expDecentralizationUpdate');
     if (updateEl) {
       const now = new Date();
-      updateEl.textContent = `Updated: ${now.toLocaleDateString()}`;
+      updateEl.textContent = `Updated: ${now.toLocaleString()}`;
     }
 
   } catch (err) {
