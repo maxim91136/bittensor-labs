@@ -3950,20 +3950,36 @@ body.light-bg .price-chart-footer {
   background: rgba(239, 68, 68, 0.15) !important;
 }
 
-/* Momentum glow for strong positive movers */
-.subnets-display-table .momentum-glow {
+/* Momentum glow for strong positive movers (climbed 2+ ranks in 7d) */
+.subnets-display-table .momentum-up {
   background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.08) 50%, transparent 100%) !important;
   box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1);
-  animation: momentum-pulse 2s ease-in-out infinite;
+  animation: momentum-up-pulse 2s ease-in-out infinite;
 }
 
-.subnets-display-table .momentum-glow:hover {
+.subnets-display-table .momentum-up:hover {
   background: linear-gradient(90deg, rgba(251, 191, 36, 0.25) 0%, rgba(251, 191, 36, 0.12) 50%, transparent 100%) !important;
 }
 
-@keyframes momentum-pulse {
+@keyframes momentum-up-pulse {
   0%, 100% { box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1); }
   50% { box-shadow: inset 0 0 30px rgba(251, 191, 36, 0.2); }
+}
+
+/* Momentum glow for strong negative movers (dropped 2+ ranks in 7d) */
+.subnets-display-table .momentum-down {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 50%, transparent 100%) !important;
+  box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.1);
+  animation: momentum-down-pulse 2s ease-in-out infinite;
+}
+
+.subnets-display-table .momentum-down:hover {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.25) 0%, rgba(239, 68, 68, 0.12) 50%, transparent 100%) !important;
+}
+
+@keyframes momentum-down-pulse {
+  0%, 100% { box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.1); }
+  50% { box-shadow: inset 0 0 30px rgba(239, 68, 68, 0.2); }
 }
 
 .subnets-display-table .emission-warning {

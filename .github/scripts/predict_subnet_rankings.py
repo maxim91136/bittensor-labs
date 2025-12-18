@@ -525,12 +525,16 @@ def format_prediction_output(
             continue
 
         # Determine trend indicators
+        # rank_delta_7d: positive = moved UP, negative = moved DOWN
+        rank_delta = feat.get('rank_delta_7d', 0)
         rank_momentum = "stable"
-        if feat.get('rank_delta_7d', 0) > 1:
-            rank_momentum = "strong_positive"
-        elif feat.get('rank_delta_7d', 0) > 0:
+        if rank_delta > 1:
+            rank_momentum = "strong_positive"  # climbed 2+ ranks
+        elif rank_delta > 0:
             rank_momentum = "positive"
-        elif feat.get('rank_delta_7d', 0) < -1:
+        elif rank_delta < -1:
+            rank_momentum = "strong_negative"  # dropped 2+ ranks
+        elif rank_delta < 0:
             rank_momentum = "negative"
 
         emission_trend = "stable"

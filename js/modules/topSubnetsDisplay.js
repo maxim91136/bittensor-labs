@@ -245,14 +245,17 @@ function renderTable(displayList) {
     // Alert: Zero emissions in Market Cap view = potential overvaluation
     const isZeroEmission = currentView === 'mcap' && parseFloat(item.daily) === 0;
 
-    // Momentum glow for strong movers
-    const hasMomentum = item.trend?.rank_momentum === 'strong_positive';
+    // Momentum glow for strong movers (2+ rank change in 7d)
+    const momentum = item.trend?.rank_momentum;
+    let momentumClass = '';
+    if (momentum === 'strong_positive') momentumClass = 'momentum-up';
+    else if (momentum === 'strong_negative') momentumClass = 'momentum-down';
 
     // Build row classes
     let rowClass = '';
     if (isBlurred) rowClass = 'blurred-row';
     else if (isZeroEmission) rowClass = 'zero-emission-row';
-    if (hasMomentum) rowClass += ' momentum-glow';
+    if (momentumClass) rowClass += ' ' + momentumClass;
 
     // Warning indicator for zero emission subnets
     const emissionWarning = isZeroEmission ? ' <span class="emission-warning" title="No emissions - speculative value">⚠️</span>' : '';
