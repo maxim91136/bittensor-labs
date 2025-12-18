@@ -95,18 +95,15 @@ def put_to_kv(key: str, data: Any) -> bool:
     return False
 
 
-def fetch_taostats_subnet_history(limit: int = 500) -> List[Dict]:
-    """Fetch historical subnet data from Taostats API.
+def fetch_subnet_history_single(netuid: int, limit: int = 200) -> List[Dict]:
+    """Fetch historical data for a single subnet from Taostats API.
 
-    The /subnet/history/v1 endpoint returns historical snapshots of all subnets
-    with their emission values at different points in time.
+    The /subnet/history/v1 endpoint requires a netuid parameter.
     """
     if not TAOSTATS_API_KEY:
-        print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
         return []
 
-    # Try fetching all subnets history
-    url = f'{TAOSTATS_API_BASE}/subnet/history/v1?limit={limit}'
+    url = f'{TAOSTATS_API_BASE}/subnet/history/v1?netuid={netuid}&limit={limit}'
     req = urllib.request.Request(url, method='GET', headers={
         'Authorization': TAOSTATS_API_KEY,
         'Accept': 'application/json',
@@ -114,19 +111,55 @@ def fetch_taostats_subnet_history(limit: int = 500) -> List[Dict]:
     })
 
     try:
-        with urllib.request.urlopen(req, timeout=60) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:
             if resp.status == 200:
                 data = json.loads(resp.read())
                 items = data.get('data', []) if isinstance(data, dict) else data
-                print(f"📊 Fetched {len(items)} historical records from Taostats")
                 return items if isinstance(items, list) else []
     except urllib.error.HTTPError as e:
-        error_body = e.read().decode('utf-8', errors='replace')
-        print(f"❌ Taostats API error: HTTP {e.code} - {error_body[:200]}", file=sys.stderr)
+        # Don't spam errors for every subnet
+        pass
     except Exception as e:
-        print(f"❌ Taostats fetch failed: {e}", file=sys.stderr)
+        pass
 
     return []
+
+
+def fetch_all_subnets_history(netuids: List[int], limit_per_subnet: int = 200) -> List[Dict]:
+    """Fetch historical data for all subnets from Taostats API.
+
+    Iterates through each netuid and combines the results.
+    """
+    if not TAOSTATS_API_KEY:
+        print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
+        return []
+
+    all_records = []
+    success_count = 0
+
+    print(f"📊 Fetching history for {len(netuids)} subnets...")
+
+    import time
+
+    for i, netuid in enumerate(netuids):
+        records = fetch_subnet_history_single(netuid, limit_per_subnet)
+        if records:
+            # Add netuid to each record if not present
+            for r in records:
+                if 'netuid' not in r:
+                    r['netuid'] = netuid
+            all_records.extend(records)
+            success_count += 1
+
+        # Progress update every 10 subnets
+        if (i + 1) % 10 == 0:
+            print(f"   Progress: {i + 1}/{len(netuids)} subnets ({success_count} with data)")
+
+        # Small delay to avoid rate limiting
+        time.sleep(0.1)
+
+    print(f"   Fetched {len(all_records)} total historical records from {success_count} subnets")
+    return all_records
 
 
 def fetch_current_subnets() -> List[Dict]:
@@ -317,9 +350,20 @@ def main():
     print(f"📅 Backfilling {BACKFILL_DAYS} days at {BACKFILL_INTERVAL_HOURS}h intervals")
     print()
 
-    # Try to fetch real historical data first
+    # First, get list of all current subnets to know which netuids to fetch
+    print("🔍 Fetching current subnet list...")
+    current_subnets = fetch_current_subnets()
+    if not current_subnets:
+        print("❌ Could not fetch current subnet list")
+        sys.exit(1)
+
+    netuids = [s.get('netuid') for s in current_subnets if s.get('netuid') is not None]
+    print(f"   Found {len(netuids)} active subnets")
+    print()
+
+    # Try to fetch real historical data for each subnet
     print("🔍 Fetching historical data from Taostats...")
-    history_records = fetch_taostats_subnet_history(limit=1000)
+    history_records = fetch_all_subnets_history(netuids, limit_per_subnet=200)
 
     snapshots = []
 
@@ -346,10 +390,10 @@ def main():
     # Fallback to synthetic if not enough data
     if len(snapshots) < 10:
         print("⚠️ Insufficient historical data, using synthetic backfill...")
-        current = fetch_current_subnets()
-        if current:
+        # current_subnets already fetched earlier
+        if current_subnets:
             snapshots = generate_synthetic_history(
-                current,
+                current_subnets,
                 days=BACKFILL_DAYS,
                 interval_hours=BACKFILL_INTERVAL_HOURS
             )
