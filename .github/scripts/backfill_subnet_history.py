@@ -95,15 +95,17 @@ def put_to_kv(key: str, data: Any) -> bool:
     return False
 
 
-def fetch_subnet_history_single(netuid: int, limit: int = 200) -> List[Dict]:
-    """Fetch historical data for a single subnet from Taostats API.
+def fetch_dtao_pool_history(limit: int = 1000) -> List[Dict]:
+    """Fetch historical subnet pool data from Taostats dTAO API.
 
-    The /subnet/history/v1 endpoint requires a netuid parameter.
+    Uses /api/dtao/pool/history/v1 which returns historical data for ALL subnets
+    including rankings, market cap, liquidity over time.
     """
     if not TAOSTATS_API_KEY:
+        print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
         return []
 
-    url = f'{TAOSTATS_API_BASE}/subnet/history/v1?netuid={netuid}&limit={limit}'
+    url = f'{TAOSTATS_API_BASE}/dtao/pool/history/v1?limit={limit}'
     req = urllib.request.Request(url, method='GET', headers={
         'Authorization': TAOSTATS_API_KEY,
         'Accept': 'application/json',
@@ -111,55 +113,54 @@ def fetch_subnet_history_single(netuid: int, limit: int = 200) -> List[Dict]:
     })
 
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        print(f"📊 Fetching dTAO pool history (limit={limit})...")
+        with urllib.request.urlopen(req, timeout=60) as resp:
             if resp.status == 200:
                 data = json.loads(resp.read())
                 items = data.get('data', []) if isinstance(data, dict) else data
-                return items if isinstance(items, list) else []
+                if isinstance(items, list):
+                    print(f"   Fetched {len(items)} historical pool records")
+                    return items
     except urllib.error.HTTPError as e:
-        # Don't spam errors for every subnet
-        pass
+        error_body = e.read().decode('utf-8', errors='replace')
+        print(f"❌ Taostats dTAO pool API error: HTTP {e.code} - {error_body[:300]}", file=sys.stderr)
     except Exception as e:
-        pass
+        print(f"❌ Taostats fetch failed: {e}", file=sys.stderr)
 
     return []
 
 
-def fetch_all_subnets_history(netuids: List[int], limit_per_subnet: int = 200) -> List[Dict]:
-    """Fetch historical data for all subnets from Taostats API.
+def fetch_subnet_emission_history(limit: int = 1000) -> List[Dict]:
+    """Fetch historical subnet emission data from Taostats.
 
-    Iterates through each netuid and combines the results.
+    Uses /api/dtao/subnet_emission/v1 for emission-specific data.
     """
     if not TAOSTATS_API_KEY:
-        print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
         return []
 
-    all_records = []
-    success_count = 0
+    url = f'{TAOSTATS_API_BASE}/dtao/subnet_emission/v1?limit={limit}'
+    req = urllib.request.Request(url, method='GET', headers={
+        'Authorization': TAOSTATS_API_KEY,
+        'Accept': 'application/json',
+        'User-Agent': 'BittensorLabsBackfill/1.0'
+    })
 
-    print(f"📊 Fetching history for {len(netuids)} subnets...")
+    try:
+        print(f"📊 Fetching subnet emission history (limit={limit})...")
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            if resp.status == 200:
+                data = json.loads(resp.read())
+                items = data.get('data', []) if isinstance(data, dict) else data
+                if isinstance(items, list):
+                    print(f"   Fetched {len(items)} emission records")
+                    return items
+    except urllib.error.HTTPError as e:
+        error_body = e.read().decode('utf-8', errors='replace')
+        print(f"⚠️ Emission history API error: HTTP {e.code} - {error_body[:200]}", file=sys.stderr)
+    except Exception as e:
+        print(f"⚠️ Emission fetch failed: {e}", file=sys.stderr)
 
-    import time
-
-    for i, netuid in enumerate(netuids):
-        records = fetch_subnet_history_single(netuid, limit_per_subnet)
-        if records:
-            # Add netuid to each record if not present
-            for r in records:
-                if 'netuid' not in r:
-                    r['netuid'] = netuid
-            all_records.extend(records)
-            success_count += 1
-
-        # Progress update every 10 subnets
-        if (i + 1) % 10 == 0:
-            print(f"   Progress: {i + 1}/{len(netuids)} subnets ({success_count} with data)")
-
-        # Small delay to avoid rate limiting
-        time.sleep(0.1)
-
-    print(f"   Fetched {len(all_records)} total historical records from {success_count} subnets")
-    return all_records
+    return []
 
 
 def fetch_current_subnets() -> List[Dict]:
@@ -350,20 +351,23 @@ def main():
     print(f"📅 Backfilling {BACKFILL_DAYS} days at {BACKFILL_INTERVAL_HOURS}h intervals")
     print()
 
-    # First, get list of all current subnets to know which netuids to fetch
+    # First, get list of all current subnets for fallback
     print("🔍 Fetching current subnet list...")
     current_subnets = fetch_current_subnets()
-    if not current_subnets:
-        print("❌ Could not fetch current subnet list")
-        sys.exit(1)
-
-    netuids = [s.get('netuid') for s in current_subnets if s.get('netuid') is not None]
-    print(f"   Found {len(netuids)} active subnets")
+    if current_subnets:
+        print(f"   Found {len(current_subnets)} active subnets")
+    else:
+        print("   ⚠️ Could not fetch current subnets (will try historical)")
     print()
 
-    # Try to fetch real historical data for each subnet
-    print("🔍 Fetching historical data from Taostats...")
-    history_records = fetch_all_subnets_history(netuids, limit_per_subnet=200)
+    # Try dTAO pool history first (has all subnets with rankings)
+    print("🔍 Fetching historical data from Taostats dTAO API...")
+    history_records = fetch_dtao_pool_history(limit=5000)
+
+    # If pool history failed, try emission history
+    if not history_records:
+        print("   Trying emission history endpoint...")
+        history_records = fetch_subnet_emission_history(limit=5000)
 
     snapshots = []
 
