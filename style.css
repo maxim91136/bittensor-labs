@@ -4076,6 +4076,20 @@ body.light-bg .price-chart-footer {
   background: transparent;
 }
 
+/* Champion SVG icons */
+.subnets-display-table .champion-belt-icon,
+.subnets-display-table .champion-crown-icon {
+  width: 1.4em;
+  height: 0.8em;
+  vertical-align: middle;
+  margin-right: 6px;
+  display: inline-block;
+}
+
+.subnets-display-table .champion-crown-icon {
+  height: 1em;
+}
+
 .subnets-display-table .champion-title-row:hover {
   background: transparent;
 }

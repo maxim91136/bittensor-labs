@@ -244,14 +244,18 @@ function updateTableHeader() {
 }
 
 /**
- * Champion titles for top 4 subnets (Boxing style)
+ * Champion titles for top 5 subnets (Boxing style)
+ * SVG icons: Crown for P4P, Belt for federation champions
  */
+const beltIcon = `<svg class="champion-belt-icon" viewBox="0 0 24 12" fill="currentColor"><path d="M2 4h3l1-2h12l1 2h3v4h-3l-1 2H6l-1-2H2V4zm5 1v2h10V5H7z"/></svg>`;
+const crownIcon = `<svg class="champion-crown-icon" viewBox="0 0 24 20" fill="currentColor"><path d="M2 16h20v3H2v-3zm1-1L5 6l4 5 3-8 3 8 4-5 2 9H3z"/></svg>`;
+
 const championTitles = {
-  1: { title: '🏆 RING MAGAZINE P4P CHAMPION', class: 'champion-p4p' },
-  2: { title: '🥊 WBA WORLD CHAMPION', class: 'champion-wba' },
-  3: { title: '🥊 WBC WORLD CHAMPION', class: 'champion-wbc' },
-  4: { title: '🥊 IBF WORLD CHAMPION', class: 'champion-ibf' },
-  5: { title: '🥊 IBO WORLD CHAMPION', class: 'champion-ibo' }
+  1: { title: `${crownIcon} RING MAGAZINE P4P CHAMPION`, class: 'champion-p4p' },
+  2: { title: `${beltIcon} WBA WORLD CHAMPION`, class: 'champion-wba' },
+  3: { title: `${beltIcon} WBC WORLD CHAMPION`, class: 'champion-wbc' },
+  4: { title: `${beltIcon} IBF WORLD CHAMPION`, class: 'champion-ibf' },
+  5: { title: `${beltIcon} IBO WORLD CHAMPION`, class: 'champion-ibo' }
 };
 
 /**
