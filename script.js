@@ -82,6 +82,9 @@ import {
   initTopWalletsDisplay
 } from './js/modules/topWalletsDisplay.js';
 import {
+  initNewcomersDisplay
+} from './js/modules/newcomersDisplay.js';
+import {
   loadDecentralizationHistory
 } from './js/modules/decentralizationChart.js';
 import {
@@ -1444,6 +1447,19 @@ document.addEventListener('DOMContentLoaded', function() {
     window.refreshDashboard = async function() {
       await originalRefreshDashboard.call(this);
       _refreshTopSubnets();
+    };
+  }
+});
+
+// ===== Newcomers Display Card (Talent Scouting) =====
+let _refreshNewcomers = null;
+document.addEventListener('DOMContentLoaded', function() {
+  _refreshNewcomers = initNewcomersDisplay();
+  if (_refreshNewcomers) {
+    const origRefreshDash = window.refreshDashboard;
+    window.refreshDashboard = async function() {
+      await origRefreshDash.call(this);
+      _refreshNewcomers();
     };
   }
 });

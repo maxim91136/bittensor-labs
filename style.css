@@ -4337,6 +4337,123 @@ body.light-bg .price-chart-footer {
   }
 }
 
+/* ===== Newcomers Card (Talent Scouting) ===== */
+.newcomers-card {
+  animation: fadeInUp 0.8s ease-out 0.2s both;
+}
+
+.newcomers-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.01);
+  border: 1px solid rgba(168, 85, 247, 0.15);
+}
+
+.newcomers-display-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95em;
+  color: var(--text);
+  table-layout: fixed;
+  font-family: 'Courier New', Consolas, monospace;
+}
+
+.newcomers-display-table thead {
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.15) 0%, rgba(168, 85, 247, 0.05) 100%);
+  border-bottom: 1px solid rgba(168, 85, 247, 0.2);
+}
+
+.newcomers-display-table th {
+  padding: 10px 8px;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #a855f7;
+  border-bottom: none;
+}
+
+.newcomers-display-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease;
+}
+
+.newcomers-display-table tbody tr:hover {
+  background: rgba(168, 85, 247, 0.08);
+}
+
+.newcomers-display-table td {
+  padding: 10px 8px;
+  vertical-align: middle;
+}
+
+.newcomers-display-table .rank-col { width: 50px; color: #a855f7; font-weight: 600; }
+.newcomers-display-table .subnet-col { width: auto; }
+.newcomers-display-table .share-col { width: 70px; color: #22c55e; }
+.newcomers-display-table .momentum-col { width: 60px; text-align: center; }
+.newcomers-display-table .pool-col { width: 80px; color: #888; }
+.newcomers-display-table .mcap-col { width: 120px; color: #f59e0b; }
+
+.newcomers-display-table .sn-id {
+  color: #a855f7;
+  font-weight: 700;
+  margin-right: 4px;
+  opacity: 0.7;
+}
+
+.newcomers-display-table .mcap-usd {
+  color: #666;
+  font-size: 0.85em;
+}
+
+/* Star icon for newcomers */
+.newcomer-star-icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  margin-right: 4px;
+  color: #f59e0b;
+  display: inline-block;
+}
+
+/* Momentum badge */
+.newcomers-display-table .momentum-badge {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 0.85em;
+  font-weight: 600;
+}
+
+/* Light mode */
+.newcomers-card.light-bg .newcomers-table-wrapper {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(168, 85, 247, 0.2);
+}
+
+.newcomers-card.light-bg .newcomers-display-table thead {
+  background: linear-gradient(90deg, rgba(168, 85, 247, 0.12) 0%, rgba(168, 85, 247, 0.05) 100%);
+}
+
+.newcomers-card.light-bg .newcomers-display-table th {
+  color: #7c3aed;
+}
+
+.newcomers-card.light-bg .newcomers-display-table tbody tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.newcomers-card.light-bg .newcomers-display-table tbody tr:hover {
+  background: rgba(168, 85, 247, 0.08);
+}
+
+.newcomers-card.light-bg .newcomers-display-table .rank-col,
+.newcomers-card.light-bg .newcomers-display-table .sn-id {
+  color: #7c3aed;
+}
+
 /* ===== Top Validators Card ===== */
 .top-validators-card {
   animation: fadeInUp 0.8s ease-out 0.25s both;

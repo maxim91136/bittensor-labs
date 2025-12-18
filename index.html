@@ -549,6 +549,34 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
       </div>
     </section>
 
+  <!-- Newcomers Card - Talent Scouting -->
+    <section class="dashboard-card newcomers-card" aria-labelledby="newcomers-card-heading">
+      <div class="card-header">
+        <h2 id="newcomers-card-heading">Talent Scouting <span class="exp-badge">Experimental</span></h2>
+        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Rising subnets with strong momentum:&#10;• Emission < 2% (still small)&#10;• Rank improved by ≥2 in 7 days&#10;• Liquidity > 10Kτ (real traction)&#10;&#10;These are the potential future champions.">i</span>
+      </div>
+      <div class="newcomers-table-wrapper">
+        <table class="newcomers-display-table" id="newcomersDisplayTable">
+          <thead>
+            <tr>
+              <th class="rank-col">Rank</th>
+              <th class="subnet-col">Subnet</th>
+              <th class="share-col">Share</th>
+              <th class="momentum-col">7d</th>
+              <th class="pool-col">Pool</th>
+              <th class="mcap-col">MCap</th>
+            </tr>
+          </thead>
+          <tbody id="newcomersDisplayList">
+            <tr class="loading-row"><td colspan="6" style="text-align:center;padding:20px;">Scouting talents...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="leaderboard-footer">
+        <span class="leaderboard-update" id="newcomersUpdate">Updated: —</span>
+      </div>
+    </section>
+
   <!-- Top Validators Card -->
     <section class="dashboard-card top-validators-card" aria-labelledby="top-validators-card-heading">
       <div class="card-header">
