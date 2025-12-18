@@ -279,11 +279,15 @@ function renderTable(displayList) {
   const taoPrice = cachedData.taoPrice || 0;
 
   const rows = data.map(item => {
+    // For hybrid view: blur rows 4-10 (teaser mode) - unless unlocked
+    const isBlurred = currentView === 'hybrid' && item.rank > 3 && !proUnlocked;
+
     // Champion title row for top 5 + Contenders header at rank 6
     let championRow = '';
     if (item.rank <= 6 && championTitles[item.rank]) {
       const champ = championTitles[item.rank];
-      championRow = `<tr class="champion-title-row ${champ.class}">
+      const titleBlurClass = isBlurred ? ' blurred-row' : '';
+      championRow = `<tr class="champion-title-row ${champ.class}${titleBlurClass}">
         <td colspan="7">${champ.title}</td>
       </tr>`;
     }
@@ -338,9 +342,6 @@ function renderTable(displayList) {
       thirdColValue = `${item.share}%`;
       thirdColClass = 'share-col';
     }
-
-    // For hybrid view: blur rows 4-10 (teaser mode) - unless unlocked
-    const isBlurred = currentView === 'hybrid' && item.rank > 3 && !proUnlocked;
 
     // Alert: Zero emissions in Market Cap view = potential overvaluation
     const isZeroEmission = currentView === 'mcap' && parseFloat(item.daily) === 0;
