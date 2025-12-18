@@ -188,11 +188,14 @@ def process_wallets(data: Dict) -> List[Dict]:
 
 
 def process_subnets(data: Dict) -> List[Dict]:
-    """Extract normalized entries from top_subnets response."""
+    """Extract normalized entries from top_subnets response.
+
+    Tracks ALL subnets for Talent Scouting (Katniss detection from rank 50+).
+    """
     entries = []
     subnets = data.get('top_subnets', [])
 
-    for i, s in enumerate(subnets[:10], 1):
+    for i, s in enumerate(subnets, 1):  # ALL subnets
         netuid = s.get('netuid', 0)
         name = s.get('taostats_name') or s.get('subnet_name') or f"SN{netuid}"
 
@@ -214,14 +217,17 @@ def process_subnets(data: Dict) -> List[Dict]:
 
 
 def process_mcap(data: Dict) -> List[Dict]:
-    """Extract normalized entries from alpha_prices response (sorted by market cap)."""
+    """Extract normalized entries from alpha_prices response (sorted by market cap).
+
+    Extended to ALL subnets (100) for Talent Scouting (Katniss detection).
+    """
     entries = []
     subnets = data.get('subnets', [])
 
     # Sort by market cap descending
     sorted_subnets = sorted(subnets, key=lambda x: x.get('market_cap_tao', 0), reverse=True)
 
-    for i, s in enumerate(sorted_subnets[:10], 1):
+    for i, s in enumerate(sorted_subnets, 1):  # ALL subnets
         netuid = s.get('netuid', 0)
         name = s.get('name') or f"SN{netuid}"
 
