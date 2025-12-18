@@ -245,16 +245,16 @@ function renderTable(displayList) {
     // Alert: Zero emissions in Market Cap view = potential overvaluation
     const isZeroEmission = currentView === 'mcap' && parseFloat(item.daily) === 0;
 
-    // Momentum glow for strong movers (3+ rank change in 7d)
+    // Momentum indicator for strong movers (3+ rank change in 7d)
     const momentum = item.trend?.rank_momentum;
     let momentumClass = '';
-    let momentumEmoji = '';
+    let momentumBadge = '';
     if (momentum === 'strong_positive') {
       momentumClass = 'momentum-up';
-      momentumEmoji = ' <span class="momentum-icon" title="Strong upward momentum (3+ ranks in 7d)">🔥</span>';
+      momentumBadge = '<span class="momentum-badge fire" title="Hot: +3 ranks in 7 days"></span>';
     } else if (momentum === 'strong_negative') {
       momentumClass = 'momentum-down';
-      momentumEmoji = ' <span class="momentum-icon" title="Strong downward momentum (3+ ranks in 7d)">⚠️</span>';
+      momentumBadge = '<span class="momentum-badge cold" title="Dropping: -3 ranks in 7 days"></span>';
     }
 
     // Build row classes
@@ -267,7 +267,7 @@ function renderTable(displayList) {
     const emissionWarning = isZeroEmission ? ' <span class="emission-warning" title="No emissions - speculative value">⚠️</span>' : '';
 
     return `<tr class="${rowClass}">
-      <td class="rank-col">${item.rank}${changeHtml}${momentumEmoji}</td>
+      <td class="rank-col">${momentumBadge}${item.rank}${changeHtml}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}${emissionWarning}</td>
       <td class="${thirdColClass}">${thirdColValue}</td>
       <td class="daily-col">${isZeroEmission ? '<span class="zero-emission">0.00τ</span>' : item.daily + 'τ'}</td>
