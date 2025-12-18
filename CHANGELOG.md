@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.19 (2025-12-18)
+### Changed
+- **Release Script**: Strict dependency checks - no more bypass prompts
+  - Fails immediately if any pre-flight check fails
+  - Added VERSION modification check (intentional version bump required)
+  - Checks: gh CLI, CHANGELOG entry, tag exists, main branch, dirty files
+
 ## v1.0.0-rc.33.18 (2025-12-18)
 ### Added
 - **MCap History Tracking**: Backend now tracks Market Cap rankings over time
