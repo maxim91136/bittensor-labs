@@ -251,7 +251,7 @@ const beltIcon = `<svg class="champion-belt-icon" viewBox="0 0 24 12" fill="curr
 const crownIcon = `<svg class="champion-crown-icon" viewBox="0 0 24 20" fill="currentColor"><path d="M2 16h20v3H2v-3zm1-1L5 6l4 5 3-8 3 8 4-5 2 9H3z"/></svg>`;
 
 const championTitles = {
-  1: { title: `${crownIcon} RING MAGAZINE P4P CHAMPION`, class: 'champion-p4p' },
+  1: { title: `${crownIcon} P4P WORLD CHAMPION`, class: 'champion-p4p' },
   2: { title: `${beltIcon} WBA WORLD CHAMPION`, class: 'champion-wba' },
   3: { title: `${beltIcon} WBC WORLD CHAMPION`, class: 'champion-wbc' },
   4: { title: `${beltIcon} IBF WORLD CHAMPION`, class: 'champion-ibf' },
