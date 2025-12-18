@@ -567,6 +567,7 @@ def format_prediction_output(
             'emission_share_pct': round(feat.get('emission_share_current', 0), 2),
             'trend_indicators': {
                 'rank_momentum': rank_momentum,
+                'rank_delta_7d': int(rank_delta),
                 'emission_trend': emission_trend,
                 'position_advantage': position_advantage
             },

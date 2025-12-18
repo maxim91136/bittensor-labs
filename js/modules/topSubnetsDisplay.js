@@ -229,6 +229,15 @@ function renderTable(displayList) {
       }
     }
 
+    // 7-day rank change from ML predictions (separate from short-term arrows)
+    let rank7dHtml = '';
+    const rankDelta7d = item.trend?.rank_delta_7d;
+    if (rankDelta7d !== undefined && rankDelta7d !== 0) {
+      const sign = rankDelta7d > 0 ? '+' : '';
+      const colorClass = rankDelta7d > 0 ? 'rank-7d-up' : 'rank-7d-down';
+      rank7dHtml = `<div class="rank-7d ${colorClass}">7d: ${sign}${rankDelta7d}</div>`;
+    }
+
     // Third column: Share (%) or Probability (%) depending on view
     let thirdColValue, thirdColClass;
     if (currentView === 'hybrid') {
@@ -264,7 +273,7 @@ function renderTable(displayList) {
     const emissionWarning = isZeroEmission ? ' <span class="emission-warning" title="No emissions - speculative value">⚠️</span>' : '';
 
     return `<tr class="${rowClass}">
-      <td class="rank-col">${item.rank}${changeHtml}</td>
+      <td class="rank-col">${item.rank}${changeHtml}${rank7dHtml}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}${emissionWarning}</td>
       <td class="${thirdColClass}">${thirdColValue}</td>
       <td class="daily-col">${isZeroEmission ? '<span class="zero-emission">0.00τ</span>' : item.daily + 'τ'}</td>

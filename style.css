@@ -4036,6 +4036,22 @@ body.light-bg .price-chart-footer {
   font-weight: 600;
 }
 
+/* 7-day rank change indicator (compact, under the ranking) */
+.subnets-display-table .rank-7d {
+  font-size: 0.65em;
+  line-height: 1;
+  margin-top: 2px;
+  opacity: 0.7;
+}
+
+.subnets-display-table .rank-7d-up {
+  color: #f7931a;
+}
+
+.subnets-display-table .rank-7d-down {
+  color: #ef4444;
+}
+
 .subnets-display-table .sn-id {
   color: var(--accent);
   font-weight: 700;
