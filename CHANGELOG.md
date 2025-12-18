@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.22 (2025-12-18)
+### Added
+- **PRO Click-to-Unlock**: Talent Scouting card now has clickable PRO overlay
+  - Click to reveal blurred content (same as Subnet Champions)
+### Changed
+- **PRO Joke Styling**: Improved visibility of joke text
+  - Larger font (0.85rem)
+  - White in dark mode, dark in light mode (was purple)
+
 ## v1.0.0-rc.33.21 (2025-12-18)
 ### Fixed
 - **Timestamp Display**: Now shows actual data update time from API, not page load time
