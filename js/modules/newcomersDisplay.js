@@ -166,41 +166,7 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     return;
   }
 
-  const rows = newcomers.map((item, idx) => {
-    const listRank = idx + 1; // Position in newcomers list (1-5)
-    const poolDisplay = formatCompact(item.poolLiquidity);
-    const mcapDisplay = formatCompact(item.marketCapTao);
-    const mcapUsd = taoPrice ? formatUsd(item.marketCapTao * taoPrice) : '';
-
-    // Blur rows 2+ (teaser mode)
-    const isBlurred = listRank > 1;
-
-    // Add title row before certain positions
-    let titleRow = '';
-    if (prospectTitles[listRank]) {
-      const prospect = prospectTitles[listRank];
-      const titleBlurClass = isBlurred ? ' blurred-row' : '';
-      titleRow = `<tr class="prospect-title-row ${prospect.class}${titleBlurClass}">
-        <td colspan="6">${prospect.title}</td>
-      </tr>`;
-    }
-
-    // Momentum display with rank improvement (deep underdogs get highlight)
-    const momentumDisplay = `<span class="momentum-badge${item.isDeepUnderdog ? ' deep-underdog' : ''}">+${item.rank7dDelta}</span>`;
-
-    const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
-
-    return `${titleRow}<tr class="${rowClass}${item.isDeepUnderdog ? ' deep-underdog-row' : ''}">
-      <td class="rank-col">${item.rank}</td>
-      <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
-      <td class="share-col">${item.share}%</td>
-      <td class="momentum-col">${momentumDisplay}</td>
-      <td class="pool-col">${poolDisplay}τ</td>
-      <td class="mcap-col">${mcapDisplay}τ${mcapUsd ? ` <span class="mcap-usd">(${mcapUsd})</span>` : ''}</td>
-    </tr>`;
-  }).join('');
-
-  // Add PRO overlay after first row
+  // PRO overlay HTML
   const proOverlay = `<tr class="pro-overlay-row">
     <td colspan="6">
       <div class="pro-overlay">
@@ -211,11 +177,47 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     </td>
   </tr>`;
 
-  // Insert PRO overlay after first data row
-  const firstRowEnd = rows.indexOf('</tr>') + 5;
-  const withOverlay = rows.slice(0, firstRowEnd) + proOverlay + rows.slice(firstRowEnd);
+  // Build rows with PRO overlay after first item
+  let html = '';
 
-  displayList.innerHTML = withOverlay;
+  newcomers.forEach((item, idx) => {
+    const listRank = idx + 1;
+    const poolDisplay = formatCompact(item.poolLiquidity);
+    const mcapDisplay = formatCompact(item.marketCapTao);
+    const mcapUsd = taoPrice ? formatUsd(item.marketCapTao * taoPrice) : '';
+
+    // Blur rows 2+ (teaser mode)
+    const isBlurred = listRank > 1;
+
+    // Add title row before certain positions
+    if (prospectTitles[listRank]) {
+      const prospect = prospectTitles[listRank];
+      const titleBlurClass = isBlurred ? ' blurred-row' : '';
+      html += `<tr class="prospect-title-row ${prospect.class}${titleBlurClass}">
+        <td colspan="6">${prospect.title}</td>
+      </tr>`;
+    }
+
+    // Momentum display
+    const momentumDisplay = `<span class="momentum-badge${item.isDeepUnderdog ? ' deep-underdog' : ''}">+${item.rank7dDelta}</span>`;
+    const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
+
+    html += `<tr class="${rowClass}${item.isDeepUnderdog ? ' deep-underdog-row' : ''}">
+      <td class="rank-col">${item.rank}</td>
+      <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
+      <td class="share-col">${item.share}%</td>
+      <td class="momentum-col">${momentumDisplay}</td>
+      <td class="pool-col">${poolDisplay}τ</td>
+      <td class="mcap-col">${mcapDisplay}τ${mcapUsd ? ` <span class="mcap-usd">(${mcapUsd})</span>` : ''}</td>
+    </tr>`;
+
+    // Insert PRO overlay AFTER first data row
+    if (listRank === 1) {
+      html += proOverlay;
+    }
+  });
+
+  displayList.innerHTML = html;
 }
 
 /**
