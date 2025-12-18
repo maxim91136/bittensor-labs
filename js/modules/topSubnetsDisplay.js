@@ -245,17 +245,19 @@ function updateTableHeader() {
 
 /**
  * Champion titles for top 5 subnets (Boxing style)
- * SVG icons: Crown for P4P, Belt for federation champions
+ * SVG icons: Crown for P4P, Belt for federation champions, Gloves for contenders
  */
 const beltIcon = `<svg class="champion-belt-icon" viewBox="0 0 24 12" fill="currentColor"><path d="M2 4h3l1-2h12l1 2h3v4h-3l-1 2H6l-1-2H2V4zm5 1v2h10V5H7z"/></svg>`;
 const crownIcon = `<svg class="champion-crown-icon" viewBox="0 0 24 20" fill="currentColor"><path d="M2 16h20v3H2v-3zm1-1L5 6l4 5 3-8 3 8 4-5 2 9H3z"/></svg>`;
+const gloveIcon = `<svg class="champion-glove-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M4 8c0-2 1-4 4-4s4 2 4 4v2h1V8c0-2 1-4 4-4s4 2 4 4v8c0 4-3 6-6 6h-5c-3 0-6-2-6-6V8zm3 0v6h2V8c0-1-.5-2-1-2s-1 1-1 2zm10 0c0-1-.5-2-1-2s-1 1-1 2v6h2V8z"/></svg>`;
 
 const championTitles = {
   1: { title: `${crownIcon} P4P WORLD CHAMPION`, class: 'champion-p4p' },
   2: { title: `${beltIcon} WBA WORLD CHAMPION`, class: 'champion-wba' },
   3: { title: `${beltIcon} WBC WORLD CHAMPION`, class: 'champion-wbc' },
   4: { title: `${beltIcon} IBF WORLD CHAMPION`, class: 'champion-ibf' },
-  5: { title: `${beltIcon} IBO WORLD CHAMPION`, class: 'champion-ibo' }
+  5: { title: `${beltIcon} IBO WORLD CHAMPION`, class: 'champion-ibo' },
+  6: { title: `${gloveIcon} CONTENDERS`, class: 'champion-contender' }
 };
 
 /**
@@ -277,9 +279,9 @@ function renderTable(displayList) {
   const taoPrice = cachedData.taoPrice || 0;
 
   const rows = data.map(item => {
-    // Champion title row for top 5
+    // Champion title row for top 5 + Contenders header at rank 6
     let championRow = '';
-    if (item.rank <= 5 && championTitles[item.rank]) {
+    if (item.rank <= 6 && championTitles[item.rank]) {
       const champ = championTitles[item.rank];
       championRow = `<tr class="champion-title-row ${champ.class}">
         <td colspan="7">${champ.title}</td>

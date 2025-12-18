@@ -4124,6 +4124,23 @@ body.light-bg .price-chart-footer {
   text-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
 }
 
+/* Contenders - Silver/Gray */
+.subnets-display-table .champion-contender td {
+  color: #9ca3af;
+  text-shadow: 0 0 6px rgba(156, 163, 175, 0.3);
+  font-size: 0.8rem;
+  padding-top: 18px;
+}
+
+/* Glove icon sizing */
+.subnets-display-table .champion-glove-icon {
+  width: 1.2em;
+  height: 1.2em;
+  vertical-align: middle;
+  margin-right: 6px;
+  display: inline-block;
+}
+
 /* Gold highlight for first-place subnet */
 .subnets-display-table tbody tr:first-child {
   background: transparent;
@@ -4248,6 +4265,10 @@ body.light-bg .price-chart-footer {
 
 .top-subnets-card.light-bg .subnets-display-table .champion-ibo td {
   color: #7c3aed;
+}
+
+.top-subnets-card.light-bg .subnets-display-table .champion-contender td {
+  color: #6b7280;
 }
 
 /* ===== Responsive Styles for Subnets Table (7 columns) ===== */
