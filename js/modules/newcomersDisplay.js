@@ -116,24 +116,27 @@ function build7dRankChangeMap(history, currentSubnets) {
 
 /**
  * Identify newcomers based on criteria
- * Uses history data for 7d rank changes (works for all subnets, not just top 10)
- * Detects "fallen giants" - subnets that were once Top 10 but have fallen
+ * Uses PREDICTIONS API for 7d rank changes (has data for 50+ subnets)
+ * Uses HISTORY for fallen giant detection (peak rank tracking)
  * Returns { prospects: [], fallenAngels: [], isCollectingData: boolean }
  */
-function identifyNewcomers(topSubnets, alphaPrices, history, fullHistory) {
+function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
   const prospects = [];
   const fallenAngels = [];
 
-  // Build 7d rank change map from history
-  const rank7dChangeMap = build7dRankChangeMap(history, topSubnets);
+  // Build prediction map by netuid for quick lookup
+  const predictionMap = {};
+  predictions.forEach(p => {
+    predictionMap[p.netuid] = p;
+  });
 
   // Build peak rank map from ALL history (for fallen giant detection)
-  const peakRankMap = buildPeakRankMap(fullHistory || history);
+  const peakRankMap = buildPeakRankMap(fullHistory);
 
-  // Check if we have historical data for subnets outside top 10
-  const hasExtendedHistory = Object.keys(rank7dChangeMap).some(netuid => {
-    const rank = topSubnets.findIndex(s => s.netuid == netuid) + 1;
-    return rank >= NEWCOMER_CRITERIA.minRank && rank7dChangeMap[netuid] !== undefined;
+  // Check if we have prediction data for subnets outside top 10
+  const hasPredictionData = predictions.some(p => {
+    const rank = topSubnets.findIndex(s => s.netuid == p.netuid) + 1;
+    return rank >= NEWCOMER_CRITERIA.minRank && p.rank7dDelta !== undefined;
   });
 
   // Collect all eligible subnets (underdogs with liquidity)
@@ -141,7 +144,8 @@ function identifyNewcomers(topSubnets, alphaPrices, history, fullHistory) {
     const currentRank = idx + 1;
     const emissionShare = subnet.taostats_emission_share || 0;
     const alpha = alphaPrices[subnet.netuid] || {};
-    const rank7dDelta = rank7dChangeMap[subnet.netuid];
+    const prediction = predictionMap[subnet.netuid] || {};
+    const rank7dDelta = prediction.rank7dDelta;
     const poolLiquidity = alpha.tao_in_pool || 0;
 
     // Check basic criteria: underdogs (outside top 10) with liquidity
@@ -170,7 +174,7 @@ function identifyNewcomers(topSubnets, alphaPrices, history, fullHistory) {
         peakRank: peakRank
       };
 
-      if (hasExtendedHistory) {
+      if (hasPredictionData) {
         // Fallen giants go to Fallen Angels regardless of recent momentum
         if (isFallenGiant) {
           fallenAngels.push(entry);
@@ -180,14 +184,14 @@ function identifyNewcomers(topSubnets, alphaPrices, history, fullHistory) {
           fallenAngels.push(entry);
         }
       } else {
-        // Collecting data: show all as watch list
+        // No prediction data: show all as watch list
         prospects.push(entry);
       }
     }
   });
 
   // Sort prospects by momentum (or liquidity if no data)
-  if (hasExtendedHistory) {
+  if (hasPredictionData) {
     prospects.sort((a, b) => {
       const aScore = (a.rank7dDelta || 0) * (a.isDeepUnderdog ? 1.5 : 1);
       const bScore = (b.rank7dDelta || 0) * (b.isDeepUnderdog ? 1.5 : 1);
@@ -214,7 +218,7 @@ function identifyNewcomers(topSubnets, alphaPrices, history, fullHistory) {
   return {
     prospects: prospects.slice(0, 5),
     fallenAngels: fallenAngels.slice(0, 3),  // Show up to 3 fallen angels (including giants)
-    isCollectingData: !hasExtendedHistory
+    isCollectingData: !hasPredictionData
   };
 }
 
@@ -343,25 +347,27 @@ function renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isColle
 
 /**
  * Load and display newcomers
- * Uses history data for 7d rank changes (works for ALL subnets, not just top 10)
+ * Uses PREDICTIONS API for 7d rank changes (has data for 50+ subnets)
+ * Uses HISTORY for fallen giant detection (peak rank tracking)
  */
 export async function loadNewcomersDisplay(displayList) {
   if (!displayList) return;
 
   try {
-    // Fetch required data - using history instead of predictions
-    // Fetch both 7d history (for momentum) and full history (for fallen giant detection)
-    const [subnetsRes, alphaRes, history7dRes, fullHistoryRes, taostatsRes] = await Promise.all([
+    // Fetch required data
+    // - predictions API for momentum (has 50+ subnets with rank7dDelta)
+    // - full history for fallen giant detection (peak rank tracking)
+    const [subnetsRes, alphaRes, predictionsRes, fullHistoryRes, taostatsRes] = await Promise.all([
       fetch('/api/top_subnets'),
       fetch('/api/alpha_prices'),
-      fetch('/api/top_subnets_history?limit=168'),  // 7 days of hourly data (for momentum)
-      fetch('/api/top_subnets_history?limit=1000'), // Full history (for fallen giant detection)
+      fetch('/api/subnet_predictions?top_n=50'),     // Predictions with rank7dDelta for 50 subnets
+      fetch('/api/top_subnets_history?limit=1000'),  // Full history for fallen giant detection
       fetch('/api/taostats')
     ]);
 
     let topSubnets = [];
     let alphaPrices = {};
-    let history7d = [];
+    let predictions = [];
     let fullHistory = [];
     let taoPrice = 0;
 
@@ -377,9 +383,9 @@ export async function loadNewcomersDisplay(displayList) {
       });
     }
 
-    if (history7dRes.ok) {
-      const data = await history7dRes.json();
-      history7d = data.history || [];
+    if (predictionsRes.ok) {
+      const data = await predictionsRes.json();
+      predictions = data.predictions || [];
     }
 
     if (fullHistoryRes.ok) {
@@ -392,9 +398,9 @@ export async function loadNewcomersDisplay(displayList) {
       taoPrice = data.price || 0;
     }
 
-    // Identify and render newcomers using history
-    // history7d for 7d momentum, fullHistory for fallen giant detection
-    const { prospects, fallenAngels, isCollectingData } = identifyNewcomers(topSubnets, alphaPrices, history7d, fullHistory);
+    // Identify and render newcomers
+    // predictions for 7d momentum, fullHistory for fallen giant detection
+    const { prospects, fallenAngels, isCollectingData } = identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory);
     renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isCollectingData);
 
     // Update timestamp
