@@ -36,6 +36,7 @@ const starIcon = `<svg class="newcomer-star-icon" viewBox="0 0 24 24" fill="curr
 const fireIcon = `<svg class="newcomer-fire-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 23c-4.97 0-9-3.58-9-8 0-2.52 1.17-5.06 3-7.5 1.09-1.45 2.41-2.74 3.8-3.8.36-.27.84-.22 1.14.12.3.34.32.84.05 1.21-.84 1.14-1.4 2.43-1.67 3.47 1.1-.91 2.5-1.5 4.18-1.5 4.14 0 7.5 3.58 7.5 8s-3.58 8-8 8z"/></svg>`;
 const chartIcon = `<svg class="newcomer-chart-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v8H3v-8zm6-6h2v14H9V7zm6-4h2v18h-2V3zm6 8h2v10h-2V11z"/></svg>`;
 const hourglassIcon = `<svg class="newcomer-hourglass-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z"/></svg>`;
+const fallenAngelIcon = `<svg class="newcomer-fallen-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>`;
 
 // Prospect titles - for confirmed rising talents
 const prospectTitles = {
@@ -88,10 +89,11 @@ function build7dRankChangeMap(history, currentSubnets) {
 /**
  * Identify newcomers based on criteria
  * Uses history data for 7d rank changes (works for all subnets, not just top 10)
- * Returns { newcomers: [], isCollectingData: boolean }
+ * Returns { prospects: [], fallenAngels: [], isCollectingData: boolean }
  */
 function identifyNewcomers(topSubnets, alphaPrices, history) {
-  const newcomers = [];
+  const prospects = [];
+  const fallenAngels = [];
 
   // Build 7d rank change map from history
   const rank7dChangeMap = build7dRankChangeMap(history, topSubnets);
@@ -115,46 +117,61 @@ function identifyNewcomers(topSubnets, alphaPrices, history) {
     const hasLiquidity = poolLiquidity >= NEWCOMER_CRITERIA.minPoolLiquidity;
     const hasRankData = rank7dDelta !== undefined;
     const isRising = hasRankData && rank7dDelta >= NEWCOMER_CRITERIA.minRankImprovement;
+    const isFalling = hasRankData && rank7dDelta <= -NEWCOMER_CRITERIA.minRankImprovement;
 
-    // When collecting data: show watch list (by liquidity)
-    // When data available: show only rising talents
-    if (isUnderdog && hasLiquidity && (isRising || !hasExtendedHistory)) {
-      newcomers.push({
+    if (isUnderdog && hasLiquidity) {
+      const entry = {
         rank: currentRank,
         netuid: subnet.netuid,
         name: subnet.subnet_name || subnet.taostats_name || `SN${subnet.netuid}`,
         share: (emissionShare * 100).toFixed(2),
-        rank7dDelta: hasRankData ? rank7dDelta : null,  // null = no data yet
+        rank7dDelta: hasRankData ? rank7dDelta : null,
         poolLiquidity: poolLiquidity,
         marketCapTao: alpha.market_cap_tao || 0,
         alpha: alpha,
         isDeepUnderdog: currentRank >= 30
-      });
+      };
+
+      if (hasExtendedHistory) {
+        // With data: categorize into rising vs falling
+        if (isRising) {
+          prospects.push(entry);
+        } else if (isFalling) {
+          fallenAngels.push(entry);
+        }
+      } else {
+        // Collecting data: show all as watch list
+        prospects.push(entry);
+      }
     }
   });
 
-  // Sort: if we have momentum data, sort by momentum; otherwise by liquidity
+  // Sort prospects by momentum (or liquidity if no data)
   if (hasExtendedHistory) {
-    // Hybrid sorting: Prioritize deep underdogs with big moves
-    newcomers.sort((a, b) => {
+    prospects.sort((a, b) => {
       const aScore = (a.rank7dDelta || 0) * (a.isDeepUnderdog ? 1.5 : 1);
       const bScore = (b.rank7dDelta || 0) * (b.isDeepUnderdog ? 1.5 : 1);
       return bScore - aScore;
     });
+    // Sort fallen angels by how much they fell (most negative first)
+    fallenAngels.sort((a, b) => (a.rank7dDelta || 0) - (b.rank7dDelta || 0));
   } else {
-    // Sort by liquidity when no momentum data
-    newcomers.sort((a, b) => b.poolLiquidity - a.poolLiquidity);
+    prospects.sort((a, b) => b.poolLiquidity - a.poolLiquidity);
   }
 
-  return { newcomers: newcomers.slice(0, 5), isCollectingData: !hasExtendedHistory };
+  return {
+    prospects: prospects.slice(0, 5),
+    fallenAngels: fallenAngels.slice(0, 2),
+    isCollectingData: !hasExtendedHistory
+  };
 }
 
 /**
  * Render newcomers table with ranking titles
- * Shows watch list or confirmed rising talents with PRO blur teaser
+ * Shows graded prospect titles (TOP PROSPECT → HOT PROSPECTS → PROSPECTS) + FALLEN ANGELS
  */
-function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = false) {
-  if (newcomers.length === 0) {
+function renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isCollectingData = false) {
+  if (prospects.length === 0 && fallenAngels.length === 0) {
     displayList.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#666;">
       ${starIcon} No rising talents found matching criteria
     </td></tr>`;
@@ -172,11 +189,21 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     </td>
   </tr>`;
 
-  // Build rows with PRO overlay after first item
   let html = '';
+  let totalIdx = 0;
 
-  newcomers.forEach((item, idx) => {
+  // Intro header when COLLECTING data - we don't know yet if they're prospects or fallen angels
+  if (isCollectingData && prospects.length > 0) {
+    html += `<tr class="prospect-intro-row">
+      <td colspan="6">TOP PROSPECT <span class="or-text">or</span> FALLEN ANGEL<span class="question-mark">?!</span></td>
+    </tr>`;
+  }
+
+  // Render prospects with graded titles (TOP PROSPECT → HOT PROSPECTS → PROSPECTS)
+  // Only show graded titles when we have momentum data (not during collection)
+  prospects.forEach((item, idx) => {
     const listRank = idx + 1;
+    totalIdx++;
     const poolDisplay = formatCompact(item.poolLiquidity);
     const mcapDisplay = formatCompact(item.marketCapTao);
     const mcapUsd = taoPrice ? formatUsd(item.marketCapTao * taoPrice) : '';
@@ -184,8 +211,8 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     // Blur rows 2+ (teaser mode) unless unlocked
     const isBlurred = listRank > 1 && !proUnlocked;
 
-    // Add title row before certain positions
-    if (prospectTitles[listRank]) {
+    // Add graded title row before certain positions (only when we have momentum data)
+    if (!isCollectingData && prospectTitles[listRank]) {
       const prospect = prospectTitles[listRank];
       const titleBlurClass = isBlurred ? ' blurred-row' : '';
       html += `<tr class="prospect-title-row ${prospect.class}${titleBlurClass}">
@@ -195,7 +222,7 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
 
     // Momentum display - show "..." if no data yet
     const momentumDisplay = item.rank7dDelta !== null
-      ? `<span class="momentum-badge${item.isDeepUnderdog ? ' deep-underdog' : ''}">+${item.rank7dDelta}</span>`
+      ? `<span class="momentum-badge rising${item.isDeepUnderdog ? ' deep-underdog' : ''}">+${item.rank7dDelta}</span>`
       : `<span class="momentum-tbd">...</span>`;
     const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
 
@@ -214,6 +241,34 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     }
   });
 
+  // Render FALLEN ANGELS section (only when we have momentum data)
+  if (fallenAngels.length > 0 && !isCollectingData) {
+    const titleBlurred = !proUnlocked ? ' blurred-row' : '';
+    html += `<tr class="prospect-title-row prospect-fallen${titleBlurred}">
+      <td colspan="6">${fallenAngelIcon} FALLEN ANGELS</td>
+    </tr>`;
+
+    fallenAngels.forEach((item) => {
+      totalIdx++;
+      const poolDisplay = formatCompact(item.poolLiquidity);
+      const mcapDisplay = formatCompact(item.marketCapTao);
+      const mcapUsd = taoPrice ? formatUsd(item.marketCapTao * taoPrice) : '';
+      const isBlurred = !proUnlocked;
+
+      const momentumDisplay = `<span class="momentum-badge falling">${item.rank7dDelta}</span>`;
+      const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
+
+      html += `<tr class="${rowClass}">
+        <td class="rank-col">${item.rank}</td>
+        <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
+        <td class="share-col">${item.share}%</td>
+        <td class="momentum-col">${momentumDisplay}</td>
+        <td class="pool-col">${poolDisplay}τ</td>
+        <td class="mcap-col">${mcapDisplay}τ${mcapUsd ? ` <span class="mcap-usd">(${mcapUsd})</span>` : ''}</td>
+      </tr>`;
+    });
+  }
+
   displayList.innerHTML = html;
 
   // Add click handler for PRO unlock
@@ -221,7 +276,7 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
   if (proBtn) {
     proBtn.addEventListener('click', () => {
       proUnlocked = true;
-      renderNewcomers(displayList, newcomers, taoPrice, isCollectingData);
+      renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isCollectingData);
     });
   }
 }
@@ -270,8 +325,8 @@ export async function loadNewcomersDisplay(displayList) {
     }
 
     // Identify and render newcomers using history
-    const { newcomers, isCollectingData } = identifyNewcomers(topSubnets, alphaPrices, history);
-    renderNewcomers(displayList, newcomers, taoPrice, isCollectingData);
+    const { prospects, fallenAngels, isCollectingData } = identifyNewcomers(topSubnets, alphaPrices, history);
+    renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isCollectingData);
 
     // Update timestamp
     const updateEl = document.getElementById('newcomersUpdate');

@@ -4492,6 +4492,52 @@ body.light-bg .pro-joke {
   text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
 }
 
+/* Fallen Angels - Red warning */
+.newcomers-display-table .prospect-fallen td {
+  color: #ef4444;
+  text-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Intro row - TOP PROSPECT or FALLEN ANGEL?! (during data collection) */
+.newcomers-display-table .prospect-intro-row td {
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  padding: 12px 8px 8px;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.1), rgba(239, 68, 68, 0.1));
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.newcomers-display-table .prospect-intro-row .or-text {
+  color: #888;
+  font-weight: 400;
+  font-style: italic;
+  margin: 0 4px;
+}
+
+.newcomers-display-table .prospect-intro-row .question-mark {
+  color: #ef4444;
+  animation: pulse-question 2s ease-in-out infinite;
+}
+
+@keyframes pulse-question {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Rising momentum badge - green */
+.newcomers-display-table .momentum-badge.rising {
+  background: rgba(34, 197, 94, 0.2);
+  color: #22c55e;
+}
+
+/* Falling momentum badge - red */
+.newcomers-display-table .momentum-badge.falling {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
 /* Watch list row styling */
 .newcomers-display-table .watchlist-row {
   opacity: 0.9;
@@ -4520,7 +4566,8 @@ body.light-bg .pro-joke {
 .newcomer-star-icon,
 .newcomer-fire-icon,
 .newcomer-chart-icon,
-.newcomer-hourglass-icon {
+.newcomer-hourglass-icon,
+.newcomer-fallen-icon {
   width: 1.2em;
   height: 1.2em;
   vertical-align: middle;
@@ -4583,6 +4630,24 @@ body.light-bg .pro-joke {
 
 .newcomers-card.light-bg .newcomers-display-table .prospect-rising td {
   color: #16a34a;
+}
+
+.newcomers-card.light-bg .newcomers-display-table .prospect-fallen td {
+  color: #dc2626;
+}
+
+.newcomers-card.light-bg .newcomers-display-table .prospect-intro-row td {
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.15));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.newcomers-card.light-bg .newcomers-display-table .prospect-intro-row .or-text {
+  color: #666;
+}
+
+.newcomers-card.light-bg .newcomers-display-table .momentum-badge.falling {
+  background: rgba(220, 38, 38, 0.15);
+  color: #dc2626;
 }
 
 .newcomers-card.light-bg .newcomers-display-table .prospect-watch td {
