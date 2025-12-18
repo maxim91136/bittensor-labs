@@ -29,6 +29,7 @@ let cachedData = {
   alphaPrices: {},
   predictions: [],
   history: [],
+  mcapHistory: [],
   taoPrice: null
 };
 
@@ -36,12 +37,13 @@ let cachedData = {
  * Fetch all required data for all views
  */
 async function fetchAllData() {
-  const [currentRes, historyRes, alphaRes, predictionsRes, taostatsRes] = await Promise.all([
+  const [currentRes, historyRes, alphaRes, predictionsRes, taostatsRes, mcapHistoryRes] = await Promise.all([
     fetch('/api/top_subnets'),
     fetch('/api/top_subnets_history?limit=96'),
     fetch('/api/alpha_prices'),
     fetch('/api/subnet_predictions?top_n=20'),
-    fetch('/api/taostats')
+    fetch('/api/taostats'),
+    fetch('/api/mcap_history?limit=168')  // 7 days @ hourly
   ]);
 
   // Top subnets (emissions)
@@ -76,6 +78,12 @@ async function fetchAllData() {
     const data = await taostatsRes.json();
     cachedData.taoPrice = data.price || null;
   }
+
+  // MCap history (for MCap rank changes)
+  if (mcapHistoryRes.ok) {
+    const data = await mcapHistoryRes.json();
+    cachedData.mcapHistory = data.history || [];
+  }
 }
 
 /**
@@ -92,6 +100,50 @@ function buildPrevRankMap() {
     });
   }
   return prevRankMap;
+}
+
+/**
+ * Build 7-day MCap rank change map
+ * Returns: { netuid: delta } where positive = moved up, negative = moved down
+ */
+function buildMcap7dChangeMap() {
+  const changeMap = {};
+  const history = cachedData.mcapHistory;
+
+  if (history.length < 2) return changeMap;
+
+  // Current = most recent snapshot (last in array)
+  const current = history[history.length - 1];
+  // 7d ago = oldest snapshot we have (first in array, up to 7d back)
+  const oldest = history[0];
+
+  // Build current rank map
+  const currentRanks = {};
+  (current.entries || []).forEach((s, idx) => {
+    const netuid = parseInt(s.id || s.netuid);
+    if (netuid) currentRanks[netuid] = idx + 1;
+  });
+
+  // Build old rank map
+  const oldRanks = {};
+  (oldest.entries || []).forEach((s, idx) => {
+    const netuid = parseInt(s.id || s.netuid);
+    if (netuid) oldRanks[netuid] = idx + 1;
+  });
+
+  // Calculate delta for each subnet in current rankings
+  for (const netuid of Object.keys(currentRanks)) {
+    const nid = parseInt(netuid);
+    const currRank = currentRanks[nid];
+    const oldRank = oldRanks[nid];
+
+    if (oldRank !== undefined) {
+      // Delta: positive = improved (was lower rank, now higher)
+      changeMap[nid] = oldRank - currRank;
+    }
+  }
+
+  return changeMap;
 }
 
 /**
@@ -195,6 +247,7 @@ function updateTableHeader() {
 function renderTable(displayList) {
   const data = getSortedData();
   const prevRankMap = buildPrevRankMap();
+  const mcap7dChangeMap = buildMcap7dChangeMap();
 
   // Update header for current view
   updateTableHeader();
@@ -229,16 +282,24 @@ function renderTable(displayList) {
       }
     }
 
-    // 7-day rank change from ML predictions (separate from short-term arrows)
-    // Only show for emissions and hybrid views (ML tracks emission rankings)
+    // 7-day rank change - different source per view
+    // Emissions/Hybrid: ML predictions (emission ranking based)
+    // MCap: MCap history (market cap ranking based)
     let rank7dHtml = '';
-    if (currentView !== 'mcap') {
-      const rankDelta7d = item.trend?.rank_delta_7d;
-      if (rankDelta7d !== undefined && rankDelta7d !== 0) {
-        const sign = rankDelta7d > 0 ? '+' : '';
-        const colorClass = rankDelta7d > 0 ? 'rank-7d-up' : 'rank-7d-down';
-        rank7dHtml = `<div class="rank-7d ${colorClass}">7d: ${sign}${rankDelta7d}</div>`;
-      }
+    let rankDelta7d = 0;
+
+    if (currentView === 'mcap') {
+      // Use MCap history for MCap view
+      rankDelta7d = mcap7dChangeMap[item.netuid] || 0;
+    } else {
+      // Use ML predictions for emissions/hybrid
+      rankDelta7d = item.trend?.rank_delta_7d || 0;
+    }
+
+    if (rankDelta7d !== 0) {
+      const sign = rankDelta7d > 0 ? '+' : '';
+      const colorClass = rankDelta7d > 0 ? 'rank-7d-up' : 'rank-7d-down';
+      rank7dHtml = `<div class="rank-7d ${colorClass}">7d: ${sign}${rankDelta7d}</div>`;
     }
 
     // Third column: Share (%) or Probability (%) depending on view
@@ -258,16 +319,12 @@ function renderTable(displayList) {
     const isZeroEmission = currentView === 'mcap' && parseFloat(item.daily) === 0;
 
     // Momentum indicator for strong movers (2+ rank change in 7d)
-    // Only show for emissions and hybrid views (ML is based on emission rankings)
-    // Market Cap view uses different ranking - momentum doesn't apply
-    const momentum = item.trend?.rank_momentum;
+    // Uses rankDelta7d which is already calculated per-view above
     let momentumClass = '';
-    if (currentView !== 'mcap') {
-      if (momentum === 'strong_positive') {
-        momentumClass = 'momentum-up';
-      } else if (momentum === 'strong_negative') {
-        momentumClass = 'momentum-down';
-      }
+    if (rankDelta7d >= 2) {
+      momentumClass = 'momentum-up';
+    } else if (rankDelta7d <= -2) {
+      momentumClass = 'momentum-down';
     }
 
     // Build row classes
