@@ -3963,47 +3963,47 @@ body.light-bg .price-chart-footer {
   cursor: help;
 }
 
-/* Fire badge - hot momentum */
+/* Rising badge - green glow */
 .momentum-badge.fire {
-  background: radial-gradient(circle at 30% 70%, #ff6b35 0%, #f7931a 50%, #ffd93d 100%);
-  box-shadow: 0 0 6px #f7931a, 0 0 12px rgba(247, 147, 26, 0.4);
-  animation: fire-glow 2s ease-in-out infinite;
+  background: radial-gradient(circle at 30% 70%, #22c55e 0%, #16a34a 50%, #4ade80 100%);
+  box-shadow: 0 0 6px #22c55e, 0 0 12px rgba(34, 197, 94, 0.4);
+  animation: rise-glow 2s ease-in-out infinite;
 }
 
-/* Cold badge - dropping momentum */
+/* Falling badge - red glow */
 .momentum-badge.cold {
   background: radial-gradient(circle at 30% 70%, #ef4444 0%, #dc2626 50%, #f87171 100%);
   box-shadow: 0 0 6px #ef4444, 0 0 12px rgba(239, 68, 68, 0.4);
-  animation: cold-glow 2s ease-in-out infinite;
+  animation: fall-glow 2s ease-in-out infinite;
 }
 
-@keyframes fire-glow {
-  0%, 100% { box-shadow: 0 0 6px #f7931a, 0 0 12px rgba(247, 147, 26, 0.4); }
-  50% { box-shadow: 0 0 10px #ff6b35, 0 0 20px rgba(255, 107, 53, 0.5); }
+@keyframes rise-glow {
+  0%, 100% { box-shadow: 0 0 6px #22c55e, 0 0 12px rgba(34, 197, 94, 0.4); }
+  50% { box-shadow: 0 0 10px #16a34a, 0 0 20px rgba(22, 163, 74, 0.5); }
 }
 
-@keyframes cold-glow {
+@keyframes fall-glow {
   0%, 100% { box-shadow: 0 0 6px #ef4444, 0 0 12px rgba(239, 68, 68, 0.4); }
   50% { box-shadow: 0 0 10px #dc2626, 0 0 20px rgba(220, 38, 38, 0.5); }
 }
 
-/* Row highlight for rising - golden gradient + border */
+/* Row highlight for rising - green gradient + border */
 .subnets-display-table .momentum-up {
   background: linear-gradient(90deg,
-    rgba(247, 147, 26, 0.12) 0%,
-    rgba(255, 215, 0, 0.06) 30%,
+    rgba(34, 197, 94, 0.1) 0%,
+    rgba(74, 222, 128, 0.05) 30%,
     transparent 60%) !important;
 }
 
 .subnets-display-table .momentum-up td:first-child {
-  border-left: 3px solid #f7931a;
+  border-left: 3px solid #22c55e;
 }
 
 /* Row highlight for falling - red gradient + border */
 .subnets-display-table .momentum-down {
   background: linear-gradient(90deg,
-    rgba(239, 68, 68, 0.12) 0%,
-    rgba(248, 113, 113, 0.06) 30%,
+    rgba(239, 68, 68, 0.1) 0%,
+    rgba(248, 113, 113, 0.05) 30%,
     transparent 60%) !important;
 }
 
