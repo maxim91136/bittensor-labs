@@ -2,7 +2,7 @@ name: kv - Top History
 
 on:
   schedule:
-    - cron: '19,49 * * * *' # every 30 min bei :19 und :49
+    - cron: '19 * * * *' # every hour at :19
   workflow_dispatch: {}
 
 jobs:

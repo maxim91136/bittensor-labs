@@ -32,20 +32,13 @@ const NEWCOMER_CRITERIA = {
 const starIcon = `<svg class="newcomer-star-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
 const fireIcon = `<svg class="newcomer-fire-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 23c-4.97 0-9-3.58-9-8 0-2.52 1.17-5.06 3-7.5 1.09-1.45 2.41-2.74 3.8-3.8.36-.27.84-.22 1.14.12.3.34.32.84.05 1.21-.84 1.14-1.4 2.43-1.67 3.47 1.1-.91 2.5-1.5 4.18-1.5 4.14 0 7.5 3.58 7.5 8s-3.58 8-8 8z"/></svg>`;
 const chartIcon = `<svg class="newcomer-chart-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M3 13h2v8H3v-8zm6-6h2v14H9V7zm6-4h2v18h-2V3zm6 8h2v10h-2V11z"/></svg>`;
-
-// Eye icon for watchlist
-const eyeIcon = `<svg class="newcomer-eye-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>`;
+const hourglassIcon = `<svg class="newcomer-hourglass-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M6 2v6h.01L6 8.01 10 12l-4 4 .01.01H6V22h12v-5.99h-.01L18 16l-4-4 4-3.99-.01-.01H18V2H6zm10 14.5V20H8v-3.5l4-4 4 4zm-4-5l-4-4V4h8v3.5l-4 4z"/></svg>`;
 
 // Prospect titles - for confirmed rising talents
 const prospectTitles = {
   1: { title: `${starIcon} TOP PROSPECT`, class: 'prospect-top' },
   2: { title: `${fireIcon} HOT PROSPECTS`, class: 'prospect-hot' },
   4: { title: `${chartIcon} PROSPECTS`, class: 'prospect-rising' }
-};
-
-// Watch list titles - neutral (no historical data to confirm direction)
-const watchListTitles = {
-  1: { title: `${eyeIcon} WATCH LIST`, class: 'prospect-watch' }
 };
 
 /**
@@ -92,11 +85,10 @@ function build7dRankChangeMap(history, currentSubnets) {
 /**
  * Identify newcomers based on criteria
  * Uses history data for 7d rank changes (works for all subnets, not just top 10)
- * Falls back to liquidity-based prospects if no historical data available
+ * Returns { newcomers: [], isCollectingData: boolean }
  */
 function identifyNewcomers(topSubnets, alphaPrices, history) {
   const newcomers = [];
-  const watchList = []; // Fallback for subnets without rank history
 
   // Build 7d rank change map from history
   const rank7dChangeMap = build7dRankChangeMap(history, topSubnets);
@@ -106,6 +98,11 @@ function identifyNewcomers(topSubnets, alphaPrices, history) {
     const rank = topSubnets.findIndex(s => s.netuid == netuid) + 1;
     return rank >= NEWCOMER_CRITERIA.minRank && rank7dChangeMap[netuid] !== undefined;
   });
+
+  // If no extended history yet, return collecting data state (Truth)
+  if (!hasExtendedHistory) {
+    return { newcomers: [], isCollectingData: true };
+  }
 
   // Check all subnets - look for rising underdogs (rank 11+)
   topSubnets.forEach((subnet, idx) => {
@@ -118,68 +115,56 @@ function identifyNewcomers(topSubnets, alphaPrices, history) {
     // Check newcomer criteria: underdogs (outside top 10) who are rising
     const isUnderdog = currentRank >= NEWCOMER_CRITERIA.minRank;
     const hasLiquidity = poolLiquidity >= NEWCOMER_CRITERIA.minPoolLiquidity;
+    const hasRankData = rank7dDelta !== undefined;
+    const isRising = hasRankData && rank7dDelta >= NEWCOMER_CRITERIA.minRankImprovement;
 
-    if (isUnderdog && hasLiquidity) {
-      const hasRankData = rank7dDelta !== undefined;
-      const isRising = hasRankData && rank7dDelta >= NEWCOMER_CRITERIA.minRankImprovement;
-
-      if (hasRankData && isRising) {
-        // Primary: Rising talent with confirmed momentum
-        newcomers.push({
-          rank: currentRank,
-          netuid: subnet.netuid,
-          name: subnet.subnet_name || subnet.taostats_name || `SN${subnet.netuid}`,
-          share: (emissionShare * 100).toFixed(2),
-          rank7dDelta: rank7dDelta,
-          poolLiquidity: poolLiquidity,
-          marketCapTao: alpha.market_cap_tao || 0,
-          alpha: alpha,
-          isWatchList: false
-        });
-      } else if (!hasExtendedHistory) {
-        // Fallback: No historical data yet - show high-liquidity prospects
-        watchList.push({
-          rank: currentRank,
-          netuid: subnet.netuid,
-          name: subnet.subnet_name || subnet.taostats_name || `SN${subnet.netuid}`,
-          share: (emissionShare * 100).toFixed(2),
-          rank7dDelta: null, // Unknown
-          poolLiquidity: poolLiquidity,
-          marketCapTao: alpha.market_cap_tao || 0,
-          alpha: alpha,
-          isWatchList: true
-        });
-      }
+    if (isUnderdog && hasLiquidity && isRising) {
+      newcomers.push({
+        rank: currentRank,
+        netuid: subnet.netuid,
+        name: subnet.subnet_name || subnet.taostats_name || `SN${subnet.netuid}`,
+        share: (emissionShare * 100).toFixed(2),
+        rank7dDelta: rank7dDelta,
+        poolLiquidity: poolLiquidity,
+        marketCapTao: alpha.market_cap_tao || 0,
+        alpha: alpha,
+        isDeepUnderdog: currentRank >= 30  // Flag for deep underdogs (Katniss-style)
+      });
     }
   });
 
-  // Sort newcomers by rank improvement (best momentum first)
-  newcomers.sort((a, b) => b.rank7dDelta - a.rank7dDelta);
+  // Hybrid sorting: Prioritize deep underdogs with big moves
+  // A +10 move from rank 60 is more impressive than +10 from rank 15
+  newcomers.sort((a, b) => {
+    const aScore = a.rank7dDelta * (a.isDeepUnderdog ? 1.5 : 1);
+    const bScore = b.rank7dDelta * (b.isDeepUnderdog ? 1.5 : 1);
+    return bScore - aScore;
+  });
 
-  // Sort watchList by rank (closest to top 10 first) - more likely real prospects
-  watchList.sort((a, b) => a.rank - b.rank);
-
-  // Use newcomers if available, otherwise fallback to watchList
-  const result = newcomers.length > 0 ? newcomers : watchList;
-
-  return result.slice(0, 5); // Top 5
+  return { newcomers: newcomers.slice(0, 5), isCollectingData: false };
 }
 
 /**
  * Render newcomers table with ranking titles
- * Handles both confirmed rising talents and watch list items
+ * Shows confirmed rising talents or collecting data message
  */
-function renderNewcomers(displayList, newcomers, taoPrice) {
+function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = false) {
+  // Show collecting data message if no extended history yet (Truth)
+  if (isCollectingData) {
+    displayList.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#888;">
+      ${hourglassIcon}
+      <div style="margin-top:10px;font-size:1.1em;">Collecting momentum data...</div>
+      <div style="margin-top:5px;font-size:0.85em;opacity:0.7;">Rising talents will appear once we have 7d rank history</div>
+    </td></tr>`;
+    return;
+  }
+
   if (newcomers.length === 0) {
     displayList.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#666;">
       ${starIcon} No rising talents found matching criteria
     </td></tr>`;
     return;
   }
-
-  // Check if these are watch list items (no historical data)
-  const isWatchListMode = newcomers[0]?.isWatchList === true;
-  const titles = isWatchListMode ? watchListTitles : prospectTitles;
 
   const rows = newcomers.map((item, idx) => {
     const listRank = idx + 1; // Position in newcomers list (1-5)
@@ -189,19 +174,17 @@ function renderNewcomers(displayList, newcomers, taoPrice) {
 
     // Add title row before certain positions
     let titleRow = '';
-    if (titles[listRank]) {
-      const prospect = titles[listRank];
+    if (prospectTitles[listRank]) {
+      const prospect = prospectTitles[listRank];
       titleRow = `<tr class="prospect-title-row ${prospect.class}">
         <td colspan="6">${prospect.title}</td>
       </tr>`;
     }
 
-    // Momentum display: show badge for confirmed, "TBD" for watch list
-    const momentumDisplay = item.isWatchList
-      ? `<span class="momentum-tbd" title="Historical data being collected">TBD</span>`
-      : `<span class="momentum-badge">+${item.rank7dDelta}</span>`;
+    // Momentum display with rank improvement (deep underdogs get highlight)
+    const momentumDisplay = `<span class="momentum-badge${item.isDeepUnderdog ? ' deep-underdog' : ''}">+${item.rank7dDelta}</span>`;
 
-    return `${titleRow}<tr class="newcomer-row${item.isWatchList ? ' watchlist-row' : ''}">
+    return `${titleRow}<tr class="newcomer-row${item.isDeepUnderdog ? ' deep-underdog-row' : ''}">
       <td class="rank-col">${item.rank}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
       <td class="share-col">${item.share}%</td>
@@ -258,8 +241,8 @@ export async function loadNewcomersDisplay(displayList) {
     }
 
     // Identify and render newcomers using history
-    const newcomers = identifyNewcomers(topSubnets, alphaPrices, history);
-    renderNewcomers(displayList, newcomers, taoPrice);
+    const { newcomers, isCollectingData } = identifyNewcomers(topSubnets, alphaPrices, history);
+    renderNewcomers(displayList, newcomers, taoPrice, isCollectingData);
 
     // Update timestamp
     const updateEl = document.getElementById('newcomersUpdate');
