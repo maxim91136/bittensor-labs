@@ -136,7 +136,7 @@ function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
   // Check if we have prediction data for subnets outside top 10
   const hasPredictionData = predictions.some(p => {
     const rank = topSubnets.findIndex(s => s.netuid == p.netuid) + 1;
-    return rank >= NEWCOMER_CRITERIA.minRank && p.rank7dDelta !== undefined;
+    return rank >= NEWCOMER_CRITERIA.minRank && p.trend_indicators?.rank_delta_7d !== undefined;
   });
 
   // Collect all eligible subnets (underdogs with liquidity)
@@ -145,7 +145,7 @@ function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
     const emissionShare = subnet.taostats_emission_share || 0;
     const alpha = alphaPrices[subnet.netuid] || {};
     const prediction = predictionMap[subnet.netuid] || {};
-    const rank7dDelta = prediction.rank7dDelta;
+    const rank7dDelta = prediction.trend_indicators?.rank_delta_7d;
     const poolLiquidity = alpha.tao_in_pool || 0;
 
     // Check basic criteria: underdogs (outside top 10) with liquidity
