@@ -248,13 +248,10 @@ function renderTable(displayList) {
     // Momentum indicator for strong movers (2+ rank change in 7d)
     const momentum = item.trend?.rank_momentum;
     let momentumClass = '';
-    let momentumBadge = '';
     if (momentum === 'strong_positive') {
       momentumClass = 'momentum-up';
-      momentumBadge = '<span class="momentum-badge fire" title="Rising: +2 ranks in 7 days"></span>';
     } else if (momentum === 'strong_negative') {
       momentumClass = 'momentum-down';
-      momentumBadge = '<span class="momentum-badge cold" title="Falling: -2 ranks in 7 days"></span>';
     }
 
     // Build row classes
@@ -267,7 +264,7 @@ function renderTable(displayList) {
     const emissionWarning = isZeroEmission ? ' <span class="emission-warning" title="No emissions - speculative value">⚠️</span>' : '';
 
     return `<tr class="${rowClass}">
-      <td class="rank-col">${momentumBadge}${item.rank}${changeHtml}</td>
+      <td class="rank-col">${item.rank}${changeHtml}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}${emissionWarning}</td>
       <td class="${thirdColClass}">${thirdColValue}</td>
       <td class="daily-col">${isZeroEmission ? '<span class="zero-emission">0.00τ</span>' : item.daily + 'τ'}</td>
