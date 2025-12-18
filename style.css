@@ -3950,7 +3950,7 @@ body.light-bg .price-chart-footer {
   background: rgba(239, 68, 68, 0.15) !important;
 }
 
-/* Momentum glow for strong positive movers (climbed 2+ ranks in 7d) */
+/* Momentum glow for strong positive movers (climbed 3+ ranks in 7d) */
 .subnets-display-table .momentum-up {
   background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.08) 50%, transparent 100%) !important;
   box-shadow: inset 0 0 20px rgba(251, 191, 36, 0.1);
@@ -3966,7 +3966,7 @@ body.light-bg .price-chart-footer {
   50% { box-shadow: inset 0 0 30px rgba(251, 191, 36, 0.2); }
 }
 
-/* Momentum glow for strong negative movers (dropped 2+ ranks in 7d) */
+/* Momentum glow for strong negative movers (dropped 3+ ranks in 7d) */
 .subnets-display-table .momentum-down {
   background: linear-gradient(90deg, rgba(239, 68, 68, 0.15) 0%, rgba(239, 68, 68, 0.08) 50%, transparent 100%) !important;
   box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.1);
@@ -3980,6 +3980,12 @@ body.light-bg .price-chart-footer {
 @keyframes momentum-down-pulse {
   0%, 100% { box-shadow: inset 0 0 20px rgba(239, 68, 68, 0.1); }
   50% { box-shadow: inset 0 0 30px rgba(239, 68, 68, 0.2); }
+}
+
+/* Momentum emoji indicator */
+.subnets-display-table .momentum-icon {
+  margin-left: 4px;
+  cursor: help;
 }
 
 .subnets-display-table .emission-warning {
