@@ -4066,11 +4066,12 @@ body.light-bg .price-chart-footer {
 }
 
 .subnets-display-table .champion-title-row td {
-  padding: 8px 12px 4px 12px;
-  font-size: 0.7rem;
+  padding: 14px 12px 6px 12px;
+  font-size: 0.9rem;
   font-weight: 700;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  text-align: center;
   border: none;
   background: transparent;
 }
