@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.23 (2025-12-18)
+### Changed
+- **README**: Updated Subnet Champions with boxing-style presentation
+- **README**: Added Talent Scouting card documentation (Katniss Principle)
+
 ## v1.0.0-rc.33.22 (2025-12-18)
 ### Added
 - **PRO Click-to-Unlock**: Talent Scouting card now has clickable PRO overlay

@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.33.22 ` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.33.23` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🏆 **RC33.16 - Subnet Champions Prediction Model**:
 > - **NEW: Subnet Champions Card** with 3 toggle views: Emissions, Market Cap, Hybrid (ML predictions)
@@ -219,7 +219,12 @@ Track position changes across all Top 10 cards with visual indicators:
 - **Supported Cards**: Subnets (netuid), Validators (hotkey), Wallets (address)
 
 ### 🏆 Subnet Champions - Prediction Model (RC33.16+)
-ML-powered subnet ranking projection model with three analysis views:
+ML-powered subnet ranking projection model with boxing-style presentation:
+
+**Boxing-Style Rankings**:
+- 🥇 **P4P World Champion** (Rank #1) - Pound-for-pound king
+- 🥊 **WBA/WBC/IBF/IBO Champions** (Ranks #2-5) - Federation title holders
+- 🥊 **Contenders** (Ranks #6-10) - Fighting for a title shot
 
 **Toggle Views**:
 - **Emissions**: Current emission share ranking (who's earning the most TAO)
@@ -247,6 +252,34 @@ This helps identify potentially overvalued subnets - high market cap with no rev
 - UI shows Top 10 (Power Law: Top 3 = ~60% of emissions)
 - Backend stores Top 100 emitters for prediction coverage
 - Chain data provides all 128+ subnets for alpha prices
+
+### 🔭 Talent Scouting - Rising Underdogs (RC33.22+)
+Hunger Games-style talent discovery for subnets outside the Top 10:
+
+**The Katniss Principle**:
+Find the next breakout subnet before it hits the mainstream. Tracks subnets ranked #11+ that show strong momentum and real traction.
+
+**Prospect Rankings**:
+- ⭐ **Top Prospect** (#1) - Highest momentum underdog
+- 🔥 **Hot Prospects** (#2-3) - Strong risers with liquidity
+- 📈 **Prospects** (#4-5) - Worth watching
+
+**Selection Criteria**:
+- Rank #11+ (outside Top 10 champions)
+- Pool liquidity > 5K TAO (real market traction)
+- Positive 7-day rank improvement
+
+**Displayed Metrics**:
+- Current emission rank
+- 7-day momentum (rank change)
+- Pool liquidity (TAO)
+- Market cap (TAO + USD)
+
+**Watch List Mode**:
+When collecting historical data (first 7 days), shows top candidates by liquidity with "..." placeholder for momentum. Once data is available, switches to momentum-based ranking.
+
+**Deep Underdog Bonus**:
+Subnets ranked #30+ get a 1.5x multiplier in the sorting algorithm - rewarding truly unexpected risers from the bottom of the pack.
 
 ### 🌗 Dark/Light Mode
 - Auto-detects system preference
