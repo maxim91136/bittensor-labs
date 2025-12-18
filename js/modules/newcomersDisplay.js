@@ -360,7 +360,7 @@ export async function loadNewcomersDisplay(displayList) {
     const [subnetsRes, alphaRes, predictionsRes, fullHistoryRes, taostatsRes] = await Promise.all([
       fetch('/api/top_subnets'),
       fetch('/api/alpha_prices'),
-      fetch('/api/subnet_predictions?top_n=50'),     // Predictions with rank7dDelta for 50 subnets
+      fetch('/api/subnet_predictions?top_n=100'),    // Predictions with rank7dDelta for ALL subnets
       fetch('/api/top_subnets_history?limit=1000'),  // Full history for fallen giant detection
       fetch('/api/taostats')
     ]);
