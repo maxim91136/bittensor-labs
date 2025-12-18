@@ -20,27 +20,34 @@ if ! command -v gh &> /dev/null; then
   ERRORS=$((ERRORS + 1))
 fi
 
-# Check 2: CHANGELOG entry exists
+# Check 2: VERSION file must be modified (intentional version bump)
+if git diff --quiet VERSION 2>/dev/null; then
+  echo "❌ MISSING: VERSION file not modified"
+  echo "   Bump version first: echo '1.0.0-rc.XX.YY' > VERSION"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# Check 3: CHANGELOG entry exists
 if ! grep -q "## $TAG" CHANGELOG.md; then
   echo "❌ MISSING: CHANGELOG.md has no entry for $TAG"
   echo "   Add: ## $TAG ($(date +%Y-%m-%d))"
   ERRORS=$((ERRORS + 1))
 fi
 
-# Check 3: Tag doesn't already exist
+# Check 4: Tag doesn't already exist
 if git rev-parse "$TAG" >/dev/null 2>&1; then
   echo "❌ CONFLICT: Tag $TAG already exists"
   ERRORS=$((ERRORS + 1))
 fi
 
-# Check 4: On main branch
+# Check 5: On main branch
 CURRENT_BRANCH=$(git branch --show-current)
 if [ "$CURRENT_BRANCH" != "main" ]; then
   echo "❌ WRONG BRANCH: On '$CURRENT_BRANCH', should be 'main'"
   ERRORS=$((ERRORS + 1))
 fi
 
-# Check 5: No uncommitted changes (except VERSION/README/CHANGELOG)
+# Check 6: No uncommitted changes (except VERSION/README/CHANGELOG)
 DIRTY_FILES=$(git status --porcelain | grep -v "VERSION\|README.md\|CHANGELOG.md" | wc -l | tr -d ' ')
 if [ "$DIRTY_FILES" != "0" ]; then
   echo "❌ DIRTY: Uncommitted changes detected"
