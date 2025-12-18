@@ -46,6 +46,34 @@ const prospectTitles = {
 };
 
 /**
+ * Build peak rank map from ALL history
+ * Returns the best (lowest) rank each subnet ever achieved
+ * Used to detect "fallen giants" - subnets that were once Top 10
+ */
+function buildPeakRankMap(history) {
+  const peakMap = {};
+
+  if (!history || history.length === 0) return peakMap;
+
+  // Scan all snapshots to find the best rank for each subnet
+  history.forEach(snapshot => {
+    const entries = snapshot?.entries || [];
+    entries.forEach(e => {
+      const netuid = parseInt(e.id || e.netuid);
+      const rank = e.rank;
+      if (netuid && rank) {
+        // Lower rank number = better position
+        if (!peakMap[netuid] || rank < peakMap[netuid]) {
+          peakMap[netuid] = rank;
+        }
+      }
+    });
+  });
+
+  return peakMap;
+}
+
+/**
  * Build 7d rank change map from history
  * Compares oldest snapshot to current rankings
  */
@@ -89,14 +117,18 @@ function build7dRankChangeMap(history, currentSubnets) {
 /**
  * Identify newcomers based on criteria
  * Uses history data for 7d rank changes (works for all subnets, not just top 10)
+ * Detects "fallen giants" - subnets that were once Top 10 but have fallen
  * Returns { prospects: [], fallenAngels: [], isCollectingData: boolean }
  */
-function identifyNewcomers(topSubnets, alphaPrices, history) {
+function identifyNewcomers(topSubnets, alphaPrices, history, fullHistory) {
   const prospects = [];
   const fallenAngels = [];
 
   // Build 7d rank change map from history
   const rank7dChangeMap = build7dRankChangeMap(history, topSubnets);
+
+  // Build peak rank map from ALL history (for fallen giant detection)
+  const peakRankMap = buildPeakRankMap(fullHistory || history);
 
   // Check if we have historical data for subnets outside top 10
   const hasExtendedHistory = Object.keys(rank7dChangeMap).some(netuid => {
@@ -119,6 +151,10 @@ function identifyNewcomers(topSubnets, alphaPrices, history) {
     const isRising = hasRankData && rank7dDelta >= NEWCOMER_CRITERIA.minRankImprovement;
     const isFalling = hasRankData && rank7dDelta <= -NEWCOMER_CRITERIA.minRankImprovement;
 
+    // Fallen Giant Detection: was once Top 10, now ranked 30+
+    const peakRank = peakRankMap[subnet.netuid];
+    const isFallenGiant = peakRank && peakRank <= 10 && currentRank >= 30;
+
     if (isUnderdog && hasLiquidity) {
       const entry = {
         rank: currentRank,
@@ -129,12 +165,16 @@ function identifyNewcomers(topSubnets, alphaPrices, history) {
         poolLiquidity: poolLiquidity,
         marketCapTao: alpha.market_cap_tao || 0,
         alpha: alpha,
-        isDeepUnderdog: currentRank >= 30
+        isDeepUnderdog: currentRank >= 30,
+        isFallenGiant: isFallenGiant,
+        peakRank: peakRank
       };
 
       if (hasExtendedHistory) {
-        // With data: categorize into rising vs falling
-        if (isRising) {
+        // Fallen giants go to Fallen Angels regardless of recent momentum
+        if (isFallenGiant) {
+          fallenAngels.push(entry);
+        } else if (isRising) {
           prospects.push(entry);
         } else if (isFalling) {
           fallenAngels.push(entry);
@@ -153,15 +193,27 @@ function identifyNewcomers(topSubnets, alphaPrices, history) {
       const bScore = (b.rank7dDelta || 0) * (b.isDeepUnderdog ? 1.5 : 1);
       return bScore - aScore;
     });
-    // Sort fallen angels by how much they fell (most negative first)
-    fallenAngels.sort((a, b) => (a.rank7dDelta || 0) - (b.rank7dDelta || 0));
+    // Sort fallen angels: fallen giants first (by how far they fell from peak), then by 7d momentum
+    fallenAngels.sort((a, b) => {
+      // Fallen giants get priority (sorted by total fall from peak)
+      if (a.isFallenGiant && !b.isFallenGiant) return -1;
+      if (!a.isFallenGiant && b.isFallenGiant) return 1;
+      if (a.isFallenGiant && b.isFallenGiant) {
+        // Both fallen giants: sort by total fall (current - peak)
+        const aFall = a.rank - (a.peakRank || a.rank);
+        const bFall = b.rank - (b.peakRank || b.rank);
+        return bFall - aFall;  // Bigger fall first
+      }
+      // Regular fallen angels: sort by 7d momentum (most negative first)
+      return (a.rank7dDelta || 0) - (b.rank7dDelta || 0);
+    });
   } else {
     prospects.sort((a, b) => b.poolLiquidity - a.poolLiquidity);
   }
 
   return {
     prospects: prospects.slice(0, 5),
-    fallenAngels: fallenAngels.slice(0, 2),
+    fallenAngels: fallenAngels.slice(0, 3),  // Show up to 3 fallen angels (including giants)
     isCollectingData: !hasExtendedHistory
   };
 }
@@ -255,12 +307,20 @@ function renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isColle
       const mcapUsd = taoPrice ? formatUsd(item.marketCapTao * taoPrice) : '';
       const isBlurred = !proUnlocked;
 
-      const momentumDisplay = `<span class="momentum-badge falling">${item.rank7dDelta}</span>`;
+      // Fallen giants show total fall from peak, regular fallen angels show 7d momentum
+      let momentumDisplay;
+      if (item.isFallenGiant && item.peakRank) {
+        const totalFall = item.rank - item.peakRank;
+        momentumDisplay = `<span class="momentum-badge fallen-giant" title="Was rank #${item.peakRank}">↓${totalFall}</span>`;
+      } else {
+        momentumDisplay = `<span class="momentum-badge falling">${item.rank7dDelta}</span>`;
+      }
       const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
+      const giantClass = item.isFallenGiant ? ' fallen-giant-row' : '';
 
-      html += `<tr class="${rowClass}">
+      html += `<tr class="${rowClass}${giantClass}">
         <td class="rank-col">${item.rank}</td>
-        <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
+        <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}${item.isFallenGiant ? ' <span class="giant-badge" title="Former Top 10">👑</span>' : ''}</td>
         <td class="share-col">${item.share}%</td>
         <td class="momentum-col">${momentumDisplay}</td>
         <td class="pool-col">${poolDisplay}τ</td>
@@ -290,16 +350,19 @@ export async function loadNewcomersDisplay(displayList) {
 
   try {
     // Fetch required data - using history instead of predictions
-    const [subnetsRes, alphaRes, historyRes, taostatsRes] = await Promise.all([
+    // Fetch both 7d history (for momentum) and full history (for fallen giant detection)
+    const [subnetsRes, alphaRes, history7dRes, fullHistoryRes, taostatsRes] = await Promise.all([
       fetch('/api/top_subnets'),
       fetch('/api/alpha_prices'),
-      fetch('/api/top_subnets_history?limit=168'),  // 7 days of hourly data
+      fetch('/api/top_subnets_history?limit=168'),  // 7 days of hourly data (for momentum)
+      fetch('/api/top_subnets_history?limit=1000'), // Full history (for fallen giant detection)
       fetch('/api/taostats')
     ]);
 
     let topSubnets = [];
     let alphaPrices = {};
-    let history = [];
+    let history7d = [];
+    let fullHistory = [];
     let taoPrice = 0;
 
     if (subnetsRes.ok) {
@@ -314,9 +377,14 @@ export async function loadNewcomersDisplay(displayList) {
       });
     }
 
-    if (historyRes.ok) {
-      const data = await historyRes.json();
-      history = data.history || [];
+    if (history7dRes.ok) {
+      const data = await history7dRes.json();
+      history7d = data.history || [];
+    }
+
+    if (fullHistoryRes.ok) {
+      const data = await fullHistoryRes.json();
+      fullHistory = data.history || [];
     }
 
     if (taostatsRes.ok) {
@@ -325,7 +393,8 @@ export async function loadNewcomersDisplay(displayList) {
     }
 
     // Identify and render newcomers using history
-    const { prospects, fallenAngels, isCollectingData } = identifyNewcomers(topSubnets, alphaPrices, history);
+    // history7d for 7d momentum, fullHistory for fallen giant detection
+    const { prospects, fallenAngels, isCollectingData } = identifyNewcomers(topSubnets, alphaPrices, history7d, fullHistory);
     renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isCollectingData);
 
     // Update timestamp

@@ -4538,6 +4538,24 @@ body.light-bg .pro-joke {
   color: #ef4444;
 }
 
+/* Fallen Giant styling - former Top 10 that crashed */
+.newcomers-display-table .momentum-badge.fallen-giant {
+  background: linear-gradient(135deg, rgba(139, 69, 19, 0.3), rgba(239, 68, 68, 0.3));
+  color: #f97316;
+  font-weight: 600;
+  border: 1px solid rgba(249, 115, 22, 0.3);
+}
+
+.newcomers-display-table .fallen-giant-row {
+  background: rgba(139, 69, 19, 0.1);
+}
+
+.newcomers-display-table .giant-badge {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  margin-left: 0.25rem;
+}
+
 /* Watch list row styling */
 .newcomers-display-table .watchlist-row {
   opacity: 0.9;
@@ -4648,6 +4666,16 @@ body.light-bg .pro-joke {
 .newcomers-card.light-bg .newcomers-display-table .momentum-badge.falling {
   background: rgba(220, 38, 38, 0.15);
   color: #dc2626;
+}
+
+.newcomers-card.light-bg .newcomers-display-table .momentum-badge.fallen-giant {
+  background: linear-gradient(135deg, rgba(180, 83, 9, 0.2), rgba(220, 38, 38, 0.2));
+  color: #c2410c;
+  border-color: rgba(194, 65, 12, 0.3);
+}
+
+.newcomers-card.light-bg .newcomers-display-table .fallen-giant-row {
+  background: rgba(180, 83, 9, 0.08);
 }
 
 .newcomers-card.light-bg .newcomers-display-table .prospect-watch td {
