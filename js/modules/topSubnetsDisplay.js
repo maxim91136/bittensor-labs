@@ -230,12 +230,15 @@ function renderTable(displayList) {
     }
 
     // 7-day rank change from ML predictions (separate from short-term arrows)
+    // Only show for emissions and hybrid views (ML tracks emission rankings)
     let rank7dHtml = '';
-    const rankDelta7d = item.trend?.rank_delta_7d;
-    if (rankDelta7d !== undefined && rankDelta7d !== 0) {
-      const sign = rankDelta7d > 0 ? '+' : '';
-      const colorClass = rankDelta7d > 0 ? 'rank-7d-up' : 'rank-7d-down';
-      rank7dHtml = `<div class="rank-7d ${colorClass}">7d: ${sign}${rankDelta7d}</div>`;
+    if (currentView !== 'mcap') {
+      const rankDelta7d = item.trend?.rank_delta_7d;
+      if (rankDelta7d !== undefined && rankDelta7d !== 0) {
+        const sign = rankDelta7d > 0 ? '+' : '';
+        const colorClass = rankDelta7d > 0 ? 'rank-7d-up' : 'rank-7d-down';
+        rank7dHtml = `<div class="rank-7d ${colorClass}">7d: ${sign}${rankDelta7d}</div>`;
+      }
     }
 
     // Third column: Share (%) or Probability (%) depending on view
@@ -255,12 +258,16 @@ function renderTable(displayList) {
     const isZeroEmission = currentView === 'mcap' && parseFloat(item.daily) === 0;
 
     // Momentum indicator for strong movers (2+ rank change in 7d)
+    // Only show for emissions and hybrid views (ML is based on emission rankings)
+    // Market Cap view uses different ranking - momentum doesn't apply
     const momentum = item.trend?.rank_momentum;
     let momentumClass = '';
-    if (momentum === 'strong_positive') {
-      momentumClass = 'momentum-up';
-    } else if (momentum === 'strong_negative') {
-      momentumClass = 'momentum-down';
+    if (currentView !== 'mcap') {
+      if (momentum === 'strong_positive') {
+        momentumClass = 'momentum-up';
+      } else if (momentum === 'strong_negative') {
+        momentumClass = 'momentum-down';
+      }
     }
 
     // Build row classes
