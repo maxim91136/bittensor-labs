@@ -45,7 +45,8 @@ const prospectTitles = {
 
 // Watch list titles - for high-liquidity subnets without historical rank data
 const watchListTitles = {
-  1: { title: `${eyeIcon} WATCH LIST`, class: 'prospect-watch' }
+  1: { title: `${eyeIcon} TOP PROSPECT`, class: 'prospect-watch' },
+  2: { title: `${fireIcon} STRONG TALENTS`, class: 'prospect-hot' }
 };
 
 /**
