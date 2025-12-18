@@ -4046,6 +4046,26 @@ body.light-bg .price-chart-footer {
   100% { left: 100%; opacity: 0; }
 }
 
+/* Mobile: smaller badge, no sweep animation (performance) */
+@media (max-width: 768px) {
+  .momentum-badge {
+    width: 6px;
+    height: 6px;
+    margin-right: 4px;
+  }
+
+  .subnets-display-table .momentum-up,
+  .subnets-display-table .momentum-down {
+    border-left-width: 2px;
+  }
+
+  .subnets-display-table .momentum-up::after,
+  .subnets-display-table .momentum-down::after {
+    animation: none;
+    display: none;
+  }
+}
+
 .subnets-display-table .emission-warning {
   font-size: 0.85em;
   margin-left: 4px;
