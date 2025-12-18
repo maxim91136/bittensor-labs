@@ -206,7 +206,7 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
       <div class="pro-overlay">
         <span class="pro-badge">PRO</span>
         <span class="pro-text">Unlock full talent scouting</span>
-        <span class="pro-hint">[jk, just click → this is open source]</span>
+        <span class="pro-joke">[jk, just click → this is open source]</span>
       </div>
     </td>
   </tr>`;

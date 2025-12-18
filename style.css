@@ -3710,9 +3710,10 @@ body.light-bg .price-chart-footer {
 }
 
 .pro-joke {
-  font-size: 0.65rem;
-  color: rgba(168, 85, 247, 0.6);
-  font-weight: 400;
+  font-size: 0.75rem;
+  color: rgba(168, 85, 247, 0.85);
+  font-weight: 500;
+  font-style: italic;
 }
 
 /* Mobile: compact pro overlay */
