@@ -172,11 +172,15 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     const mcapDisplay = formatCompact(item.marketCapTao);
     const mcapUsd = taoPrice ? formatUsd(item.marketCapTao * taoPrice) : '';
 
+    // Blur rows 2+ (teaser mode)
+    const isBlurred = listRank > 1;
+
     // Add title row before certain positions
     let titleRow = '';
     if (prospectTitles[listRank]) {
       const prospect = prospectTitles[listRank];
-      titleRow = `<tr class="prospect-title-row ${prospect.class}">
+      const titleBlurClass = isBlurred ? ' blurred-row' : '';
+      titleRow = `<tr class="prospect-title-row ${prospect.class}${titleBlurClass}">
         <td colspan="6">${prospect.title}</td>
       </tr>`;
     }
@@ -184,7 +188,9 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     // Momentum display with rank improvement (deep underdogs get highlight)
     const momentumDisplay = `<span class="momentum-badge${item.isDeepUnderdog ? ' deep-underdog' : ''}">+${item.rank7dDelta}</span>`;
 
-    return `${titleRow}<tr class="newcomer-row${item.isDeepUnderdog ? ' deep-underdog-row' : ''}">
+    const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
+
+    return `${titleRow}<tr class="${rowClass}${item.isDeepUnderdog ? ' deep-underdog-row' : ''}">
       <td class="rank-col">${item.rank}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
       <td class="share-col">${item.share}%</td>
@@ -194,7 +200,22 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     </tr>`;
   }).join('');
 
-  displayList.innerHTML = rows;
+  // Add PRO overlay after first row
+  const proOverlay = `<tr class="pro-overlay-row">
+    <td colspan="6">
+      <div class="pro-overlay">
+        <span class="pro-badge">PRO</span>
+        <span class="pro-text">Unlock full talent scouting</span>
+        <span class="pro-hint">[jk, just click → this is open source]</span>
+      </div>
+    </td>
+  </tr>`;
+
+  // Insert PRO overlay after first data row
+  const firstRowEnd = rows.indexOf('</tr>') + 5;
+  const withOverlay = rows.slice(0, firstRowEnd) + proOverlay + rows.slice(firstRowEnd);
+
+  displayList.innerHTML = withOverlay;
 }
 
 /**

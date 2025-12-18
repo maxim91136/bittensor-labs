@@ -4517,6 +4517,20 @@ body.light-bg .price-chart-footer {
   display: inline-block;
 }
 
+/* Newcomers blur teaser */
+.newcomers-display-table .blurred-row {
+  filter: blur(4px);
+  opacity: 0.4;
+  user-select: none;
+  pointer-events: none;
+}
+
+.newcomers-display-table .pro-overlay-row td {
+  padding: 0;
+  border: none;
+  background: transparent;
+}
+
 /* Light mode */
 .newcomers-card.light-bg .newcomers-table-wrapper {
   background: rgba(0, 0, 0, 0.02);
