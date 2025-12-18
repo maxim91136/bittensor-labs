@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.33.23` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.33.24` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🏆 **RC33.16 - Subnet Champions Prediction Model**:
 > - **NEW: Subnet Champions Card** with 3 toggle views: Emissions, Market Cap, Hybrid (ML predictions)
@@ -280,6 +280,16 @@ When collecting historical data (first 7 days), shows top candidates by liquidit
 
 **Deep Underdog Bonus**:
 Subnets ranked #30+ get a 1.5x multiplier in the sorting algorithm - rewarding truly unexpected risers from the bottom of the pack.
+
+**Fallen Giants Detection** (RC33.24+):
+Identifies former Top 10 subnets that have fallen from grace:
+- Scans ALL historical data (not just 7 days) to find peak rank
+- 👑 Badge marks subnets that were once in Top 10
+- Shows total fall from peak (e.g., ↓70 = fell 70 ranks from peak)
+- Fallen Giants go to "Fallen Angels" section regardless of recent momentum
+- Prevents misclassifying a +2 recovery as a "prospect" when the subnet actually fell 70 ranks total
+
+**Example**: Gradients (SN56) was rank #10 on Dec 3, fell to rank #80 by Dec 15. Even though it recovered +2 in the last 7 days, it's correctly shown as a Fallen Giant with ↓70 total fall, not as a "Top Prospect."
 
 ### 🌗 Dark/Light Mode
 - Auto-detects system preference

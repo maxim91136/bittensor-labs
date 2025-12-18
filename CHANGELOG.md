@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.24 (2025-12-18)
+### Added
+- **Fallen Giants Detection**: Identifies former Top 10 subnets that have fallen
+  - Scans ALL historical data (not just 7 days) to find peak rank
+  - 👑 Badge marks subnets that were once in Top 10
+  - Shows total fall from peak (e.g., ↓70 = fell 70 ranks)
+  - Fallen Giants go to "Fallen Angels" regardless of recent momentum
+  - Prevents misclassifying recoveries as prospects (e.g., +2 when actually -70 total)
+### Changed
+- **Prediction Model**: Now considers ALL 129 subnets for probability calculation
+  - More accurate distribution of probabilities across full subnet set
+  - Individual probabilities lower but more representative
+
 ## v1.0.0-rc.33.23 (2025-12-18)
 ### Changed
 - **README**: Updated Subnet Champions with boxing-style presentation
