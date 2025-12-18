@@ -4059,6 +4059,56 @@ body.light-bg .price-chart-footer {
   opacity: 0.7;
 }
 
+/* Champion Title Rows - Boxing Style */
+.subnets-display-table .champion-title-row {
+  background: transparent;
+  border: none;
+}
+
+.subnets-display-table .champion-title-row td {
+  padding: 8px 12px 4px 12px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border: none;
+  background: transparent;
+}
+
+.subnets-display-table .champion-title-row:hover {
+  background: transparent;
+}
+
+/* P4P Champion - Gold */
+.subnets-display-table .champion-p4p td {
+  color: #D4AF37;
+  text-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+}
+
+/* WBA Champion - Red/Gold */
+.subnets-display-table .champion-wba td {
+  color: #dc2626;
+  text-shadow: 0 0 8px rgba(220, 38, 38, 0.3);
+}
+
+/* WBC Champion - Green */
+.subnets-display-table .champion-wbc td {
+  color: #22c55e;
+  text-shadow: 0 0 8px rgba(34, 197, 94, 0.3);
+}
+
+/* IBF Champion - Blue */
+.subnets-display-table .champion-ibf td {
+  color: #3b82f6;
+  text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+}
+
+/* IBO Champion - Purple */
+.subnets-display-table .champion-ibo td {
+  color: #a855f7;
+  text-shadow: 0 0 8px rgba(168, 85, 247, 0.3);
+}
+
 /* Gold highlight for first-place subnet */
 .subnets-display-table tbody tr:first-child {
   background: transparent;
@@ -4158,6 +4208,31 @@ body.light-bg .price-chart-footer {
 
 .top-subnets-card.light-bg .subnets-display-table .loading-row td {
   color: #888;
+}
+
+/* Light mode champion titles */
+.top-subnets-card.light-bg .subnets-display-table .champion-title-row td {
+  text-shadow: none;
+}
+
+.top-subnets-card.light-bg .subnets-display-table .champion-p4p td {
+  color: #B8860B;
+}
+
+.top-subnets-card.light-bg .subnets-display-table .champion-wba td {
+  color: #b91c1c;
+}
+
+.top-subnets-card.light-bg .subnets-display-table .champion-wbc td {
+  color: #15803d;
+}
+
+.top-subnets-card.light-bg .subnets-display-table .champion-ibf td {
+  color: #1d4ed8;
+}
+
+.top-subnets-card.light-bg .subnets-display-table .champion-ibo td {
+  color: #7c3aed;
 }
 
 /* ===== Responsive Styles for Subnets Table (7 columns) ===== */

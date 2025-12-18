@@ -244,6 +244,17 @@ function updateTableHeader() {
 }
 
 /**
+ * Champion titles for top 4 subnets (Boxing style)
+ */
+const championTitles = {
+  1: { title: '🏆 RING MAGAZINE P4P CHAMPION', class: 'champion-p4p' },
+  2: { title: '🥊 WBA WORLD CHAMPION', class: 'champion-wba' },
+  3: { title: '🥊 WBC WORLD CHAMPION', class: 'champion-wbc' },
+  4: { title: '🥊 IBF WORLD CHAMPION', class: 'champion-ibf' },
+  5: { title: '🥊 IBO WORLD CHAMPION', class: 'champion-ibo' }
+};
+
+/**
  * Render the table rows
  */
 function renderTable(displayList) {
@@ -262,6 +273,14 @@ function renderTable(displayList) {
   const taoPrice = cachedData.taoPrice || 0;
 
   const rows = data.map(item => {
+    // Champion title row for top 5
+    let championRow = '';
+    if (item.rank <= 5 && championTitles[item.rank]) {
+      const champ = championTitles[item.rank];
+      championRow = `<tr class="champion-title-row ${champ.class}">
+        <td colspan="7">${champ.title}</td>
+      </tr>`;
+    }
     const alphaPrice = item.alpha.alpha_price ? item.alpha.alpha_price.toFixed(4) : '-';
     const taoInPool = formatCompact(item.alpha.tao_in_pool);
     const marketCapTao = item.alpha.market_cap_tao || 0;
@@ -338,7 +357,7 @@ function renderTable(displayList) {
     // Warning indicator for zero emission subnets
     const emissionWarning = isZeroEmission ? ' <span class="emission-warning" title="No emissions - speculative value">⚠️</span>' : '';
 
-    return `<tr class="${rowClass}">
+    return `${championRow}<tr class="${rowClass}">
       <td class="rank-col">${item.rank}${changeHtml}${rank7dHtml}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}${emissionWarning}</td>
       <td class="${thirdColClass}">${thirdColValue}</td>
