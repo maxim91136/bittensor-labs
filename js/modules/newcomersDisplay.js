@@ -99,12 +99,7 @@ function identifyNewcomers(topSubnets, alphaPrices, history) {
     return rank >= NEWCOMER_CRITERIA.minRank && rank7dChangeMap[netuid] !== undefined;
   });
 
-  // If no extended history yet, return collecting data state (Truth)
-  if (!hasExtendedHistory) {
-    return { newcomers: [], isCollectingData: true };
-  }
-
-  // Check all subnets - look for rising underdogs (rank 11+)
+  // Collect all eligible subnets (underdogs with liquidity)
   topSubnets.forEach((subnet, idx) => {
     const currentRank = idx + 1;
     const emissionShare = subnet.taostats_emission_share || 0;
@@ -112,53 +107,50 @@ function identifyNewcomers(topSubnets, alphaPrices, history) {
     const rank7dDelta = rank7dChangeMap[subnet.netuid];
     const poolLiquidity = alpha.tao_in_pool || 0;
 
-    // Check newcomer criteria: underdogs (outside top 10) who are rising
+    // Check basic criteria: underdogs (outside top 10) with liquidity
     const isUnderdog = currentRank >= NEWCOMER_CRITERIA.minRank;
     const hasLiquidity = poolLiquidity >= NEWCOMER_CRITERIA.minPoolLiquidity;
     const hasRankData = rank7dDelta !== undefined;
     const isRising = hasRankData && rank7dDelta >= NEWCOMER_CRITERIA.minRankImprovement;
 
-    if (isUnderdog && hasLiquidity && isRising) {
+    // When collecting data: show watch list (by liquidity)
+    // When data available: show only rising talents
+    if (isUnderdog && hasLiquidity && (isRising || !hasExtendedHistory)) {
       newcomers.push({
         rank: currentRank,
         netuid: subnet.netuid,
         name: subnet.subnet_name || subnet.taostats_name || `SN${subnet.netuid}`,
         share: (emissionShare * 100).toFixed(2),
-        rank7dDelta: rank7dDelta,
+        rank7dDelta: hasRankData ? rank7dDelta : null,  // null = no data yet
         poolLiquidity: poolLiquidity,
         marketCapTao: alpha.market_cap_tao || 0,
         alpha: alpha,
-        isDeepUnderdog: currentRank >= 30  // Flag for deep underdogs (Katniss-style)
+        isDeepUnderdog: currentRank >= 30
       });
     }
   });
 
-  // Hybrid sorting: Prioritize deep underdogs with big moves
-  // A +10 move from rank 60 is more impressive than +10 from rank 15
-  newcomers.sort((a, b) => {
-    const aScore = a.rank7dDelta * (a.isDeepUnderdog ? 1.5 : 1);
-    const bScore = b.rank7dDelta * (b.isDeepUnderdog ? 1.5 : 1);
-    return bScore - aScore;
-  });
+  // Sort: if we have momentum data, sort by momentum; otherwise by liquidity
+  if (hasExtendedHistory) {
+    // Hybrid sorting: Prioritize deep underdogs with big moves
+    newcomers.sort((a, b) => {
+      const aScore = (a.rank7dDelta || 0) * (a.isDeepUnderdog ? 1.5 : 1);
+      const bScore = (b.rank7dDelta || 0) * (b.isDeepUnderdog ? 1.5 : 1);
+      return bScore - aScore;
+    });
+  } else {
+    // Sort by liquidity when no momentum data
+    newcomers.sort((a, b) => b.poolLiquidity - a.poolLiquidity);
+  }
 
-  return { newcomers: newcomers.slice(0, 5), isCollectingData: false };
+  return { newcomers: newcomers.slice(0, 5), isCollectingData: !hasExtendedHistory };
 }
 
 /**
  * Render newcomers table with ranking titles
- * Shows confirmed rising talents or collecting data message
+ * Shows watch list or confirmed rising talents with PRO blur teaser
  */
 function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = false) {
-  // Show collecting data message if no extended history yet (Truth)
-  if (isCollectingData) {
-    displayList.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:30px;color:#888;">
-      ${hourglassIcon}
-      <div style="margin-top:10px;font-size:1.1em;">Collecting momentum data...</div>
-      <div style="margin-top:5px;font-size:0.85em;opacity:0.7;">Rising talents will appear once we have 7d rank history</div>
-    </td></tr>`;
-    return;
-  }
-
   if (newcomers.length === 0) {
     displayList.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;color:#666;">
       ${starIcon} No rising talents found matching criteria
@@ -198,8 +190,10 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
       </tr>`;
     }
 
-    // Momentum display
-    const momentumDisplay = `<span class="momentum-badge${item.isDeepUnderdog ? ' deep-underdog' : ''}">+${item.rank7dDelta}</span>`;
+    // Momentum display - show "..." if no data yet
+    const momentumDisplay = item.rank7dDelta !== null
+      ? `<span class="momentum-badge${item.isDeepUnderdog ? ' deep-underdog' : ''}">+${item.rank7dDelta}</span>`
+      : `<span class="momentum-tbd">...</span>`;
     const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
 
     html += `<tr class="${rowClass}${item.isDeepUnderdog ? ' deep-underdog-row' : ''}">
