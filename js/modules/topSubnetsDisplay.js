@@ -30,7 +30,8 @@ let cachedData = {
   predictions: [],
   history: [],
   mcapHistory: [],
-  taoPrice: null
+  taoPrice: null,
+  lastUpdated: null
 };
 
 /**
@@ -50,6 +51,7 @@ async function fetchAllData() {
   if (currentRes.ok) {
     const data = await currentRes.json();
     cachedData.topSubnets = data.top_subnets || [];
+    cachedData.lastUpdated = data.last_updated || null;
   }
 
   // Alpha prices (market cap)
@@ -410,11 +412,11 @@ export async function loadTopSubnetsDisplay(displayList) {
     await fetchAllData();
     renderTable(displayList);
 
-    // Update timestamp
+    // Update timestamp from API data
     const updateEl = document.getElementById('subnetsUpdate');
-    if (updateEl) {
-      const now = new Date();
-      updateEl.textContent = `Updated: ${now.toLocaleString()}`;
+    if (updateEl && cachedData.lastUpdated) {
+      const date = new Date(cachedData.lastUpdated);
+      updateEl.textContent = `Updated: ${date.toLocaleString()}`;
     }
   } catch (err) {
     console.error('Error loading top subnets for display:', err);

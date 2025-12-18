@@ -80,11 +80,11 @@ export async function loadTopValidatorsDisplay(displayList) {
 
     displayList.innerHTML = rows;
 
-    // Update timestamp
+    // Update timestamp from API data
     const updateEl = document.getElementById('validatorsUpdate');
-    if (updateEl) {
-      const now = new Date();
-      updateEl.textContent = `Updated: ${now.toLocaleString()}`;
+    if (updateEl && data.last_updated) {
+      const date = new Date(data.last_updated);
+      updateEl.textContent = `Updated: ${date.toLocaleString()}`;
     }
   } catch (err) {
     console.error('Error loading top validators:', err);

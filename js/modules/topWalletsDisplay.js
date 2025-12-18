@@ -86,11 +86,11 @@ export async function loadTopWalletsDisplay(displayList) {
 
     displayList.innerHTML = rows;
 
-    // Update timestamp
+    // Update timestamp from API data
     const updateEl = document.getElementById('walletsUpdate');
-    if (updateEl) {
-      const now = new Date();
-      updateEl.textContent = `Updated: ${now.toLocaleString()}`;
+    if (updateEl && data.last_updated) {
+      const date = new Date(data.last_updated);
+      updateEl.textContent = `Updated: ${date.toLocaleString()}`;
     }
   } catch (err) {
     console.error('Error loading top wallets:', err);
@@ -445,11 +445,11 @@ export async function loadExperimentalDecentralization() {
     setEl('expOwnershipGini', edsComponents.gini !== null ? edsComponents.gini.toFixed(3) : '—');
     setEl('expStakeSpread', edsComponents.stakeSpread !== null ? edsComponents.stakeSpread.toFixed(1) + '%' : '—');
 
-    // Update timestamp
+    // Update timestamp from API data
     const updateEl = document.getElementById('expDecentralizationUpdate');
-    if (updateEl) {
-      const now = new Date();
-      updateEl.textContent = `Updated: ${now.toLocaleString()}`;
+    if (updateEl && decData.last_updated) {
+      const date = new Date(decData.last_updated);
+      updateEl.textContent = `Updated: ${date.toLocaleString()}`;
     }
 
   } catch (err) {
