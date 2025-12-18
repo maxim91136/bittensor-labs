@@ -5878,6 +5878,7 @@ body.light-bg .score-bar-container {
   font-size: 0.65rem;
   font-weight: 600;
   padding: 0.2rem 0.5rem;
+  margin-left: 0.75rem;
   background: rgba(251, 191, 36, 0.2);
   color: #fbbf24;
   border: 1px solid rgba(251, 191, 36, 0.4);
