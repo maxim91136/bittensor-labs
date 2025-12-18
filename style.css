@@ -3987,66 +3987,31 @@ body.light-bg .price-chart-footer {
   50% { box-shadow: 0 0 10px #dc2626, 0 0 20px rgba(220, 38, 38, 0.5); }
 }
 
-/* Row glow - golden sweep for rising */
+/* Row highlight for rising - golden gradient + border */
 .subnets-display-table .momentum-up {
-  position: relative;
   background: linear-gradient(90deg,
-    rgba(247, 147, 26, 0.1) 0%,
-    rgba(255, 215, 0, 0.05) 40%,
-    transparent 70%) !important;
+    rgba(247, 147, 26, 0.12) 0%,
+    rgba(255, 215, 0, 0.06) 30%,
+    transparent 60%) !important;
+}
+
+.subnets-display-table .momentum-up td:first-child {
   border-left: 3px solid #f7931a;
-  overflow: hidden;
 }
 
-.subnets-display-table .momentum-up::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(255, 215, 0, 0.12) 50%,
-    transparent 100%);
-  animation: sweep-right 4s ease-in-out infinite;
-  pointer-events: none;
-}
-
-/* Row glow - red sweep for falling */
+/* Row highlight for falling - red gradient + border */
 .subnets-display-table .momentum-down {
-  position: relative;
   background: linear-gradient(90deg,
-    rgba(239, 68, 68, 0.1) 0%,
-    rgba(248, 113, 113, 0.05) 40%,
-    transparent 70%) !important;
+    rgba(239, 68, 68, 0.12) 0%,
+    rgba(248, 113, 113, 0.06) 30%,
+    transparent 60%) !important;
+}
+
+.subnets-display-table .momentum-down td:first-child {
   border-left: 3px solid #ef4444;
-  overflow: hidden;
 }
 
-.subnets-display-table .momentum-down::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg,
-    transparent 0%,
-    rgba(248, 113, 113, 0.12) 50%,
-    transparent 100%);
-  animation: sweep-right 4s ease-in-out infinite;
-  pointer-events: none;
-}
-
-@keyframes sweep-right {
-  0% { left: -100%; opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { left: 100%; opacity: 0; }
-}
-
-/* Mobile: smaller badge, no sweep animation (performance) */
+/* Mobile: smaller badge, thinner border */
 @media (max-width: 768px) {
   .momentum-badge {
     width: 6px;
@@ -4054,15 +4019,9 @@ body.light-bg .price-chart-footer {
     margin-right: 4px;
   }
 
-  .subnets-display-table .momentum-up,
-  .subnets-display-table .momentum-down {
+  .subnets-display-table .momentum-up td:first-child,
+  .subnets-display-table .momentum-down td:first-child {
     border-left-width: 2px;
-  }
-
-  .subnets-display-table .momentum-up::after,
-  .subnets-display-table .momentum-down::after {
-    animation: none;
-    display: none;
   }
 }
 

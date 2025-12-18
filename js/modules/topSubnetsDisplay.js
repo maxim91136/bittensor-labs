@@ -245,16 +245,16 @@ function renderTable(displayList) {
     // Alert: Zero emissions in Market Cap view = potential overvaluation
     const isZeroEmission = currentView === 'mcap' && parseFloat(item.daily) === 0;
 
-    // Momentum indicator for strong movers (3+ rank change in 7d)
+    // Momentum indicator for strong movers (2+ rank change in 7d)
     const momentum = item.trend?.rank_momentum;
     let momentumClass = '';
     let momentumBadge = '';
     if (momentum === 'strong_positive') {
       momentumClass = 'momentum-up';
-      momentumBadge = '<span class="momentum-badge fire" title="Hot: +3 ranks in 7 days"></span>';
+      momentumBadge = '<span class="momentum-badge fire" title="Rising: +2 ranks in 7 days"></span>';
     } else if (momentum === 'strong_negative') {
       momentumClass = 'momentum-down';
-      momentumBadge = '<span class="momentum-badge cold" title="Dropping: -3 ranks in 7 days"></span>';
+      momentumBadge = '<span class="momentum-badge cold" title="Falling: -2 ranks in 7 days"></span>';
     }
 
     // Build row classes
