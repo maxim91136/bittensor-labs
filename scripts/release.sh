@@ -1,5 +1,6 @@
 #!/bin/bash
 # Release script - reads VERSION and updates README, creates tag + release
+# Strict mode: fails on missing dependencies
 
 set -e
 
@@ -8,17 +9,56 @@ TAG="v$VERSION"
 TODAY=$(date +%Y-%m-%d)
 
 echo "📦 Releasing $TAG..."
+echo ""
 
-# Check if CHANGELOG has entry for this version
-if ! grep -q "## $TAG" CHANGELOG.md; then
-  echo "⚠ WARNING: CHANGELOG.md has no entry for $TAG"
-  echo "  Please add changelog entry before releasing!"
-  read -p "  Continue anyway? (y/N) " -n 1 -r
-  echo
-  if [[ ! $REPLY =~ ^[Yy]$ ]]; then
-    exit 1
-  fi
+# ===== DEPENDENCY CHECKS =====
+ERRORS=0
+
+# Check 1: gh CLI available
+if ! command -v gh &> /dev/null; then
+  echo "❌ MISSING: gh CLI not installed (brew install gh)"
+  ERRORS=$((ERRORS + 1))
 fi
+
+# Check 2: CHANGELOG entry exists
+if ! grep -q "## $TAG" CHANGELOG.md; then
+  echo "❌ MISSING: CHANGELOG.md has no entry for $TAG"
+  echo "   Add: ## $TAG ($(date +%Y-%m-%d))"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# Check 3: Tag doesn't already exist
+if git rev-parse "$TAG" >/dev/null 2>&1; then
+  echo "❌ CONFLICT: Tag $TAG already exists"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# Check 4: On main branch
+CURRENT_BRANCH=$(git branch --show-current)
+if [ "$CURRENT_BRANCH" != "main" ]; then
+  echo "❌ WRONG BRANCH: On '$CURRENT_BRANCH', should be 'main'"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# Check 5: No uncommitted changes (except VERSION/README/CHANGELOG)
+DIRTY_FILES=$(git status --porcelain | grep -v "VERSION\|README.md\|CHANGELOG.md" | wc -l | tr -d ' ')
+if [ "$DIRTY_FILES" != "0" ]; then
+  echo "❌ DIRTY: Uncommitted changes detected"
+  git status --porcelain | grep -v "VERSION\|README.md\|CHANGELOG.md"
+  ERRORS=$((ERRORS + 1))
+fi
+
+# Abort if any errors
+if [ "$ERRORS" -gt 0 ]; then
+  echo ""
+  echo "🛑 Release aborted: $ERRORS error(s) found"
+  exit 1
+fi
+
+echo "✓ All dependency checks passed"
+echo ""
+
+# ===== RELEASE PROCESS =====
 
 # Update README with version from VERSION file
 sed -i '' "s/\*\*Latest release:\*\* \`v[^\`]*\`/**Latest release:** \`$TAG\`/" README.md
@@ -47,22 +87,19 @@ fi
 git push
 
 # Create and push tag
-if git rev-parse "$TAG" >/dev/null 2>&1; then
-  echo "⚠ Tag $TAG already exists"
-else
-  git tag "$TAG"
-  git push origin "$TAG"
-  echo "✓ Tag $TAG created"
-fi
+git tag "$TAG"
+git push origin "$TAG"
+echo "✓ Tag $TAG created"
 
 # Get commits since last tag for release notes
 PREV_TAG=$(git tag --sort=-version:refname | grep -v "^$TAG$" | head -1)
 COMMITS=$(git log "$PREV_TAG".."$TAG" --oneline 2>/dev/null || git log --oneline -10)
 
-# Create GitHub release (not pre-release, mark as latest)
+# Create GitHub release
 gh release create "$TAG" --title "$TAG" --latest --notes "## Changes in $TAG
 
 $COMMITS
-" 2>/dev/null || echo "⚠ Release already exists or gh not available"
+"
 
+echo ""
 echo "✅ Released $TAG"
