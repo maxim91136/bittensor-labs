@@ -28,6 +28,9 @@ const NEWCOMER_CRITERIA = {
   minPoolLiquidity: 5000     // > 5K TAO in pool (real traction)
 };
 
+// PRO unlock state
+let proUnlocked = false;
+
 // Icons for newcomers
 const starIcon = `<svg class="newcomer-star-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>`;
 const fireIcon = `<svg class="newcomer-fire-icon" viewBox="0 0 24 24" fill="currentColor"><path d="M12 23c-4.97 0-9-3.58-9-8 0-2.52 1.17-5.06 3-7.5 1.09-1.45 2.41-2.74 3.8-3.8.36-.27.84-.22 1.14.12.3.34.32.84.05 1.21-.84 1.14-1.4 2.43-1.67 3.47 1.1-.91 2.5-1.5 4.18-1.5 4.14 0 7.5 3.58 7.5 8s-3.58 8-8 8z"/></svg>`;
@@ -158,10 +161,10 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     return;
   }
 
-  // PRO overlay HTML
-  const proOverlay = `<tr class="pro-overlay-row">
+  // PRO overlay HTML (only show if not unlocked)
+  const proOverlay = proUnlocked ? '' : `<tr class="pro-overlay-row">
     <td colspan="6">
-      <div class="pro-overlay">
+      <div class="pro-overlay" id="newcomersProOverlayBtn" style="cursor:pointer;">
         <span class="pro-badge">PRO</span>
         <span class="pro-text">Unlock full talent scouting</span>
         <span class="pro-joke">[jk, just click → this is open source]</span>
@@ -178,8 +181,8 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
     const mcapDisplay = formatCompact(item.marketCapTao);
     const mcapUsd = taoPrice ? formatUsd(item.marketCapTao * taoPrice) : '';
 
-    // Blur rows 2+ (teaser mode)
-    const isBlurred = listRank > 1;
+    // Blur rows 2+ (teaser mode) unless unlocked
+    const isBlurred = listRank > 1 && !proUnlocked;
 
     // Add title row before certain positions
     if (prospectTitles[listRank]) {
@@ -212,6 +215,15 @@ function renderNewcomers(displayList, newcomers, taoPrice, isCollectingData = fa
   });
 
   displayList.innerHTML = html;
+
+  // Add click handler for PRO unlock
+  const proBtn = document.getElementById('newcomersProOverlayBtn');
+  if (proBtn) {
+    proBtn.addEventListener('click', () => {
+      proUnlocked = true;
+      renderNewcomers(displayList, newcomers, taoPrice, isCollectingData);
+    });
+  }
 }
 
 /**
