@@ -385,9 +385,10 @@ function renderTable(displayList) {
         </div>
       </td>
     </tr>`;
-    // Insert after 3rd row
+    // Insert after 3rd data row (accounting for title rows)
+    // Ranks 1-3 each have title + data = 6 </tr> tags total
     const rowsArray = rows.split('</tr>');
-    rowsArray.splice(3, 0, '</tr>' + proOverlay);
+    rowsArray.splice(6, 0, '</tr>' + proOverlay);
     displayList.innerHTML = rowsArray.join('</tr>');
 
     // Add click handler to unlock
