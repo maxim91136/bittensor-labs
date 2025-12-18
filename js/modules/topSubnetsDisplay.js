@@ -100,6 +100,12 @@ function buildPrevRankMap() {
 function getSortedData() {
   const alphaPrices = cachedData.alphaPrices;
 
+  // Build predictions lookup for momentum data
+  const predictionsMap = {};
+  cachedData.predictions.forEach(p => {
+    predictionsMap[p.netuid] = p;
+  });
+
   if (currentView === 'emissions') {
     // Use top_subnets data (already sorted by emission)
     return cachedData.topSubnets.slice(0, 10).map((subnet, idx) => ({
@@ -108,7 +114,8 @@ function getSortedData() {
       name: subnet.subnet_name || subnet.taostats_name || `SN${subnet.netuid}`,
       share: ((subnet.taostats_emission_share || 0) * 100).toFixed(2),
       daily: (subnet.estimated_emission_daily || 0).toFixed(2),
-      alpha: alphaPrices[subnet.netuid] || {}
+      alpha: alphaPrices[subnet.netuid] || {},
+      trend: predictionsMap[subnet.netuid]?.trend_indicators
     }));
   }
 
@@ -139,7 +146,8 @@ function getSortedData() {
         name: alpha.name || fallback.subnet_name || `SN${alpha.netuid}`,
         share: (emissionShare * 100).toFixed(2),
         daily: emissionDaily.toFixed(2),
-        alpha: alpha
+        alpha: alpha,
+        trend: predictionsMap[alpha.netuid]?.trend_indicators
       };
     });
   }
@@ -236,7 +244,15 @@ function renderTable(displayList) {
 
     // Alert: Zero emissions in Market Cap view = potential overvaluation
     const isZeroEmission = currentView === 'mcap' && parseFloat(item.daily) === 0;
-    const rowClass = isBlurred ? 'blurred-row' : (isZeroEmission ? 'zero-emission-row' : '');
+
+    // Momentum glow for strong movers
+    const hasMomentum = item.trend?.rank_momentum === 'strong_positive';
+
+    // Build row classes
+    let rowClass = '';
+    if (isBlurred) rowClass = 'blurred-row';
+    else if (isZeroEmission) rowClass = 'zero-emission-row';
+    if (hasMomentum) rowClass += ' momentum-glow';
 
     // Warning indicator for zero emission subnets
     const emissionWarning = isZeroEmission ? ' <span class="emission-warning" title="No emissions - speculative value">⚠️</span>' : '';
