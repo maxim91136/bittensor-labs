@@ -43,10 +43,9 @@ const prospectTitles = {
   4: { title: `${chartIcon} PROSPECTS`, class: 'prospect-rising' }
 };
 
-// Watch list titles - for high-liquidity subnets without historical rank data
+// Watch list titles - neutral (no historical data to confirm direction)
 const watchListTitles = {
-  1: { title: `${starIcon} TOP PROSPECT`, class: 'prospect-top' },
-  2: { title: `${fireIcon} STRONG TALENTS`, class: 'prospect-hot' }
+  1: { title: `${eyeIcon} WATCH LIST`, class: 'prospect-watch' }
 };
 
 /**
@@ -157,8 +156,8 @@ function identifyNewcomers(topSubnets, alphaPrices, history) {
   // Sort newcomers by rank improvement (best momentum first)
   newcomers.sort((a, b) => b.rank7dDelta - a.rank7dDelta);
 
-  // Sort watchList by liquidity (highest first) as proxy for interest
-  watchList.sort((a, b) => b.poolLiquidity - a.poolLiquidity);
+  // Sort watchList by rank (closest to top 10 first) - more likely real prospects
+  watchList.sort((a, b) => a.rank - b.rank);
 
   // Use newcomers if available, otherwise fallback to watchList
   const result = newcomers.length > 0 ? newcomers : watchList;
