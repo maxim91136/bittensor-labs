@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.20 (2025-12-18)
+### Fixed
+- **Timestamp Display**: All leaderboard "Updated" timestamps now show date + time
+  - Uses `toLocaleString()` for automatic timezone/locale detection per user
+  - Affected: Top Subnets, Validators, Wallets, Distribution, Decentralization cards
+
 ## v1.0.0-rc.33.19 (2025-12-18)
 ### Changed
 - **Release Script**: Strict dependency checks - no more bypass prompts

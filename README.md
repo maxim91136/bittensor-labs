@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.33.19` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.33.20` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🏆 **RC33.16 - Subnet Champions Prediction Model**:
 > - **NEW: Subnet Champions Card** with 3 toggle views: Emissions, Market Cap, Hybrid (ML predictions)
