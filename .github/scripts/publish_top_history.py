@@ -191,25 +191,54 @@ def process_subnets(data: Dict) -> List[Dict]:
     """Extract normalized entries from top_subnets response."""
     entries = []
     subnets = data.get('top_subnets', [])
-    
+
     for i, s in enumerate(subnets[:10], 1):
         netuid = s.get('netuid', 0)
         name = s.get('taostats_name') or s.get('subnet_name') or f"SN{netuid}"
-        
+
         # Use estimated daily emission as the value
         emission = s.get('estimated_emission_daily', 0) or s.get('emission', 0)
         try:
             emission = float(emission)
         except:
             emission = 0.0
-        
+
         entries.append({
             'rank': i,
             'id': str(netuid),
             'name': name,
             'value': round(emission, 2)
         })
-    
+
+    return entries
+
+
+def process_mcap(data: Dict) -> List[Dict]:
+    """Extract normalized entries from alpha_prices response (sorted by market cap)."""
+    entries = []
+    subnets = data.get('subnets', [])
+
+    # Sort by market cap descending
+    sorted_subnets = sorted(subnets, key=lambda x: x.get('market_cap_tao', 0), reverse=True)
+
+    for i, s in enumerate(sorted_subnets[:10], 1):
+        netuid = s.get('netuid', 0)
+        name = s.get('name') or f"SN{netuid}"
+
+        # Use market cap in TAO as the value
+        mcap = s.get('market_cap_tao', 0)
+        try:
+            mcap = float(mcap)
+        except:
+            mcap = 0.0
+
+        entries.append({
+            'rank': i,
+            'id': str(netuid),
+            'name': name,
+            'value': round(mcap, 2)
+        })
+
     return entries
 
 
@@ -270,7 +299,8 @@ def main():
         '_generated_at': timestamp,
         'validators': None,
         'wallets': None,
-        'subnets': None
+        'subnets': None,
+        'mcap': None
     }
     
     # === Top Validators ===
@@ -357,16 +387,45 @@ def main():
     else:
         print("   ❌ Failed to fetch subnets")
         error_count += 1
-    
+
     print()
-    
+
+    # === Market Cap Rankings ===
+    print("💎 Fetching Market Cap Rankings...")
+    mcap_data = fetch_api('/api/alpha_prices')
+    if mcap_data:
+        entries = process_mcap(mcap_data)
+        if entries:
+            snapshot = {
+                '_timestamp': timestamp,
+                'entries': entries
+            }
+            all_snapshots['mcap'] = snapshot
+
+            print(f"   Found {len(entries)} subnets by MCap")
+            for e in entries[:3]:
+                print(f"   #{e['rank']} {e['name']}: {e['value']:,.0f} τ MCap")
+
+            if append_to_history('mcap_history', snapshot):
+                success_count += 1
+            else:
+                error_count += 1
+        else:
+            print("   ⚠️ No mcap entries extracted")
+            error_count += 1
+    else:
+        print("   ❌ Failed to fetch alpha_prices")
+        error_count += 1
+
+    print()
+
     # Write local backup
     write_local_backup('top_history_latest.json', all_snapshots)
-    
+
     # Summary
     print("=" * 60)
-    print(f"✅ Success: {success_count}/3")
-    print(f"❌ Errors: {error_count}/3")
+    print(f"✅ Success: {success_count}/4")
+    print(f"❌ Errors: {error_count}/4")
     print("=" * 60)
     
     if error_count > 0:
