@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.21 (2025-12-18)
+### Fixed
+- **Timestamp Display**: Now shows actual data update time from API, not page load time
+  - Uses `last_updated` from each API response
+  - Affected: Top Subnets, Validators, Wallets, Decentralization cards
+
 ## v1.0.0-rc.33.20 (2025-12-18)
 ### Fixed
 - **Timestamp Display**: All leaderboard "Updated" timestamps now show date + time
