@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.18 (2025-12-18)
+### Added
+- **MCap History Tracking**: Backend now tracks Market Cap rankings over time
+  - New `mcap_history` KV store with 7-day rolling window
+  - New `/api/mcap_history` endpoint for MCap ranking history
+  - Enables proper 7d change calculation for MCap view
+- **7-Day Rank Change per View**: Each view now shows its own 7d change
+  - Emissions/Hybrid: Uses ML predictions (emission ranking based)
+  - Market Cap: Uses MCap history (market cap ranking based)
+  - Unified momentum highlighting logic (±2 ranks = strong momentum)
+- **Experimental Badges**: Added to Subnet Champions and Market Conditions cards
+- **Detailed Tooltip**: Subnet Champions now explains all indicators
+  - Views (Emissions, MCap, Hybrid)
+  - Arrows (short-term ~1h), 7d change, momentum highlighting
+
+### Changed
+- **ML Predictions**: Now run hourly (was daily) for real-time momentum tracking
+
 ## v1.0.0-rc.33.17 (2025-12-17)
 ### Changed
 - **Unified Card Footer Layout**: Consistent "Last Update" display across all large cards
