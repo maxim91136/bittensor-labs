@@ -8,10 +8,10 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.33.24` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.33.30` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
-> 🏆 **RC33.16 - Subnet Champions Prediction Model**:
-> - **NEW: Subnet Champions Card** with 3 toggle views: Emissions, Market Cap, Hybrid (ML predictions)
+> 🏆 **RC33.16 - Subnet Champions League**:
+> - **Subnet Champions League Card** with 3 toggle views: Emissions, Market Cap, Hybrid (ML predictions)
 > - **ML Prediction Model**: Probability-based ranking for reaching #1 emission position
 > - **Zero-Emission Warning** ⚠️: Red alerts for high mcap + 0 revenue subnets (e.g., SN5 Hone: 67Kτ mcap, 0 emissions)
 > - **Data Architecture**: TOP_N expanded to 100 for full emission coverage
@@ -218,7 +218,7 @@ Track position changes across all Top 10 cards with visual indicators:
 - **Compact Display**: Rank + change indicator in single column (e.g., "1 ▲2")
 - **Supported Cards**: Subnets (netuid), Validators (hotkey), Wallets (address)
 
-### 🏆 Subnet Champions - Prediction Model (RC33.16+)
+### 🏆 Subnet Champions League (RC33.16+)
 ML-powered subnet ranking projection model with boxing-style presentation:
 
 **Boxing-Style Rankings**:

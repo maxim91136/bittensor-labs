@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.30 (2025-12-19)
+### Changed
+- **Subnet Champions League**: Renamed Top 10 card from "Subnet Champions" to "Subnet Champions League"
+- **Talent Scouting Tooltip**: Updated with trend arrows explanation and Champions League reference
+
 ## v1.0.0-rc.33.29 (2025-12-19)
 ### Added
 - **Emission Trend Arrows**: Shows direction alongside health zone
