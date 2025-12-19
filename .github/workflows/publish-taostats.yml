@@ -24,11 +24,28 @@ jobs:
           python -m pip install --upgrade pip
           pip install requests
 
-      - name: Fetch Taostats data
+      - name: Fetch Taostats data (with KV fallback)
         env:
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
         run: |
-          python .github/scripts/fetch_taostats.py
+          # Try Taostats first
+          python .github/scripts/fetch_taostats.py || TAOSTATS_FAILED=1
+
+          # If Taostats failed (rate limited, etc.), use cached KV data
+          if [ "$TAOSTATS_FAILED" = "1" ] || [ ! -f taostats_latest.json ]; then
+            echo "⚠️ Taostats API failed, retrieving cached data from KV..."
+            python .github/scripts/kv_fallback.py taostats_latest > taostats_latest.json || KV_FAILED=1
+
+            if [ "$KV_FAILED" = "1" ] || [ ! -s taostats_latest.json ]; then
+              echo "❌ Both Taostats and KV cache failed - no data available"
+              exit 1
+            fi
+
+            echo "✅ Using cached taostats data (may be stale but accurate)"
+          fi
 
       - name: Push Taostats data to Cloudflare KV
         env:
