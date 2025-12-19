@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.31 (2025-12-19)
+### Fixed
+- **KV Fallback**: Create `.github/data/` directory before writing fallback data
+  - Fixes "No such file or directory" error when Taostats API is down
+  - Ensures graceful degradation to cached KV data
+
 ## v1.0.0-rc.33.30 (2025-12-19)
 ### Changed
 - **Subnet Champions League**: Renamed Top 10 card from "Subnet Champions" to "Subnet Champions League"
