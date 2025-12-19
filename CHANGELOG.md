@@ -5,6 +5,13 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.32 (2025-12-19)
+### Fixed
+- **Talent Scouting Mobile Layout**: Fixed broken table layout on small screens
+  - 768px: Auto table layout, USD mcap hidden
+  - 600px: Pool column hidden, SN-ID stacked vertically
+  - 420px: Compact layout for very small screens
+
 ## v1.0.0-rc.33.31 (2025-12-19)
 ### Fixed
 - **KV Fallback**: Create `.github/data/` directory before writing fallback data
