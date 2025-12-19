@@ -36,6 +36,7 @@ jobs:
 
           # If Taostats failed (rate limited, etc.), use cached KV data
           if [ "$TAOSTATS_FAILED" = "1" ] || [ ! -f taostats_latest.json ]; then
+            echo "::warning::Taostats API failed - using KV cache fallback"
             echo "⚠️ Taostats API failed, retrieving cached data from KV..."
             python .github/scripts/kv_fallback.py taostats_latest > taostats_latest.json || KV_FAILED=1
 

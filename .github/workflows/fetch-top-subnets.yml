@@ -47,6 +47,7 @@ jobs:
 
           # If Taostats failed, use cached KV data (stale but accurate)
           if [ "$TAOSTATS_FAILED" = "1" ] || [ ! -f .github/data/top_subnets.json ]; then
+            echo "::warning::Taostats API failed - using KV cache fallback"
             echo "⚠️ Taostats failed, retrieving cached data from KV..."
             mkdir -p .github/data
             python .github/scripts/kv_fallback.py top_subnets > .github/data/top_subnets.json || KV_FAILED=1
