@@ -101,8 +101,10 @@ def fetch_top_subnets() -> Dict[str, object]:
         out: Dict[int, Dict] = {}
         last_error = ''
         # Prefer the documented API path per https://docs.taostats.io/reference/get-subnets-1
+        # NOTE: No params needed - defaults to finney, returns all 129 SNs
+        # The limit param was causing 500 errors (bug reported to Taostats by Doug)
         variants = [
-            f"https://api.taostats.io/api/subnet/latest/v1?network={network}&limit={limit}",
+            "https://api.taostats.io/api/subnet/latest/v1",
         ]
 
         # Basic retry/backoff
