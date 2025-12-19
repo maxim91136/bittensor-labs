@@ -259,6 +259,18 @@ Hunger Games-style talent discovery for subnets outside the Top 10:
 **The Katniss Principle**:
 Find the next breakout subnet before it hits the mainstream. Tracks subnets ranked #11+ that show strong momentum and real traction.
 
+**Emission Health Zones** (RC33.28+):
+Visual indicators showing subnet viability based on emission share:
+- 🟢 **Healthy** (≥1.0%) - Miners profitable, sustainable subnet
+- 🟡 **Rising** (0.5-1.0%) - Gaining momentum, approaching profitability
+- 🟠 **Struggling** (0.2-0.5%) - Needs growth, miner attrition risk
+- 🔴 **Critical** (<0.2%) - Death zone, miners leaving
+
+**Investment Strategy**:
+- Watch 🟠→🔴 transitions as EXIT signals
+- 🟢 subnets are Champion candidates
+- All Struggling subnets still have active miners (not dead yet)
+
 **Prospect Rankings**:
 - ⭐ **Top Prospect** (#1) - Highest momentum underdog
 - 🔥 **Hot Prospects** (#2-3) - Strong risers with liquidity

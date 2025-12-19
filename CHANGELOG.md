@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.28 (2025-12-19)
+### Added
+- **Emission Health Zones**: Visual indicators showing subnet viability
+  - 🟢 Healthy (≥1.0%) - Miners profitable, sustainable subnet
+  - 🟡 Rising (0.5-1.0%) - Gaining momentum, approaching profitability
+  - 🟠 Struggling (0.2-0.5%) - Needs growth, miner attrition risk
+  - 🔴 Critical (<0.2%) - Death zone, miners leaving
+- **Talent Scouting Tooltip**: Enhanced with emission health zone explanations
+- **README Documentation**: Added Emission Health Zones section with investment strategy
+
 ## v1.0.0-rc.33.24 (2025-12-18)
 ### Added
 - **Fallen Giants Detection**: Identifies former Top 10 subnets that have fallen
