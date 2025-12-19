@@ -21,6 +21,22 @@ function formatUsd(num) {
   return '$' + num.toFixed(0);
 }
 
+/**
+ * Get emission health zone based on share percentage
+ * Thresholds per Gemini analysis:
+ * - >= 1.0%: Healthy (miners profitable)
+ * - 0.5-1.0%: Rising (approaching milestone)
+ * - 0.2-0.5%: Struggling (miner attrition risk)
+ * - < 0.2%: Death zone (miners leaving)
+ */
+function getEmissionHealth(sharePct) {
+  const share = parseFloat(sharePct) || 0;
+  if (share >= 1.0) return { zone: 'healthy', icon: '🟢', label: 'Healthy', class: 'emission-healthy' };
+  if (share >= 0.5) return { zone: 'rising', icon: '🟡', label: 'Rising', class: 'emission-rising' };
+  if (share >= 0.2) return { zone: 'struggling', icon: '🟠', label: 'Struggling', class: 'emission-struggling' };
+  return { zone: 'critical', icon: '🔴', label: 'Critical', class: 'emission-critical' };
+}
+
 // Newcomer criteria thresholds - Katniss comes from outside Top 10
 const NEWCOMER_CRITERIA = {
   minRank: 11,               // Only subnets ranked 11+ (outside top 10)
@@ -160,11 +176,13 @@ function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
     const isFallenGiant = peakRank && peakRank <= 10 && currentRank >= 30;
 
     if (isUnderdog && hasLiquidity) {
+      const sharePct = (emissionShare * 100).toFixed(2);
       const entry = {
         rank: currentRank,
         netuid: subnet.netuid,
         name: subnet.subnet_name || subnet.taostats_name || `SN${subnet.netuid}`,
-        share: (emissionShare * 100).toFixed(2),
+        share: sharePct,
+        emissionHealth: getEmissionHealth(sharePct),
         rank7dDelta: hasRankData ? rank7dDelta : null,
         poolLiquidity: poolLiquidity,
         marketCapTao: alpha.market_cap_tao || 0,
@@ -282,10 +300,14 @@ function renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isColle
       : `<span class="momentum-tbd">...</span>`;
     const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
 
+    // Emission health indicator
+    const healthIcon = item.emissionHealth?.icon || '';
+    const healthClass = item.emissionHealth?.class || '';
+
     html += `<tr class="${rowClass}${item.isDeepUnderdog ? ' deep-underdog-row' : ''}">
       <td class="rank-col">${item.rank}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
-      <td class="share-col">${item.share}%</td>
+      <td class="share-col ${healthClass}"><span class="health-icon" title="${item.emissionHealth?.label || ''}">${healthIcon}</span>${item.share}%</td>
       <td class="momentum-col">${momentumDisplay}</td>
       <td class="pool-col">${poolDisplay}τ</td>
       <td class="mcap-col">${mcapDisplay}τ${mcapUsd ? ` <span class="mcap-usd">(${mcapUsd})</span>` : ''}</td>
@@ -322,10 +344,14 @@ function renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isColle
       const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
       const giantClass = item.isFallenGiant ? ' fallen-giant-row' : '';
 
+      // Emission health indicator
+      const healthIcon = item.emissionHealth?.icon || '';
+      const healthClass = item.emissionHealth?.class || '';
+
       html += `<tr class="${rowClass}${giantClass}">
         <td class="rank-col">${item.rank}</td>
         <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}${item.isFallenGiant ? ' <span class="giant-badge" title="Former Top 10">👑</span>' : ''}</td>
-        <td class="share-col">${item.share}%</td>
+        <td class="share-col ${healthClass}"><span class="health-icon" title="${item.emissionHealth?.label || ''}">${healthIcon}</span>${item.share}%</td>
         <td class="momentum-col">${momentumDisplay}</td>
         <td class="pool-col">${poolDisplay}τ</td>
         <td class="mcap-col">${mcapDisplay}τ${mcapUsd ? ` <span class="mcap-usd">(${mcapUsd})</span>` : ''}</td>

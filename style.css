@@ -4410,10 +4410,20 @@ body.light-bg .pro-joke {
 
 .newcomers-display-table .rank-col { width: 50px; color: #a855f7; font-weight: 600; }
 .newcomers-display-table .subnet-col { width: auto; }
-.newcomers-display-table .share-col { width: 70px; color: #22c55e; }
+.newcomers-display-table .share-col { width: 85px; color: #22c55e; }
 .newcomers-display-table .momentum-col { width: 60px; text-align: center; }
 .newcomers-display-table .pool-col { width: 80px; color: #888; }
 .newcomers-display-table .mcap-col { width: 120px; color: #f59e0b; }
+
+/* Emission health indicator */
+.newcomers-display-table .health-icon {
+  margin-right: 3px;
+  font-size: 0.9em;
+}
+.newcomers-display-table .emission-healthy { color: #22c55e; }
+.newcomers-display-table .emission-rising { color: #eab308; }
+.newcomers-display-table .emission-struggling { color: #f97316; }
+.newcomers-display-table .emission-critical { color: #ef4444; }
 
 .newcomers-display-table .sn-id {
   color: #a855f7;
