@@ -23,13 +23,8 @@ jobs:
       - name: Install deps (cached)
         run: pip install -r .github/requirements-bittensor.txt
 
-      - name: Clear old KV data
-        env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
-          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
-          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
-        run: |
-          python .github/scripts/clear_kv.py
+      # NOTE: Removed "Clear old KV data" step - it was destructive when Taostats is down
+      # KV cache should persist as fallback, not be cleared before we know if primary works
 
       - name: Fetch subnet data (Taostats primary, KV cache fallback)
         id: fetch_subnets
