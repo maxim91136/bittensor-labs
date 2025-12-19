@@ -664,13 +664,25 @@ def fetch_top_subnets() -> Dict[str, object]:
         if taodata:
             # Use Taostats data for these
             try:
-                # The Taostats API returns 'emission' field which is already a percentage share
-                # E.g., 86447949 from API becomes 0.086447949 (which is 8.6447949% when * 100)
-                # This is the subnet's emission share as a decimal (0.0-1.0 range)
-                ts_emission_raw = float(taodata.get('emission', 0.0))
-                # The value needs to be treated as a share directly
-                # Convert from the raw API format to share (it appears to be * 10^9, so divide by 10^9)
-                ts_share = ts_emission_raw / 1_000_000_000.0
+                # The Taostats API provides 'projected_emission' as the actual share (0.0-1.0)
+                # E.g., projected_emission: "0.067600274" = 6.76% emission share
+                # The 'emission' field is a different metric and NOT what we need
+                ts_share = 0.0
+
+                # Prefer projected_emission (accurate share value)
+                if taodata.get('projected_emission') is not None:
+                    try:
+                        ts_share = float(taodata.get('projected_emission'))
+                    except Exception:
+                        pass
+
+                # Fallback to emission_share if available
+                if ts_share == 0.0 and taodata.get('emission_share') is not None:
+                    try:
+                        ts_share = float(taodata.get('emission_share'))
+                    except Exception:
+                        pass
+
                 # Calculate daily emission: share * total_daily_emission
                 if ts_share > 0:
                     est = ts_share * DAILY_EMISSION
