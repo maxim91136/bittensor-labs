@@ -4697,6 +4697,100 @@ body.light-bg .pro-joke {
   color: #2563eb;
 }
 
+/* ===== Talent Scouting Mobile Styles ===== */
+@media (max-width: 768px) {
+  .newcomers-display-table {
+    font-size: 0.85em;
+    table-layout: auto;
+  }
+
+  .newcomers-display-table th,
+  .newcomers-display-table td {
+    padding: 8px 4px;
+  }
+
+  .newcomers-display-table .rank-col { width: 35px; }
+  .newcomers-display-table .subnet-col { min-width: 80px; }
+  .newcomers-display-table .share-col { width: 65px; }
+  .newcomers-display-table .momentum-col { width: 45px; }
+  .newcomers-display-table .pool-col { width: 55px; }
+  .newcomers-display-table .mcap-col { width: 70px; }
+
+  /* Hide USD mcap on tablet */
+  .newcomers-display-table .mcap-usd {
+    display: none;
+  }
+}
+
+@media (max-width: 600px) {
+  .newcomers-display-table {
+    font-size: 0.8em;
+  }
+
+  .newcomers-display-table th,
+  .newcomers-display-table td {
+    padding: 6px 3px;
+  }
+
+  .newcomers-display-table .rank-col { width: 30px; font-size: 0.9em; }
+  .newcomers-display-table .subnet-col { min-width: 70px; }
+  .newcomers-display-table .share-col { width: 55px; }
+  .newcomers-display-table .momentum-col { width: 40px; }
+  .newcomers-display-table .pool-col { display: none; }
+  .newcomers-display-table .mcap-col { width: 60px; }
+
+  /* Hide pool header on small screens */
+  .newcomers-display-table th:nth-child(5) {
+    display: none;
+  }
+
+  .newcomers-display-table .sn-id {
+    display: block;
+    font-size: 0.85em;
+  }
+
+  .newcomers-display-table .momentum-badge {
+    padding: 1px 4px;
+    font-size: 0.8em;
+  }
+
+  .newcomers-display-table .prospect-title-row td {
+    font-size: 0.7rem;
+    padding: 8px 4px 2px 4px;
+  }
+}
+
+@media (max-width: 420px) {
+  .newcomers-display-table {
+    font-size: 0.75em;
+  }
+
+  .newcomers-display-table th,
+  .newcomers-display-table td {
+    padding: 5px 2px;
+  }
+
+  .newcomers-display-table .rank-col { width: 25px; }
+  .newcomers-display-table .share-col { width: 50px; }
+  .newcomers-display-table .momentum-col { width: 35px; }
+  .newcomers-display-table .mcap-col { width: 50px; }
+
+  .newcomers-display-table .health-icon {
+    font-size: 0.8em;
+    margin-right: 1px;
+  }
+
+  .newcomers-display-table .momentum-badge {
+    padding: 1px 3px;
+    font-size: 0.75em;
+  }
+
+  .newcomers-display-table .prospect-title-row td {
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+  }
+}
+
 /* ===== Top Validators Card ===== */
 .top-validators-card {
   animation: fadeInUp 0.8s ease-out 0.25s both;
