@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.29 (2025-12-19)
+### Added
+- **Emission Trend Arrows**: Shows direction alongside health zone
+  - 🟠↗ = Struggling but RISING (Katniss moment!)
+  - 🟠↘ = Struggling and FALLING (EXIT warning)
+  - 🟡↗ = Rising and climbing (good momentum)
+  - Tooltip shows exact delta vs 7d ago (e.g., "+0.19% vs 7d ago")
+- Trend calculated from oldest history snapshot to current
+
 ## v1.0.0-rc.33.28 (2025-12-19)
 ### Added
 - **Emission Health Zones**: Visual indicators showing subnet viability

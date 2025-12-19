@@ -266,6 +266,13 @@ Visual indicators showing subnet viability based on emission share:
 - 🟠 **Struggling** (0.2-0.5%) - Needs growth, miner attrition risk
 - 🔴 **Critical** (<0.2%) - Death zone, miners leaving
 
+**Emission Trend Arrows** (RC33.29+):
+Direction matters! Trend arrows show if emission is improving or declining:
+- 🟠↗ **Struggling + Rising** = Katniss moment (underdog climbing from danger zone)
+- 🟠↘ **Struggling + Falling** = EXIT warning (heading toward death zone)
+- 🟡↗ **Rising + Climbing** = Healthy momentum
+- Hover for exact delta (e.g., "+0.19% vs 7d ago")
+
 **Investment Strategy**:
 - Watch 🟠→🔴 transitions as EXIT signals
 - 🟢 subnets are Champion candidates

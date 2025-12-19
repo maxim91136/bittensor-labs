@@ -62,6 +62,57 @@ const prospectTitles = {
 };
 
 /**
+ * Build emission trend map from history
+ * Compares oldest emission to current to determine direction
+ * Returns: { netuid: { oldShare, delta, trend: 'rising'|'falling'|'stable' } }
+ */
+function buildEmissionTrendMap(history, currentSubnets) {
+  const trendMap = {};
+
+  if (!history || history.length < 2) return trendMap;
+
+  // Get oldest snapshot for baseline
+  const oldest = history[0];
+  const oldEntries = oldest?.entries || [];
+
+  // Build old emission map (value = daily emission τ)
+  // Daily emission ~3600τ total, so share = value/3600
+  const DAILY_TOTAL = 3600;
+  const oldEmissions = {};
+  oldEntries.forEach(e => {
+    const netuid = parseInt(e.id || e.netuid);
+    if (netuid && e.value) {
+      oldEmissions[netuid] = e.value / DAILY_TOTAL; // Convert to share
+    }
+  });
+
+  // Calculate trend for each current subnet
+  currentSubnets.forEach(subnet => {
+    const netuid = parseInt(subnet.netuid);
+    const currentShare = subnet.taostats_emission_share || 0;
+    const oldShare = oldEmissions[netuid];
+
+    if (oldShare !== undefined && currentShare > 0) {
+      const delta = currentShare - oldShare;
+      const deltaPct = delta * 100; // Convert to percentage points
+
+      // Threshold: ±0.05% is considered significant movement
+      let trend = 'stable';
+      if (deltaPct >= 0.05) trend = 'rising';
+      else if (deltaPct <= -0.05) trend = 'falling';
+
+      trendMap[netuid] = {
+        oldShare: oldShare * 100,  // Store as percentage
+        delta: deltaPct,
+        trend: trend
+      };
+    }
+  });
+
+  return trendMap;
+}
+
+/**
  * Build peak rank map from ALL history
  * Returns the best (lowest) rank each subnet ever achieved
  * Used to detect "fallen giants" - subnets that were once Top 10
@@ -149,6 +200,9 @@ function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
   // Build peak rank map from ALL history (for fallen giant detection)
   const peakRankMap = buildPeakRankMap(fullHistory);
 
+  // Build emission trend map from history
+  const emissionTrendMap = buildEmissionTrendMap(fullHistory, topSubnets);
+
   // Check if we have prediction data for subnets outside top 10
   const hasPredictionData = predictions.some(p => {
     const rank = topSubnets.findIndex(s => s.netuid == p.netuid) + 1;
@@ -177,12 +231,14 @@ function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
 
     if (isUnderdog && hasLiquidity) {
       const sharePct = (emissionShare * 100).toFixed(2);
+      const emissionTrend = emissionTrendMap[subnet.netuid] || null;
       const entry = {
         rank: currentRank,
         netuid: subnet.netuid,
         name: subnet.subnet_name || subnet.taostats_name || `SN${subnet.netuid}`,
         share: sharePct,
         emissionHealth: getEmissionHealth(sharePct),
+        emissionTrend: emissionTrend,  // { oldShare, delta, trend }
         rank7dDelta: hasRankData ? rank7dDelta : null,
         poolLiquidity: poolLiquidity,
         marketCapTao: alpha.market_cap_tao || 0,
@@ -300,14 +356,18 @@ function renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isColle
       : `<span class="momentum-tbd">...</span>`;
     const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
 
-    // Emission health indicator
+    // Emission health indicator with trend arrow
     const healthIcon = item.emissionHealth?.icon || '';
     const healthClass = item.emissionHealth?.class || '';
+    const trend = item.emissionTrend;
+    const trendArrow = trend ? (trend.trend === 'rising' ? '↗' : trend.trend === 'falling' ? '↘' : '') : '';
+    const trendDelta = trend && trend.delta ? (trend.delta > 0 ? `+${trend.delta.toFixed(2)}` : trend.delta.toFixed(2)) : '';
+    const trendTooltip = trend ? `${item.emissionHealth?.label || ''} (${trendDelta}% vs 7d ago)` : (item.emissionHealth?.label || '');
 
     html += `<tr class="${rowClass}${item.isDeepUnderdog ? ' deep-underdog-row' : ''}">
       <td class="rank-col">${item.rank}</td>
       <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
-      <td class="share-col ${healthClass}"><span class="health-icon" title="${item.emissionHealth?.label || ''}">${healthIcon}</span>${item.share}%</td>
+      <td class="share-col ${healthClass}"><span class="health-icon" title="${trendTooltip}">${healthIcon}${trendArrow}</span>${item.share}%</td>
       <td class="momentum-col">${momentumDisplay}</td>
       <td class="pool-col">${poolDisplay}τ</td>
       <td class="mcap-col">${mcapDisplay}τ${mcapUsd ? ` <span class="mcap-usd">(${mcapUsd})</span>` : ''}</td>
@@ -344,14 +404,18 @@ function renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isColle
       const rowClass = isBlurred ? 'newcomer-row blurred-row' : 'newcomer-row';
       const giantClass = item.isFallenGiant ? ' fallen-giant-row' : '';
 
-      // Emission health indicator
+      // Emission health indicator with trend arrow
       const healthIcon = item.emissionHealth?.icon || '';
       const healthClass = item.emissionHealth?.class || '';
+      const trend = item.emissionTrend;
+      const trendArrow = trend ? (trend.trend === 'rising' ? '↗' : trend.trend === 'falling' ? '↘' : '') : '';
+      const trendDelta = trend && trend.delta ? (trend.delta > 0 ? `+${trend.delta.toFixed(2)}` : trend.delta.toFixed(2)) : '';
+      const trendTooltip = trend ? `${item.emissionHealth?.label || ''} (${trendDelta}% vs 7d ago)` : (item.emissionHealth?.label || '');
 
       html += `<tr class="${rowClass}${giantClass}">
         <td class="rank-col">${item.rank}</td>
         <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}${item.isFallenGiant ? ' <span class="giant-badge" title="Former Top 10">👑</span>' : ''}</td>
-        <td class="share-col ${healthClass}"><span class="health-icon" title="${item.emissionHealth?.label || ''}">${healthIcon}</span>${item.share}%</td>
+        <td class="share-col ${healthClass}"><span class="health-icon" title="${trendTooltip}">${healthIcon}${trendArrow}</span>${item.share}%</td>
         <td class="momentum-col">${momentumDisplay}</td>
         <td class="pool-col">${poolDisplay}τ</td>
         <td class="mcap-col">${mcapDisplay}τ${mcapUsd ? ` <span class="mcap-usd">(${mcapUsd})</span>` : ''}</td>
