@@ -18,8 +18,26 @@ import ssl
 import re
 
 NETWORK = os.getenv('NETWORK', 'finney')
-DAILY_EMISSION = float(os.getenv('DAILY_EMISSION', '7200'))
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
+
+# Halving schedule (theoretical emission thresholds)
+HALVING_DATES = [
+    datetime(2025, 12, 14, tzinfo=timezone.utc),  # Halving 1: 7200 → 3600
+    # Future halvings will be added as they're confirmed
+]
+BASE_EMISSION = 7200.0  # Pre-halving emission τ/day
+
+
+def get_daily_emission() -> float:
+    """Calculate current daily emission based on halving schedule."""
+    now = datetime.now(timezone.utc)
+    halvings_passed = sum(1 for d in HALVING_DATES if now >= d)
+    emission = BASE_EMISSION / (2 ** halvings_passed)
+    return emission
+
+
+# Dynamic emission (auto-adjusts after halvings)
+DAILY_EMISSION = float(os.getenv('DAILY_EMISSION', str(get_daily_emission())))
 USE_ONCHAIN_STAKE_FALLBACK = os.getenv('USE_ONCHAIN_STAKE_FALLBACK', '0') == '1'
 # cap how many per-uid queries we'll perform per subnet to avoid heavy CI workloads.
 # Default is a reasonable 50 UID-sample per subnet for the Free Plan

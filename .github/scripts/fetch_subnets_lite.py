@@ -15,7 +15,22 @@ import urllib.error
 # Finney RPC endpoint (public)
 RPC_URL = os.getenv('RPC_URL', 'wss://entrypoint-finney.opentensor.ai:443')
 NETWORK = os.getenv('NETWORK', 'finney')
-DAILY_EMISSION = float(os.getenv('DAILY_EMISSION', '7200'))
+
+# Halving schedule (theoretical emission thresholds)
+HALVING_DATES = [
+    datetime(2025, 12, 14, tzinfo=timezone.utc),  # Halving 1: 7200 → 3600
+]
+BASE_EMISSION = 7200.0
+
+
+def get_daily_emission() -> float:
+    """Calculate current daily emission based on halving schedule."""
+    now = datetime.now(timezone.utc)
+    halvings_passed = sum(1 for d in HALVING_DATES if now >= d)
+    return BASE_EMISSION / (2 ** halvings_passed)
+
+
+DAILY_EMISSION = float(os.getenv('DAILY_EMISSION', str(get_daily_emission())))
 
 
 def rpc_call(method: str, params: list = None) -> dict:

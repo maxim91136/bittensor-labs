@@ -44,6 +44,19 @@ DEFAULT_LOOKBACK_DAYS = 28
 MIN_DATA_POINTS = int(os.getenv('MIN_DATA_POINTS', '48'))
 LOOKBACK_DAYS = int(os.getenv('LOOKBACK_DAYS', str(DEFAULT_LOOKBACK_DAYS)))
 
+# Halving schedule (theoretical emission thresholds)
+HALVING_DATES = [
+    datetime(2025, 12, 14, tzinfo=timezone.utc),  # Halving 1: 7200 → 3600
+]
+BASE_EMISSION = 7200.0
+
+
+def get_daily_emission() -> float:
+    """Calculate current daily emission based on halving schedule."""
+    now = datetime.now(timezone.utc)
+    halvings_passed = sum(1 for d in HALVING_DATES if now >= d)
+    return BASE_EMISSION / (2 ** halvings_passed)
+
 # Feature weights (tunable parameters)
 # v2.1: Reduced current_rank weight, increased gap/tenure (2025-12-16)
 FEATURE_WEIGHTS = {
@@ -253,10 +266,9 @@ class SubnetFeatureExtractor:
         current_emission = snapshots[-1]['value']
         emissions = [s['value'] for s in snapshots]
 
-        # Current emission share (approximate)
-        # Assume total daily emission ~7200 TAO
-        DAILY_EMISSION = 7200
-        features['emission_share_current'] = (current_emission / DAILY_EMISSION) * 100
+        # Current emission share (dynamic based on halving schedule)
+        daily_emission = get_daily_emission()
+        features['emission_share_current'] = (current_emission / daily_emission) * 100
 
         # Emission trend (percent change)
         if len(snapshots) >= 2:
