@@ -153,8 +153,15 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
   } else if (filter === 'favorites') {
     displayData = searchedSubnets.filter(s => favorites.includes(s.netuid));
   } else if (filter === 'buying') {
+    // Strong buying: >= 50%
     displayData = searchedSubnets
-      .filter(s => s.alpha_pressure_30d >= 0)
+      .filter(s => s.alpha_pressure_30d >= 50)
+      .sort((a, b) => b.alpha_pressure_30d - a.alpha_pressure_30d)
+      .slice(0, limit);
+  } else if (filter === 'neutral') {
+    // Neutral: 0% to 50%
+    displayData = searchedSubnets
+      .filter(s => s.alpha_pressure_30d >= 0 && s.alpha_pressure_30d < 50)
       .sort((a, b) => b.alpha_pressure_30d - a.alpha_pressure_30d)
       .slice(0, limit);
   } else if (filter === 'selling') {
