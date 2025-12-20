@@ -103,7 +103,7 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
   if (!displayList) return;
 
   const favorites = getFavorites();
-  const limit = expanded ? 20 : 6;  // 3+3 default, 10+10 expanded
+  const limit = expanded ? 30 : 10;  // 5+5 default, 15+15 expanded
 
   // Filter and prepare data
   let displayData = [];
