@@ -31,7 +31,8 @@ jobs:
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
         run: |
           echo "Fetching owner dump scores..."
-          python .github/scripts/fetch_owner_dump_score.py > .github/data/owner_dump_scores.json 2>&1 || {
+          mkdir -p .github/data
+          python .github/scripts/fetch_owner_dump_score.py > .github/data/owner_dump_scores.json || {
             echo "::warning::Owner dump score fetch failed"
             exit 0  # Don't fail workflow, this is supplementary data
           }
