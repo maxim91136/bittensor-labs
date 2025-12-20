@@ -46,6 +46,7 @@ export function initAlphaPressureCard() {
 
   // Store state
   let currentFilter = 'all';
+  let searchQuery = '';
   let allData = [];
   let apiTimestamp = null;
   let showExpanded = false;
@@ -57,21 +58,43 @@ export function initAlphaPressureCard() {
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentFilter = btn.dataset.filter;
-      renderTable(allData, currentFilter, showExpanded, apiTimestamp);
+      renderTable(allData, currentFilter, showExpanded, apiTimestamp, searchQuery);
     });
   });
+
+  // Setup search input
+  const searchInput = container.querySelector('#alphaPressureSearch');
+  if (searchInput) {
+    let debounceTimer;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        searchQuery = e.target.value.trim().toLowerCase();
+        renderTable(allData, currentFilter, showExpanded, apiTimestamp, searchQuery);
+      }, 150);
+    });
+
+    // Clear search on Escape
+    searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        searchInput.value = '';
+        searchQuery = '';
+        renderTable(allData, currentFilter, showExpanded, apiTimestamp, searchQuery);
+      }
+    });
+  }
 
   // Load data
   loadAlphaPressureData().then(result => {
     allData = result.subnets;
     apiTimestamp = result.timestamp;
-    renderTable(allData, currentFilter, showExpanded, apiTimestamp);
+    renderTable(allData, currentFilter, showExpanded, apiTimestamp, searchQuery);
   });
 
   // Make renderTable accessible for expand toggle
   window._alphaPressureRender = (expanded) => {
     showExpanded = expanded;
-    renderTable(allData, currentFilter, showExpanded, apiTimestamp);
+    renderTable(allData, currentFilter, showExpanded, apiTimestamp, searchQuery);
   };
 }
 
@@ -94,9 +117,9 @@ async function loadAlphaPressureData() {
 }
 
 /**
- * Render the table based on current filter
+ * Render the table based on current filter and search
  */
-function renderTable(subnets, filter = 'all', expanded = false, timestamp = null) {
+function renderTable(subnets, filter = 'all', expanded = false, timestamp = null, searchQuery = '') {
   const displayList = document.getElementById('alphaPressureList');
   const summaryEl = document.getElementById('alphaPressureSummary');
   const updateEl = document.getElementById('alphaPressureUpdate');
@@ -105,33 +128,47 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
   const favorites = getFavorites();
   const limit = expanded ? 30 : 10;  // 5+5 default, 15+15 expanded
 
+  // Apply search filter first
+  let searchedSubnets = subnets;
+  if (searchQuery) {
+    searchedSubnets = subnets.filter(s => {
+      const name = (s.name || '').toLowerCase();
+      const netuid = String(s.netuid);
+      return name.includes(searchQuery) || netuid.includes(searchQuery);
+    });
+  }
+
   // Filter and prepare data
   let displayData = [];
 
-  if (filter === 'all') {
+  // If searching, show all matches sorted by pressure
+  if (searchQuery) {
+    displayData = [...searchedSubnets].sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d);
+  } else if (filter === 'all') {
     // Show mix: worst sellers + best buyers
-    const sorted = [...subnets].sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d);
+    const sorted = [...searchedSubnets].sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d);
     const worst = sorted.slice(0, Math.ceil(limit / 2));
     const best = sorted.slice(-Math.ceil(limit / 2)).reverse();
     displayData = [...worst, { separator: true }, ...best];
   } else if (filter === 'favorites') {
-    displayData = subnets.filter(s => favorites.includes(s.netuid));
+    displayData = searchedSubnets.filter(s => favorites.includes(s.netuid));
   } else if (filter === 'buying') {
-    displayData = subnets
+    displayData = searchedSubnets
       .filter(s => s.alpha_pressure_30d >= 0)
       .sort((a, b) => b.alpha_pressure_30d - a.alpha_pressure_30d)
       .slice(0, limit);
   } else if (filter === 'selling') {
-    displayData = subnets
+    displayData = searchedSubnets
       .filter(s => s.alpha_pressure_30d < 0)
       .sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d)
       .slice(0, limit);
   }
 
   if (displayData.length === 0) {
-    displayList.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">
-      ${filter === 'favorites' ? 'No favorites yet. Click ★ to add.' : 'No data available'}
-    </td></tr>`;
+    let emptyMsg = 'No data available';
+    if (searchQuery) emptyMsg = `No subnets matching "${searchQuery}"`;
+    else if (filter === 'favorites') emptyMsg = 'No favorites yet. Click ★ to add.';
+    displayList.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">${emptyMsg}</td></tr>`;
     return;
   }
 

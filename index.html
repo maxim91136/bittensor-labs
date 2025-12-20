@@ -584,10 +584,16 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Alpha Pressure: (Net Flow / Emission) × 100&#10;Positive = accumulation, Negative = selling&#10;&#10;Owner: Tracks if subnet owner sells their 18% emission take&#10;✅ healthy (≤30%) 🟡 moderate (≤70%)&#10;🟠 high (≤100%) 🔴 aggressive (>100%)">i</span>
       </div>
       <div class="filter-bar">
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="favorites">★ Favorites</button>
-        <button class="filter-btn" data-filter="selling">🔴 Selling</button>
-        <button class="filter-btn" data-filter="buying">🟢 Buying</button>
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="all">All</button>
+          <button class="filter-btn" data-filter="favorites">★ Favorites</button>
+          <button class="filter-btn" data-filter="selling">🔴 Selling</button>
+          <button class="filter-btn" data-filter="buying">🟢 Buying</button>
+        </div>
+        <div class="search-wrapper">
+          <input type="text" id="alphaPressureSearch" class="subnet-search" placeholder="Search subnet..." autocomplete="off">
+          <span class="search-icon">🔍</span>
+        </div>
       </div>
       <div class="pressure-summary" id="alphaPressureSummary"></div>
       <div class="pressure-table-wrapper">
