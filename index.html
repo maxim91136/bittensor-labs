@@ -604,6 +604,41 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
       </div>
     </section>
 
+  <!-- Alpha Pressure Card -->
+    <section class="dashboard-card alpha-pressure-card" id="alphaPressureCard" aria-labelledby="alpha-pressure-heading">
+      <div class="card-header">
+        <h2 id="alpha-pressure-heading">Alpha Pressure</h2>
+        <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Measures net buying/selling pressure. Pressure = (Net Flow / Emission) × 100. Positive = accumulation, Negative = selling.">i</span>
+      </div>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="favorites">★ Favorites</button>
+        <button class="filter-btn" data-filter="selling">🔴 Selling</button>
+        <button class="filter-btn" data-filter="buying">🟢 Buying</button>
+      </div>
+      <div class="pressure-summary" id="alphaPressureSummary"></div>
+      <div class="pressure-table-wrapper">
+        <table class="pressure-display-table" id="alphaPressureTable">
+          <thead>
+            <tr>
+              <th class="fav-col"></th>
+              <th class="subnet-col">Subnet</th>
+              <th class="emission-col">Emit/d</th>
+              <th class="flow-col">Flow 30d</th>
+              <th class="pressure-col">Pressure</th>
+              <th class="trend-col">Trend</th>
+            </tr>
+          </thead>
+          <tbody id="alphaPressureList">
+            <tr class="loading-row"><td colspan="6" style="text-align:center;padding:20px;">Loading alpha pressure...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="leaderboard-footer">
+        <span class="leaderboard-update" id="alphaPressureUpdate">Updated: —</span>
+      </div>
+    </section>
+
   <!-- Top Wallets Card -->
     <section class="dashboard-card top-wallets-card" aria-labelledby="top-wallets-card-heading">
       <div class="card-header">

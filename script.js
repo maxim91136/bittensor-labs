@@ -85,6 +85,9 @@ import {
   initNewcomersDisplay
 } from './js/modules/newcomersDisplay.js';
 import {
+  initAlphaPressureCard
+} from './js/modules/alphaPressureDisplay.js';
+import {
   loadDecentralizationHistory
 } from './js/modules/decentralizationChart.js';
 import {
@@ -1488,6 +1491,11 @@ document.addEventListener('DOMContentLoaded', function() {
       _refreshTopWallets.refreshAll();
     };
   }
+});
+
+// ===== Alpha Pressure Card =====
+document.addEventListener('DOMContentLoaded', function() {
+  initAlphaPressureCard();
 });
 
 // ===== Decentralization Score History Charts =====

@@ -5003,6 +5003,195 @@ body.light-bg .pro-joke {
 }
 
 
+/* ===== Alpha Pressure Card ===== */
+.alpha-pressure-card {
+  animation: fadeInUp 0.8s ease-out 0.25s both;
+}
+
+.alpha-pressure-card .filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.alpha-pressure-card .filter-btn {
+  padding: 6px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.7);
+  border-radius: 6px;
+  font-size: 0.85em;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.alpha-pressure-card .filter-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
+}
+
+.alpha-pressure-card .filter-btn.active {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.alpha-pressure-card .pressure-summary {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 0.9em;
+}
+
+.alpha-pressure-card .summary-item {
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pressure-table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.01);
+}
+
+.pressure-display-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92em;
+  color: var(--text);
+}
+
+.pressure-display-table thead {
+  background: linear-gradient(90deg, rgba(34, 197, 94, 0.12) 0%, rgba(34, 197, 94, 0.04) 100%);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.pressure-display-table th {
+  padding: 12px 8px;
+  text-align: left;
+  font-weight: 700;
+  color: var(--accent);
+  font-size: 0.85em;
+  letter-spacing: 0.03em;
+}
+
+.pressure-display-table tbody tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  transition: background 0.2s ease;
+}
+
+.pressure-display-table tbody tr:hover {
+  background: rgba(34, 197, 94, 0.06);
+}
+
+.pressure-display-table td {
+  padding: 10px 8px;
+  vertical-align: middle;
+}
+
+/* Column widths */
+.pressure-display-table .fav-col { width: 32px; text-align: center; }
+.pressure-display-table .subnet-col { width: 30%; }
+.pressure-display-table .emission-col { width: 15%; text-align: right; }
+.pressure-display-table .flow-col { width: 20%; text-align: right; }
+.pressure-display-table .pressure-col { width: 20%; text-align: right; }
+.pressure-display-table .trend-col { width: 10%; text-align: center; }
+
+/* Favorite button */
+.pressure-display-table .fav-btn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.3);
+  cursor: pointer;
+  font-size: 1.1em;
+  padding: 4px;
+  transition: all 0.2s ease;
+}
+
+.pressure-display-table .fav-btn:hover {
+  color: #f59e0b;
+  transform: scale(1.1);
+}
+
+.pressure-display-table .fav-btn.active {
+  color: #f59e0b;
+  text-shadow: 0 0 8px rgba(245, 158, 11, 0.5);
+}
+
+/* Subnet column */
+.pressure-display-table .subnet-name {
+  display: block;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.pressure-display-table .subnet-id {
+  display: block;
+  font-size: 0.8em;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: 'SF Mono', monospace;
+}
+
+/* Pressure status colors */
+.pressure-display-table .pressure-strong-buy { color: #22c55e; font-weight: 600; }
+.pressure-display-table .pressure-accumulation { color: #4ade80; }
+.pressure-display-table .pressure-neutral { color: #fbbf24; }
+.pressure-display-table .pressure-sell { color: #f97316; }
+.pressure-display-table .pressure-heavy-sell { color: #ef4444; font-weight: 600; }
+
+/* Flow column colors */
+.pressure-display-table .flow-col {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Separator row */
+.pressure-display-table .separator-row td {
+  background: rgba(34, 197, 94, 0.08);
+  font-weight: 600;
+}
+
+/* Light mode */
+.alpha-pressure-card.light-bg .filter-btn {
+  border-color: rgba(0, 0, 0, 0.15);
+  color: rgba(0, 0, 0, 0.6);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.alpha-pressure-card.light-bg .filter-btn.active {
+  background: rgba(34, 197, 94, 0.12);
+  color: #15803d;
+}
+
+.alpha-pressure-card.light-bg .pressure-display-table .subnet-name {
+  color: #1a1a1a;
+}
+
+.alpha-pressure-card.light-bg .pressure-display-table .fav-btn {
+  color: rgba(0, 0, 0, 0.3);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .alpha-pressure-card .filter-bar {
+    gap: 6px;
+  }
+  .alpha-pressure-card .filter-btn {
+    padding: 5px 10px;
+    font-size: 0.8em;
+  }
+  .pressure-display-table {
+    font-size: 0.85em;
+  }
+  .pressure-display-table th,
+  .pressure-display-table td {
+    padding: 8px 5px;
+  }
+}
+
 /* ===== Top Wallets Card ===== */
 .top-wallets-card {
   animation: fadeInUp 0.8s ease-out 0.3s both;
