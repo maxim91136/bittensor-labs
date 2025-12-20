@@ -103,7 +103,7 @@ export function initAlphaPressureCard() {
  */
 async function loadAlphaPressureData() {
   try {
-    const res = await fetch('/api/alpha_pressure?limit=100');
+    const res = await fetch('/api/alpha_pressure?limit=150');
     if (!res.ok) throw new Error('Failed to fetch');
     const data = await res.json();
     return {

@@ -32,7 +32,7 @@ export async function onRequest(context) {
   const url = new URL(context.request.url);
   const filterNetuids = url.searchParams.get('netuids'); // comma-separated: "8,64,120"
   const sortBy = url.searchParams.get('sort') || 'pressure'; // pressure, emission, flow
-  const limit = parseInt(url.searchParams.get('limit')) || 100;
+  const limit = parseInt(url.searchParams.get('limit')) || 150;
 
   try {
     // Fetch both subnet data and owner dump scores in parallel

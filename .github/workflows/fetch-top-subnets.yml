@@ -35,7 +35,7 @@ jobs:
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
           NETWORK: finney
           DAILY_EMISSION: 3600  # Post-halving (Dec 14, 2025)
-          TOP_N: 100  # Store all subnets with meaningful emissions
+          TOP_N: 150  # Store all subnets (currently ~128 active)
         run: |
           # Try Taostats first (accurate aggregated emissions)
           python .github/scripts/fetch_top_subnets.py || TAOSTATS_FAILED=1

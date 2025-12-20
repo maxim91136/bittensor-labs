@@ -53,7 +53,7 @@ KNOWN_EXCHANGES = {
 }
 
 OWNER_TAKE_PERCENT = 0.18  # 18% owner take
-MAX_SUBNETS = 50  # Limit to avoid rate limiting
+MAX_SUBNETS = 150  # Track all subnets (currently ~128 active)
 
 
 def get_headers():
