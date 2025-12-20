@@ -14,8 +14,8 @@ from datetime import datetime, timezone
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
 VALIDATOR_URL = "https://api.taostats.io/api/dtao/validator/latest/v1"
 
-MAX_RETRIES = 3
-RETRY_DELAY = 5  # seconds
+MAX_RETRIES = 4
+RETRY_DELAY = 10  # seconds
 
 
 def fetch_staking_apy(num_validators=50):
