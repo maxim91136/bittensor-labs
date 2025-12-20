@@ -108,22 +108,13 @@ export async function onRequest(context) {
         trendEmoji = '⚠️';
       }
 
-      // Status based on pressure
+      // Status based on pressure (simple: positive = buying, negative = selling)
       let status, emoji;
-      if (pressure30d >= 100) {
-        status = 'strong_buy';
+      if (pressure30d >= 0) {
+        status = 'buying';
         emoji = '🟢';
-      } else if (pressure30d >= 50) {
-        status = 'accumulation';
-        emoji = '🟢';
-      } else if (pressure30d >= 0) {
-        status = 'neutral';
-        emoji = '🟡';
-      } else if (pressure30d >= -50) {
-        status = 'sell_pressure';
-        emoji = '🟠';
       } else {
-        status = 'heavy_selling';
+        status = 'selling';
         emoji = '🔴';
       }
 
@@ -177,13 +168,10 @@ export async function onRequest(context) {
     // Apply limit
     const limited = alphaPressure.slice(0, limit);
 
-    // Summary stats
+    // Summary stats (simple: buying vs selling)
     const summary = {
-      strong_buy: limited.filter(s => s.status === 'strong_buy').length,
-      accumulation: limited.filter(s => s.status === 'accumulation').length,
-      neutral: limited.filter(s => s.status === 'neutral').length,
-      sell_pressure: limited.filter(s => s.status === 'sell_pressure').length,
-      heavy_selling: limited.filter(s => s.status === 'heavy_selling').length,
+      buying: limited.filter(s => s.status === 'buying').length,
+      selling: limited.filter(s => s.status === 'selling').length,
       improving: limited.filter(s => s.trend === 'improving').length,
       declining: limited.filter(s => s.trend === 'declining').length,
       reversing: limited.filter(s => s.trend === 'reversing').length

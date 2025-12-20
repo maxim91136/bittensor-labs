@@ -153,18 +153,13 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
   } else if (filter === 'favorites') {
     displayData = searchedSubnets.filter(s => favorites.includes(s.netuid));
   } else if (filter === 'buying') {
-    // Strong buying: >= 50%
+    // Buying: >= 0% (positive = market absorbs emissions)
     displayData = searchedSubnets
-      .filter(s => s.alpha_pressure_30d >= 50)
-      .sort((a, b) => b.alpha_pressure_30d - a.alpha_pressure_30d)
-      .slice(0, limit);
-  } else if (filter === 'neutral') {
-    // Neutral: 0% to 50%
-    displayData = searchedSubnets
-      .filter(s => s.alpha_pressure_30d >= 0 && s.alpha_pressure_30d < 50)
+      .filter(s => s.alpha_pressure_30d >= 0)
       .sort((a, b) => b.alpha_pressure_30d - a.alpha_pressure_30d)
       .slice(0, limit);
   } else if (filter === 'selling') {
+    // Selling: < 0% (negative = net selling beyond emissions)
     displayData = searchedSubnets
       .filter(s => s.alpha_pressure_30d < 0)
       .sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d)
@@ -197,13 +192,8 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
     const flow7dClass = flow7d >= 0 ? 'flow-positive' : 'flow-negative';
     const flow30dClass = flow30d >= 0 ? 'flow-positive' : 'flow-negative';
 
-    // Color class based on pressure
-    let pressureClass = 'pressure-neutral';
-    if (pressure >= 100) pressureClass = 'pressure-strong-buy';
-    else if (pressure >= 50) pressureClass = 'pressure-accumulation';
-    else if (pressure >= 0) pressureClass = 'pressure-neutral';
-    else if (pressure >= -50) pressureClass = 'pressure-sell';
-    else pressureClass = 'pressure-heavy-sell';
+    // Color class based on pressure (simple: positive = green, negative = red)
+    const pressureClass = pressure >= 0 ? 'pressure-buying' : 'pressure-selling';
 
     // Owner dump indicator
     const ownerDumpScore = s.owner_dump_score;
@@ -272,15 +262,13 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
     });
   });
 
-  // Update summary
+  // Update summary (simple: buying vs selling)
   if (summaryEl) {
-    const buying = subnets.filter(s => s.alpha_pressure_30d >= 50).length;
-    const neutral = subnets.filter(s => s.alpha_pressure_30d >= 0 && s.alpha_pressure_30d < 50).length;
+    const buying = subnets.filter(s => s.alpha_pressure_30d >= 0).length;
     const selling = subnets.filter(s => s.alpha_pressure_30d < 0).length;
     summaryEl.innerHTML = `
-      <span class="summary-item summary-good" title="Accumulation (≥50%)">🟢 ${buying}</span>
-      <span class="summary-item summary-neutral" title="Neutral (0-50%)">🟡 ${neutral}</span>
-      <span class="summary-item summary-bad" title="Selling Pressure (<0%)">🔴 ${selling}</span>
+      <span class="summary-item summary-good" title="Buying (≥0% - market absorbs emissions)">🟢 ${buying}</span>
+      <span class="summary-item summary-bad" title="Selling (<0% - net selling beyond emissions)">🔴 ${selling}</span>
     `;
   }
 
