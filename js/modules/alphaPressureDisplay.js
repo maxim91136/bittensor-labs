@@ -124,10 +124,15 @@ function renderTable(subnets, filter = 'all') {
   const rows = displayData.map(s => {
     const isFavorite = favorites.includes(s.netuid);
     const pressure = s.alpha_pressure_30d;
-    const pressureFormatted = pressure >= 0 ? `+${pressure.toFixed(1)}%` : `${pressure.toFixed(1)}%`;
-    const flowFormatted = s.net_flow_30d_tao >= 0
-      ? `+${s.net_flow_30d_tao.toLocaleString()}`
-      : s.net_flow_30d_tao.toLocaleString();
+    const pressureFormatted = pressure >= 0 ? `+${pressure.toFixed(0)}%` : `${pressure.toFixed(0)}%`;
+
+    // Format flows with color
+    const flow7d = s.net_flow_7d_tao || 0;
+    const flow30d = s.net_flow_30d_tao || 0;
+    const flow7dFormatted = flow7d >= 0 ? `+${Math.round(flow7d).toLocaleString()}` : Math.round(flow7d).toLocaleString();
+    const flow30dFormatted = flow30d >= 0 ? `+${Math.round(flow30d).toLocaleString()}` : Math.round(flow30d).toLocaleString();
+    const flow7dClass = flow7d >= 0 ? 'flow-positive' : 'flow-negative';
+    const flow30dClass = flow30d >= 0 ? 'flow-positive' : 'flow-negative';
 
     // Color class based on pressure
     let pressureClass = 'pressure-neutral';
@@ -147,8 +152,8 @@ function renderTable(subnets, filter = 'all') {
         <span class="subnet-name">${s.name}</span>
         <span class="subnet-id">SN${s.netuid}</span>
       </td>
-      <td class="emission-col">${s.emission_daily_tao.toFixed(0)}τ</td>
-      <td class="flow-col">${flowFormatted}τ</td>
+      <td class="flow-col ${flow7dClass}">${flow7dFormatted}</td>
+      <td class="flow-col ${flow30dClass}">${flow30dFormatted}</td>
       <td class="pressure-col ${pressureClass}">${s.emoji} ${pressureFormatted}</td>
       <td class="trend-col">${s.trend_emoji}</td>
     </tr>`;

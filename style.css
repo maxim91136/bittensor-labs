@@ -5146,7 +5146,10 @@ body.light-bg .pro-joke {
 /* Flow column colors */
 .pressure-display-table .flow-col {
   font-variant-numeric: tabular-nums;
+  font-size: 0.9em;
 }
+.pressure-display-table .flow-positive { color: #22c55e; }
+.pressure-display-table .flow-negative { color: #ef4444; }
 
 /* Separator row */
 .pressure-display-table .separator-row td {
