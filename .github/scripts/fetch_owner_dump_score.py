@@ -2,7 +2,7 @@
 """
 Owner Dump Score Tracker
 
-Tracks subnet owner wallet activity to identify potential dump patterns.
+Tracks ALL subnet owner wallet activity to identify dump patterns.
 Calculates a "Dump Score" based on:
 - Owner's 18% emission take
 - Actual outflows from owner wallet
@@ -20,11 +20,11 @@ import json
 import requests
 from datetime import datetime, timezone, timedelta
 from typing import Optional
+import time
 
 # API Configuration
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
 TRANSFER_URL = "https://api.taostats.io/api/transfer/v1"
-STAKE_URL = "https://api.taostats.io/api/dtao/stake_balance/latest/v1"
 
 # Cloudflare KV
 CF_ACCOUNT_ID = os.getenv('CF_ACCOUNT_ID')
@@ -33,29 +33,27 @@ CF_METRICS_NAMESPACE_ID = os.getenv('CF_METRICS_NAMESPACE_ID')
 
 # Known exchange addresses (for detecting dumps to CEX)
 KNOWN_EXCHANGES = {
+    # Binance
     "5Hd2ze5ug8n1bo3UCAcQsf66VNjKqGos8u6apNfzcU86pg4N": "Binance",
+    "5GZe8MrVxSqRMRfnMz5TnxNS3Q7M6g3gNfSCqvZQCxbKFZBJ": "Binance",
+    # Kucoin
     "5FZiuxCBt8p6PFDisJ9ZEbBaKNVKy6TeemVJd1Z6jscsdjib": "Kucoin",
+    # Kraken
     "5C5FQQSfuxgJc5sHjjAL9RKAzR98qqCV2YN5xAm2wVf1ctGR": "Kraken",
+    # Bitget
     "5GjG97YKBxwFoWkhMNXP9CoqVKLqCHgq16xQCJPVmYLhGS8e": "Bitget",
+    # MEXC
     "5DRrDe5RYmjNCKXQQWXLSGrWK4HN5d7qvhRPcBdNaUVz9sCB": "MEXC",
+    # OKX
     "5GNJqTPyNqANBkUVMN1LPPrxXnFouWXoe2wNSmmEoLctxiZY": "OKX",
+    # Gate.io
+    "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw": "Gate.io",
+    # Bybit
+    "5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty": "Bybit",
 }
 
-# User's holdings - netuids to track
-USER_HOLDINGS = [
-    {"netuid": 8, "name": "Vanta"},
-    {"netuid": 64, "name": "Chutes"},
-    {"netuid": 120, "name": "Affine"},
-    {"netuid": 62, "name": "Ridges"},
-    {"netuid": 29, "name": "Coldint"},
-    {"netuid": 68, "name": "NOVA"},
-    {"netuid": 60, "name": "Bitsec.ai"},
-    {"netuid": 85, "name": "Vidaio"},
-    {"netuid": 76, "name": "Safe Scan"},
-    {"netuid": 67, "name": "τenex"},
-]
-
 OWNER_TAKE_PERCENT = 0.18  # 18% owner take
+MAX_SUBNETS = 50  # Limit to avoid rate limiting
 
 
 def get_headers():
@@ -103,48 +101,50 @@ def write_to_kv(key: str, value: str) -> bool:
         return False
 
 
-def get_subnet_data() -> dict:
-    """Get subnet data from KV including owner addresses."""
+def get_all_subnets() -> list:
+    """Get all subnets from KV with owner addresses."""
     top_subnets = read_from_kv("top_subnets")
     if not top_subnets:
         print("❌ Could not read top_subnets from KV", file=sys.stderr)
-        return {}
+        return []
 
-    subnet_map = {}
+    subnets = []
     for s in top_subnets.get("top_subnets", []):
         netuid = s.get("netuid")
-        if netuid:
-            raw = s.get("taostats_raw", {})
-            subnet_map[netuid] = {
-                "name": s.get("subnet_name"),
-                "emission_daily": s.get("estimated_emission_daily", 0),
-                "owner": raw.get("owner", {}).get("ss58"),
-                "owner_hotkey": raw.get("owner_hotkey", {}).get("ss58"),
-                "net_flow_30d": int(raw.get("net_flow_30_days", 0)) / 1e9,  # Convert to TAO
-                "net_flow_7d": int(raw.get("net_flow_7_days", 0)) / 1e9,
-                "net_flow_1d": int(raw.get("net_flow_1_day", 0)) / 1e9,
-            }
+        raw = s.get("taostats_raw", {})
+        owner = raw.get("owner", {}).get("ss58")
+        emission = s.get("estimated_emission_daily", 0)
 
-    return subnet_map
+        if netuid and owner and emission > 0:
+            subnets.append({
+                "netuid": netuid,
+                "name": s.get("subnet_name", f"SN{netuid}"),
+                "owner": owner,
+                "emission_daily": emission,
+                "net_flow_30d": int(raw.get("net_flow_30_days", 0)) / 1e9,
+                "net_flow_7d": int(raw.get("net_flow_7_days", 0)) / 1e9,
+            })
+
+    # Sort by emission (highest first = most important)
+    subnets.sort(key=lambda x: x["emission_daily"], reverse=True)
+    return subnets[:MAX_SUBNETS]
 
 
 def fetch_wallet_transfers(address: str, days: int = 30) -> list:
     """Fetch transfer history for a wallet."""
     if not TAOSTATS_API_KEY:
-        print("⚠️ TAOSTATS_API_KEY not set", file=sys.stderr)
         return []
 
     try:
-        # Fetch transfers FROM this address (outflows)
         url = f"{TRANSFER_URL}?from={address}&limit=100"
         resp = requests.get(url, headers=get_headers(), timeout=30)
 
         if resp.status_code == 429:
-            print(f"⚠️ Rate limited for {address[:10]}...", file=sys.stderr)
+            print(f"⚠️ Rate limited", file=sys.stderr)
+            time.sleep(2)
             return []
 
         if not resp.ok:
-            print(f"⚠️ Transfer fetch failed: {resp.status_code}", file=sys.stderr)
             return []
 
         data = resp.json()
@@ -169,175 +169,114 @@ def fetch_wallet_transfers(address: str, days: int = 30) -> list:
         return []
 
 
-def analyze_transfers(transfers: list) -> dict:
-    """Analyze transfer patterns."""
+def analyze_owner(subnet: dict) -> dict:
+    """Analyze a single owner's dump behavior."""
+    owner = subnet["owner"]
+    emission_daily = subnet["emission_daily"]
+    owner_take_30d = emission_daily * OWNER_TAKE_PERCENT * 30
+
+    # Fetch transfers
+    transfers = fetch_wallet_transfers(owner, days=30)
+
+    # Analyze transfers
     total_out = 0
     to_exchange = 0
-    exchange_names = []
-    transfer_count = 0
+    exchanges_used = set()
 
     for t in transfers:
-        amount = float(t.get("amount", 0)) / 1e9  # Convert to TAO
+        amount = float(t.get("amount", 0)) / 1e9
         to_addr = t.get("to", {}).get("ss58", "")
 
         total_out += amount
-        transfer_count += 1
 
-        # Check if destination is known exchange
         if to_addr in KNOWN_EXCHANGES:
             to_exchange += amount
-            exchange_names.append(KNOWN_EXCHANGES[to_addr])
+            exchanges_used.add(KNOWN_EXCHANGES[to_addr])
 
-    return {
-        "total_outflow_tao": round(total_out, 2),
-        "to_exchange_tao": round(to_exchange, 2),
-        "exchange_percent": round(to_exchange / total_out * 100, 1) if total_out > 0 else 0,
-        "transfer_count": transfer_count,
-        "exchanges_used": list(set(exchange_names)),
-    }
-
-
-def calculate_dump_score(owner_data: dict, emission_daily: float, days: int = 30) -> dict:
-    """
-    Calculate Owner Dump Score.
-
-    Score interpretation:
-    - 0-30: ✅ Healthy (owner retaining/staking most)
-    - 30-70: 🟡 Moderate (partial selling, normal for business)
-    - 70-100: 🟠 High (selling most of take)
-    - 100+: 🔴 Aggressive (selling more than take = unstaking too)
-    """
-    owner_take_30d = emission_daily * OWNER_TAKE_PERCENT * days
-    total_outflow = owner_data.get("total_outflow_tao", 0)
-
+    # Calculate dump score
     if owner_take_30d > 0:
-        dump_ratio = (total_outflow / owner_take_30d) * 100
+        dump_score = (total_out / owner_take_30d) * 100
     else:
-        dump_ratio = 0
+        dump_score = 0
 
-    # Classify
-    if dump_ratio <= 30:
+    # Determine status
+    if dump_score <= 30:
         status = "healthy"
         emoji = "✅"
-        description = "Owner retaining most of emission take"
-    elif dump_ratio <= 70:
+    elif dump_score <= 70:
         status = "moderate"
         emoji = "🟡"
-        description = "Partial selling - normal for business operations"
-    elif dump_ratio <= 100:
+    elif dump_score <= 100:
         status = "high"
         emoji = "🟠"
-        description = "Selling most of owner take"
     else:
         status = "aggressive"
         emoji = "🔴"
-        description = "Selling more than 18% take - unstaking or additional sources"
 
     return {
-        "score": round(dump_ratio, 1),
-        "status": status,
-        "emoji": emoji,
-        "description": description,
+        "netuid": subnet["netuid"],
+        "name": subnet["name"],
+        "owner": owner,
+        "owner_short": f"{owner[:6]}...{owner[-4:]}",
+        "emission_daily_tao": round(emission_daily, 2),
         "owner_take_30d_tao": round(owner_take_30d, 2),
-        "actual_outflow_tao": round(total_outflow, 2),
-        "to_exchange_tao": owner_data.get("to_exchange_tao", 0),
-        "exchange_percent": owner_data.get("exchange_percent", 0),
+        "owner_outflow_30d_tao": round(total_out, 2),
+        "to_exchange_tao": round(to_exchange, 2),
+        "exchange_percent": round(to_exchange / total_out * 100, 1) if total_out > 0 else 0,
+        "exchanges_used": list(exchanges_used),
+        "transfer_count": len(transfers),
+        "dump_score": round(dump_score, 1),
+        "dump_status": status,
+        "dump_emoji": emoji,
+        "net_flow_30d_tao": round(subnet["net_flow_30d"], 0),
+        "net_flow_7d_tao": round(subnet["net_flow_7d"], 0),
     }
-
-
-def analyze_holdings(holdings: list, subnet_map: dict) -> list:
-    """Analyze all holdings for dump patterns."""
-    results = []
-
-    for holding in holdings:
-        netuid = holding["netuid"]
-        name = holding["name"]
-
-        print(f"\n📊 Analyzing {name} (SN{netuid})...", file=sys.stderr)
-
-        subnet = subnet_map.get(netuid, {})
-        if not subnet:
-            print(f"  ⚠️ No subnet data found", file=sys.stderr)
-            continue
-
-        owner = subnet.get("owner")
-        if not owner:
-            print(f"  ⚠️ No owner address found", file=sys.stderr)
-            continue
-
-        emission_daily = subnet.get("emission_daily", 0)
-        net_flow_30d = subnet.get("net_flow_30d", 0)
-
-        print(f"  Owner: {owner[:12]}...", file=sys.stderr)
-        print(f"  Emission: {emission_daily:.2f}τ/day", file=sys.stderr)
-        print(f"  Net Flow 30d: {net_flow_30d:+,.0f}τ", file=sys.stderr)
-
-        # Fetch owner transfers
-        transfers = fetch_wallet_transfers(owner, days=30)
-        print(f"  Transfers found: {len(transfers)}", file=sys.stderr)
-
-        # Analyze transfers
-        transfer_analysis = analyze_transfers(transfers)
-
-        # Calculate dump score
-        dump_score = calculate_dump_score(transfer_analysis, emission_daily)
-
-        result = {
-            "netuid": netuid,
-            "name": name,
-            "owner": owner,
-            "owner_short": f"{owner[:6]}...{owner[-4:]}",
-            "emission_daily_tao": round(emission_daily, 2),
-            "owner_take_daily_tao": round(emission_daily * OWNER_TAKE_PERCENT, 2),
-            "net_flow_30d_tao": round(net_flow_30d, 0),
-            "net_flow_7d_tao": round(subnet.get("net_flow_7d", 0), 0),
-            "net_flow_1d_tao": round(subnet.get("net_flow_1d", 0), 0),
-            "transfers_30d": transfer_analysis,
-            "dump_score": dump_score,
-        }
-
-        print(f"  {dump_score['emoji']} Dump Score: {dump_score['score']:.1f}% ({dump_score['status']})", file=sys.stderr)
-
-        results.append(result)
-
-    return results
 
 
 def main():
     print("=" * 60, file=sys.stderr)
     print("🗑️  OWNER DUMP SCORE TRACKER", file=sys.stderr)
-    print("   Looking in the trash can...", file=sys.stderr)
+    print("   Tracking ALL subnet owners...", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
 
-    # Get subnet data from KV
-    print("\n📥 Loading subnet data...", file=sys.stderr)
-    subnet_map = get_subnet_data()
-
-    if not subnet_map:
-        print("❌ No subnet data available", file=sys.stderr)
+    if not TAOSTATS_API_KEY:
+        print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
         sys.exit(1)
 
-    print(f"✅ Loaded {len(subnet_map)} subnets", file=sys.stderr)
+    # Get all subnets
+    subnets = get_all_subnets()
+    print(f"\n📊 Analyzing {len(subnets)} subnets...", file=sys.stderr)
 
-    # Analyze user holdings
-    results = analyze_holdings(USER_HOLDINGS, subnet_map)
+    results = []
+    for i, subnet in enumerate(subnets):
+        print(f"\n[{i+1}/{len(subnets)}] {subnet['name']} (SN{subnet['netuid']})...", file=sys.stderr)
 
-    # Sort by dump score (highest first = most suspicious)
-    results.sort(key=lambda x: x.get("dump_score", {}).get("score", 0), reverse=True)
+        result = analyze_owner(subnet)
+        results.append(result)
+
+        print(f"  {result['dump_emoji']} Score: {result['dump_score']:.1f}% | "
+              f"Out: {result['owner_outflow_30d_tao']:.0f}τ | "
+              f"CEX: {result['exchange_percent']:.0f}%", file=sys.stderr)
+
+        # Rate limit protection
+        time.sleep(0.5)
+
+    # Sort by dump score (worst first)
+    results.sort(key=lambda x: x["dump_score"], reverse=True)
 
     # Build output
     output = {
         "_timestamp": datetime.now(timezone.utc).isoformat(),
         "_source": "owner-dump-tracker",
-        "holdings_analyzed": len(results),
+        "subnets_analyzed": len(results),
         "owner_take_percent": OWNER_TAKE_PERCENT * 100,
         "analysis_period_days": 30,
-        "holdings": results,
+        "subnets": results,
         "summary": {
-            "healthy": len([r for r in results if r["dump_score"]["status"] == "healthy"]),
-            "moderate": len([r for r in results if r["dump_score"]["status"] == "moderate"]),
-            "high": len([r for r in results if r["dump_score"]["status"] == "high"]),
-            "aggressive": len([r for r in results if r["dump_score"]["status"] == "aggressive"]),
+            "healthy": len([r for r in results if r["dump_status"] == "healthy"]),
+            "moderate": len([r for r in results if r["dump_status"] == "moderate"]),
+            "high": len([r for r in results if r["dump_status"] == "high"]),
+            "aggressive": len([r for r in results if r["dump_status"] == "aggressive"]),
         }
     }
 
@@ -346,20 +285,26 @@ def main():
     print("📊 DUMP SCORE SUMMARY", file=sys.stderr)
     print("=" * 60, file=sys.stderr)
 
-    for r in results:
-        ds = r["dump_score"]
-        print(f"{ds['emoji']} {r['name']:15} Score: {ds['score']:6.1f}%  ({ds['status']})", file=sys.stderr)
+    # Top 5 worst
+    print("\n🔴 TOP 5 DUMPERS:", file=sys.stderr)
+    for r in results[:5]:
+        print(f"  {r['dump_emoji']} {r['name']:20} Score: {r['dump_score']:6.1f}%  "
+              f"CEX: {r['exchange_percent']:.0f}%", file=sys.stderr)
 
-    print("\n" + "-" * 60, file=sys.stderr)
+    # Top 5 best
+    print("\n✅ TOP 5 HOLDERS:", file=sys.stderr)
+    for r in results[-5:][::-1]:
+        print(f"  {r['dump_emoji']} {r['name']:20} Score: {r['dump_score']:6.1f}%", file=sys.stderr)
+
     s = output["summary"]
-    print(f"✅ Healthy: {s['healthy']}  🟡 Moderate: {s['moderate']}  🟠 High: {s['high']}  🔴 Aggressive: {s['aggressive']}", file=sys.stderr)
+    print(f"\n✅ Healthy: {s['healthy']}  🟡 Moderate: {s['moderate']}  "
+          f"🟠 High: {s['high']}  🔴 Aggressive: {s['aggressive']}", file=sys.stderr)
 
     # Write to KV
     json_data = json.dumps(output, indent=2)
     if write_to_kv("owner_dump_scores", json_data):
         print("\n✅ Results written to KV: owner_dump_scores", file=sys.stderr)
 
-    # Output JSON
     print(json_data)
 
 

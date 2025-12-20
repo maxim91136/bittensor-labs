@@ -35,7 +35,12 @@ export async function onRequest(context) {
   const limit = parseInt(url.searchParams.get('limit')) || 100;
 
   try {
-    const topSubnets = await KV.get('top_subnets');
+    // Fetch both subnet data and owner dump scores in parallel
+    const [topSubnets, ownerDumpRaw] = await Promise.all([
+      KV.get('top_subnets'),
+      KV.get('owner_dump_scores').catch(() => null)
+    ]);
+
     if (!topSubnets) {
       return new Response(JSON.stringify({
         error: 'No subnet data found',
@@ -46,6 +51,19 @@ export async function onRequest(context) {
 
     const subnetsData = JSON.parse(topSubnets);
     const subnets = subnetsData.top_subnets || [];
+
+    // Parse owner dump scores if available
+    let ownerDumpMap = {};
+    if (ownerDumpRaw) {
+      try {
+        const ownerDumpData = JSON.parse(ownerDumpRaw);
+        for (const s of (ownerDumpData.subnets || [])) {
+          ownerDumpMap[s.netuid] = s;
+        }
+      } catch (e) {
+        // Ignore parse errors
+      }
+    }
 
     // Filter by netuids if provided
     let filteredSubnets = subnets;
@@ -109,6 +127,9 @@ export async function onRequest(context) {
         emoji = '🔴';
       }
 
+      // Get owner dump data if available
+      const ownerDump = ownerDumpMap[s.netuid] || null;
+
       return {
         netuid: s.netuid,
         name: s.subnet_name,
@@ -132,7 +153,15 @@ export async function onRequest(context) {
         status,
         emoji,
         trend,
-        trend_emoji: trendEmoji
+        trend_emoji: trendEmoji,
+
+        // Owner Dump data (if available)
+        owner_dump_score: ownerDump?.dump_score ?? null,
+        owner_dump_status: ownerDump?.dump_status ?? null,
+        owner_dump_emoji: ownerDump?.dump_emoji ?? null,
+        owner_outflow_30d_tao: ownerDump?.owner_outflow_30d_tao ?? null,
+        owner_to_exchange_tao: ownerDump?.to_exchange_tao ?? null,
+        owner_exchanges_used: ownerDump?.exchanges_used ?? []
       };
     }).filter(s => s.emission_daily_tao > 0);
 

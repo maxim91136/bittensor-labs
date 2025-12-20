@@ -1,0 +1,50 @@
+name: taostats - Owner Dump Scores
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'    # every 6 hours at :17
+  workflow_dispatch: {}
+  workflow_call: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python with pip cache
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: '.github/requirements-bittensor.txt'
+
+      - name: Install deps (cached)
+        run: pip install -r .github/requirements-bittensor.txt
+
+      - name: Fetch owner dump scores
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_METRICS_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
+        run: |
+          echo "Fetching owner dump scores..."
+          python .github/scripts/fetch_owner_dump_score.py > .github/data/owner_dump_scores.json 2>&1 || {
+            echo "::warning::Owner dump score fetch failed"
+            exit 0  # Don't fail workflow, this is supplementary data
+          }
+
+          if [ -f .github/data/owner_dump_scores.json ]; then
+            echo "Owner dump scores collected"
+            cat .github/data/owner_dump_scores.json | head -50
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: owner-dump-scores-json
+          path: .github/data/owner_dump_scores.json
+          if-no-files-found: ignore

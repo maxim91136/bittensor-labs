@@ -5151,6 +5151,19 @@ body.light-bg .pro-joke {
 .pressure-display-table .flow-positive { color: #22c55e; }
 .pressure-display-table .flow-negative { color: #ef4444; }
 
+/* Owner dump column */
+.pressure-display-table .owner-col {
+  font-size: 0.85em;
+  text-align: center;
+  cursor: help;
+  white-space: nowrap;
+}
+.pressure-display-table .owner-unknown { color: rgba(255, 255, 255, 0.3); }
+.pressure-display-table .owner-healthy { color: #22c55e; }
+.pressure-display-table .owner-moderate { color: #fbbf24; }
+.pressure-display-table .owner-high { color: #f97316; }
+.pressure-display-table .owner-aggressive { color: #ef4444; font-weight: 600; }
+
 /* Separator row */
 .pressure-display-table .separator-row td {
   background: rgba(34, 197, 94, 0.08);

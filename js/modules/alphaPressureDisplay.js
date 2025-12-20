@@ -129,7 +129,7 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
   }
 
   if (displayData.length === 0) {
-    displayList.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;">
+    displayList.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">
       ${filter === 'favorites' ? 'No favorites yet. Click ★ to add.' : 'No data available'}
     </td></tr>`;
     return;
@@ -138,7 +138,7 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
   const rows = displayData.map(s => {
     // Separator row
     if (s.separator) {
-      return `<tr class="separator-row"><td colspan="6">─── Best Performers ───</td></tr>`;
+      return `<tr class="separator-row"><td colspan="7">─── Best Performers ───</td></tr>`;
     }
 
     const isFavorite = favorites.includes(s.netuid);
@@ -161,6 +161,27 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
     else if (pressure >= -50) pressureClass = 'pressure-sell';
     else pressureClass = 'pressure-heavy-sell';
 
+    // Owner dump indicator
+    const ownerDumpScore = s.owner_dump_score;
+    const ownerDumpEmoji = s.owner_dump_emoji || '';
+    const ownerDumpStatus = s.owner_dump_status || '';
+    let ownerDumpClass = 'owner-unknown';
+    let ownerDumpDisplay = '—';
+
+    if (ownerDumpScore !== null && ownerDumpScore !== undefined) {
+      ownerDumpDisplay = `${ownerDumpEmoji} ${Math.round(ownerDumpScore)}%`;
+      if (ownerDumpStatus === 'healthy') ownerDumpClass = 'owner-healthy';
+      else if (ownerDumpStatus === 'moderate') ownerDumpClass = 'owner-moderate';
+      else if (ownerDumpStatus === 'high') ownerDumpClass = 'owner-high';
+      else if (ownerDumpStatus === 'aggressive') ownerDumpClass = 'owner-aggressive';
+    }
+
+    // Owner tooltip with exchange info
+    const exchangesUsed = s.owner_exchanges_used || [];
+    const ownerTooltip = ownerDumpScore !== null
+      ? `Owner Dump Score: ${Math.round(ownerDumpScore)}%\nOutflow: ${s.owner_outflow_30d_tao || 0}τ\nTo CEX: ${s.owner_to_exchange_tao || 0}τ${exchangesUsed.length ? '\nExchanges: ' + exchangesUsed.join(', ') : ''}`
+      : 'Owner data not available';
+
     return `<tr data-netuid="${s.netuid}">
       <td class="fav-col">
         <button class="fav-btn ${isFavorite ? 'active' : ''}" data-netuid="${s.netuid}" title="Add to favorites">
@@ -174,6 +195,7 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
       <td class="flow-col ${flow7dClass}">${flow7dFormatted}</td>
       <td class="flow-col ${flow30dClass}">${flow30dFormatted}</td>
       <td class="pressure-col ${pressureClass}">${s.emoji} ${pressureFormatted}</td>
+      <td class="owner-col ${ownerDumpClass}" title="${ownerTooltip}">${ownerDumpDisplay}</td>
       <td class="trend-col">${s.trend_emoji}</td>
     </tr>`;
   }).join('');
@@ -183,7 +205,7 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
   const showingCount = displayData.filter(s => !s.separator).length;
   const expandRow = totalCount > limit ? `
     <tr class="expand-row">
-      <td colspan="6" style="text-align:center;padding:8px;">
+      <td colspan="7" style="text-align:center;padding:8px;">
         <button class="expand-btn" onclick="window._alphaPressureRender(${!expanded})">
           ${expanded ? '▲ Show Less' : `▼ Show More (${totalCount} total)`}
         </button>
