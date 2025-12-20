@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.33 (2025-12-20)
+### Added
+- **Owner Dump Score Tracker**: Exposes subnet owner selling behavior
+  - Tracks owner wallet outflows vs their 18% emission take
+  - Identifies transfers to known exchanges (Binance, Kraken, etc.)
+  - Dump Score = (Outflow / Owner Take) × 100
+  - Status levels: Healthy (≤30%), Moderate (≤70%), High (≤100%), Aggressive (>100%)
+  - New GitHub workflow runs every 6 hours
+- **Alpha Pressure Owner Column**: Shows owner dump data in pressure table
+  - Hover tooltip with detailed outflow and exchange info
+
+### Fixed
+- **Rate Limiting**: Increased delay to 1s for Taostats API calls
+- **Workflow**: Added mkdir -p for data directory creation
+
 ## v1.0.0-rc.33.32 (2025-12-19)
 ### Fixed
 - **Talent Scouting Mobile Layout**: Fixed broken table layout on small screens
