@@ -5155,6 +5155,30 @@ body.light-bg .pro-joke {
 .pressure-display-table .separator-row td {
   background: rgba(34, 197, 94, 0.08);
   font-weight: 600;
+  text-align: center;
+  color: var(--accent);
+  font-size: 0.85em;
+  padding: 6px;
+}
+
+/* Expand button */
+.pressure-display-table .expand-row td {
+  background: transparent;
+}
+.pressure-display-table .expand-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.7);
+  padding: 6px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85em;
+  transition: all 0.2s ease;
+}
+.pressure-display-table .expand-btn:hover {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* Light mode */

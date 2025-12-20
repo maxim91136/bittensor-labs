@@ -2,6 +2,7 @@
 // Shows subnet alpha token buying/selling pressure with filters and favorites
 
 const FAVORITES_KEY = 'alphaPressure_favorites';
+const DISPLAY_LIMIT_KEY = 'alphaPressure_limit';
 
 /**
  * Get favorites from localStorage
@@ -44,8 +45,10 @@ export function initAlphaPressureCard() {
   if (!container) return;
 
   // Store state
-  let currentFilter = 'all'; // all, favorites, buying, selling
+  let currentFilter = 'all';
   let allData = [];
+  let apiTimestamp = null;
+  let showExpanded = false;
 
   // Setup filter buttons
   const filterBtns = container.querySelectorAll('.filter-btn');
@@ -54,15 +57,22 @@ export function initAlphaPressureCard() {
       filterBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       currentFilter = btn.dataset.filter;
-      renderTable(allData, currentFilter);
+      renderTable(allData, currentFilter, showExpanded, apiTimestamp);
     });
   });
 
   // Load data
-  loadAlphaPressureData().then(data => {
-    allData = data;
-    renderTable(data, currentFilter);
+  loadAlphaPressureData().then(result => {
+    allData = result.subnets;
+    apiTimestamp = result.timestamp;
+    renderTable(allData, currentFilter, showExpanded, apiTimestamp);
   });
+
+  // Make renderTable accessible for expand toggle
+  window._alphaPressureRender = (expanded) => {
+    showExpanded = expanded;
+    renderTable(allData, currentFilter, showExpanded, apiTimestamp);
+  };
 }
 
 /**
@@ -73,46 +83,50 @@ async function loadAlphaPressureData() {
     const res = await fetch('/api/alpha_pressure?limit=100');
     if (!res.ok) throw new Error('Failed to fetch');
     const data = await res.json();
-    return data.subnets || [];
+    return {
+      subnets: data.subnets || [],
+      timestamp: data._timestamp || null
+    };
   } catch (err) {
     console.error('Error loading alpha pressure:', err);
-    return [];
+    return { subnets: [], timestamp: null };
   }
 }
 
 /**
  * Render the table based on current filter
  */
-function renderTable(subnets, filter = 'all') {
+function renderTable(subnets, filter = 'all', expanded = false, timestamp = null) {
   const displayList = document.getElementById('alphaPressureList');
   const summaryEl = document.getElementById('alphaPressureSummary');
+  const updateEl = document.getElementById('alphaPressureUpdate');
   if (!displayList) return;
 
   const favorites = getFavorites();
+  const limit = expanded ? 30 : 10;
 
-  // Filter subnets
-  let filtered = [...subnets];
-  switch (filter) {
-    case 'favorites':
-      filtered = subnets.filter(s => favorites.includes(s.netuid));
-      break;
-    case 'buying':
-      filtered = subnets.filter(s => s.alpha_pressure_30d >= 0);
-      break;
-    case 'selling':
-      filtered = subnets.filter(s => s.alpha_pressure_30d < 0);
-      break;
+  // Filter and prepare data
+  let displayData = [];
+
+  if (filter === 'all') {
+    // Show mix: worst sellers + best buyers
+    const sorted = [...subnets].sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d);
+    const worst = sorted.slice(0, Math.ceil(limit / 2));
+    const best = sorted.slice(-Math.ceil(limit / 2)).reverse();
+    displayData = [...worst, { separator: true }, ...best];
+  } else if (filter === 'favorites') {
+    displayData = subnets.filter(s => favorites.includes(s.netuid));
+  } else if (filter === 'buying') {
+    displayData = subnets
+      .filter(s => s.alpha_pressure_30d >= 0)
+      .sort((a, b) => b.alpha_pressure_30d - a.alpha_pressure_30d)
+      .slice(0, limit);
+  } else if (filter === 'selling') {
+    displayData = subnets
+      .filter(s => s.alpha_pressure_30d < 0)
+      .sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d)
+      .slice(0, limit);
   }
-
-  // Sort: worst first for selling, best first for buying
-  if (filter === 'buying') {
-    filtered.sort((a, b) => b.alpha_pressure_30d - a.alpha_pressure_30d);
-  } else {
-    filtered.sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d);
-  }
-
-  // Limit display
-  const displayData = filtered.slice(0, 15);
 
   if (displayData.length === 0) {
     displayList.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:20px;">
@@ -122,6 +136,11 @@ function renderTable(subnets, filter = 'all') {
   }
 
   const rows = displayData.map(s => {
+    // Separator row
+    if (s.separator) {
+      return `<tr class="separator-row"><td colspan="6">─── Best Performers ───</td></tr>`;
+    }
+
     const isFavorite = favorites.includes(s.netuid);
     const pressure = s.alpha_pressure_30d;
     const pressureFormatted = pressure >= 0 ? `+${pressure.toFixed(0)}%` : `${pressure.toFixed(0)}%`;
@@ -159,7 +178,20 @@ function renderTable(subnets, filter = 'all') {
     </tr>`;
   }).join('');
 
-  displayList.innerHTML = rows;
+  // Add expand/collapse row
+  const totalCount = filter === 'all' ? subnets.length : displayData.filter(s => !s.separator).length;
+  const showingCount = displayData.filter(s => !s.separator).length;
+  const expandRow = totalCount > limit ? `
+    <tr class="expand-row">
+      <td colspan="6" style="text-align:center;padding:8px;">
+        <button class="expand-btn" onclick="window._alphaPressureRender(${!expanded})">
+          ${expanded ? '▲ Show Less' : `▼ Show More (${totalCount} total)`}
+        </button>
+      </td>
+    </tr>
+  ` : '';
+
+  displayList.innerHTML = rows + expandRow;
 
   // Add click handlers for favorite buttons
   displayList.querySelectorAll('.fav-btn').forEach(btn => {
@@ -170,8 +202,6 @@ function renderTable(subnets, filter = 'all') {
       const isNowFavorite = newFavorites.includes(netuid);
       btn.classList.toggle('active', isNowFavorite);
       btn.textContent = isNowFavorite ? '★' : '☆';
-
-      // Update favorites count
       updateFavoritesCount(subnets);
     });
   });
@@ -182,10 +212,16 @@ function renderTable(subnets, filter = 'all') {
     const neutral = subnets.filter(s => s.alpha_pressure_30d >= 0 && s.alpha_pressure_30d < 50).length;
     const selling = subnets.filter(s => s.alpha_pressure_30d < 0).length;
     summaryEl.innerHTML = `
-      <span class="summary-item summary-good" title="Accumulation">🟢 ${buying}</span>
-      <span class="summary-item summary-neutral" title="Neutral">🟡 ${neutral}</span>
-      <span class="summary-item summary-bad" title="Selling Pressure">🔴 ${selling}</span>
+      <span class="summary-item summary-good" title="Accumulation (≥50%)">🟢 ${buying}</span>
+      <span class="summary-item summary-neutral" title="Neutral (0-50%)">🟡 ${neutral}</span>
+      <span class="summary-item summary-bad" title="Selling Pressure (<0%)">🔴 ${selling}</span>
     `;
+  }
+
+  // Update timestamp
+  if (updateEl && timestamp) {
+    const date = new Date(timestamp);
+    updateEl.textContent = `Updated: ${date.toLocaleTimeString()}`;
   }
 
   updateFavoritesCount(subnets);
@@ -213,6 +249,5 @@ function updateFavoritesCount(subnets) {
  */
 export async function loadAlphaPressureDisplay(displayList, options = {}) {
   if (!displayList) return;
-  // Just trigger the card init
   initAlphaPressureCard();
 }
