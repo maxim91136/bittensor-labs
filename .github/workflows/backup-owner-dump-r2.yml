@@ -1,0 +1,93 @@
+name: Backup Owner Dump Scores to R2
+
+on:
+  schedule:
+    - cron: '25 */6 * * *'  # every 6 hours at :25 (after fetch at :17)
+  workflow_dispatch: {}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install requests boto3
+
+      - name: Fetch owner_dump_scores from Cloudflare KV
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_KV_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+        run: |
+          URL="https://api.cloudflare.com/client/v4/accounts/${CF_ACCOUNT_ID}/storage/kv/namespaces/${CF_KV_NAMESPACE_ID}/values/owner_dump_scores"
+          STATUS=$(curl -s -o owner_dump_scores.json -w "%{http_code}" -H "Authorization: Bearer $CF_API_TOKEN" "$URL") || true
+          if [ "$STATUS" -eq 404 ]; then
+            echo "No owner_dump_scores key in KV; nothing to backup."
+            exit 0
+          fi
+          if [ ! -s owner_dump_scores.json ]; then
+            echo "No owner_dump_scores.json downloaded; exiting"
+            exit 0
+          fi
+          TS=$(date -u +"%Y%m%dT%H%M%SZ")
+          NEW_FILE="owner_dump_scores-${TS}.json"
+          mv owner_dump_scores.json "$NEW_FILE"
+          echo "Downloaded owner dump scores to $NEW_FILE"
+
+      - name: Upload to R2
+        env:
+          ENABLE_R2: 'true'
+          R2_ENDPOINT: ${{ secrets.R2_ENDPOINT }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_PREFIX: ${{ secrets.R2_PREFIX }}
+        run: |
+          python3 - <<'PY'
+          import os
+          import glob
+          import boto3
+          from botocore.config import Config
+
+          endpoint = os.environ.get('R2_ENDPOINT')
+          bucket = os.environ.get('R2_BUCKET')
+          access_key = os.environ.get('R2_ACCESS_KEY_ID')
+          secret_key = os.environ.get('R2_SECRET_ACCESS_KEY')
+          prefix = os.environ.get('R2_PREFIX', '')
+
+          if not all([endpoint, bucket, access_key, secret_key]):
+              print("⚠️ R2 credentials not set, skipping R2 upload")
+              exit(0)
+
+          s3 = boto3.client(
+              's3',
+              endpoint_url=endpoint,
+              aws_access_key_id=access_key,
+              aws_secret_access_key=secret_key,
+              config=Config(signature_version='s3v4')
+          )
+
+          files = glob.glob("owner_dump_scores-*.json")
+          if not files:
+              print("No owner_dump_scores files to upload")
+              exit(0)
+
+          for f in files:
+              # Upload timestamped version
+              key = f"{prefix}owner-dump-scores/{f}" if prefix else f"owner-dump-scores/{f}"
+              s3.upload_file(f, bucket, key)
+              print(f"✅ Uploaded to R2: {key}")
+
+              # Also upload as latest
+              key_latest = f"{prefix}owner-dump-scores/owner_dump_scores-latest.json" if prefix else "owner-dump-scores/owner_dump_scores-latest.json"
+              s3.upload_file(f, bucket, key_latest)
+              print(f"✅ Uploaded to R2: {key_latest}")
+          PY
