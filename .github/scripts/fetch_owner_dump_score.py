@@ -53,7 +53,7 @@ KNOWN_EXCHANGES = {
 }
 
 OWNER_TAKE_PERCENT = 0.18  # 18% owner take
-MAX_SUBNETS = 50  # Top 50 by emission (saves API credits, covers all important subnets)
+MAX_SUBNETS = 150  # All subnets for full visibility
 
 
 def get_headers():
