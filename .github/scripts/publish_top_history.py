@@ -248,6 +248,47 @@ def process_mcap(data: Dict) -> List[Dict]:
     return entries
 
 
+def process_alpha_pressure(data: Dict) -> List[Dict]:
+    """Extract normalized entries from alpha_pressure response.
+
+    Tracks ALL subnets with their buying/selling pressure.
+    Value = alpha_pressure_30d (positive = buying, negative = selling)
+    """
+    entries = []
+    subnets = data.get('subnets', [])
+
+    for s in subnets:
+        netuid = s.get('netuid', 0)
+        name = s.get('name') or f"SN{netuid}"
+        pressure = s.get('alpha_pressure_30d', 0)
+        status = s.get('status', 'unknown')
+        flow_30d = s.get('net_flow_30d_tao', 0)
+
+        try:
+            pressure = float(pressure)
+            flow_30d = float(flow_30d)
+        except:
+            pressure = 0.0
+            flow_30d = 0.0
+
+        entries.append({
+            'id': str(netuid),
+            'name': name,
+            'pressure': round(pressure, 1),
+            'flow_30d': round(flow_30d, 0),
+            'status': status
+        })
+
+    # Sort by pressure (most negative first = worst dumpers)
+    entries.sort(key=lambda x: x['pressure'])
+
+    # Add rank after sorting
+    for i, e in enumerate(entries, 1):
+        e['rank'] = i
+
+    return entries
+
+
 def append_to_history(history_key: str, new_entry: Dict) -> bool:
     """Append a new entry to a history collection and store it."""
     # Get existing history
@@ -306,7 +347,8 @@ def main():
         'validators': None,
         'wallets': None,
         'subnets': None,
-        'mcap': None
+        'mcap': None,
+        'alpha_pressure': None
     }
     
     # === Top Validators ===
@@ -425,13 +467,45 @@ def main():
 
     print()
 
+    # === Alpha Pressure ===
+    print("📈 Fetching Alpha Pressure...")
+    pressure_data = fetch_api('/api/alpha_pressure')
+    if pressure_data:
+        entries = process_alpha_pressure(pressure_data)
+        if entries:
+            snapshot = {
+                '_timestamp': timestamp,
+                'entries': entries,
+                'summary': pressure_data.get('summary', {})
+            }
+            all_snapshots['alpha_pressure'] = snapshot
+
+            print(f"   Found {len(entries)} subnets with pressure data")
+            # Show worst dumpers
+            worst = [e for e in entries if e['pressure'] < 0][:3]
+            for e in worst:
+                print(f"   🔴 {e['name']}: {e['pressure']:+.1f}% ({e['flow_30d']:+,.0f}τ)")
+
+            if append_to_history('alpha_pressure_history', snapshot):
+                success_count += 1
+            else:
+                error_count += 1
+        else:
+            print("   ⚠️ No pressure entries extracted")
+            error_count += 1
+    else:
+        print("   ❌ Failed to fetch alpha_pressure")
+        error_count += 1
+
+    print()
+
     # Write local backup
     write_local_backup('top_history_latest.json', all_snapshots)
 
     # Summary
     print("=" * 60)
-    print(f"✅ Success: {success_count}/4")
-    print(f"❌ Errors: {error_count}/4")
+    print(f"✅ Success: {success_count}/5")
+    print(f"❌ Errors: {error_count}/5")
     print("=" * 60)
     
     if error_count > 0:
