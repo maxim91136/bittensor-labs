@@ -2,7 +2,7 @@ name: Backup Owner Dump Scores to R2
 
 on:
   schedule:
-    - cron: '25 */6 * * *'  # every 6 hours at :25 (after fetch at :17)
+    - cron: '25 */3 * * *'  # every 3 hours at :25 (after fetch at :17)
   workflow_dispatch: {}
 
 jobs:
