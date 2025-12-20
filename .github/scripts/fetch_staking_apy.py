@@ -7,11 +7,15 @@ Calculates network-wide average APR from top validators.
 import os
 import sys
 import json
+import time
 import requests
 from datetime import datetime, timezone
 
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
 VALIDATOR_URL = "https://api.taostats.io/api/dtao/validator/latest/v1"
+
+MAX_RETRIES = 3
+RETRY_DELAY = 5  # seconds
 
 
 def fetch_staking_apy(num_validators=50):
@@ -19,20 +23,50 @@ def fetch_staking_apy(num_validators=50):
     if not TAOSTATS_API_KEY:
         print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
         return None
-    
+
     headers = {
         "accept": "application/json",
         "Authorization": TAOSTATS_API_KEY
     }
-    
+
+    # Fetch top validators ordered by stake (descending)
+    url = f"{VALIDATOR_URL}?limit={num_validators}"
+    print(f"📊 Fetching top {num_validators} validators for APY calculation...", file=sys.stderr)
+
+    data = None
+    for attempt in range(MAX_RETRIES):
+        try:
+            resp = requests.get(url, headers=headers, timeout=30)
+
+            # Handle rate limiting with retry
+            if resp.status_code == 429:
+                if attempt < MAX_RETRIES - 1:
+                    wait_time = RETRY_DELAY * (attempt + 1)
+                    print(f"⚠️ Rate limited (429), waiting {wait_time}s before retry {attempt + 2}/{MAX_RETRIES}...", file=sys.stderr)
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    print(f"❌ Rate limited after {MAX_RETRIES} attempts", file=sys.stderr)
+                    return None
+
+            resp.raise_for_status()
+            data = resp.json()
+            break
+        except requests.exceptions.RequestException as e:
+            if attempt < MAX_RETRIES - 1:
+                wait_time = RETRY_DELAY * (attempt + 1)
+                print(f"⚠️ Request failed: {e}, retrying in {wait_time}s ({attempt + 2}/{MAX_RETRIES})...", file=sys.stderr)
+                time.sleep(wait_time)
+                continue
+            else:
+                print(f"❌ Failed to fetch validators after {MAX_RETRIES} attempts: {e}", file=sys.stderr)
+                return None
+
+    if data is None:
+        print("❌ No data received", file=sys.stderr)
+        return None
+
     try:
-        # Fetch top validators ordered by stake (descending)
-        url = f"{VALIDATOR_URL}?limit={num_validators}"
-        print(f"📊 Fetching top {num_validators} validators for APY calculation...", file=sys.stderr)
-        
-        resp = requests.get(url, headers=headers, timeout=30)
-        resp.raise_for_status()
-        data = resp.json()
         
         validators = data.get("data", [])
         if not validators:
@@ -110,7 +144,7 @@ def fetch_staking_apy(num_validators=50):
         return result
         
     except Exception as e:
-        print(f"❌ Failed to fetch validators: {e}", file=sys.stderr)
+        print(f"❌ Failed to process validator data: {e}", file=sys.stderr)
         return None
 
 
