@@ -258,8 +258,8 @@ def main():
               f"Out: {result['owner_outflow_30d_tao']:.0f}τ | "
               f"CEX: {result['exchange_percent']:.0f}%", file=sys.stderr)
 
-        # Rate limit protection (20 req/min = 3s between calls)
-        time.sleep(3.0)
+        # Rate limit protection (waiting for Doug's 20/min upgrade, using 12s for now)
+        time.sleep(12.0)
 
     # Sort by dump score (worst first)
     results.sort(key=lambda x: x["dump_score"], reverse=True)
