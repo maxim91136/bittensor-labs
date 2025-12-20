@@ -258,8 +258,8 @@ def main():
               f"Out: {result['owner_outflow_30d_tao']:.0f}τ | "
               f"CEX: {result['exchange_percent']:.0f}%", file=sys.stderr)
 
-        # Rate limit protection (Taostats allows ~10 req/min)
-        time.sleep(1.0)
+        # Rate limit protection (Free tier = 5 req/min = 12s between calls)
+        time.sleep(12.0)
 
     # Sort by dump score (worst first)
     results.sort(key=lambda x: x["dump_score"], reverse=True)
