@@ -5081,6 +5081,21 @@ body.light-bg .pro-joke {
   color: var(--accent);
 }
 
+.alpha-pressure-card .filter-btn.dumpers-btn {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.alpha-pressure-card .filter-btn.dumpers-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.alpha-pressure-card .filter-btn.dumpers-btn.active {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
 .alpha-pressure-card .pressure-summary {
   display: flex;
   gap: 16px;

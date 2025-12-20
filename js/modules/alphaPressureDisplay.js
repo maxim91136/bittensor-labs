@@ -164,12 +164,18 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
       .filter(s => s.alpha_pressure_30d < 0)
       .sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d)
       .slice(0, limit);
+  } else if (filter === 'dumpers') {
+    // Dumpers: Owner dump score > 30% (moderate, high, aggressive)
+    displayData = searchedSubnets
+      .filter(s => s.owner_dump_score !== null && s.owner_dump_score > 30)
+      .sort((a, b) => b.owner_dump_score - a.owner_dump_score);
   }
 
   if (displayData.length === 0) {
     let emptyMsg = 'No data available';
     if (searchQuery) emptyMsg = `No subnets matching "${searchQuery}"`;
     else if (filter === 'favorites') emptyMsg = 'No favorites yet. Click ★ to add.';
+    else if (filter === 'dumpers') emptyMsg = '✅ No aggressive dumpers detected!';
     displayList.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;">${emptyMsg}</td></tr>`;
     return;
   }
@@ -195,19 +201,23 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
     // Color class based on pressure (simple: positive = green, negative = red)
     const pressureClass = pressure >= 0 ? 'pressure-buying' : 'pressure-selling';
 
-    // Owner dump indicator
+    // Owner dump indicator - only show if score > 30% (notable)
     const ownerDumpScore = s.owner_dump_score;
     const ownerDumpEmoji = s.owner_dump_emoji || '';
     const ownerDumpStatus = s.owner_dump_status || '';
     let ownerDumpClass = 'owner-unknown';
     let ownerDumpDisplay = '—';
 
-    if (ownerDumpScore !== null && ownerDumpScore !== undefined) {
+    if (ownerDumpScore !== null && ownerDumpScore !== undefined && ownerDumpScore > 30) {
+      // Only display if score is notable (> 30% = moderate or worse)
       ownerDumpDisplay = `${ownerDumpEmoji} ${Math.round(ownerDumpScore)}%`;
-      if (ownerDumpStatus === 'healthy') ownerDumpClass = 'owner-healthy';
-      else if (ownerDumpStatus === 'moderate') ownerDumpClass = 'owner-moderate';
+      if (ownerDumpStatus === 'moderate') ownerDumpClass = 'owner-moderate';
       else if (ownerDumpStatus === 'high') ownerDumpClass = 'owner-high';
       else if (ownerDumpStatus === 'aggressive') ownerDumpClass = 'owner-aggressive';
+    } else if (ownerDumpScore !== null && ownerDumpScore <= 30) {
+      // Healthy owners - show checkmark
+      ownerDumpDisplay = '✅';
+      ownerDumpClass = 'owner-healthy';
     }
 
     // Owner tooltip with exchange info
