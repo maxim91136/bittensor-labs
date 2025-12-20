@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.33.33.1 (2025-12-20)
+### Added
+- **Dumpers Filter**: New filter badge to show only problematic subnet owners (>30% dump score)
+- **R2 Backups**: Historical backups for subnet data and owner dump scores
+  - `backup-subnets-r2.yml`: Full subnet data every 6h
+  - `backup-owner-dump-r2.yml`: Owner dump scores every 3h
+
+### Changed
+- **Full Subnet Coverage**: Now tracking all 128+ subnets (increased limits from 100 to 150)
+- **Owner Dump Frequency**: Increased from 6h to 3h for more timely data
+- **Owner Column Display**: Shows ✅ for healthy owners, only displays scores >30%
+
 ## v1.0.0-rc.33.33 (2025-12-20)
 ### Added
 - **Owner Dump Score Tracker**: Exposes subnet owner selling behavior
