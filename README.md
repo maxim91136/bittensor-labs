@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.38` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.38.1` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🏆 **RC33.16 - Subnet Champions League**:
 > - **Subnet Champions League Card** with 3 toggle views: Emissions, Market Cap, Hybrid (ML predictions)
@@ -90,6 +90,22 @@ See [docs/HALVING_ESTIMATES.md](docs/HALVING_ESTIMATES.md) for complete technica
 - **EUR currency support**: View prices in Euros with live conversion
 - **Smart Toggle Logic**: Candle/Volume and Compare modes are mutually exclusive
 - **Data sources**: Binance (primary), Taostats, CoinGecko (fallbacks)
+
+### 🔧 Developer Activity (RC38+)
+Real-time GitHub development metrics from opentensor repositories:
+
+**Tracked Repositories**:
+- `opentensor/bittensor` - Main SDK
+- `opentensor/subtensor` - Blockchain layer
+- `opentensor/bittensor-subnet-template` - Subnet template
+
+**Metrics**:
+- **Active Developers**: Unique contributors (7d/30d)
+- **Commits**: Code changes (7d/30d)
+- **Total Contributors**: All-time contributor count
+- **Per-Repository Breakdown**: Visual bars showing activity distribution
+
+**Data Source**: GitHub API (free, 5000 req/hour) - Updates every 6 hours
 
 ### 📊 TAO Distribution Analysis (RC30+)
 Institutional-grade wealth distribution metrics:
