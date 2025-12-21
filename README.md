@@ -8,22 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.38.2` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
-
-> 🏆 **RC33.16 - Subnet Champions League**:
-> - **Subnet Champions League Card** with 3 toggle views: Emissions, Market Cap, Hybrid (ML predictions)
-> - **ML Prediction Model**: Probability-based ranking for reaching #1 emission position
-> - **Zero-Emission Warning** ⚠️: Red alerts for high mcap + 0 revenue subnets (e.g., SN5 Hone: 67Kτ mcap, 0 emissions)
-> - **Data Architecture**: TOP_N expanded to 100 for full emission coverage
-> - **Power Law Aware**: UI shows Top 10, backend stores Top 100 for predictions
->
-> **RC33 Legacy - WORLD'S FIRST: Doug's Cheat + Triple-Precision GPS**:
-> - **100% Halving Accuracy**: Predicted Halving #1 to the exact second (13:31 UTC)
-> - **Doug's Cheat**: Using REAL pre-halving emission from chain history (halved)
-> - **Triple-Precision GPS**: Distance-adaptive emission selection methodology
-> - **Real Data**: Measured 7193.74 τ/day → halved to 3596.87 τ/day (vs theoretical 3600)
-> - **0.09% more accurate** than protocol-defined theoretical values!
-> - Props to **Doug from Taostats** for the brilliant methodology
+**Latest release:** `v1.0.0-rc.38.3` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 ## Features
 

@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.38.3 (2025-12-21)
+### Changed
+- **README**: Removed redundant feature highlights (already documented in Features section)
+
 ## v1.0.0-rc.38.2 (2025-12-21)
 ### Changed
 - **README**: Reorganized features chronologically by RC release (newest first)
