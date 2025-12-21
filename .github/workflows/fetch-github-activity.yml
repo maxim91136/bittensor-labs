@@ -1,0 +1,50 @@
+name: github - Developer Activity
+
+on:
+  schedule:
+    - cron: '23 */6 * * *'   # every 6h at :23
+  workflow_dispatch: {}
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python with pip cache
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: '.github/requirements-bittensor.txt'
+
+      - name: Install deps (cached)
+        run: pip install -r .github/requirements-bittensor.txt
+
+      - name: Fetch GitHub activity
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_METRICS_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+        run: |
+          echo "Fetching GitHub developer activity..."
+          mkdir -p .github/data
+          python .github/scripts/fetch_github_activity.py > .github/data/github_activity.json || {
+            echo "::warning::GitHub activity fetch failed"
+            exit 0
+          }
+
+          if [ -f .github/data/github_activity.json ]; then
+            echo "GitHub activity collected"
+            cat .github/data/github_activity.json | head -30
+          fi
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: github-activity-json
+          path: .github/data/github_activity.json
+          if-no-files-found: ignore
