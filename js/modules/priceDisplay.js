@@ -67,6 +67,9 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
   // Bittensor SDK / network API
   const networkStatus = networkData ? 'ok' : 'error';
 
+  // Token Terminal (methodology for turnover calculation - always ok)
+  const tokenTerminalStatus = 'ok';
+
   // Calculate overall status
   // Critical APIs: SDK, Taostats, Binance, CMC - if any has ERROR → critical (red)
   // Non-critical: DexScreener, Alternative.me - if ERROR → warning (yellow)
@@ -91,10 +94,11 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
   lines.push('<div>' + chip(cmcStatus) + ' CoinMarketCap</div>');
   lines.push('<div>' + chip(altMeStatus) + ' Alternative.me</div>');
   lines.push('<div>' + chip(dexStatus) + ' DexScreener</div>');
+  lines.push('<div>' + chip(tokenTerminalStatus) + ' Token Terminal</div>');
 
   return {
     html: lines.join(''),
-    statuses: { networkStatus, taostatsStatus, binanceStatus, coingeckoStatus, cmcStatus, altMeStatus, dexStatus },
+    statuses: { networkStatus, taostatsStatus, binanceStatus, coingeckoStatus, cmcStatus, altMeStatus, dexStatus, tokenTerminalStatus },
     overallStatus
   };
 }
