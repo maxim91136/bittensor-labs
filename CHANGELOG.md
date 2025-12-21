@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.38.5 (2025-12-21)
+### Added
+- **Alpha Pressure**: Trend column header with tooltip explaining all indicators (↗️ ↘️ ⚠️ ➡️)
+- **Katniss Trust Filter**: Full transparency in Talent Scouting tooltips
+  - Card header explains filter logic (>100% excluded, 70-100% warning)
+  - Warning badge shows detailed owner dump score breakdown
+- **Owner Dump Score 90d**: Added 90-day tracking alongside 30d (no extra API calls)
+- **Alpha Pressure**: Shows both 90d/30d owner dump scores with CEX exchange info
+
+### Fixed
+- **Alpha Pressure**: Compact table columns for better data density
+- **Owner column**: Updated header for 90d/30d display format
+
 ## v1.0.0-rc.38.3 (2025-12-21)
 ### Changed
 - **README**: Removed redundant feature highlights (already documented in Features section)
