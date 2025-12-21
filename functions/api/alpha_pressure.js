@@ -146,12 +146,17 @@ export async function onRequest(context) {
         trend,
         trend_emoji: trendEmoji,
 
-        // Owner Dump data (if available)
-        owner_dump_score: ownerDump?.dump_score ?? null,
+        // Owner Dump data (if available) - both 30d and 90d metrics
+        owner_dump_score: ownerDump?.dump_score ?? null,  // Primary score (90d based)
+        owner_dump_score_30d: ownerDump?.dump_score_30d ?? null,
+        owner_dump_score_90d: ownerDump?.dump_score_90d ?? null,
         owner_dump_status: ownerDump?.dump_status ?? null,
         owner_dump_emoji: ownerDump?.dump_emoji ?? null,
         owner_outflow_30d_tao: ownerDump?.owner_outflow_30d_tao ?? null,
-        owner_to_exchange_tao: ownerDump?.to_exchange_tao ?? null,
+        owner_outflow_90d_tao: ownerDump?.owner_outflow_90d_tao ?? null,
+        owner_to_exchange_30d_tao: ownerDump?.to_exchange_30d_tao ?? null,
+        owner_to_exchange_90d_tao: ownerDump?.to_exchange_90d_tao ?? null,
+        owner_to_exchange_tao: ownerDump?.to_exchange_tao ?? ownerDump?.to_exchange_90d_tao ?? null,  // backwards compat
         owner_exchanges_used: ownerDump?.exchanges_used ?? []
       };
     }).filter(s => s.emission_daily_tao > 0);

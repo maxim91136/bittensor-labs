@@ -201,29 +201,41 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
     // Color class based on pressure (simple: positive = green, negative = red)
     const pressureClass = pressure >= 0 ? 'pressure-buying' : 'pressure-selling';
 
-    // Owner dump indicator - only show if score > 30% (notable)
-    const ownerDumpScore = s.owner_dump_score;
+    // Owner dump indicator - show both 30d and 90d scores
+    const ownerDumpScore = s.owner_dump_score;  // Primary (90d based)
+    const ownerDumpScore30d = s.owner_dump_score_30d;
+    const ownerDumpScore90d = s.owner_dump_score_90d || ownerDumpScore;
     const ownerDumpEmoji = s.owner_dump_emoji || '';
     const ownerDumpStatus = s.owner_dump_status || '';
     let ownerDumpClass = 'owner-unknown';
     let ownerDumpDisplay = '—';
 
-    if (ownerDumpScore !== null && ownerDumpScore !== undefined && ownerDumpScore > 30) {
-      // Only display if score is notable (> 30% = moderate or worse)
-      ownerDumpDisplay = `${ownerDumpEmoji} ${Math.round(ownerDumpScore)}%`;
-      if (ownerDumpStatus === 'moderate') ownerDumpClass = 'owner-moderate';
-      else if (ownerDumpStatus === 'high') ownerDumpClass = 'owner-high';
-      else if (ownerDumpStatus === 'aggressive') ownerDumpClass = 'owner-aggressive';
-    } else if (ownerDumpScore !== null && ownerDumpScore <= 30) {
-      // Healthy owners - show checkmark
-      ownerDumpDisplay = '✅';
-      ownerDumpClass = 'owner-healthy';
+    if (ownerDumpScore !== null && ownerDumpScore !== undefined) {
+      // Show both scores: 90d | 30d
+      const score30 = Math.round(ownerDumpScore30d || 0);
+      const score90 = Math.round(ownerDumpScore90d || 0);
+
+      if (ownerDumpScore > 30) {
+        // Notable: show emoji + both scores
+        ownerDumpDisplay = `${ownerDumpEmoji} ${score90}%<span class="owner-30d">/${score30}%</span>`;
+        if (ownerDumpStatus === 'moderate') ownerDumpClass = 'owner-moderate';
+        else if (ownerDumpStatus === 'high') ownerDumpClass = 'owner-high';
+        else if (ownerDumpStatus === 'aggressive') ownerDumpClass = 'owner-aggressive';
+      } else {
+        // Healthy: show checkmark + scores
+        ownerDumpDisplay = `✅ ${score90}%<span class="owner-30d">/${score30}%</span>`;
+        ownerDumpClass = 'owner-healthy';
+      }
     }
 
-    // Owner tooltip with exchange info
+    // Owner tooltip with 30d + 90d scores and exchange info
     const exchangesUsed = s.owner_exchanges_used || [];
+    const score30d = s.owner_dump_score_30d;
+    const score90d = s.owner_dump_score_90d || ownerDumpScore;
+    const outflow30d = s.owner_outflow_30d_tao || 0;
+    const outflow90d = s.owner_outflow_90d_tao || 0;
     const ownerTooltip = ownerDumpScore !== null
-      ? `Owner Dump Score: ${Math.round(ownerDumpScore)}%\nOutflow: ${s.owner_outflow_30d_tao || 0}τ\nTo CEX: ${s.owner_to_exchange_tao || 0}τ${exchangesUsed.length ? '\nExchanges: ' + exchangesUsed.join(', ') : ''}`
+      ? `Owner Dump Score:\n• 90d: ${Math.round(score90d)}% (${Math.round(outflow90d)}τ)\n• 30d: ${Math.round(score30d || 0)}% (${Math.round(outflow30d)}τ)\nTo CEX: ${s.owner_to_exchange_90d_tao || s.owner_to_exchange_tao || 0}τ${exchangesUsed.length ? '\nExchanges: ' + exchangesUsed.join(', ') : ''}`
       : 'Owner data not available';
 
     return `<tr data-netuid="${s.netuid}">

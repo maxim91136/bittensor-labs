@@ -5219,6 +5219,7 @@ body.light-bg .pro-joke {
 .pressure-display-table .owner-moderate { color: #fbbf24; }
 .pressure-display-table .owner-high { color: #f97316; }
 .pressure-display-table .owner-aggressive { color: #ef4444; font-weight: 600; }
+.pressure-display-table .owner-30d { font-size: 0.8em; opacity: 0.6; }
 
 /* Separator row */
 .pressure-display-table .separator-row td {
