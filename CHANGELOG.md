@@ -7,23 +7,17 @@ All notable changes to this project will be documented in this file.
 
 ## v1.0.0-rc.35 (2025-12-21)
 ### Changed
-- **API Credit Optimization**: All Taostats workflows optimized for ~22 month credit runway
-  - Hourly workflows → every 3h (subnets, validators, wallets, staking, block time, price history)
-  - Owner dump tracker → every 12h (2x daily)
-  - publish-taostats → every 3h (fallback only, SDK primary)
-- **Cost**: ~384 calls/day = €4.56/month
+- **Workflow Optimization**: Reduced API call frequency for efficiency
+  - Most workflows: hourly → every 3h
+  - Owner dump tracker: every 12h
 
 ## v1.0.0-rc.34 (2025-12-21)
 ### Added
-- **For Sale Detection**: Identifies subnets with active coldkey swap requests (pending sale)
-  - New `for_sale` flag in subnet data via on-chain coldkey swap check
-  - For Sale badge displayed in Talent Scouting table
-- **Talent Scouting Filter**: Filters out For Sale subnets from investment prospects
+- **For Sale Detection**: Identifies subnets with active coldkey swap requests
+- **Talent Scouting Filter**: Excludes For Sale subnets from prospects
 
 ### Changed
-- **Owner Column**: Renamed from "Owner" to "Owner (30d)" for transparency
-- **Rate Limit Upgrade**: Doug increased Taostats rate limit from 5/min to 20/min (FREE!)
-  - Reduced API delay from 12s to 3s
+- **Owner Column**: Renamed to "Owner (30d)" for clarity
 
 ## v1.0.0-rc.33.33.1 (2025-12-20)
 ### Added
