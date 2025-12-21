@@ -51,6 +51,13 @@ const FOR_SALE_NETUIDS = [
   21,  // OMEGA Any-to-Any - listed for sale on Taostats
 ];
 
+// Owner dump score thresholds for Katniss principle
+// A true prospect has a trustworthy owner who doesn't dump
+const DUMP_SCORE_THRESHOLDS = {
+  aggressive: 100,  // >100% = exclude from prospects (dumps more than 18% take)
+  warning: 70       // >70% = show warning badge (high dumping activity)
+};
+
 // PRO unlock state
 let proUnlocked = false;
 
@@ -192,9 +199,10 @@ function build7dRankChangeMap(history, currentSubnets) {
  * Identify newcomers based on criteria
  * Uses PREDICTIONS API for 7d rank changes (has data for 50+ subnets)
  * Uses HISTORY for fallen giant detection (peak rank tracking)
+ * Uses OWNER DUMP SCORES for Katniss trust filter (excludes aggressive dumpers)
  * Returns { prospects: [], fallenAngels: [], isCollectingData: boolean }
  */
-function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
+function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory, ownerDumpScores = {}) {
   const prospects = [];
   const fallenAngels = [];
 
@@ -232,6 +240,15 @@ function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
 
     // Skip subnets that are for sale - owner wants to exit, not a prospect
     if (isForSale) return;
+
+    // Katniss Trust Filter: Check owner dump score
+    const ownerDump = ownerDumpScores[subnet.netuid] || null;
+    const dumpScore90d = ownerDump?.dump_score_90d ?? ownerDump?.dump_score ?? null;
+    const isAggressiveDumper = dumpScore90d !== null && dumpScore90d > DUMP_SCORE_THRESHOLDS.aggressive;
+    const hasWarningDump = dumpScore90d !== null && dumpScore90d > DUMP_SCORE_THRESHOLDS.warning;
+
+    // Skip aggressive dumpers - Katniss wouldn't dump on her community
+    if (isAggressiveDumper) return;
     const hasRankData = rank7dDelta !== undefined;
     const isRising = hasRankData && rank7dDelta >= NEWCOMER_CRITERIA.minRankImprovement;
     const isFalling = hasRankData && rank7dDelta <= -NEWCOMER_CRITERIA.minRankImprovement;
@@ -256,7 +273,11 @@ function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
         alpha: alpha,
         isDeepUnderdog: currentRank >= 30,
         isFallenGiant: isFallenGiant,
-        peakRank: peakRank
+        peakRank: peakRank,
+        // Owner dump score for trust indicator
+        ownerDumpScore: dumpScore90d,
+        hasWarningDump: hasWarningDump,
+        ownerDumpEmoji: ownerDump?.dump_emoji || null
       };
 
       if (hasPredictionData) {
@@ -375,9 +396,14 @@ function renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isColle
     const trendDelta = trend && trend.delta ? (trend.delta > 0 ? `+${trend.delta.toFixed(2)}` : trend.delta.toFixed(2)) : '';
     const trendTooltip = trend ? `${item.emissionHealth?.label || ''} (${trendDelta}% vs 7d ago)` : (item.emissionHealth?.label || '');
 
-    html += `<tr class="${rowClass}${item.isDeepUnderdog ? ' deep-underdog-row' : ''}">
+    // Owner dump warning badge (for high but not aggressive dumpers)
+    const dumpWarning = item.hasWarningDump
+      ? ` <span class="dump-warning" title="Owner dump score: ${Math.round(item.ownerDumpScore)}%">${item.ownerDumpEmoji || '⚠️'}</span>`
+      : '';
+
+    html += `<tr class="${rowClass}${item.isDeepUnderdog ? ' deep-underdog-row' : ''}${item.hasWarningDump ? ' has-dump-warning' : ''}">
       <td class="rank-col">${item.rank}</td>
-      <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}</td>
+      <td class="subnet-col"><span class="sn-id">SN${item.netuid}</span> ${item.name}${dumpWarning}</td>
       <td class="share-col ${healthClass}"><span class="health-icon" title="${trendTooltip}">${healthIcon}${trendArrow}</span>${item.share}%</td>
       <td class="momentum-col">${momentumDisplay}</td>
       <td class="pool-col">${poolDisplay}τ</td>
@@ -458,12 +484,14 @@ export async function loadNewcomersDisplay(displayList) {
     // Fetch required data
     // - predictions API for momentum (has 50+ subnets with rank7dDelta)
     // - full history for fallen giant detection (peak rank tracking)
-    const [subnetsRes, alphaRes, predictionsRes, fullHistoryRes, taostatsRes] = await Promise.all([
+    // - owner dump scores for Katniss trust filter
+    const [subnetsRes, alphaRes, predictionsRes, fullHistoryRes, taostatsRes, dumpScoresRes] = await Promise.all([
       fetch('/api/top_subnets'),
       fetch('/api/alpha_prices'),
       fetch('/api/subnet_predictions?top_n=100'),    // Predictions with rank7dDelta for ALL subnets
       fetch('/api/top_subnets_history?limit=1000'),  // Full history for fallen giant detection
-      fetch('/api/taostats')
+      fetch('/api/taostats'),
+      fetch('/api/alpha_pressure?limit=150')         // Owner dump scores for trust filter
     ]);
 
     let topSubnets = [];
@@ -471,6 +499,7 @@ export async function loadNewcomersDisplay(displayList) {
     let predictions = [];
     let fullHistory = [];
     let taoPrice = 0;
+    let ownerDumpScores = {};
 
     if (subnetsRes.ok) {
       const data = await subnetsRes.json();
@@ -499,9 +528,23 @@ export async function loadNewcomersDisplay(displayList) {
       taoPrice = data.price || 0;
     }
 
+    if (dumpScoresRes.ok) {
+      const data = await dumpScoresRes.json();
+      // Build map by netuid for quick lookup
+      (data.subnets || []).forEach(s => {
+        ownerDumpScores[s.netuid] = {
+          dump_score: s.owner_dump_score,
+          dump_score_90d: s.owner_dump_score_90d,
+          dump_score_30d: s.owner_dump_score_30d,
+          dump_status: s.owner_dump_status,
+          dump_emoji: s.owner_dump_emoji
+        };
+      });
+    }
+
     // Identify and render newcomers
-    // predictions for 7d momentum, fullHistory for fallen giant detection
-    const { prospects, fallenAngels, isCollectingData } = identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory);
+    // predictions for 7d momentum, fullHistory for fallen giant detection, ownerDumpScores for trust filter
+    const { prospects, fallenAngels, isCollectingData } = identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory, ownerDumpScores);
     renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isCollectingData);
 
     // Update timestamp
