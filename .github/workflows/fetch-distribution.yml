@@ -9,7 +9,7 @@ on:
 jobs:
   fetch-distribution:
     runs-on: ubuntu-latest
-    timeout-minutes: 30  # 10 pages × 13s delay + buffer
+    timeout-minutes: 10  # 10 pages × 3s delay + buffer
     steps:
       - uses: actions/checkout@v4
 

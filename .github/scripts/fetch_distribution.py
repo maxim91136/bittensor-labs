@@ -163,10 +163,10 @@ def fetch_wallets(max_pages=100, page_size=200):
 
             page += 1
 
-            # Rate limit: 5 requests/min = 12s between, use 13s to be safe
+            # Rate limit: 20 requests/min = 3s between
             if page <= max_pages:
-                print(f"   ⏳ Rate limit pause (13s)...", file=sys.stderr)
-                time.sleep(13)
+                print(f"   ⏳ Rate limit pause (3s)...", file=sys.stderr)
+                time.sleep(3)
 
         except Exception as e:
             consecutive_errors += 1
