@@ -397,8 +397,9 @@ function renderNewcomers(displayList, prospects, fallenAngels, taoPrice, isColle
     const trendTooltip = trend ? `${item.emissionHealth?.label || ''} (${trendDelta}% vs 7d ago)` : (item.emissionHealth?.label || '');
 
     // Owner dump warning badge (for high but not aggressive dumpers)
+    // Katniss Filter: >100% excluded, 70-100% shown with warning
     const dumpWarning = item.hasWarningDump
-      ? ` <span class="dump-warning" title="Owner dump score: ${Math.round(item.ownerDumpScore)}%">${item.ownerDumpEmoji || '⚠️'}</span>`
+      ? ` <span class="dump-warning" title="⚠️ Katniss Trust Filter Warning\n\nOwner Dump Score: ${Math.round(item.ownerDumpScore)}% (90d)\n\nThis owner transfers ${Math.round(item.ownerDumpScore)}% of their 18% emission take.\n70-100% = high activity, shown with warning.\n>100% = aggressive dumpers are excluded.\n\nUse as one indicator among many.">${item.ownerDumpEmoji || '⚠️'}</span>`
       : '';
 
     html += `<tr class="${rowClass}${item.isDeepUnderdog ? ' deep-underdog-row' : ''}${item.hasWarningDump ? ' has-dump-warning' : ''}">
