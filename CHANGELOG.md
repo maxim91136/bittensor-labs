@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.35.2 (2025-12-21)
+### Fixed
+- **Comments**: Restored useful architecture documentation
+
 ## v1.0.0-rc.35.1 (2025-12-21)
 ### Changed
 - **Cleanup**: Removed internal details from code comments
