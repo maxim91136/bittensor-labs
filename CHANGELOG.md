@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.36 (2025-12-21)
+### Added
+- **Token Turnover**: Shows Volume/MarketCap % in Market Conditions card
+- **Token Terminal**: Added to API status and data sources
+
 ## v1.0.0-rc.35.2 (2025-12-21)
 ### Fixed
 - **Comments**: Restored useful architecture documentation
