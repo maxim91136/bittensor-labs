@@ -94,7 +94,7 @@ export function buildApiStatusHtml({ networkData, taostats, taoPrice, fearAndGre
   lines.push('<div>' + chip(cmcStatus) + ' CoinMarketCap</div>');
   lines.push('<div>' + chip(altMeStatus) + ' Alternative.me</div>');
   lines.push('<div>' + chip(dexStatus) + ' DexScreener</div>');
-  lines.push('<div>' + chip(tokenTerminalStatus) + ' Token Terminal</div>');
+  lines.push('<div>' + chip(tokenTerminalStatus) + ' token terminal_</div>');
 
   return {
     html: lines.join(''),
