@@ -94,6 +94,9 @@ import {
   loadDecentralizationExpHistory
 } from './js/modules/decentralizationExpChart.js';
 import {
+  initDeveloperActivityDisplay
+} from './js/modules/developerActivityDisplay.js';
+import {
   initThemeToggle
 } from './js/modules/themeToggle.js';
 import {
@@ -1533,6 +1536,19 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     });
   });
+});
+
+// ===== Developer Activity Card =====
+let _refreshDeveloperActivity = null;
+document.addEventListener('DOMContentLoaded', async function() {
+  _refreshDeveloperActivity = await initDeveloperActivityDisplay();
+  if (_refreshDeveloperActivity) {
+    const origRefresh = window.refreshDashboard;
+    window.refreshDashboard = async function() {
+      await origRefresh.call(this);
+      _refreshDeveloperActivity();
+    };
+  }
 });
 
 // Old Top Subnets Tooltip handler removed - now uses standard data-tooltip

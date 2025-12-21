@@ -6012,6 +6012,222 @@ body.light-bg .distribution-footer {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   DEVELOPER ACTIVITY CARD
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.developer-activity-card {
+  grid-column: span 1;
+}
+
+.developer-activity-content {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Headline Metrics Grid */
+.dev-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.dev-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  background: rgba(34, 197, 94, 0.05);
+  border: 1px solid rgba(34, 197, 94, 0.15);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.dev-metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-primary, #22c55e);
+  line-height: 1.1;
+}
+
+.dev-metric-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--text-primary, #fff);
+  margin-top: 0.25rem;
+}
+
+.dev-metric-sub {
+  font-size: 0.65rem;
+  color: var(--text-tertiary, #666);
+}
+
+.dev-metric-trend {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--accent-primary, #22c55e);
+  margin-top: 0.25rem;
+}
+
+/* Repository Section */
+.dev-repos-section {
+  margin-top: 0.5rem;
+}
+
+.dev-section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary, #a1a1a1);
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dev-repos-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.dev-repo-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 6px;
+  border-left: 3px solid rgba(34, 197, 94, 0.4);
+}
+
+.dev-repo-item.loading {
+  opacity: 0.5;
+}
+
+.dev-repo-name {
+  font-size: 0.8rem;
+  color: var(--text-primary, #fff);
+  font-weight: 500;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dev-repo-bar-container {
+  flex: 1;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dev-repo-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #22c55e, #16a34a);
+  border-radius: 4px;
+  transition: width 0.5s ease-out;
+}
+
+.dev-repo-commits {
+  font-size: 0.75rem;
+  color: var(--text-secondary, #a1a1a1);
+  min-width: 70px;
+  text-align: right;
+}
+
+/* Footer */
+.developer-activity-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.7rem;
+  color: var(--text-tertiary, #666);
+}
+
+.dev-github-link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary, #a1a1a1);
+  text-decoration: none;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.dev-github-link:hover {
+  color: var(--accent-primary, #22c55e);
+}
+
+.dev-github-link svg {
+  opacity: 0.8;
+}
+
+.dev-update {
+  font-size: 0.65rem;
+  color: var(--text-tertiary, #555);
+}
+
+/* Light mode adjustments */
+body.light-bg .dev-metric {
+  background: rgba(34, 197, 94, 0.08);
+  border-color: rgba(34, 197, 94, 0.2);
+}
+
+body.light-bg .dev-metric-label {
+  color: var(--text-primary, #1a1a1a);
+}
+
+body.light-bg .dev-repo-item {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+body.light-bg .dev-section-title {
+  border-bottom-color: rgba(0, 0, 0, 0.08);
+}
+
+body.light-bg .developer-activity-footer {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+body.light-bg .dev-repo-bar-container {
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Responsive - Mobile */
+@media (max-width: 480px) {
+  .dev-metrics-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .dev-metric {
+    padding: 0.5rem 0.25rem;
+  }
+
+  .dev-metric-value {
+    font-size: 1.2rem;
+  }
+
+  .dev-metric-label {
+    font-size: 0.6rem;
+  }
+
+  .dev-repo-name {
+    font-size: 0.7rem;
+    max-width: 100px;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    DECENTRALIZATION SCORE CARD
    ═══════════════════════════════════════════════════════════════════════════ */
 

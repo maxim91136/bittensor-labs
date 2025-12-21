@@ -27,10 +27,11 @@ REPOS = [
     "opentensor/bittensor-subnet-template",  # Subnet template
 ]
 
-# Cloudflare KV
+# Cloudflare KV & R2
 CF_ACCOUNT_ID = os.getenv('CF_ACCOUNT_ID')
 CF_API_TOKEN = os.getenv('CF_API_TOKEN')
 CF_KV_NAMESPACE_ID = os.getenv('CF_METRICS_NAMESPACE_ID')
+R2_BUCKET = os.getenv('R2_BUCKET')
 
 
 def get_headers():
@@ -146,6 +147,26 @@ def write_to_kv(key: str, value: str) -> bool:
         return False
 
 
+def write_to_r2(key: str, value: str) -> bool:
+    """Write data to Cloudflare R2 (public bucket for frontend)."""
+    if not all([CF_ACCOUNT_ID, CF_API_TOKEN, R2_BUCKET]):
+        print("⚠️ R2 credentials not set", file=sys.stderr)
+        return False
+
+    url = f"https://api.cloudflare.com/client/v4/accounts/{CF_ACCOUNT_ID}/r2/buckets/{R2_BUCKET}/objects/{key}"
+    headers = {
+        "Authorization": f"Bearer {CF_API_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        resp = requests.put(url, headers=headers, data=value, timeout=30)
+        return resp.status_code in (200, 201)
+    except Exception as e:
+        print(f"❌ R2 write error: {e}", file=sys.stderr)
+        return False
+
+
 def main():
     print("=" * 60, file=sys.stderr)
     print("🐙 GITHUB DEVELOPER ACTIVITY TRACKER", file=sys.stderr)
@@ -228,6 +249,10 @@ def main():
     json_data = json.dumps(output, indent=2)
     if write_to_kv("github_activity", json_data):
         print("\n✅ Results written to KV: github_activity", file=sys.stderr)
+
+    # Write to R2 (for public frontend access)
+    if write_to_r2("bittensor-metrics/github_activity.json", json_data):
+        print("✅ Results written to R2: bittensor-metrics/github_activity.json", file=sys.stderr)
 
     # Output JSON
     print(json_data)

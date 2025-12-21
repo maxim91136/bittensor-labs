@@ -28,6 +28,7 @@ jobs:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
           CF_METRICS_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
         run: |
           echo "Fetching GitHub developer activity..."
           mkdir -p .github/data
