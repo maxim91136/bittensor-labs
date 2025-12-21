@@ -104,6 +104,14 @@ async function updateMarketConditionsCard(currentVolume, priceChange24h) {
         volumeChangeEl.classList.add('negative');
       }
     }
+
+    // Calculate and display turnover (Volume / MarketCap)
+    const turnoverEl = volumeMetric.querySelector('#marketVolumeTurnover');
+    if (turnoverEl && currentVolume && taostats?.price && taostats?.circulating_supply) {
+      const marketCap = taostats.price * taostats.circulating_supply;
+      const turnover = (currentVolume / marketCap) * 100;
+      turnoverEl.textContent = `(${turnover.toFixed(2)}% turnover)`;
+    }
   }
 
   // Update price change

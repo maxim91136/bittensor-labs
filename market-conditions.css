@@ -164,6 +164,13 @@
   color: #ef4444;
 }
 
+/* Turnover - subtle supplementary info (Token Terminal style) */
+.market-metric .metric-value-sub.turnover {
+  font-size: 0.75em;
+  color: rgba(229,231,235,0.45);
+  font-style: italic;
+}
+
 /* Signal color states */
 .market-metric#marketSignal.signal-green .metric-value { color: #22c55e; }
 .market-metric#marketSignal.signal-red .metric-value { color: #ef4444; }
@@ -335,6 +342,10 @@
     font-size: 0.75em;
   }
 
+  .market-metric .metric-value-sub.turnover {
+    font-size: 0.65em;
+  }
+
   .market-phase-section {
     padding: 10px 12px;
     margin-bottom: 8px;
@@ -407,6 +418,10 @@
 
   .market-metric .metric-value-sub {
     font-size: 0.7em;
+  }
+
+  .market-metric .metric-value-sub.turnover {
+    font-size: 0.6em;
   }
 
   .market-metric#marketSignal {
@@ -509,6 +524,10 @@
 
 .market-conditions-card.light-bg .metric-value-sub.negative {
   color: #dc2626;
+}
+
+.market-conditions-card.light-bg .metric-value-sub.turnover {
+  color: rgba(55,65,81,0.45);
 }
 
 .market-conditions-card.light-bg #marketPrice .metric-value.positive {
