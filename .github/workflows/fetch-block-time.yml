@@ -2,8 +2,7 @@ name: taostats - Block Time
 
 on:
   schedule:
-    # Every hour at :12 (between :07 price-history and :17 publish-taostats to avoid rate limits)
-    - cron: '12 * * * *'
+    - cron: '12 */3 * * *'  # every 3h at :12
   workflow_dispatch:
 
 jobs:

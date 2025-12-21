@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.35 (2025-12-21)
+### Changed
+- **API Credit Optimization**: All Taostats workflows optimized for ~22 month credit runway
+  - Hourly workflows → every 3h (subnets, validators, wallets, staking, block time, price history)
+  - Owner dump tracker → every 12h (2x daily)
+  - publish-taostats → every 3h (fallback only, SDK primary)
+- **Cost**: ~384 calls/day = €4.56/month
+
 ## v1.0.0-rc.33.33.1 (2025-12-20)
 ### Added
 - **Dumpers Filter**: New filter badge to show only problematic subnet owners (>30% dump score)

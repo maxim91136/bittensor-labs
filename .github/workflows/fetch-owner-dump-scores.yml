@@ -2,7 +2,7 @@ name: taostats - Owner Dump Scores
 
 on:
   schedule:
-    - cron: '17 */6 * * *'    # every 6 hours at :17 (4x daily, 19mo credit runway)
+    - cron: '17 */12 * * *'   # every 12h (2x daily, ~22mo credit runway)
   workflow_dispatch: {}
   workflow_call: {}
 

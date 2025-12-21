@@ -2,8 +2,7 @@ name: taostats - Wallets
 
 on:
   schedule:
-    # Run hourly at :37
-    - cron: '37 * * * *'
+    - cron: '37 */3 * * *'  # every 3h at :37
   workflow_dispatch:
 
 jobs:

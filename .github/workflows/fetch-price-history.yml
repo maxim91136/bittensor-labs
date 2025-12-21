@@ -2,8 +2,7 @@ name: coingecko - Price History
 
 on:
   schedule:
-    # Run every hour at :7
-    - cron: '7 * * * *'
+    - cron: '7 */3 * * *'   # every 3h at :07
   workflow_dispatch:
 
 jobs:

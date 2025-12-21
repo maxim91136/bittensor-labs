@@ -2,7 +2,7 @@ name: taostats - Subnets
 
 on:
   schedule:
-    - cron: '53 * * * *'    # every hour bei :53
+    - cron: '53 */3 * * *'  # every 3h at :53
   workflow_dispatch: {}
   workflow_call: {}
 

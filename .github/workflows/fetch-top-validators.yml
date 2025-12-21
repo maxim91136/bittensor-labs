@@ -2,7 +2,7 @@ name: taostats - Validators
 
 on:
   schedule:
-    - cron: '31 * * * *'    # every hour at :31
+    - cron: '31 */3 * * *'  # every 3h at :31
   workflow_dispatch: {}
   workflow_call: {}
 

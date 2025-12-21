@@ -2,8 +2,7 @@ name: taostats - Staking APY
 
 on:
   schedule:
-    # Every hour at :53 (offset from other taostats jobs)
-    - cron: '53 * * * *'
+    - cron: '47 */3 * * *'  # every 3h at :47
   workflow_dispatch:
 
 jobs:
