@@ -5152,13 +5152,14 @@ body.light-bg .pro-joke {
   vertical-align: middle;
 }
 
-/* Column widths */
-.pressure-display-table .fav-col { width: 32px; text-align: center; }
-.pressure-display-table .subnet-col { width: 30%; }
-.pressure-display-table .emission-col { width: 15%; text-align: right; }
-.pressure-display-table .flow-col { width: 20%; text-align: right; }
-.pressure-display-table .pressure-col { width: 20%; text-align: right; }
-.pressure-display-table .trend-col { width: 10%; text-align: center; }
+/* Column widths - compact for more data density */
+.pressure-display-table .fav-col { width: 28px; text-align: center; }
+.pressure-display-table .subnet-col { width: 18%; min-width: 100px; }
+.pressure-display-table .emission-col { width: 12%; text-align: right; }
+.pressure-display-table .flow-col { width: 14%; text-align: right; }
+.pressure-display-table .pressure-col { width: 16%; text-align: right; }
+.pressure-display-table .owner-col { width: 18%; text-align: center; }
+.pressure-display-table .trend-col { width: 8%; text-align: center; }
 
 /* Favorite button */
 .pressure-display-table .fav-btn {
