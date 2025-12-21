@@ -44,6 +44,13 @@ const NEWCOMER_CRITERIA = {
   minPoolLiquidity: 5000     // > 5K TAO in pool (real traction)
 };
 
+// Subnets marked "For Sale" - excluded from Talent Scouting
+// These are subnets where owner is actively trying to sell/exit
+// TODO: Fetch dynamically from KV (for_sale_subnets) when available
+const FOR_SALE_NETUIDS = [
+  21,  // OMEGA Any-to-Any - listed for sale on Taostats
+];
+
 // PRO unlock state
 let proUnlocked = false;
 
@@ -218,9 +225,13 @@ function identifyNewcomers(topSubnets, alphaPrices, predictions, fullHistory) {
     const rank7dDelta = prediction.trend_indicators?.rank_delta_7d;
     const poolLiquidity = alpha.tao_in_pool || 0;
 
-    // Check basic criteria: underdogs (outside top 10) with liquidity
+    // Check basic criteria: underdogs (outside top 10) with liquidity, not for sale
     const isUnderdog = currentRank >= NEWCOMER_CRITERIA.minRank;
     const hasLiquidity = poolLiquidity >= NEWCOMER_CRITERIA.minPoolLiquidity;
+    const isForSale = FOR_SALE_NETUIDS.includes(parseInt(subnet.netuid));
+
+    // Skip subnets that are for sale - owner wants to exit, not a prospect
+    if (isForSale) return;
     const hasRankData = rank7dDelta !== undefined;
     const isRising = hasRankData && rank7dDelta >= NEWCOMER_CRITERIA.minRankImprovement;
     const isFalling = hasRankData && rank7dDelta <= -NEWCOMER_CRITERIA.minRankImprovement;
