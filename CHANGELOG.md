@@ -5,21 +5,25 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
-## v1.0.0-rc.37 (2025-12-21)
+## v1.0.0-rc.38 (2025-12-21)
 ### Added
-- **token terminal_**: Added to footer data sources with link
-- **API Status**: token terminal_ now shows in dynamic status list
+- **Developer Activity Card**: New dashboard card showing GitHub metrics
+  - Active developers (7d/30d)
+  - Commits (7d/30d)
+  - Total contributors
+  - Per-repository breakdown with visual bars
+  - Data from opentensor/bittensor, subtensor, subnet-template
+  - Updates every 6 hours via GitHub API
 
-### Changed
-- **Branding**: Corrected to "token terminal_" (lowercase with underscore)
+### Fixed
+- **Token Terminal**: Removed false references (turnover calculated from Taostats)
 
 ### Performance
 - **Distribution Fetch**: Optimized from 13s to 3s delay (20/min rate limit)
 
-## v1.0.0-rc.36 (2025-12-21)
+## v1.0.0-rc.37 (2025-12-21)
 ### Added
 - **Token Turnover**: Shows Volume/MarketCap % in Market Conditions card
-- **Token Terminal**: Added to API status and data sources
 
 ## v1.0.0-rc.35.2 (2025-12-21)
 ### Fixed
