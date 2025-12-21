@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.37 (2025-12-21)
+### Added
+- **token terminal_**: Added to footer data sources with link
+- **API Status**: token terminal_ now shows in dynamic status list
+
+### Changed
+- **Branding**: Corrected to "token terminal_" (lowercase with underscore)
+
+### Performance
+- **Distribution Fetch**: Optimized from 13s to 3s delay (20/min rate limit)
+
 ## v1.0.0-rc.36 (2025-12-21)
 ### Added
 - **Token Turnover**: Shows Volume/MarketCap % in Market Conditions card
