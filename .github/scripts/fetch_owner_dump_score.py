@@ -174,39 +174,58 @@ def analyze_owner(subnet: dict) -> dict:
     owner = subnet["owner"]
     emission_daily = subnet["emission_daily"]
     owner_take_30d = emission_daily * OWNER_TAKE_PERCENT * 30
+    owner_take_90d = emission_daily * OWNER_TAKE_PERCENT * 90
 
-    # Fetch transfers
-    transfers = fetch_wallet_transfers(owner, days=30)
+    # Fetch transfers (90 days, we'll filter for 30d locally)
+    transfers = fetch_wallet_transfers(owner, days=90)
 
-    # Analyze transfers
-    total_out = 0
-    to_exchange = 0
+    # Analyze transfers for both 30d and 90d
+    cutoff_30d = datetime.now(timezone.utc) - timedelta(days=30)
+
+    total_out_30d = 0
+    total_out_90d = 0
+    to_exchange_30d = 0
+    to_exchange_90d = 0
     exchanges_used = set()
+    transfer_count_30d = 0
 
     for t in transfers:
         amount = float(t.get("amount", 0)) / 1e9
         to_addr = t.get("to", {}).get("ss58", "")
 
-        total_out += amount
+        # Parse timestamp
+        ts = t.get("timestamp", "")
+        try:
+            dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+            is_30d = dt >= cutoff_30d
+        except:
+            is_30d = False
 
+        # 90d totals (all transfers)
+        total_out_90d += amount
         if to_addr in KNOWN_EXCHANGES:
-            to_exchange += amount
+            to_exchange_90d += amount
             exchanges_used.add(KNOWN_EXCHANGES[to_addr])
 
-    # Calculate dump score
-    if owner_take_30d > 0:
-        dump_score = (total_out / owner_take_30d) * 100
-    else:
-        dump_score = 0
+        # 30d totals (recent only)
+        if is_30d:
+            total_out_30d += amount
+            transfer_count_30d += 1
+            if to_addr in KNOWN_EXCHANGES:
+                to_exchange_30d += amount
 
-    # Determine status
-    if dump_score <= 30:
+    # Calculate dump scores for both periods
+    dump_score_30d = (total_out_30d / owner_take_30d * 100) if owner_take_30d > 0 else 0
+    dump_score_90d = (total_out_90d / owner_take_90d * 100) if owner_take_90d > 0 else 0
+
+    # Determine status based on 90d score (longer-term view)
+    if dump_score_90d <= 30:
         status = "healthy"
         emoji = "✅"
-    elif dump_score <= 70:
+    elif dump_score_90d <= 70:
         status = "moderate"
         emoji = "🟡"
-    elif dump_score <= 100:
+    elif dump_score_90d <= 100:
         status = "high"
         emoji = "🟠"
     else:
@@ -219,15 +238,26 @@ def analyze_owner(subnet: dict) -> dict:
         "owner": owner,
         "owner_short": f"{owner[:6]}...{owner[-4:]}",
         "emission_daily_tao": round(emission_daily, 2),
+        # 30d metrics
         "owner_take_30d_tao": round(owner_take_30d, 2),
-        "owner_outflow_30d_tao": round(total_out, 2),
-        "to_exchange_tao": round(to_exchange, 2),
-        "exchange_percent": round(to_exchange / total_out * 100, 1) if total_out > 0 else 0,
+        "owner_outflow_30d_tao": round(total_out_30d, 2),
+        "to_exchange_30d_tao": round(to_exchange_30d, 2),
+        "dump_score_30d": round(dump_score_30d, 1),
+        "transfer_count_30d": transfer_count_30d,
+        # 90d metrics
+        "owner_take_90d_tao": round(owner_take_90d, 2),
+        "owner_outflow_90d_tao": round(total_out_90d, 2),
+        "to_exchange_90d_tao": round(to_exchange_90d, 2),
+        "dump_score_90d": round(dump_score_90d, 1),
+        "transfer_count_90d": len(transfers),
+        # Exchange analysis
+        "exchange_percent_90d": round(to_exchange_90d / total_out_90d * 100, 1) if total_out_90d > 0 else 0,
         "exchanges_used": list(exchanges_used),
-        "transfer_count": len(transfers),
-        "dump_score": round(dump_score, 1),
+        # Primary score for sorting (90d based)
+        "dump_score": round(dump_score_90d, 1),
         "dump_status": status,
         "dump_emoji": emoji,
+        # Subnet flow data from Taostats
         "net_flow_30d_tao": round(subnet["net_flow_30d"], 0),
         "net_flow_7d_tao": round(subnet["net_flow_7d"], 0),
     }
@@ -254,9 +284,9 @@ def main():
         result = analyze_owner(subnet)
         results.append(result)
 
-        print(f"  {result['dump_emoji']} Score: {result['dump_score']:.1f}% | "
-              f"Out: {result['owner_outflow_30d_tao']:.0f}τ | "
-              f"CEX: {result['exchange_percent']:.0f}%", file=sys.stderr)
+        print(f"  {result['dump_emoji']} 90d: {result['dump_score_90d']:.1f}% | "
+              f"30d: {result['dump_score_30d']:.1f}% | "
+              f"CEX: {result['exchange_percent_90d']:.0f}%", file=sys.stderr)
 
         # Rate limit protection
         time.sleep(3.0)
@@ -270,7 +300,8 @@ def main():
         "_source": "owner-dump-tracker",
         "subnets_analyzed": len(results),
         "owner_take_percent": OWNER_TAKE_PERCENT * 100,
-        "analysis_period_days": 30,
+        "analysis_periods": [30, 90],
+        "primary_score_period": 90,
         "subnets": results,
         "summary": {
             "healthy": len([r for r in results if r["dump_status"] == "healthy"]),
@@ -286,10 +317,10 @@ def main():
     print("=" * 60, file=sys.stderr)
 
     # Top 5 worst
-    print("\n🔴 TOP 5 DUMPERS:", file=sys.stderr)
+    print("\n🔴 TOP 5 DUMPERS (90d):", file=sys.stderr)
     for r in results[:5]:
-        print(f"  {r['dump_emoji']} {r['name']:20} Score: {r['dump_score']:6.1f}%  "
-              f"CEX: {r['exchange_percent']:.0f}%", file=sys.stderr)
+        print(f"  {r['dump_emoji']} {r['name']:20} 90d: {r['dump_score_90d']:6.1f}%  "
+              f"30d: {r['dump_score_30d']:6.1f}%  CEX: {r['exchange_percent_90d']:.0f}%", file=sys.stderr)
 
     # Top 5 best
     print("\n✅ TOP 5 HOLDERS:", file=sys.stderr)
