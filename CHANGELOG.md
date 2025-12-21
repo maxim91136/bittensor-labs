@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.38.2 (2025-12-21)
+### Changed
+- **README**: Reorganized features chronologically by RC release (newest first)
+- **Developer Activity**: Removed false "Real-time" label (updates every 6h)
+
 ## v1.0.0-rc.38.1 (2025-12-21)
 ### Changed
 - **README**: Added Developer Activity card documentation

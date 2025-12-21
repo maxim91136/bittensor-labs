@@ -8,7 +8,7 @@ Started: November 3, 2025
 
 A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO price, halving projections, network stats, and market conditions with a unique terminal aesthetic.
 
-**Latest release:** `v1.0.0-rc.38.1` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
+**Latest release:** `v1.0.0-rc.38.2` — see [Releases](https://github.com/maxim91136/bittensor-labs/releases) for details.
 
 > 🏆 **RC33.16 - Subnet Champions League**:
 > - **Subnet Champions League Card** with 3 toggle views: Emissions, Market Cap, Hybrid (ML predictions)
@@ -27,72 +27,8 @@ A Matrix-styled terminal for exploring Bittensor network metrics. Track TAO pric
 
 ## Features
 
-### 🎯 Halving Projections: Doug's Cheat + Triple-Precision GPS
-
-**World's first implementation of "Doug's Cheat" halving projection methodology**
-
-Instead of using protocol-defined theoretical emission (7200/2^n), we calculate the **actual emission rate** from historical data BEFORE the halving, then halve it. This accounts for real-world protocol variations and provides higher accuracy than theoretical approximations.
-
-**How It Works**:
-1. **Measure pre-halving emission** from chain history (7 days before halving)
-2. **Halve it** for post-halving projections: `measured_emission / (2 ^ halvings_since_last)`
-3. **Result**: Real-world accuracy using actual on-chain data
-
-**Example** (Halving #1 → #2):
-- Pre-halving measured: **7193.74 τ/day** (not theoretical 7200)
-- Post-halving: 7193.74 / 2 = **3596.87 τ/day** 🎯
-- Theoretical would be: 3600 τ/day
-- **0.09% more accurate!**
-
-**Triple-Precision GPS (Global Positioning System)**:
-Distance-adaptive emission selection methodology that ensures accurate projections across all time horizons:
-
-- **Stage 1 (0-7 days post-halving)**: Doug's Cheat for all projections
-  - Both 7d and 30d averages contaminated with pre-halving data
-  - Solution: Use real pre-halving emission (halved) - zero contamination!
-
-- **Stage 2 (7-30 days)**: Transition Period
-  - Terminal approach (<30d away): Clean 7d empirical data
-  - Long-range (>30d away): Theoretical (30d still contaminated)
-
-- **Stage 3 (30+ days)**: Full GPS Operation
-  - Terminal approach: 7d for real-time precision
-  - Long-range: 30d for stable noise-resistant forecasts
-
-**Transparency Metadata**:
-- GPS stage indicators (`post_halving_stabilization`, `terminal_approach`, `long_range`)
-- Confidence levels (`empirical_halved`, `high`, `medium`, `low`)
-- Days since halving + days until clean data
-- Exact emission rate used for each threshold
-
-**Results**:
-- ✅ Halving #1: **100% accuracy** (0 seconds error) - predicted 13:31 UTC, occurred 13:31 UTC
-- 🔮 Halving #2-4: Using Doug's Cheat (3596.87 τ/day → 1798.44 τ/day → 899.22 τ/day)
-
-Props to **Doug from Taostats** for pioneering this methodology!
-
-See [docs/HALVING_ESTIMATES.md](docs/HALVING_ESTIMATES.md) for complete technical documentation.
-
-### 📊 Network Metrics
-- **TAO price** with 24h change indicator and breathing animation
-- **Live pricing** from Binance API (<1 second delay)
-- **EUR/USD toggle** on price pill and chart (synced, persisted)
-- **Circulating Supply** tracking against the 21M cap
-- **Total Issuance** from on-chain data via Bittensor SDK
-- **Active Neurons** count across all subnets
-- **Tooltip Transparency**: Every stat card shows data source + last updated timestamp
-
-### 📈 Price Chart (RC29+)
-- **Candlestick Chart**: Professional OHLC visualization with green/red candles
-- **Volume Bars**: Trading volume displayed below price chart
-- **Multiple time ranges**: 1D, 7D, 30D, 90D, Max (~600 days)
-- **Multi-asset comparison**: Compare TAO vs BTC, ETH, and SOL performance
-- **EUR currency support**: View prices in Euros with live conversion
-- **Smart Toggle Logic**: Candle/Volume and Compare modes are mutually exclusive
-- **Data sources**: Binance (primary), Taostats, CoinGecko (fallbacks)
-
 ### 🔧 Developer Activity (RC38+)
-Real-time GitHub development metrics from opentensor repositories:
+GitHub development metrics from opentensor repositories (updated every 6h):
 
 **Tracked Repositories**:
 - `opentensor/bittensor` - Main SDK
@@ -106,168 +42,6 @@ Real-time GitHub development metrics from opentensor repositories:
 - **Per-Repository Breakdown**: Visual bars showing activity distribution
 
 **Data Source**: GitHub API (free, 5000 req/hour) - Updates every 6 hours
-
-### 📊 TAO Distribution Analysis (RC30+)
-Institutional-grade wealth distribution metrics:
-
-**Percentile Rankings**:
-- Find out where you rank among all TAO holders
-- Top 1% threshold: 395 τ
-- Top 10% threshold: 25 τ
-- Top 50% threshold: 1 τ
-
-**Distribution Metrics**:
-- **Gini Coefficient**: Measures wealth inequality (0 = perfect equality, 1 = total inequality)
-- **Total Wallets**: Track the growth of the TAO holder base
-- **Decentralization Score**: Comprehensive analysis of wallet distribution
-
-**Data Quality**:
-- Based on real on-chain wallet data
-- Updated weekly from Taostats API
-- Transparent sample counts and timestamps
-
-### 🎯 Network Decentralization Score (RC30+)
-First institutional-grade decentralization analysis for Bittensor:
-
-**Composite Score** (0-100):
-- Combines Wallets (30%), Validators (30%), and Subnets (40%)
-- Color-coded thresholds: Critical (<40), Low (40-60), Moderate (60-80), High (80+)
-
-**Key Metrics**:
-- **Nakamoto Coefficient**: Minimum entities needed to control 51% of stake
-  - Higher is better (more decentralized)
-  - Separate calculations for Validators and Subnets
-- **Gini Index**: Inequality measure (0 = perfect equality, 1 = total inequality)
-  - Lower is better (more equal distribution)
-- **HHI (Herfindahl-Hirschman Index)**: Market concentration (0-10,000)
-  - Lower is better (less concentrated)
-
-**Three Pillars**:
-1. **Wallets**: TAO holder distribution analysis
-2. **Validators**: Stake concentration among validators
-3. **Subnets**: Emission distribution across subnets
-
-**Visual Features**:
-- Score gauge with threshold indicators
-- Historical tracking (shows trend over time)
-- Expandable details with plain-language explanations
-- Last updated timestamps
-
-### 🧪 Decentralization Score 2.0 (RC30.37+)
-Experimental model separating **Technical** vs **Economic** decentralization:
-
-**Three Scores**:
-- **TDS (Technical)**: Who controls the keys? CEX holdings + validator concentration
-- **EDS (Economic)**: Who owns the tokens? Wallet distribution + subnet strength
-- **Hybrid**: Combined score (50% TDS + 50% EDS)
-
-**Why Two Models?**
-- A protocol can be **technically centralized** (CEX custody, few validators) but **economically decentralized** (broad ownership)
-- Classic score mixes everything → hides CEX/validator risk
-- Score 2.0 exposes it: "EDS 67 but TDS 32" tells a clearer story
-
-**Technical Metrics (TDS)**:
-- CEX Holdings % (Binance, Coinbase, etc.)
-- Validator Top10 concentration
-
-**Economic Metrics (EDS)**:
-- Wallet distribution (35%)
-- Subnet score (35%)
-- Gini + Stake spread (30%)
-
-### 🎯 Market Conditions Intelligence (RC25+)
-Real-time market analysis card combining multiple data sources into actionable intelligence:
-
-**Four Key Metrics** (Matrix-style 2x2 grid):
-- **Signal** 🟢 Bullish/🔴 Bearish/🟠 Watch/🟡 Caution - Multi-factor short-term signal
-- **Volume 24h** - Dollar amount ($180M) + percentage change (+145%)
-- **Price 24h** - Short-term price change percentage
-- **Trend (3d/7d)** - Medium-term price trend (3-day vs 7-day MA comparison)
-
-**Market Phase Analysis**:
-- Contextual phase detection (Bullish/Bearish/Neutral)
-- Fear & Greed Index integration (CMC current + Alternative.me historical)
-- Weekend activity context
-- Clear explanations in expandable section
-
-**Moving Averages Dashboard**:
-- MA-2h, MA-4h, MA-3d, MA-7d live tracking
-- Percentage difference from current price
-- Green (above MA) / Red (below MA) indicators
-- Trend analysis at a glance
-
-**Data Quality & Transparency**:
-- Confidence scoring (high/medium/low)
-- Sample count and hours of data displayed
-- Last updated timestamps
-- Transparent data provenance
-
-**Visual Design**:
-- Strategic color usage: Neutral values (white), conditional signals (green/red)
-- Matrix console aesthetic with monospace typography
-- Fully responsive (4 → 2 → 1 columns on mobile)
-- Complete light/dark mode support
-
-### ⚡ Emission & Halving
-- **AVG. Emission/Day** calculated from on-chain issuance history
-- **Halving Countdown** with Triple-Precision GPS projections
-- **Emission curve visualization** showing TAO distribution over time
-- **GPS Metadata**: Real-time contamination tracking and confidence levels
-
-### 😱 Fear & Greed Index
-- **Hybrid data source**: CoinMarketCap (current, frequent updates) + Alternative.me (historical)
-- Spoon gauge visualization (0-100 scale)
-- Historical timeline: Now → Yesterday → Week → Month
-- Integration with Market Conditions Card for comprehensive analysis
-- Tooltip shows both sources with individual timestamps
-
-### 🏆 Leaderboards
-- **Top Validators** by stake with delegation info
-- **Top Wallets** by TAO holdings
-- **Top Subnets** by emission allocation
-
-### 📈 Leaderboard Ranking System (RC26+)
-Track position changes across all Top 10 cards with visual indicators:
-- **Position Change Indicators**: ▲ (rank up), ▼ (rank down), NEW (new entry)
-- **Historical Comparison**: Compares current ranking against previous snapshot
-- **Color-Coded Signals**: Green for improvements, Red for drops, Blue for new entries
-- **Compact Display**: Rank + change indicator in single column (e.g., "1 ▲2")
-- **Supported Cards**: Subnets (netuid), Validators (hotkey), Wallets (address)
-
-### 🏆 Subnet Champions League (RC33.16+)
-ML-powered subnet ranking projection model with boxing-style presentation:
-
-**Boxing-Style Rankings**:
-- 🥇 **P4P World Champion** (Rank #1) - Pound-for-pound king
-- 🥊 **WBA/WBC/IBF/IBO Champions** (Ranks #2-5) - Federation title holders
-- 🥊 **Contenders** (Ranks #6-10) - Fighting for a title shot
-
-**Toggle Views**:
-- **Emissions**: Current emission share ranking (who's earning the most TAO)
-- **Market Cap**: Alpha token market capitalization ranking
-- **Hybrid**: ML prediction probability for reaching #1 position
-
-**Prediction Model Features**:
-- Calculates probability of each subnet reaching #1 emission position
-- Based on historical emission trends, momentum, and rank stability
-- Shows →#1 probability column in Hybrid view
-- "PRO" button easter egg (click to unlock - it's all open source!)
-
-**Zero-Emission Warning** ⚠️:
-In Market Cap view, subnets with high market cap but **zero emissions** are flagged:
-- Red background highlighting for at-risk rows
-- ⚠️ Warning icon next to subnet name
-- Red "0.00τ" in daily emission column
-- Tooltip: "No emissions - speculative value"
-
-This helps identify potentially overvalued subnets - high market cap with no revenue is pure speculation.
-
-**Example**: SN5 Hone has 67K τ market cap but generates 0 τ/day in emissions (due to net TAO outflows under the Taoflow model).
-
-**Data Architecture**:
-- UI shows Top 10 (Power Law: Top 3 = ~60% of emissions)
-- Backend stores Top 100 emitters for prediction coverage
-- Chain data provides all 128+ subnets for alpha prices
 
 ### 🔭 Talent Scouting - Rising Underdogs (RC33.22+)
 Hunger Games-style talent discovery for subnets outside the Top 10:
@@ -325,6 +99,232 @@ Identifies former Top 10 subnets that have fallen from grace:
 - Prevents misclassifying a +2 recovery as a "prospect" when the subnet actually fell 70 ranks total
 
 **Example**: Gradients (SN56) was rank #10 on Dec 3, fell to rank #80 by Dec 15. Even though it recovered +2 in the last 7 days, it's correctly shown as a Fallen Giant with ↓70 total fall, not as a "Top Prospect."
+
+### 🏆 Subnet Champions League (RC33.16+)
+ML-powered subnet ranking projection model with boxing-style presentation:
+
+**Boxing-Style Rankings**:
+- 🥇 **P4P World Champion** (Rank #1) - Pound-for-pound king
+- 🥊 **WBA/WBC/IBF/IBO Champions** (Ranks #2-5) - Federation title holders
+- 🥊 **Contenders** (Ranks #6-10) - Fighting for a title shot
+
+**Toggle Views**:
+- **Emissions**: Current emission share ranking (who's earning the most TAO)
+- **Market Cap**: Alpha token market capitalization ranking
+- **Hybrid**: ML prediction probability for reaching #1 position
+
+**Prediction Model Features**:
+- Calculates probability of each subnet reaching #1 emission position
+- Based on historical emission trends, momentum, and rank stability
+- Shows →#1 probability column in Hybrid view
+- "PRO" button easter egg (click to unlock - it's all open source!)
+
+**Zero-Emission Warning** ⚠️:
+In Market Cap view, subnets with high market cap but **zero emissions** are flagged:
+- Red background highlighting for at-risk rows
+- ⚠️ Warning icon next to subnet name
+- Red "0.00τ" in daily emission column
+- Tooltip: "No emissions - speculative value"
+
+This helps identify potentially overvalued subnets - high market cap with no revenue is pure speculation.
+
+**Example**: SN5 Hone has 67K τ market cap but generates 0 τ/day in emissions (due to net TAO outflows under the Taoflow model).
+
+**Data Architecture**:
+- UI shows Top 10 (Power Law: Top 3 = ~60% of emissions)
+- Backend stores Top 100 emitters for prediction coverage
+- Chain data provides all 128+ subnets for alpha prices
+
+### 🎯 Halving Projections: Doug's Cheat + Triple-Precision GPS (RC33+)
+
+**World's first implementation of "Doug's Cheat" halving projection methodology**
+
+Instead of using protocol-defined theoretical emission (7200/2^n), we calculate the **actual emission rate** from historical data BEFORE the halving, then halve it. This accounts for real-world protocol variations and provides higher accuracy than theoretical approximations.
+
+**How It Works**:
+1. **Measure pre-halving emission** from chain history (7 days before halving)
+2. **Halve it** for post-halving projections: `measured_emission / (2 ^ halvings_since_last)`
+3. **Result**: Real-world accuracy using actual on-chain data
+
+**Example** (Halving #1 → #2):
+- Pre-halving measured: **7193.74 τ/day** (not theoretical 7200)
+- Post-halving: 7193.74 / 2 = **3596.87 τ/day** 🎯
+- Theoretical would be: 3600 τ/day
+- **0.09% more accurate!**
+
+**Triple-Precision GPS (Global Positioning System)**:
+Distance-adaptive emission selection methodology that ensures accurate projections across all time horizons:
+
+- **Stage 1 (0-7 days post-halving)**: Doug's Cheat for all projections
+  - Both 7d and 30d averages contaminated with pre-halving data
+  - Solution: Use real pre-halving emission (halved) - zero contamination!
+
+- **Stage 2 (7-30 days)**: Transition Period
+  - Terminal approach (<30d away): Clean 7d empirical data
+  - Long-range (>30d away): Theoretical (30d still contaminated)
+
+- **Stage 3 (30+ days)**: Full GPS Operation
+  - Terminal approach: 7d for real-time precision
+  - Long-range: 30d for stable noise-resistant forecasts
+
+**Transparency Metadata**:
+- GPS stage indicators (`post_halving_stabilization`, `terminal_approach`, `long_range`)
+- Confidence levels (`empirical_halved`, `high`, `medium`, `low`)
+- Days since halving + days until clean data
+- Exact emission rate used for each threshold
+
+**Results**:
+- ✅ Halving #1: **100% accuracy** (0 seconds error) - predicted 13:31 UTC, occurred 13:31 UTC
+- 🔮 Halving #2-4: Using Doug's Cheat (3596.87 τ/day → 1798.44 τ/day → 899.22 τ/day)
+
+Props to **Doug from Taostats** for pioneering this methodology!
+
+See [docs/HALVING_ESTIMATES.md](docs/HALVING_ESTIMATES.md) for complete technical documentation.
+
+### 🧪 Decentralization Score 2.0 (RC30.37+)
+Experimental model separating **Technical** vs **Economic** decentralization:
+
+**Three Scores**:
+- **TDS (Technical)**: Who controls the keys? CEX holdings + validator concentration
+- **EDS (Economic)**: Who owns the tokens? Wallet distribution + subnet strength
+- **Hybrid**: Combined score (50% TDS + 50% EDS)
+
+**Why Two Models?**
+- A protocol can be **technically centralized** (CEX custody, few validators) but **economically decentralized** (broad ownership)
+- Classic score mixes everything → hides CEX/validator risk
+- Score 2.0 exposes it: "EDS 67 but TDS 32" tells a clearer story
+
+**Technical Metrics (TDS)**:
+- CEX Holdings % (Binance, Coinbase, etc.)
+- Validator Top10 concentration
+
+**Economic Metrics (EDS)**:
+- Wallet distribution (35%)
+- Subnet score (35%)
+- Gini + Stake spread (30%)
+
+### 📊 TAO Distribution Analysis (RC30+)
+Institutional-grade wealth distribution metrics:
+
+**Percentile Rankings**:
+- Find out where you rank among all TAO holders
+- Top 1% threshold: 395 τ
+- Top 10% threshold: 25 τ
+- Top 50% threshold: 1 τ
+
+**Distribution Metrics**:
+- **Gini Coefficient**: Measures wealth inequality (0 = perfect equality, 1 = total inequality)
+- **Total Wallets**: Track the growth of the TAO holder base
+- **Decentralization Score**: Comprehensive analysis of wallet distribution
+
+**Data Quality**:
+- Based on real on-chain wallet data
+- Updated weekly from Taostats API
+- Transparent sample counts and timestamps
+
+### 🎯 Network Decentralization Score (RC30+)
+First institutional-grade decentralization analysis for Bittensor:
+
+**Composite Score** (0-100):
+- Combines Wallets (30%), Validators (30%), and Subnets (40%)
+- Color-coded thresholds: Critical (<40), Low (40-60), Moderate (60-80), High (80+)
+
+**Key Metrics**:
+- **Nakamoto Coefficient**: Minimum entities needed to control 51% of stake
+  - Higher is better (more decentralized)
+  - Separate calculations for Validators and Subnets
+- **Gini Index**: Inequality measure (0 = perfect equality, 1 = total inequality)
+  - Lower is better (more equal distribution)
+- **HHI (Herfindahl-Hirschman Index)**: Market concentration (0-10,000)
+  - Lower is better (less concentrated)
+
+**Three Pillars**:
+1. **Wallets**: TAO holder distribution analysis
+2. **Validators**: Stake concentration among validators
+3. **Subnets**: Emission distribution across subnets
+
+**Visual Features**:
+- Score gauge with threshold indicators
+- Historical tracking (shows trend over time)
+- Expandable details with plain-language explanations
+- Last updated timestamps
+
+### 📈 Price Chart (RC29+)
+- **Candlestick Chart**: Professional OHLC visualization with green/red candles
+- **Volume Bars**: Trading volume displayed below price chart
+- **Multiple time ranges**: 1D, 7D, 30D, 90D, Max (~600 days)
+- **Multi-asset comparison**: Compare TAO vs BTC, ETH, and SOL performance
+- **EUR currency support**: View prices in Euros with live conversion
+- **Smart Toggle Logic**: Candle/Volume and Compare modes are mutually exclusive
+- **Data sources**: Binance (primary), Taostats, CoinGecko (fallbacks)
+
+### 📈 Leaderboard Ranking System (RC26+)
+Track position changes across all Top 10 cards with visual indicators:
+- **Position Change Indicators**: ▲ (rank up), ▼ (rank down), NEW (new entry)
+- **Historical Comparison**: Compares current ranking against previous snapshot
+- **Color-Coded Signals**: Green for improvements, Red for drops, Blue for new entries
+- **Compact Display**: Rank + change indicator in single column (e.g., "1 ▲2")
+- **Supported Cards**: Subnets (netuid), Validators (hotkey), Wallets (address)
+
+### 🎯 Market Conditions Intelligence (RC25+)
+Real-time market analysis card combining multiple data sources into actionable intelligence:
+
+**Four Key Metrics** (Matrix-style 2x2 grid):
+- **Signal** 🟢 Bullish/🔴 Bearish/🟠 Watch/🟡 Caution - Multi-factor short-term signal
+- **Volume 24h** - Dollar amount ($180M) + percentage change (+145%)
+- **Price 24h** - Short-term price change percentage
+- **Trend (3d/7d)** - Medium-term price trend (3-day vs 7-day MA comparison)
+
+**Market Phase Analysis**:
+- Contextual phase detection (Bullish/Bearish/Neutral)
+- Fear & Greed Index integration (CMC current + Alternative.me historical)
+- Weekend activity context
+- Clear explanations in expandable section
+
+**Moving Averages Dashboard**:
+- MA-2h, MA-4h, MA-3d, MA-7d live tracking
+- Percentage difference from current price
+- Green (above MA) / Red (below MA) indicators
+- Trend analysis at a glance
+
+**Data Quality & Transparency**:
+- Confidence scoring (high/medium/low)
+- Sample count and hours of data displayed
+- Last updated timestamps
+- Transparent data provenance
+
+**Visual Design**:
+- Strategic color usage: Neutral values (white), conditional signals (green/red)
+- Matrix console aesthetic with monospace typography
+- Fully responsive (4 → 2 → 1 columns on mobile)
+- Complete light/dark mode support
+
+### 📊 Network Metrics
+- **TAO price** with 24h change indicator and breathing animation
+- **Live pricing** from Binance API (<1 second delay)
+- **EUR/USD toggle** on price pill and chart (synced, persisted)
+- **Circulating Supply** tracking against the 21M cap
+- **Total Issuance** from on-chain data via Bittensor SDK
+- **Active Neurons** count across all subnets
+- **Tooltip Transparency**: Every stat card shows data source + last updated timestamp
+
+### ⚡ Emission & Halving
+- **AVG. Emission/Day** calculated from on-chain issuance history
+- **Halving Countdown** with Triple-Precision GPS projections
+- **Emission curve visualization** showing TAO distribution over time
+- **GPS Metadata**: Real-time contamination tracking and confidence levels
+
+### 😱 Fear & Greed Index
+- **Hybrid data source**: CoinMarketCap (current, frequent updates) + Alternative.me (historical)
+- Spoon gauge visualization (0-100 scale)
+- Historical timeline: Now → Yesterday → Week → Month
+- Integration with Market Conditions Card for comprehensive analysis
+- Tooltip shows both sources with individual timestamps
+
+### 🏆 Leaderboards
+- **Top Validators** by stake with delegation info
+- **Top Wallets** by TAO holdings
+- **Top Subnets** by emission allocation
 
 ### 🌗 Dark/Light Mode
 - Auto-detects system preference
