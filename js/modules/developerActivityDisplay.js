@@ -4,15 +4,12 @@
  * Data source: KV key "github_activity" (updated every 6h by workflow)
  */
 
-// KV endpoint
-const KV_BASE = 'https://pub-1fed43d66fb6403fab04464bb7c24442.r2.dev/bittensor-metrics';
-
 /**
- * Fetch GitHub activity data from KV
+ * Fetch GitHub activity data from API
  */
 async function fetchGitHubActivity() {
   try {
-    const response = await fetch(`${KV_BASE}/github_activity.json`, {
+    const response = await fetch('/api/github_activity', {
       cache: 'no-store'
     });
 
