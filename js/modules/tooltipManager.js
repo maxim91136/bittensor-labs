@@ -116,20 +116,20 @@ class TooltipManager {
     const padding = 8;
     const arrowOffset = 6;
 
-    // Determine best vertical position
-    const spaceAbove = targetRect.top;
-    const spaceBelow = window.innerHeight - targetRect.bottom;
-    const positionBelow = spaceBelow >= tooltipRect.height + padding + arrowOffset;
-
     let top, left;
 
-    // Position vertically
-    if (positionBelow) {
-      top = targetRect.bottom + arrowOffset + padding;
-      this.tooltip.dataset.position = 'bottom';
-    } else {
-      top = targetRect.top - tooltipRect.height - arrowOffset - padding;
-      this.tooltip.dataset.position = 'top';
+    // Always position below (consistent UX) - only flip if truly no space
+    top = targetRect.bottom + arrowOffset + padding;
+    this.tooltip.dataset.position = 'bottom';
+
+    // Only flip to top if tooltip would go off-screen at bottom
+    if (top + tooltipRect.height > window.innerHeight - padding) {
+      const topPosition = targetRect.top - tooltipRect.height - arrowOffset - padding;
+      // Only use top if it actually fits better
+      if (topPosition >= padding) {
+        top = topPosition;
+        this.tooltip.dataset.position = 'top';
+      }
     }
 
     // Position horizontally (centered on target)
@@ -141,16 +141,6 @@ class TooltipManager {
     }
     if (left + tooltipRect.width > window.innerWidth - padding) {
       left = window.innerWidth - tooltipRect.width - padding;
-    }
-
-    // Final flip check - if still doesn't fit, flip vertical position
-    if (top < padding) {
-      top = targetRect.bottom + arrowOffset + padding;
-      this.tooltip.dataset.position = 'bottom';
-    }
-    if (top + tooltipRect.height > window.innerHeight - padding) {
-      top = targetRect.top - tooltipRect.height - arrowOffset - padding;
-      this.tooltip.dataset.position = 'top';
     }
 
     // Apply position
