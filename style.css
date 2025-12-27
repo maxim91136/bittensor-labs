@@ -7264,7 +7264,8 @@ body.light-bg .pressure-table-wrapper::after {
 
 /* === Jump Navigation (TOC) === */
 .jump-nav {
-  display: block;
+  display: flex;
+  justify-content: center;
   position: sticky;
   top: 0;
   z-index: 90;
@@ -7275,21 +7276,10 @@ body.light-bg .pressure-table-wrapper::after {
   padding: 8px 16px;
 }
 
-/* On desktop: center and limit width */
-@media (min-width: 769px) {
-  .jump-nav {
-    padding: 8px 24px;
-  }
-
-  .jump-nav-toggle {
-    max-width: 280px;
-    margin: 0 auto;
-  }
-
-  .jump-nav-menu {
-    max-width: 320px;
-    margin: 12px auto 0 auto;
-  }
+.jump-nav-container {
+  position: relative;
+  width: 100%;
+  max-width: 280px;
 }
 
 .jump-nav-toggle {
@@ -7322,7 +7312,7 @@ body.light-bg .pressure-table-wrapper::after {
 .jump-nav-menu {
   display: none;
   list-style: none;
-  margin: 12px 0 0 0;
+  margin: 0;
   padding: 0;
   background: var(--surface);
   border-radius: 8px;
@@ -7330,10 +7320,21 @@ body.light-bg .pressure-table-wrapper::after {
   overflow: hidden;
   max-height: 60vh;
   overflow-y: auto;
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 220px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .jump-nav-menu.open {
   display: block;
+}
+
+/* Scroll margin for jump targets */
+[id$="Card"], [id$="card"], .dashboard-card[id] {
+  scroll-margin-top: 70px;
 }
 
 .jump-nav-menu li {
