@@ -7338,7 +7338,7 @@ body.light-bg .pressure-table-wrapper::after {
   display: block;
 }
 
-/* Scroll margin for jump targets - accounts for sticky jump-nav (~60px) */
+/* Scroll margin for jump targets - accounts for sticky header + jump-nav */
 #marketConditionsCard,
 #priceChartCard,
 #subnetsCard,
@@ -7355,6 +7355,27 @@ body.light-bg .pressure-table-wrapper::after {
 #mapPreviewCard,
 #taotensorCard {
   scroll-margin-top: 80px;
+}
+
+/* Mobile: Header is taller (stacked pills) + jump nav = ~220px total */
+@media (max-width: 480px) {
+  #marketConditionsCard,
+  #priceChartCard,
+  #subnetsCard,
+  #topSubnetsCard,
+  #newcomersCard,
+  #alphaPressureCard,
+  #topValidatorsCard,
+  #topWalletsCard,
+  #devActivityCard,
+  #distributionCard,
+  #decentralizationCard,
+  #decentralizationExpCard,
+  #fngCard,
+  #mapPreviewCard,
+  #taotensorCard {
+    scroll-margin-top: 220px;
+  }
 }
 
 .jump-nav-menu li {
