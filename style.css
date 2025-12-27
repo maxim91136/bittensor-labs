@@ -7389,60 +7389,6 @@ body.light-bg .jump-nav-menu a:hover {
   color: #15803d;
 }
 
-/* === Collapsible Cards (Mobile) === */
-@media (max-width: 768px) {
-  .dashboard-card[data-collapsible] .card-header {
-    cursor: pointer;
-    user-select: none;
-  }
-
-  .collapse-toggle {
-    background: transparent;
-    border: none;
-    border-radius: 4px;
-    width: 24px;
-    height: 24px;
-    min-width: 24px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    margin-left: 8px;
-    flex-shrink: 0;
-    opacity: 0.5;
-  }
-
-  .collapse-toggle:hover {
-    background: rgba(255, 255, 255, 0.1);
-    opacity: 1;
-  }
-
-  .collapse-icon {
-    font-size: 1rem;
-    font-weight: normal;
-    color: var(--text-muted);
-    line-height: 1;
-  }
-
-  .dashboard-card.collapsed > *:not(.card-header) {
-    display: none !important;
-  }
-
-  .dashboard-card.collapsed {
-    padding-bottom: var(--space-sm);
-  }
-
-  /* Light mode collapse toggle */
-  body.light-bg .collapse-toggle:hover {
-    background: rgba(0, 0, 0, 0.08);
-  }
-
-  body.light-bg .collapse-icon {
-    color: #666;
-  }
-}
-
 /* === Abbreviation Tooltips === */
 abbr[data-tooltip],
 .abbr-tooltip {
