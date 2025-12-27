@@ -7332,9 +7332,20 @@ body.light-bg .pressure-table-wrapper::after {
   display: block;
 }
 
-/* Scroll margin for jump targets */
-[id$="Card"], [id$="card"], .dashboard-card[id] {
-  scroll-margin-top: 70px;
+/* Scroll margin for jump targets - accounts for sticky jump-nav (~60px) */
+#marketConditionsCard,
+#priceChartCard,
+#subnetsCard,
+#topSubnetsCard,
+#newcomersCard,
+#alphaPressureCard,
+#topValidatorsCard,
+#topWalletsCard,
+#devActivityCard,
+#distributionCard,
+#decentralizationCard,
+#fngCard {
+  scroll-margin-top: 80px;
 }
 
 .jump-nav-menu li {
