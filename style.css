@@ -7339,6 +7339,8 @@ body.light-bg .pressure-table-wrapper::after {
 }
 
 /* Scroll margin for jump targets - accounts for sticky header + jump-nav */
+/* Desktop: header ~80px + jump-nav ~60px = ~140px */
+/* Mobile (<480px): header ~150px (stacked) + jump-nav ~60px = ~210px */
 #marketConditionsCard,
 #priceChartCard,
 #subnetsCard,
@@ -7354,10 +7356,9 @@ body.light-bg .pressure-table-wrapper::after {
 #fngCard,
 #mapPreviewCard,
 #taotensorCard {
-  scroll-margin-top: 80px;
+  scroll-margin-top: 160px;
 }
 
-/* Mobile: Header is taller (stacked pills) + jump nav = ~220px total */
 @media (max-width: 480px) {
   #marketConditionsCard,
   #priceChartCard,
@@ -7374,7 +7375,7 @@ body.light-bg .pressure-table-wrapper::after {
   #fngCard,
   #mapPreviewCard,
   #taotensorCard {
-    scroll-margin-top: 220px;
+    scroll-margin-top: 240px;
   }
 }
 
