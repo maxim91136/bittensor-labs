@@ -7085,12 +7085,8 @@ body.light-bg a:focus-visible {
     padding: 12px 24px;
   }
 
-  /* Theme and sound toggles */
-  #bgToggleBtn,
-  #soundToggleBtn {
-    width: 44px;
-    height: 44px;
-  }
+  /* Theme and sound toggles - keep original mobile sizes, don't enlarge */
+  /* These are already adequately sized at 34px/28px for header controls */
 
   /* History period buttons (7d/30d/90d) */
   .history-btn,
@@ -7168,13 +7164,14 @@ body.light-bg a:focus-visible {
   }
 
   .pills-row {
-    gap: 6px;
+    gap: 10px;
+    margin-top: 6px;
   }
 
   .halving-pill,
   .price-pill {
-    padding: 8px 12px;
-    font-size: 0.8rem;
+    padding: 12px 14px;
+    font-size: 0.85rem;
   }
 }
 
