@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.39.2 (2025-12-27)
+### Fixed
+- **Mobile Header**: Toggle buttons same size (34px), proper spacing
+- **Mobile Header**: Max Supply (21M) stays left-aligned (not centered)
+- **Price Pill**: Increased height for better [pill me] spacing
+
 ## v1.0.0-rc.39.1 (2025-12-27)
 ### Fixed
 - **Jump Navigation**: Added missing sections (Decentralization 2.0, Miner Map Preview, TAO Tensor Law)
