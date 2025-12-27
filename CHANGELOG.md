@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.39.1 (2025-12-27)
+### Fixed
+- **Jump Navigation**: Added missing sections (Decentralization 2.0, Miner Map Preview, TAO Tensor Law)
+
 ## v1.0.0-rc.39.0 (2025-12-27)
 ### Added
 - **Jump Navigation**: Sticky "Jump to section" dropdown for quick navigation to all dashboard cards
