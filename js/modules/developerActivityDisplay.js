@@ -125,7 +125,7 @@ function updateDeveloperActivityCard(data) {
  * Initialize the Developer Activity display
  */
 async function initDeveloperActivityDisplay() {
-  const card = document.getElementById('developerActivityCard');
+  const card = document.getElementById('devActivityCard');
   if (!card) return null;
 
   // Fetch and display data

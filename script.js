@@ -54,6 +54,9 @@ import {
 import {
   setupDynamicTooltips
 } from './js/modules/tooltipManager.js';
+import { initBackToTop } from './js/modules/backToTop.js';
+import { initJumpNavigation } from './js/modules/jumpNavigation.js';
+import { initCollapsibleCards } from './js/modules/collapsibleCards.js';
 import {
   initRefreshControls,
   startAutoRefresh,
@@ -1555,6 +1558,13 @@ document.addEventListener('DOMContentLoaded', async function() {
 
 // Initialize seasonal effects (imported from module)
 document.addEventListener('DOMContentLoaded', initAllSeasonalEffects);
+
+// Initialize UX enhancements (mobile improvements)
+document.addEventListener('DOMContentLoaded', () => {
+  initBackToTop();
+  initJumpNavigation();
+  initCollapsibleCards();
+});
 
 // ===== Force Fear & Greed Badge Position on Desktop =====
 initFngBadgePosition();

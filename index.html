@@ -199,6 +199,28 @@
   </div>
 </section>
 
+<!-- Jump Navigation (Mobile TOC) -->
+<nav class="jump-nav" id="jumpNav" aria-label="Jump to section">
+  <button class="jump-nav-toggle" id="jumpNavToggle" aria-expanded="false">
+    <span class="jump-nav-icon">☰</span>
+    <span class="jump-nav-label">Jump to section...</span>
+  </button>
+  <ul class="jump-nav-menu" id="jumpNavMenu">
+    <li><a href="#marketConditionsCard">📊 Market Conditions</a></li>
+    <li><a href="#priceChartCard">📈 Price Chart</a></li>
+    <li><a href="#subnetsCard">🔢 Stats Grid</a></li>
+    <li><a href="#topSubnetsCard">🏆 Subnet Champions</a></li>
+    <li><a href="#newcomersCard">🌱 Talent Scouting</a></li>
+    <li><a href="#alphaPressureCard">🔥 Alpha Pressure</a></li>
+    <li><a href="#topValidatorsCard">✅ Top Validators</a></li>
+    <li><a href="#topWalletsCard">💰 Top Wallets</a></li>
+    <li><a href="#devActivityCard">👨‍💻 Developer Activity</a></li>
+    <li><a href="#distributionCard">📊 TAO Distribution</a></li>
+    <li><a href="#decentralizationCard">🌐 Decentralization</a></li>
+    <li><a href="#fngCard">😱 Fear & Greed</a></li>
+  </ul>
+</nav>
+
 <main class="dashboard">
   <!-- Market Conditions Card (Volume Signal Expanded) - Prominent Position #1 -->
   <div class="market-conditions-card" id="marketConditionsCard">
@@ -247,7 +269,7 @@
   </div>
 
   <!-- Price Chart Card - Position #2 after Market Conditions -->
-  <section class="dashboard-card loading" aria-labelledby="price-heading" style="position: relative;">
+  <section class="dashboard-card loading" id="priceChartCard" aria-labelledby="price-heading" style="position: relative;">
     <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Real-time TAO price data from Binance API.
 
 • Time Ranges: 1D to Max (~600 days)
@@ -515,7 +537,7 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
 
   <div class="dashboard-grid">
   <!-- Top Subnets Card -->
-    <section class="dashboard-card top-subnets-card" aria-labelledby="top-subnets-card-heading">
+    <section class="dashboard-card top-subnets-card" id="topSubnetsCard" data-collapsible aria-labelledby="top-subnets-card-heading">
       <div class="card-header">
         <h2 id="top-subnets-card-heading">Subnet Champions League <span class="exp-badge">Experimental</span></h2>
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Rankings by view:&#10;• Emissions: Daily τ emission&#10;• Market Cap: Alpha token MCap&#10;• Hybrid: ML prediction probability&#10;&#10;Indicators:&#10;• Arrows (▲▼): Short-term change (~1h)&#10;• 7d: Rank change over 7 days&#10;• Gold/Red highlight: Strong momentum (±2 ranks in 7d)&#10;&#10;Each view uses its own 7d history (Emissions uses ML data, MCap uses MCap history).">i</span>
@@ -551,7 +573,7 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
     </section>
 
   <!-- Newcomers Card - Talent Scouting -->
-    <section class="dashboard-card newcomers-card" aria-labelledby="newcomers-card-heading">
+    <section class="dashboard-card newcomers-card" id="newcomersCard" data-collapsible aria-labelledby="newcomers-card-heading">
       <div class="card-header">
         <h2 id="newcomers-card-heading">Talent Scouting <span class="exp-badge">Experimental</span></h2>
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Rising subnets outside Champions League:&#10;&#10;KATNISS TRUST FILTER:&#10;🚫 Excludes aggressive dumpers (>100%)&#10;⚠️ Warning badge for high dumping (>70%)&#10;A true prospect has a trustworthy owner&#10;&#10;EMISSION HEALTH ZONES:&#10;🟢 Healthy (≥1.0%) - Miners profitable&#10;🟡 Rising (0.5-1.0%) - Gaining momentum&#10;🟠 Struggling (0.2-0.5%) - Needs growth&#10;🔴 Critical (<0.2%) - Miners leaving&#10;&#10;TREND ARROWS (vs 7d ago):&#10;↗ Emission rising&#10;↘ Emission falling&#10;&#10;CRITERIA:&#10;• Rank 11+ (outside Top 10)&#10;• Pool > 5Kτ (real liquidity)&#10;&#10;Watch for 🟠↘ = EXIT signal">i</span>
@@ -579,7 +601,7 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
     </section>
 
   <!-- Alpha Pressure Card -->
-    <section class="dashboard-card alpha-pressure-card" id="alphaPressureCard" aria-labelledby="alpha-pressure-heading">
+    <section class="dashboard-card alpha-pressure-card" id="alphaPressureCard" data-collapsible aria-labelledby="alpha-pressure-heading">
       <div class="card-header">
         <h2 id="alpha-pressure-heading">Alpha Pressure <span class="exp-badge">Experimental</span></h2>
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Alpha Pressure: (Net Flow / Emission) × 100&#10;Positive = accumulation, Negative = selling&#10;&#10;Owner: Tracks if subnet owner sells their 18% emission take&#10;Shows 90d/30d dump scores&#10;✅ healthy (≤30%) 🟡 moderate (≤70%)&#10;🟠 high (≤100%) 🔴 aggressive (>100%)">i</span>
@@ -622,7 +644,7 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
     </section>
 
   <!-- Top Validators Card -->
-    <section class="dashboard-card top-validators-card" aria-labelledby="top-validators-card-heading">
+    <section class="dashboard-card top-validators-card" id="topValidatorsCard" data-collapsible aria-labelledby="top-validators-card-heading">
       <div class="card-header">
         <h2 id="top-validators-card-heading">Network Titans by Stake</h2>
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Shows the 10 validators with highest stake. Source: taostats.io">i</span>
@@ -649,7 +671,7 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
     </section>
 
   <!-- Top Wallets Card -->
-    <section class="dashboard-card top-wallets-card" aria-labelledby="top-wallets-card-heading">
+    <section class="dashboard-card top-wallets-card" id="topWalletsCard" data-collapsible aria-labelledby="top-wallets-card-heading">
       <div class="card-header">
         <h2 id="top-wallets-card-heading">TAO Whales by Balance</h2>
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Shows the 10 wallets with highest total balance. Source: taostats.io">i</span>
@@ -676,7 +698,7 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
     </section>
 
     <!-- Developer Activity Card -->
-    <section class="dashboard-card developer-activity-card" id="developerActivityCard" aria-labelledby="developer-activity-heading">
+    <section class="dashboard-card developer-activity-card" id="devActivityCard" data-collapsible aria-labelledby="developer-activity-heading">
       <div class="card-header">
         <h2 id="developer-activity-heading">Developer Activity</h2>
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="GitHub activity from opentensor repositories:&#10;• bittensor (SDK)&#10;• subtensor (blockchain)&#10;• bittensor-subnet-template&#10;&#10;Data updates every 6 hours.&#10;Source: GitHub API">i</span>
@@ -725,7 +747,7 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
     </section>
 
   <!-- TAO Distribution Card -->
-    <section class="dashboard-card distribution-card" aria-labelledby="distribution-card-heading">
+    <section class="dashboard-card distribution-card" id="distributionCard" data-collapsible aria-labelledby="distribution-card-heading">
       <div class="card-header">
         <h2 id="distribution-card-heading">TAO Distribution</h2>
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="How much TAO you need to be in the Top X%. Data updates weekly due to API rate limits. Source: taostats.io">i</span>
@@ -782,7 +804,7 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
     </section>
 
     <!-- Decentralization Score Card -->
-    <section class="dashboard-card decentralization-card" aria-labelledby="decentralization-card-heading">
+    <section class="dashboard-card decentralization-card" id="decentralizationCard" data-collapsible aria-labelledby="decentralization-card-heading">
       <div class="card-header">
         <h2 id="decentralization-card-heading">Network Decentralization (Own Model)</h2>
         <span class="info-badge" translate="no" aria-hidden="true" data-tooltip="Composite score measuring network decentralization across wallets (30%), validators (30%), and subnets (40%). Nakamoto = minimum entities for 51% control. Higher scores = more decentralized.">i</span>
@@ -1175,6 +1197,14 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
     <img src="assets/bittensor-logo.svg" alt="Bittensor" class="footer-bittensor-logo">
   </div>
 </footer>
+
+<!-- Back to Top Button -->
+<button id="backToTop" class="back-to-top" aria-label="Back to top">
+  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="18 15 12 9 6 15"></polyline>
+  </svg>
+</button>
+
 </body>
 
 <!-- Matrix Glitch Overlay (RC20.2 style) -->
