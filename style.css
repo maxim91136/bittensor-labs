@@ -7344,7 +7344,10 @@ body.light-bg .pressure-table-wrapper::after {
 #devActivityCard,
 #distributionCard,
 #decentralizationCard,
-#fngCard {
+#decentralizationExpCard,
+#fngCard,
+#mapPreviewCard,
+#taotensorCard {
   scroll-margin-top: 80px;
 }
 
