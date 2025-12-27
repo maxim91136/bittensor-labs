@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.39.3.1 (2025-12-27)
+### Changed
+- **Cleanup**: Removed unused files (dev scripts, old modules, duplicate shell scripts)
+
 ## v1.0.0-rc.39.3 (2025-12-27)
 ### Fixed
 - **Jump Navigation**: Correct scroll-margin-top for all screen sizes (Desktop 140px, Tablet 160-180px, Mobile 260px)
