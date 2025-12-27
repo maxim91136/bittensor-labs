@@ -7262,9 +7262,9 @@ body.light-bg .pressure-table-wrapper::after {
   }
 }
 
-/* === Jump Navigation (Mobile TOC) === */
+/* === Jump Navigation (TOC) === */
 .jump-nav {
-  display: none;
+  display: block;
   position: sticky;
   top: 0;
   z-index: 90;
@@ -7275,9 +7275,20 @@ body.light-bg .pressure-table-wrapper::after {
   padding: 8px 16px;
 }
 
-@media (max-width: 768px) {
+/* On desktop: center and limit width */
+@media (min-width: 769px) {
   .jump-nav {
-    display: block;
+    padding: 8px 24px;
+  }
+
+  .jump-nav-toggle {
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  .jump-nav-menu {
+    max-width: 320px;
+    margin: 12px auto 0 auto;
   }
 }
 
