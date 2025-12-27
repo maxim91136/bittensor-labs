@@ -7339,8 +7339,10 @@ body.light-bg .pressure-table-wrapper::after {
 }
 
 /* Scroll margin for jump targets - accounts for sticky header + jump-nav */
-/* Desktop: header ~80px + jump-nav ~60px = ~140px */
-/* Mobile (<480px): header ~150px (stacked) + jump-nav ~60px = ~210px */
+/* Large Desktop (>1024px): header ~70px + jump-nav ~60px = 140px */
+/* Small Desktop/Tablet landscape (769-1024px): ~150px */
+/* Tablet portrait (481-768px): ~170px */
+/* Mobile (<480px): header stacked ~150px + jump-nav ~60px = 240px */
 #marketConditionsCard,
 #priceChartCard,
 #subnetsCard,
@@ -7356,7 +7358,47 @@ body.light-bg .pressure-table-wrapper::after {
 #fngCard,
 #mapPreviewCard,
 #taotensorCard {
-  scroll-margin-top: 160px;
+  scroll-margin-top: 140px;
+}
+
+@media (max-width: 1024px) {
+  #marketConditionsCard,
+  #priceChartCard,
+  #subnetsCard,
+  #topSubnetsCard,
+  #newcomersCard,
+  #alphaPressureCard,
+  #topValidatorsCard,
+  #topWalletsCard,
+  #devActivityCard,
+  #distributionCard,
+  #decentralizationCard,
+  #decentralizationExpCard,
+  #fngCard,
+  #mapPreviewCard,
+  #taotensorCard {
+    scroll-margin-top: 160px;
+  }
+}
+
+@media (max-width: 768px) {
+  #marketConditionsCard,
+  #priceChartCard,
+  #subnetsCard,
+  #topSubnetsCard,
+  #newcomersCard,
+  #alphaPressureCard,
+  #topValidatorsCard,
+  #topWalletsCard,
+  #devActivityCard,
+  #distributionCard,
+  #decentralizationCard,
+  #decentralizationExpCard,
+  #fngCard,
+  #mapPreviewCard,
+  #taotensorCard {
+    scroll-margin-top: 180px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -7375,7 +7417,7 @@ body.light-bg .pressure-table-wrapper::after {
   #fngCard,
   #mapPreviewCard,
   #taotensorCard {
-    scroll-margin-top: 240px;
+    scroll-margin-top: 260px;
   }
 }
 
