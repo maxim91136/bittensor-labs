@@ -195,12 +195,12 @@
   }
   #soundToggleBtn {
     top: 12px;
-    right: 50px;
-    width: 28px;
-    height: 28px;
+    right: 54px;
+    width: 34px;
+    height: 34px;
   }
   #soundToggleBtn #soundMusicNote {
-    font-size: 14px;
+    font-size: 16px;
   }
   /* Hide SVG icons on mobile */
   #soundOnIcon,
