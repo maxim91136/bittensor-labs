@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.39.0 (2025-12-27)
+### Added
+- **Jump Navigation**: Sticky "Jump to section" dropdown for quick navigation to all dashboard cards
+- **Back-to-Top Button**: Floating button appears after scrolling, smooth scroll to top
+- **Enhanced Focus States**: Visible focus outlines for keyboard navigation (accessibility)
+- **Touch Targets**: Minimum 44x44px touch targets on touch devices (WCAG compliance)
+
+### Changed
+- **Mobile Header**: Pills stack vertically on small screens (<480px) to prevent overlap
+- **Table Layout**: Sticky first column on mobile, scroll indicator gradient
+- **Tooltips**: Always position below target (consistent UX), only flip when off-screen
+
+### Removed
+- **Collapsible Cards**: Removed feature (not useful for data dashboard)
+
 ## v1.0.0-rc.38.5 (2025-12-21)
 ### Added
 - **Alpha Pressure**: Trend column header with tooltip explaining all indicators (↗️ ↘️ ⚠️ ➡️)
