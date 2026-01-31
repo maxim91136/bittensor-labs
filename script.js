@@ -716,13 +716,13 @@ async function updateNetworkStats(data) {
           const usedEmission = h.emission_used;
           const usedEtaMs = h.eta ? new Date(h.eta).getTime() : null;
 
-          // Format: #X threshold - method - ~Xd → date (emission/day)
+          // Format: #X threshold - method - ~Xd → date time (emission/day)
           const methodLabel = getMethodLabel(h.method || method);
-          const etaDate = usedEtaMs ? formatEtaFromMs(usedEtaMs).split(' ').slice(0, 1).join(' ') : '?';
+          const etaDateTime = usedEtaMs ? formatEtaFromMs(usedEtaMs) : '?';
           const daysAway = h.days !== undefined ? `~${Math.round(h.days)}d` : '';
           const rateFormatted = usedEmission ? Math.round(usedEmission).toLocaleString() : '?';
 
-          halvingLines.push(`${step} ${t} - ${methodLabel} - ${daysAway} → ${etaDate} (${rateFormatted}/day)`);
+          halvingLines.push(`${step} ${t} - ${methodLabel} - ${daysAway} → ${etaDateTime} (${rateFormatted}/day)`);
         });
 
         // Add GPS methodology explanation
