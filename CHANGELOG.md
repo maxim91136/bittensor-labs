@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.40.0.0 (2026-01-31)
+### Fixed
+- **Halving Timestamp**: Corrected first halving date to 2025-12-15 13:31:00 UTC (was showing wrong date)
+- **GPS Terminal Approach**: Fixed emission calculation bug that caused double-halving of 7d emission
+- **Halving Projections**: Now show correct ETAs (~2030 for #2) instead of shifted dates (~2034)
+
+### Added
+- **KNOWN_HALVINGS**: Hardcoded verified halving timestamps to prevent future overwrites
+- **Halving Tooltip**: Added days countdown and time to projection ETAs (e.g., "~1460d → 2030-01-31 14:35 UTC")
+
 ## v1.0.0-rc.39.3.1 (2025-12-27)
 ### Changed
 - **Cleanup**: Removed unused files (dev scripts, old modules, duplicate shell scripts)
