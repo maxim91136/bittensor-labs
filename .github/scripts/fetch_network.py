@@ -9,6 +9,19 @@ import urllib.error
 
 NETWORK = os.getenv("NETWORK", "finney")
 
+# =====================================================================
+# KNOWN HISTORICAL HALVINGS - These are blockchain facts, not estimates
+# Do NOT modify these timestamps - they are verified block times
+# =====================================================================
+KNOWN_HALVINGS = [
+    {
+        'threshold': 10500000,
+        'at': 1734270660000,  # 2025-12-15 13:31:00 UTC - Block 7103976
+        'block': 7103976,
+        'verified': True
+    }
+]
+
 def fetch_metrics() -> Dict[str, Any]:
     """Fetch Bittensor network metrics: block, subnets, validators, neurons, emission"""
     subtensor = bt.Subtensor(network=NETWORK)
@@ -795,31 +808,50 @@ def fetch_metrics() -> Dict[str, Any]:
         return sum(trimmed) / len(trimmed) if trimmed else None
 
     # Load halving history to get last_halving timestamp and calculate pre-halving emission
+    # IMPORTANT: Use KNOWN_HALVINGS timestamps first (verified blockchain data),
+    # only fall back to KV for unknown/future halvings
     last_halving_ts = None
     pre_halving_emission = None
 
-    try:
-        cf_account = os.getenv('CF_ACCOUNT_ID')
-        cf_token = os.getenv('CF_API_TOKEN')
-        cf_kv_ns = os.getenv('CF_KV_NAMESPACE_ID') or os.getenv('CF_METRICS_NAMESPACE_ID')
-        if cf_account and cf_token and cf_kv_ns:
-            kv_url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/storage/kv/namespaces/{cf_kv_ns}/values/halving_history"
-            req = urllib.request.Request(kv_url, method='GET', headers={'Authorization': f'Bearer {cf_token}'})
-            with urllib.request.urlopen(req, timeout=15) as resp:
-                if resp.status == 200:
-                    halving_hist = json.loads(resp.read())
-                    if isinstance(halving_hist, list) and len(halving_hist) > 0:
-                        last_halving_ts = halving_hist[-1].get('at')  # Unix timestamp in ms
+    # Determine which halving we're currently past based on issuance
+    current_halving_threshold = None
+    for known in sorted(KNOWN_HALVINGS, key=lambda x: x['threshold'], reverse=True):
+        if cur_iss is not None and cur_iss >= known['threshold']:
+            current_halving_threshold = known['threshold']
+            last_halving_ts = known['at']  # Use VERIFIED timestamp
+            print(f"📍 Using known halving timestamp for {known['threshold']:,} TAO: {datetime.fromtimestamp(known['at'] / 1000, timezone.utc).isoformat()}", file=sys.stderr)
+            break
 
-                        # Doug's Cheat: Calculate actual pre-halving emission from history
-                        pre_halving_emission = calculate_pre_halving_emission(history, last_halving_ts)
-                        if pre_halving_emission:
-                            print(f"🎯 Doug's Cheat: Pre-halving emission = {pre_halving_emission:.2f} τ/day (from historical data)", file=sys.stderr)
-                        else:
-                            print(f"⚠️  Could not calculate pre-halving emission from history, falling back to protocol base", file=sys.stderr)
-    except Exception as e:
-        print(f"⚠️  Error loading halving history: {e}", file=sys.stderr)
-        pass  # Ignore errors
+    # Only try KV if we're past a threshold not in KNOWN_HALVINGS
+    if last_halving_ts is None:
+        try:
+            cf_account = os.getenv('CF_ACCOUNT_ID')
+            cf_token = os.getenv('CF_API_TOKEN')
+            cf_kv_ns = os.getenv('CF_KV_NAMESPACE_ID') or os.getenv('CF_METRICS_NAMESPACE_ID')
+            if cf_account and cf_token and cf_kv_ns:
+                kv_url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/storage/kv/namespaces/{cf_kv_ns}/values/halving_history"
+                req = urllib.request.Request(kv_url, method='GET', headers={'Authorization': f'Bearer {cf_token}'})
+                with urllib.request.urlopen(req, timeout=15) as resp:
+                    if resp.status == 200:
+                        halving_hist = json.loads(resp.read())
+                        if isinstance(halving_hist, list) and len(halving_hist) > 0:
+                            # Find the most recent halving that's not in KNOWN_HALVINGS
+                            known_thresholds = {h['threshold'] for h in KNOWN_HALVINGS}
+                            for h in reversed(halving_hist):
+                                if h.get('threshold') not in known_thresholds:
+                                    last_halving_ts = h.get('at')
+                                    print(f"📍 Using KV halving timestamp for {h.get('threshold'):,} TAO", file=sys.stderr)
+                                    break
+        except Exception as e:
+            print(f"⚠️  Error loading halving history from KV: {e}", file=sys.stderr)
+
+    # Doug's Cheat: Calculate actual pre-halving emission from history
+    if last_halving_ts is not None:
+        pre_halving_emission = calculate_pre_halving_emission(history, last_halving_ts)
+        if pre_halving_emission:
+            print(f"🎯 Doug's Cheat: Pre-halving emission = {pre_halving_emission:.2f} τ/day (from historical data)", file=sys.stderr)
+        else:
+            print(f"⚠️  Could not calculate pre-halving emission from history, falling back to protocol base", file=sys.stderr)
 
     result['halving_estimates'] = compute_halving_estimates(
         cur_iss,
@@ -888,11 +920,39 @@ def fetch_metrics() -> Dict[str, Any]:
 
             # Check which thresholds are already recorded
             recorded_thresholds = {h.get('threshold') for h in halving_history}
+            known_thresholds = {h['threshold'] for h in KNOWN_HALVINGS}
 
-            # Detect newly crossed thresholds
+            # First: Ensure all KNOWN_HALVINGS are in the history with correct timestamps
+            # This prevents accidental overwrites and ensures historical accuracy
+            history_modified = False
+            for known in KNOWN_HALVINGS:
+                th = known['threshold']
+                existing = next((h for h in halving_history if h.get('threshold') == th), None)
+
+                if existing is None:
+                    # Known halving missing - add it with verified timestamp
+                    halving_history.append({
+                        'threshold': th,
+                        'at': known['at'],
+                        'block': known.get('block'),
+                        'verified': True,
+                        'detected_at': datetime.fromtimestamp(known['at'] / 1000, timezone.utc).isoformat()
+                    })
+                    history_modified = True
+                    print(f"✅ Added known halving: {th:,} TAO at {datetime.fromtimestamp(known['at'] / 1000, timezone.utc).isoformat()}", file=sys.stderr)
+                elif existing.get('at') != known['at']:
+                    # Known halving exists but with wrong timestamp - fix it
+                    old_ts = existing.get('at')
+                    existing['at'] = known['at']
+                    existing['block'] = known.get('block')
+                    existing['verified'] = True
+                    history_modified = True
+                    print(f"🔧 Fixed halving timestamp for {th:,} TAO: {old_ts} → {known['at']}", file=sys.stderr)
+
+            # Detect newly crossed thresholds (only for UNKNOWN halvings)
             new_halvings = []
             for th in thresholds:
-                if total_issuance_human >= th and th not in recorded_thresholds:
+                if total_issuance_human >= th and th not in recorded_thresholds and th not in known_thresholds:
                     # Use last issuance snapshot timestamp (more accurate than detection time)
                     # This represents when the on-chain data was captured, closer to actual halving block time
                     halving_timestamp_ms = result.get('last_issuance_ts', int(datetime.now(timezone.utc).timestamp())) * 1000
@@ -906,8 +966,8 @@ def fetch_metrics() -> Dict[str, Any]:
                     new_halvings.append(halving_event)
                     print(f"🎉 HALVING DETECTED! Threshold {th:,} TAO crossed at {total_issuance_human:,.2f} TAO", file=sys.stderr)
 
-            # Save updated halving history to KV if new halvings detected
-            if new_halvings:
+            # Save updated halving history to KV if new halvings detected or history was modified
+            if new_halvings or history_modified:
                 halving_history.extend(new_halvings)
                 # Sort by threshold to maintain order
                 halving_history.sort(key=lambda x: x.get('threshold', 0))
