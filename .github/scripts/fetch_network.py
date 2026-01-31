@@ -650,9 +650,9 @@ def fetch_metrics() -> Dict[str, Any]:
                 days_estimate = remaining / emission if emission > 0 else float('inf')
 
                 if days_estimate < 7 and emission_7d_val is not None and emission_7d_val > 0:
-                    # Terminal approach: 7d is clean, use it with halved-emission-based ratio
-                    ratio = halved_emission / base_emission
-                    emission_to_use = emission_7d_val * ratio
+                    # Terminal approach: 7d is clean and already reflects post-halving emission
+                    # NO ratio needed - use 7d directly for real-time precision
+                    emission_to_use = emission_7d_val
                     method_used = 'emission_7d'
                     gps_stage = 'terminal_approach_transition'
                     confidence = 'high'
@@ -670,14 +670,15 @@ def fetch_metrics() -> Dict[str, Any]:
                 days_estimate = remaining / emission if emission > 0 else float('inf')
 
                 if days_estimate < 7 and emission_7d_val is not None and emission_7d_val > 0:
-                    # Stage 3: Terminal approach (<30d away) - use 7d for precision
-                    ratio = halved_emission / base_emission
-                    emission_to_use = emission_7d_val * ratio
+                    # Stage 3: Terminal approach (<7d away) - use 7d for real-time precision
+                    # After >30d post-halving, emission_7d_val already reflects current emission
+                    # NO ratio needed - the 7d data is clean and accurate
+                    emission_to_use = emission_7d_val
                     method_used = 'emission_7d'
                     gps_stage = 'terminal_approach'
                     confidence = 'high'
                 else:
-                    # Stage 2: Long-range (>30d away) - use 30d for stability
+                    # Long-range (>7d away) - use 30d for noise-resistant stability
                     emission_to_use = emission
                     method_used = method
                     gps_stage = 'long_range'
