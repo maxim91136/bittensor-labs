@@ -16,7 +16,7 @@ NETWORK = os.getenv("NETWORK", "finney")
 KNOWN_HALVINGS = [
     {
         'threshold': 10500000,
-        'at': 1734270660000,  # 2025-12-15 13:31:00 UTC - Block 7103976
+        'at': 1765805460000,  # 2025-12-15 13:31:00 UTC - Block 7103976
         'block': 7103976,
         'verified': True
     }
