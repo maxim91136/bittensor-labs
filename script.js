@@ -271,6 +271,7 @@ window.useFngGraphics = async function(darkPath = '/assets/fng-spoon-black.png',
 
 
 async function updateNetworkStats(data) {
+  if (!data) return; // Keep previous values on API failure
   // Keep previous supply snapshot for delta-based emission fallback and crossing detection
   const prevSupplyTs = window._prevSupplyTs ?? null;
   const prevHalvingSupply = (window._prevHalvingSupply !== undefined) ? window._prevHalvingSupply : null;
