@@ -1,0 +1,26 @@
+name: Keepalive – Re-enable Workflows
+
+on:
+  schedule:
+    - cron: '0 6 1,15 * *'   # 1st & 15th of each month – well within the 60-day window
+  workflow_dispatch:
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-enable disabled workflows
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REPO="${{ github.repository }}"
+          echo "Checking for disabled workflows in $REPO …"
+
+          gh workflow list --repo "$REPO" --all --json id,name,state \
+            --jq '.[] | select(.state == "disabled_inactivity") | "\(.id)\t\(.name)"' |
+          while IFS=$'\t' read -r id name; do
+            gh workflow enable "$id" --repo "$REPO"
+            echo "✓ Re-enabled: $name ($id)"
+          done
+
+          echo "Done."
