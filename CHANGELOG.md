@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.40.1.0 (2026-07-24)
+### Fixed
+- **GitHub Actions – bittensor SDK**: Pinned `bittensor>=10.0.0,<11.0.0` across all SDK workflows to prevent bittensor 11.x (CLI rewrite, no SDK API) from being installed — restores `AsyncSubtensor`, `get_all_subnets_netuid()`, and all network fetch workflows
+- **Dashboard**: Preserve SUBNETS / VALIDATORS / NEURONS values on API failure instead of resetting to 0
+
+### Added
+- **Keepalive Workflow**: Runs on the 1st & 15th of each month to re-enable any workflows GitHub disabled due to repository inactivity (60-day limit)
+
 ## v1.0.0-rc.40.0.0 (2026-01-31)
 ### Fixed
 - **Halving Timestamp**: Corrected first halving date to 2025-12-15 13:31:00 UTC (was showing wrong date)
