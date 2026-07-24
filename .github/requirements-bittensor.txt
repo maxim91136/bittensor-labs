@@ -1,2 +1,3 @@
-bittensor
+bittensor>=9.0.0,<10.0.0
+async-substrate-interface<2.0.0
 requests
