@@ -23,42 +23,12 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-bittensor-v9-asi1-${{ hashFiles('**/requirements*.txt') }}
+          key: ${{ runner.os }}-pip-bittensor-v10-${{ hashFiles('**/requirements*.txt') }}
 
       - name: Install dependencies
         run: |
           pip install --upgrade pip
-          pip install requests websockets "bittensor>=9.0.0,<10.0.0" "async-substrate-interface<2.0.0"
-
-      - name: Debug imports
-        run: |
-          python << 'PYEOF'
-          import sys
-          print("Python:", sys.version)
-          try:
-              import bittensor as bt
-              print("bittensor OK, version:", bt.__version__)
-              from bittensor import AsyncSubtensor
-              print("AsyncSubtensor from bittensor OK")
-          except Exception as e:
-              print("bittensor error (%s): %s" % (type(e).__name__, e))
-          try:
-              from bittensor.core.async_subtensor import AsyncSubtensor
-              print("AsyncSubtensor from core OK")
-          except Exception as e:
-              print("bittensor.core error (%s): %s" % (type(e).__name__, e))
-          try:
-              import async_substrate_interface
-              print("async_substrate_interface OK")
-          except Exception as e:
-              print("async_substrate_interface error (%s): %s" % (type(e).__name__, e))
-          try:
-              import scalecodec
-              from scalecodec import GenericCall
-              print("scalecodec + GenericCall OK")
-          except Exception as e:
-              print("scalecodec error (%s): %s" % (type(e).__name__, e))
-          PYEOF
+          pip install requests websockets "bittensor>=10.0.0,<11.0.0"
 
       - name: Fetch Alpha Prices
         env:
