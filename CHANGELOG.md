@@ -5,6 +5,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 -
 
+## v1.0.0-rc.40.2.0 (2026-08-26)
+### Fixed
+- **Wallet Score**: Recalibrated whale concentration formula (factor 500→50) — score was permanently 0 due to overly aggressive threshold (0.2% whale wallets = 0); now 2% = 0, giving a realistic score (~79) for the current network state
+
 ## v1.0.0-rc.40.1.0 (2026-07-24)
 ### Fixed
 - **GitHub Actions – bittensor SDK**: Pinned `bittensor>=10.0.0,<11.0.0` across all SDK workflows to prevent bittensor 11.x (CLI rewrite, no SDK API) from being installed — restores `AsyncSubtensor`, `get_all_subnets_netuid()`, and all network fetch workflows
