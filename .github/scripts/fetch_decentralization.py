@@ -251,7 +251,7 @@ def analyze_wallets(distribution_data: Dict) -> Dict:
     # Lower whale concentration = more decentralized
     # If 0.07% hold >10k TAO, that's fairly concentrated
     # Score: 100 - (whale_pct * 100) with some scaling
-    whale_score = max(0, 100 - (whale_pct * 500))  # Scale: 0.2% whales = 0 score
+    whale_score = max(0, 100 - (whale_pct * 50))  # Scale: 2% whales = 0 score
     result["wallet_score"] = round(whale_score, 1)
 
     return result
