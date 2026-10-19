@@ -1,26 +1,33 @@
 name: Keepalive – Re-enable Workflows
 
+# GitHub disables scheduled workflows after 60 days without repo activity.
+# Calling the "enable" API on every workflow (even already-active ones)
+# resets that inactivity timer – no dummy commits needed.
+
 on:
   schedule:
     - cron: '0 6 1,15 * *'   # 1st & 15th of each month – well within the 60-day window
   workflow_dispatch:
 
+permissions:
+  actions: write
+
 jobs:
   keepalive:
     runs-on: ubuntu-latest
     steps:
-      - name: Re-enable disabled workflows
+      - name: Enable all workflows (resets inactivity timer)
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           REPO="${{ github.repository }}"
-          echo "Checking for disabled workflows in $REPO …"
+          echo "Refreshing workflows in $REPO …"
 
-          gh workflow list --repo "$REPO" --all --json id,name,state \
-            --jq '.[] | select(.state == "disabled_inactivity") | "\(.id)\t\(.name)"' |
-          while IFS=$'\t' read -r id name; do
-            gh workflow enable "$id" --repo "$REPO"
-            echo "✓ Re-enabled: $name ($id)"
+          gh api --paginate "repos/$REPO/actions/workflows" \
+            --jq '.workflows[] | select(.state == "active" or .state == "disabled_inactivity") | "\(.id)\t\(.state)\t\(.name)"' |
+          while IFS=$'\t' read -r id state name; do
+            gh api -X PUT "repos/$REPO/actions/workflows/$id/enable"
+            echo "✓ $name ($id, was: $state)"
           done
 
           echo "Done."
