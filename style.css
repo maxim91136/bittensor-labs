@@ -488,6 +488,57 @@ body.light-bg .snowflake::before { filter: drop-shadow(0 2px 0 rgba(43,109,246,0
   animation: fadeInUp 0.6s ease-out;
 }
 
+/* Sibling projects bar (below sticky header) */
+.sibling-projects {
+  max-width: 1200px;
+  margin: 10px auto 0;
+  padding: 0 var(--space-md);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-xs);
+}
+
+.sibling-label {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.sibling-projects a {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.sibling-projects a span {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.sibling-projects a:hover {
+  border-color: #22c55e;
+  color: #fff;
+}
+
+@media (max-width: 600px) {
+  .sibling-projects a span {
+    display: none;
+  }
+}
+
+body.light-bg .sibling-label,
+body.light-bg .sibling-projects a span {
+  color: rgba(0, 0, 0, 0.55);
+}
+
+body.light-bg .sibling-projects a {
+  color: #222;
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
 /* Max Supply Terminal Badge - Matrix style */
 #maxSupplyTerminal {
   position: absolute;
@@ -2424,20 +2475,6 @@ body.light-bg .fng-card.fng-red .barometer-class {
 .site-footer p {
   margin: 0;
   line-height: 1.5;
-}
-
-.footer-projects {
-  margin-top: 10px;
-  line-height: 1.6;
-}
-
-.footer-projects a {
-  color: rgba(255, 255, 255, 0.6);
-  text-decoration: underline;
-}
-
-.footer-projects a:hover {
-  color: #fff;
 }
 
 .footer-brand {
