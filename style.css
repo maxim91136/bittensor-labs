@@ -2426,6 +2426,20 @@ body.light-bg .fng-card.fng-red .barometer-class {
   line-height: 1.5;
 }
 
+.footer-projects {
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+.footer-projects a {
+  color: rgba(255, 255, 255, 0.6);
+  text-decoration: underline;
+}
+
+.footer-projects a:hover {
+  color: #fff;
+}
+
 .footer-brand {
   display: flex;
   align-items: center;
