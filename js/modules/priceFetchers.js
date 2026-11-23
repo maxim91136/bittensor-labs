@@ -74,7 +74,7 @@ export async function fetchTaoPrice() {
   }
 
   // Last fallback: CoinGecko
-  const url = 'https://api.coingecko.com/api/v3/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true';
+  const url = `${COINGECKO_API}/simple/price?ids=bittensor&vs_currencies=usd&include_24hr_change=true`;
   try {
     const res = await fetch(url);
     const data = await res.json();
@@ -336,7 +336,7 @@ export async function fetchCirculatingSupply() {
     return taostats.circulating_supply;
   }
   try {
-    const res = await fetch('https://api.coingecko.com/api/v3/coins/bittensor');
+    const res = await fetch(`${COINGECKO_API}/coins/bittensor`);
     const data = await res.json();
     window._circSupplySource = 'coingecko';
     return data.market_data?.circulating_supply ?? null;

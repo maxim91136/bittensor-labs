@@ -7599,3 +7599,10 @@ body.light-bg .skeleton-cell {
     rgba(0, 0, 0, 0.04) 75%);
   background-size: 200% 100%;
 }
+
+/* Click-to-load consent overlay for the TAO Tensor Law embed */
+.taotensor-embed .taotensor-consent { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 16px; text-align: center; cursor: pointer; border: 1px solid #333; border-radius: 8px; background: #0b0b0b; color: #ccc; font-family: 'JetBrains Mono', monospace; }
+.taotensor-embed .taotensor-consent-title { font-size: 1.05em; color: #ff6b35; }
+.taotensor-embed .taotensor-consent-note { font-size: 0.75em; color: #888; line-height: 1.5; max-width: 420px; }
+body.light-bg .taotensor-embed .taotensor-consent { background: #f6f6f6; border-color: #e0e0e0; color: #333; }
+.embed-overlay-mobile { z-index: 3; }

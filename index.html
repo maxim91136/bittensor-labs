@@ -1061,7 +1061,11 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
           </div>
         </div>
         <div class="taotensor-embed" id="taotensorEmbed">
-          <iframe id="taotensorFrame" src="https://taotensorlaw.com" title="TAO Tensor Law price model" aria-label="TAO Tensor Law embed" loading="lazy"></iframe>
+          <iframe id="taotensorFrame" data-src="https://taotensorlaw.com" title="TAO Tensor Law price model" aria-label="TAO Tensor Law embed"></iframe>
+          <button type="button" id="taotensorLoad" class="taotensor-consent">
+            <span class="taotensor-consent-title">&#9654; Load interactive model</span>
+            <span class="taotensor-consent-note">Embeds taotensorlaw.com. Only after your click is a connection to that site made and your IP address transmitted.</span>
+          </button>
           <!-- Mobile-only overlay: intercept taps to open the full-screen modal to avoid clipped tooltips in small viewports -->
           <div class="embed-overlay-mobile" id="taotensorOverlay" role="button" aria-hidden="true">Tap to open full view</div>
           <div class="embed-fallback">

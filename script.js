@@ -1042,24 +1042,26 @@ async function initDashboard() {
   updateTaoPrice(taoPrice);
 
     // TAO Tensor Law iframe fallback: hide iframe if blocked and show a friendly fallback message
-    document.addEventListener('DOMContentLoaded', function() {
+    (function(init) { if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init(); })(function() {
       const embed = document.getElementById('taotensorEmbed');
       const frame = document.getElementById('taotensorFrame');
       if (!embed || !frame) return;
-      // If the iframe cannot load due to X-Frame-Options, we detect via a timeout and 'load' event
+      // The embed is loaded only after an explicit click (GDPR: no connection to taotensorlaw.com before that).
+      // If the iframe cannot load due to X-Frame-Options, we detect via a timeout and 'load' event.
       let loaded = false;
-      frame.addEventListener('load', function() { loaded = true; });
-      // After a short delay, if the frame didn't load, show fallback
-      setTimeout(function() {
-        try {
-          // Some browsers will block access; in that case, the 'load' event won't fire or will be blocked
-          if (!loaded) {
-            embed.classList.add('fallback-active');
-          }
-        } catch (e) {
-          embed.classList.add('fallback-active');
-        }
-      }, 1500);
+      let started = false;
+      const loadBtn = document.getElementById('taotensorLoad');
+      function startLoad() {
+        if (started) return;
+        started = true;
+        if (loadBtn) loadBtn.style.display = 'none';
+        frame.addEventListener('load', function() { loaded = true; });
+        frame.src = frame.dataset.src || 'https://taotensorlaw.com';
+        setTimeout(function() {
+          if (!loaded) embed.classList.add('fallback-active');
+        }, 4000);
+      }
+      if (loadBtn) loadBtn.addEventListener('click', startLoad);
       // Modal / full-screen behavior for the embed
       const openBtn = document.getElementById('taotensorFullBtn');
       const modal = document.getElementById('taotensorModal');
@@ -1071,9 +1073,10 @@ async function initDashboard() {
 
       function openModal() {
         if (!embed || !frame) return;
+        startLoad();
         // If we are in fallback mode, just open in a new tab instead
         if (embed.classList.contains('fallback-active')) {
-          window.open(frame?.src || 'https://taotensorlaw.com', '_blank');
+          window.open('https://taotensorlaw.com', '_blank');
           return;
         }
         if (modal.classList.contains('active')) return;
