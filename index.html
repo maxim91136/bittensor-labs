@@ -1113,14 +1113,21 @@ Note: Candle & Volume require Binance data and are disabled in Compare mode.">i<
     <p class="learn-intro matrix-text" style="font-family: 'JetBrains Mono', 'IBM Plex Mono', monospace; font-size: 1.1em; color: #ff6b35; margin-bottom: 12px; text-shadow: 0 0 8px rgba(255, 107, 53, 0.5); letter-spacing: 0.05em;">
       &gt; dive deep with the documentary
     </p>
-    <iframe
-      src="https://www.youtube.com/embed/71rvASmXUN8"
-      title="The Incentive Layer – Bittensor Documentary"
-      frameborder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowfullscreen
-      style="width: 100%; aspect-ratio: 16/9; max-width: 720px; border-radius: 8px; box-shadow: 0 2px 12px #0003;">
-    </iframe>
+    <button type="button" id="yt-load" data-yt="71rvASmXUN8" style="width: 100%; max-width: 720px; aspect-ratio: 16/9; border-radius: 8px; border: 1px solid #333; background: #0b0b0b; color: #ccc; font-family: 'JetBrains Mono', monospace; cursor: pointer; padding: 16px; box-shadow: 0 2px 12px #0003;">
+      <span style="display:block; font-size: 1.05em; color: #ff6b35; margin-bottom: 8px;">&#9654; Load video from YouTube</span>
+      <span style="display:block; font-size: 0.75em; color: #888; line-height: 1.5;">The Incentive Layer – Bittensor Documentary.<br>Only after your click is a connection to YouTube (Google) made and your IP address transmitted.</span>
+    </button>
+    <script>
+      document.getElementById('yt-load').addEventListener('click', function () {
+        var f = document.createElement('iframe');
+        f.src = 'https://www.youtube-nocookie.com/embed/' + this.dataset.yt + '?autoplay=1';
+        f.title = 'The Incentive Layer – Bittensor Documentary';
+        f.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+        f.allowFullscreen = true; f.frameBorder = '0';
+        f.style.cssText = 'width: 100%; aspect-ratio: 16/9; max-width: 720px; border-radius: 8px; box-shadow: 0 2px 12px #0003;';
+        this.replaceWith(f);
+      });
+    </script>
   </div>
 </section>
 
