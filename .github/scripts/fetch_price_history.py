@@ -15,6 +15,26 @@ TAOSTATS_API_KEY = os.getenv("TAOSTATS_API_KEY")
 TAOSTATS_OHLC_URL = "https://api.taostats.io/api/price/ohlc/v1"
 # History endpoint for detailed data
 TAOSTATS_HISTORY_URL = "https://api.taostats.io/api/price/history/v1"
+# Fallback when Taostats refuses (e.g. 410 Gone): public market-data mirror of Binance, no key needed
+BINANCE_KLINES_URL = "https://data-api.binance.vision/api/v3/klines"
+
+
+def fetch_price_history_binance(days: int):
+    """Fallback: TAOUSDT klines from Binance. Hourly for <= 3 days, daily otherwise.
+    Returns [[timestamp_ms, close_price], ...] ascending, same shape as the Taostats functions."""
+    interval = "1h" if days <= 3 else "1d"
+    limit = days * 24 if days <= 3 else days
+    try:
+        resp = requests.get(BINANCE_KLINES_URL, params={"symbol": "TAOUSDT", "interval": interval, "limit": min(limit, 1000)}, timeout=30)
+        resp.raise_for_status()
+        klines = resp.json()
+        chart_data = [[int(k[0]), float(k[4])] for k in klines]
+        chart_data.sort(key=lambda x: x[0])
+        print(f"✅ Binance fallback: {len(chart_data)} points for {days}d", file=sys.stderr)
+        return chart_data or None
+    except Exception as e:
+        print(f"❌ Binance fallback failed for {days}d: {e}", file=sys.stderr)
+        return None
 
 
 def fetch_price_history_ohlc(days: int):
@@ -154,6 +174,7 @@ def main():
         "_timestamp": datetime.now(timezone.utc).isoformat(),
         "data": {}
     }
+    sources = set()
     
     for key, days in timeframes.items():
         print(f"📊 Fetching {days}d price history...", file=sys.stderr)
@@ -167,6 +188,13 @@ def main():
             data = fetch_price_history_ohlc(days)
         
         if data:
+            sources.add("taostats")
+        else:
+            data = fetch_price_history_binance(days)
+            if data:
+                sources.add("binance")
+
+        if data:
             result["data"][key] = data
         else:
             print(f"⚠️ No data for {key}d timeframe", file=sys.stderr)
@@ -175,6 +203,8 @@ def main():
         print("❌ No price history data fetched", file=sys.stderr)
         sys.exit(1)
     
+    result["_source"] = "+".join(sorted(sources)) or "taostats"
+
     # Save to file
     output_file = "price_history.json"
     with open(output_file, "w") as f:

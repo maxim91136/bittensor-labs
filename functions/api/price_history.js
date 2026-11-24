@@ -56,7 +56,7 @@ export async function onRequest(context) {
     // Return in CoinGecko-compatible format: { prices: [[ts, price], ...] }
     return new Response(JSON.stringify({
       prices: rangeData,
-      _source: 'taostats',
+      _source: data._source || 'taostats',
       _timestamp: data._timestamp,
       range: range
     }), { status: 200, headers: cors });
