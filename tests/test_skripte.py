@@ -6,11 +6,18 @@ nur Funktionen, die Daten umformen oder rechnen.
 """
 import importlib.util
 import os
+import sys
 import tempfile
+import types
 import unittest
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
+
+try:
+    import requests  # noqa: F401
+except ImportError:  # der Prüflauf hat requests nicht; die getesteten Funktionen brauchen es nicht
+    sys.modules["requests"] = types.ModuleType("requests")
 
 SKRIPTE = Path(__file__).resolve().parent.parent / ".github" / "scripts"
 
