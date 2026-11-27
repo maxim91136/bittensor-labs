@@ -555,3 +555,11 @@ Notes:
  - If you expect historical data already present in KV, we can implement a merge strategy (fetch and merge arrays) before overwriting the `taostats_history` key. Currently the `publish-taostats` workflow POSTs the latest entry to the Worker (worker appends server-side) and then downloads the merged history back. The workflow performs a pre/post GET check when `CF_WORKER_URL` is set, and will fail if the history count does not increase after the POST — this helps detect route/permission issues before any direct PUT would run.
  - If you are starting from scratch (no existing KV entries), the current workflow will create new `taostats_history` payloads and write them to the KV key on the first run.
 
+
+## Tests
+
+Die Rechenlogik der Datenskripte (`.github/scripts`) wird ohne Netzzugriff getestet:
+
+```
+python -m unittest discover -s tests
+```
