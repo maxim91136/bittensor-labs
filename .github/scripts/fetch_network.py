@@ -152,8 +152,6 @@ def fetch_metrics() -> Dict[str, Any]:
                 # network or other error when reading kv; do not try to overwrite
                 kv_read_ok = False
                 print(f"⚠️  KV GET failed: {str(e)}; skipping issuance_history update", file=sys.stderr)
-            except Exception:
-                pass
     except Exception:
         existing = None
 
@@ -437,8 +435,6 @@ def fetch_metrics() -> Dict[str, Any]:
     
     # Try different periods and use the best available
     # Start with longer periods but fall back to shorter if data quality is poor
-    emission_7d_result = None
-    emission_7d_actual_days = 0
     
     # Try 7 days first
     rate_7d, sd_7d, samples_7d, days_7d = compute_emission_for_period(history, 7)
@@ -453,7 +449,6 @@ def fetch_metrics() -> Dict[str, Any]:
     if rate_7d is not None and days_7d >= 4 and EMISSION_MIN <= rate_7d <= EMISSION_MAX and data_is_reliable:
         emission_7d = rate_7d
         emission_sd_7d = sd_7d
-        emission_7d_actual_days = days_7d
     else:
         # Fallback: Use last 3-4 days where data is more reliable
         # These periods are after the initial data gaps were resolved
@@ -463,7 +458,6 @@ def fetch_metrics() -> Dict[str, Any]:
             if rate_fb is not None and days_fb >= (fallback_days * 0.7) and EMISSION_MIN <= rate_fb <= EMISSION_MAX:
                 emission_7d = rate_fb
                 emission_sd_7d = sd_fb
-                emission_7d_actual_days = days_fb
                 break
 
     # 30-day emission (will work better once we have more history)
@@ -815,10 +809,8 @@ def fetch_metrics() -> Dict[str, Any]:
     pre_halving_emission = None
 
     # Determine which halving we're currently past based on issuance
-    current_halving_threshold = None
     for known in sorted(KNOWN_HALVINGS, key=lambda x: x['threshold'], reverse=True):
         if cur_iss is not None and cur_iss >= known['threshold']:
-            current_halving_threshold = known['threshold']
             last_halving_ts = known['at']  # Use VERIFIED timestamp
             print(f"📍 Using known halving timestamp for {known['threshold']:,} TAO: {datetime.fromtimestamp(known['at'] / 1000, timezone.utc).isoformat()}", file=sys.stderr)
             break
@@ -852,7 +844,7 @@ def fetch_metrics() -> Dict[str, Any]:
         if pre_halving_emission:
             print(f"🎯 Doug's Cheat: Pre-halving emission = {pre_halving_emission:.2f} τ/day (from historical data)", file=sys.stderr)
         else:
-            print(f"⚠️  Could not calculate pre-halving emission from history, falling back to protocol base", file=sys.stderr)
+            print("⚠️  Could not calculate pre-halving emission from history, falling back to protocol base", file=sys.stderr)
 
     result['halving_estimates'] = compute_halving_estimates(
         cur_iss,

@@ -341,7 +341,7 @@ def main():
         print('⚠️ CF credentials missing; skipping KV upload', file=sys.stderr)
 
     # Print summary
-    print(f"\n📊 Summary:", file=sys.stderr)
+    print("\n📊 Summary:", file=sys.stderr)
     print(f"  Total subnets: {len(output.get('all_subnets', []))}", file=sys.stderr)
     print(f"  Total neurons: {output.get('total_neurons', 0)}", file=sys.stderr)
     print(f"  Top subnet: netuid={output['top_subnets'][0]['netuid']} ({output['top_subnets'][0]['neurons']} neurons)" if output.get('top_subnets') else "  No subnets found", file=sys.stderr)

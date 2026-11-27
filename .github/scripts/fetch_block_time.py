@@ -210,7 +210,7 @@ def main():
     print(f"✅ Block time data written to {output_file}", file=sys.stderr)
     
     # Print summary
-    print(f"\n⏱️ Block Time Summary:", file=sys.stderr)
+    print("\n⏱️ Block Time Summary:", file=sys.stderr)
     print(f"  Average: {result['avg_block_time']}s (target: {result['target_block_time']}s)", file=sys.stderr)
     print(f"  Deviation: {result['deviation']:+.2f}s ({result['deviation_percent']:+.1f}%)", file=sys.stderr)
     print(f"  Range: {result['min_block_time']}s - {result['max_block_time']}s", file=sys.stderr)

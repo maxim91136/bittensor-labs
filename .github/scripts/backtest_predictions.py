@@ -22,9 +22,7 @@ import json
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Any, Tuple
-from collections import defaultdict
-import math
+from typing import Dict, List, Optional, Any
 
 # Import prediction logic from main script
 sys.path.insert(0, os.path.dirname(__file__))
@@ -32,8 +30,6 @@ try:
     from predict_subnet_rankings import (
         SubnetFeatureExtractor,
         RankPredictionModel,
-        FEATURE_WEIGHTS,
-        POSITION_PENALTIES
     )
 except ImportError:
     print("❌ Could not import prediction modules. Ensure predict_subnet_rankings.py exists.", file=sys.stderr)

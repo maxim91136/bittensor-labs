@@ -158,7 +158,6 @@ def fetch_block_time_taostats_fallback():
 
     # Import the old taostats fetcher
     import importlib.util
-    import sys
     spec = importlib.util.spec_from_file_location("fetch_block_time",
                                                    os.path.join(os.path.dirname(__file__), "fetch_block_time.py"))
     old_module = importlib.util.module_from_spec(spec)
@@ -192,7 +191,7 @@ def main():
     print(f"✅ Block time data written to {output_file}", file=sys.stderr)
 
     # Print summary
-    print(f"\n⏱️ Block Time Summary:", file=sys.stderr)
+    print("\n⏱️ Block Time Summary:", file=sys.stderr)
     print(f"  Average: {result['avg_block_time']}s (target: {result['target_block_time']}s)", file=sys.stderr)
     print(f"  Deviation: {result['deviation']:+.2f}s ({result['deviation_percent']:+.1f}%)", file=sys.stderr)
     print(f"  Range: {result['min_block_time']}s - {result['max_block_time']}s", file=sys.stderr)

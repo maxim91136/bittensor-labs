@@ -97,7 +97,7 @@ def fetch_from_taostats(network: str, limit: int = 100) -> Tuple[List[Dict], str
                     data = resp.read()
                     try:
                         j = json.loads(data)
-                    except Exception as e:
+                    except Exception:
                         last_error = f'Non-JSON response from {url}'
                         break
                     

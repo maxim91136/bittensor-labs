@@ -26,7 +26,7 @@ If no file argument is provided, the script will look for the latest
 import os
 import sys
 from glob import glob
-from datetime import datetime
+from datetime import datetime, timezone
 
 ENABLE_R2 = os.environ.get('ENABLE_R2', 'false').lower()
 if ENABLE_R2 != 'true':

@@ -140,7 +140,7 @@ def fetch_wallet_transfers(address: str, days: int = 30) -> list:
         resp = requests.get(url, headers=get_headers(), timeout=30)
 
         if resp.status_code == 429:
-            print(f"⚠️ Rate limited", file=sys.stderr)
+            print("⚠️ Rate limited", file=sys.stderr)
             time.sleep(2)
             return []
 

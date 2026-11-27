@@ -22,7 +22,7 @@ import json
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Optional
 
 
 def get_from_kv(account: str, token: str, namespace: str, key: str) -> Optional[Dict]:
@@ -696,7 +696,7 @@ def main():
         if put_to_r2(cf_acc, cf_token, r2_bucket, r2_path, snapshot_data):
             print(f"   Archived: {r2_path}", file=sys.stderr)
         else:
-            print(f"   ⚠️ R2 archival failed (non-fatal)", file=sys.stderr)
+            print("   ⚠️ R2 archival failed (non-fatal)", file=sys.stderr)
 
         # Archive experimental scores to R2
         exp_r2_path = f"decentralization_exp/{now.year}/{now.month:02d}/{now.day:02d}.json"
@@ -714,7 +714,7 @@ def main():
         if put_to_r2(cf_acc, cf_token, r2_bucket, exp_r2_path, exp_snapshot_data):
             print(f"   Archived experimental: {exp_r2_path}", file=sys.stderr)
         else:
-            print(f"   ⚠️ Experimental R2 archival failed (non-fatal)", file=sys.stderr)
+            print("   ⚠️ Experimental R2 archival failed (non-fatal)", file=sys.stderr)
     else:
         if not enable_r2:
             print("\n⏭️  Skipping R2 archival (ENABLE_R2 not true)", file=sys.stderr)

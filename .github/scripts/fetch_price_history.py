@@ -40,7 +40,7 @@ def fetch_price_history_binance(days: int):
 def fetch_price_history_ohlc(days: int):
     """Fetch price history using OHLC endpoint (daily candles)."""
     if not TAOSTATS_API_KEY:
-        print(f"❌ TAOSTATS_API_KEY not set", file=sys.stderr)
+        print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
         return None
     
     headers = {
@@ -108,7 +108,7 @@ def fetch_price_history_ohlc(days: int):
 def fetch_price_history_detailed(days: int, limit: int = 200):
     """Fetch price history using detailed history endpoint (for shorter timeframes)."""
     if not TAOSTATS_API_KEY:
-        print(f"❌ TAOSTATS_API_KEY not set", file=sys.stderr)
+        print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
         return None
     
     headers = {

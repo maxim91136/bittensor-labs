@@ -120,15 +120,15 @@ chutes_prob = prob_dict.get('64', 0)
 affine_prob = prob_dict.get('120', 0)
 other_prob = 1.0 - chutes_prob - affine_prob
 
-print(f"\n💰 BETTING ANALYSIS (7 days ago → today):")
+print("\n💰 BETTING ANALYSIS (7 days ago → today):")
 print(f"   Chutes (#64) probability: {chutes_prob:.1%}")
 print(f"   Affine (#120) probability: {affine_prob:.1%}")
 print(f"   Other probability: {other_prob:.1%}")
 
 print(f"\n   Actual result: #{actual_top1} is #1")
 if actual_top1 == '64':
-    print(f"   → Chutes won ✓")
+    print("   → Chutes won ✓")
 elif actual_top1 == '120':
-    print(f"   → Affine won ✓")
+    print("   → Affine won ✓")
 else:
-    print(f"   → OTHER won ✓✓✓")
+    print("   → OTHER won ✓✓✓")

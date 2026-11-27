@@ -220,7 +220,7 @@ def main():
             else:
                 failed += 1
 
-        print(f'\n✅ Cleanup complete:')
+        print('\n✅ Cleanup complete:')
         print(f'   Deleted: {deleted} files')
         if failed > 0:
             print(f'   Failed: {failed} files')

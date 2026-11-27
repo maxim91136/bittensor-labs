@@ -34,7 +34,7 @@ import math
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone, timedelta
-from typing import Dict, List, Optional, Tuple, Any
+from typing import Dict, List, Optional, Any
 from collections import defaultdict
 
 # === CONFIGURATION ===
@@ -332,7 +332,7 @@ class SubnetFeatureExtractor:
 
         # Find current leader (rank #1) emission at same timestamp
         leader_emission = None
-        for other_netuid, other_snapshots in self._subnet_snapshots.items():
+        for _other_netuid, other_snapshots in self._subnet_snapshots.items():
             for snap in other_snapshots:
                 # Find snapshot at same time with rank #1
                 if abs((snap['ts_dt'] - current_timestamp).total_seconds()) < 3600:  # within 1 hour
@@ -734,7 +734,7 @@ def main():
         all_predictions.append(prediction_output)
 
         # Show top 3 predictions
-        print(f'   Top 3 predictions:')
+        print('   Top 3 predictions:')
         for p in prediction_output['predictions'][:3]:
             print(f'   #{p["current_rank"]} {p["subnet_name"]}: {p["probability_pct"]} probability')
 
@@ -764,7 +764,7 @@ def main():
             total_prob = sum(p['probability'] for p in pred['predictions'])
             print(f'   Validation: probabilities sum to {total_prob:.4f}')
             if not (0.99 <= total_prob <= 1.01):
-                print(f'   ⚠️ Warning: probabilities do not sum to 1.0', file=sys.stderr)
+                print('   ⚠️ Warning: probabilities do not sum to 1.0', file=sys.stderr)
 
         print()
         print("=" * 60)

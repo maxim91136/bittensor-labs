@@ -21,7 +21,7 @@ Usage:
 """
 import os
 import sys
-from datetime import datetime, timezone
+from datetime import datetime
 
 ENABLE_R2 = os.environ.get('ENABLE_R2', 'false').lower()
 if ENABLE_R2 != 'true':
@@ -103,7 +103,7 @@ if have_s3_keys:
     try:
         import boto3
         from botocore.client import Config
-    except Exception as e:
+    except Exception:
         print('boto3 required for S3 API. Install: pip install boto3')
         sys.exit(3)
 
@@ -125,7 +125,7 @@ if have_s3_keys:
 else:
     try:
         import requests
-    except Exception as e:
+    except Exception:
         print('requests required for CF API. Install: pip install requests')
         sys.exit(3)
 

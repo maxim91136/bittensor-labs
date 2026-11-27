@@ -8,8 +8,6 @@ Hybrid block time fetcher:
 import os
 import sys
 import json
-import time
-import random
 import requests
 from datetime import datetime, timezone
 
@@ -91,7 +89,7 @@ def fetch_block_time_onchain():
                                     if timestamp_ms:
                                         timestamp = int(timestamp_ms) / 1000
                                         break
-                    except Exception as e:
+                    except Exception:
                         # Debug first extrinsic structure on first block
                         if i == 0 and idx == 0:
                             print(f"  Debug: ext type={type(ext)}, hasattr value={hasattr(ext, 'value')}", file=sys.stderr)
@@ -144,7 +142,7 @@ def fetch_block_time_taostats():
         print("❌ TAOSTATS_API_KEY not set", file=sys.stderr)
         return None
 
-    print(f"⚠️ FALLBACK: Using Taostats API...", file=sys.stderr)
+    print("⚠️ FALLBACK: Using Taostats API...", file=sys.stderr)
 
     headers = {
         "accept": "application/json",
@@ -152,7 +150,6 @@ def fetch_block_time_taostats():
     }
 
     try:
-        all_blocks = []
         url = f"{BLOCK_URL}?limit=100&page=1"
 
         resp = requests.get(url, headers=headers, timeout=10)

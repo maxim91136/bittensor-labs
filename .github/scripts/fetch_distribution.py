@@ -158,14 +158,14 @@ def fetch_wallets(max_pages=100, page_size=200):
                 total_wallet_count = 200000
 
             if page >= pagination.get("total_pages", max_pages):
-                print(f"✅ Reached last page", file=sys.stderr)
+                print("✅ Reached last page", file=sys.stderr)
                 break
 
             page += 1
 
             # Rate limit: 20 requests/min = 3s between
             if page <= max_pages:
-                print(f"   ⏳ Rate limit pause (3s)...", file=sys.stderr)
+                print("   ⏳ Rate limit pause (3s)...", file=sys.stderr)
                 time.sleep(3)
 
         except Exception as e:
@@ -194,7 +194,6 @@ def fetch_wallets(max_pages=100, page_size=200):
 def calculate_brackets(balances, total_network_wallets):
     """Calculate wallet counts per bracket using fetched sample."""
     brackets = {}
-    sample_size = len(balances)
 
     for threshold in BRACKETS:
         count = sum(1 for b in balances if b > threshold)
@@ -255,7 +254,7 @@ def main():
     pages_needed = 100  # Fixed at 100 pages for predictable runtime
 
     estimated_time = pages_needed * 13 // 60
-    print(f"\n📊 Step 2: Fetching top wallets from Taostats...", file=sys.stderr)
+    print("\n📊 Step 2: Fetching top wallets from Taostats...", file=sys.stderr)
     print(f"Dynamic pages: {pages_needed} (~{wallets_needed:,} wallets for Top 10%+)", file=sys.stderr)
     print(f"Rate limit aware: ~{estimated_time} min", file=sys.stderr)
     balances = fetch_wallets(max_pages=pages_needed)
@@ -310,7 +309,7 @@ def main():
     print(f"\n✅ Distribution written to {output_file}", file=sys.stderr)
 
     # Print summary
-    print(f"\n📊 TAO Distribution Summary:", file=sys.stderr)
+    print("\n📊 TAO Distribution Summary:", file=sys.stderr)
     print(f"   Total network wallets: {total_wallets:,}", file=sys.stderr)
     print(f"   Sample fetched: {len(balances):,}", file=sys.stderr)
     print("-" * 40, file=sys.stderr)

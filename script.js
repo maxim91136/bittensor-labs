@@ -1230,12 +1230,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (window._debug) {
       const overlay = document.getElementById('debugOverlay');
       if (overlay) overlay.style.display = 'block';
-      updateDebugStatus();
+      if (typeof window.updateDebugStatus === 'function') window.updateDebugStatus();
       const btn = document.getElementById('debugRetryBtn');
       if (btn) btn.onclick = () => {
         if (window._debug) console.log('Debug: manual retry triggered');
         refreshDashboard();
-        setTimeout(updateDebugStatus, 1200);
+        if (typeof window.updateDebugStatus === 'function') setTimeout(window.updateDebugStatus, 1200);
       };
     }
 

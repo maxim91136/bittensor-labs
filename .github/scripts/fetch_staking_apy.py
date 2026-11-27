@@ -164,7 +164,7 @@ def main():
     print(f"✅ Staking APY data written to {output_file}", file=sys.stderr)
     
     # Print summary
-    print(f"\n📊 Staking APY Summary:", file=sys.stderr)
+    print("\n📊 Staking APY Summary:", file=sys.stderr)
     print(f"  Weighted Avg APR: {result['avg_apr']}%", file=sys.stderr)
     print(f"  Simple Avg APR: {result['simple_avg_apr']}%", file=sys.stderr)
     print(f"  Range: {result['min_apr']}% - {result['max_apr']}%", file=sys.stderr)

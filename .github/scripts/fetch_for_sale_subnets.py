@@ -15,7 +15,6 @@ from datetime import datetime, timezone
 
 # Try to import bittensor SDK
 try:
-    import bittensor as bt
     from bittensor import AsyncSubtensor
 except ImportError:
     try:

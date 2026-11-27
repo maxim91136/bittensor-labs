@@ -8,7 +8,6 @@ import sys
 import json
 import urllib.request
 import urllib.error
-from urllib.parse import urljoin
 
 CF_WORKER_URL = os.environ.get("CF_WORKER_URL", "").strip()
 EXPECTED_VERSION = os.environ.get("EXPECTED_VERSION", "").strip()

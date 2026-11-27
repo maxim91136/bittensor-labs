@@ -7,7 +7,6 @@ import json
 import sys
 import os
 import subprocess
-from datetime import datetime
 
 def main():
     # Config

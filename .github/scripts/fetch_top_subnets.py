@@ -126,7 +126,7 @@ def fetch_top_subnets() -> Dict[str, object]:
                         data = resp.read()
                         try:
                             j = json.loads(data)
-                        except Exception as e:
+                        except Exception:
                             # not JSON — capture snippet & continue
                             try:
                                 snippet = data[:240].decode('utf-8', errors='replace') if isinstance(data, (bytes, bytearray)) else str(data)
