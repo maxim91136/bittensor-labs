@@ -102,15 +102,29 @@ def _val(x):
     return x.value if hasattr(x, "value") else x
 
 
-def read_maps(sub, block_hash=None):
-    """{netuid: (tao_in_rao, injection_rao_per_block)} at a block."""
+def _query_map_all(sub, name, **kw):
+    out = {}
+    for k, v in sub.substrate.query_map("SubtensorModule", name, page_size=200, **kw):
+        out[int(_val(k))] = int(_val(v))
+    return out
+
+
+def read_maps(sub, block_hash=None, retries=4):
+    """{netuid: (tao_in_rao, injection_rao_per_block)} at a block.
+
+    The archive node limits "historical work"; on that error we wait and retry."""
     kw = {"block_hash": block_hash} if block_hash else {}
-    tao, inj = {}, {}
-    for k, v in sub.substrate.query_map("SubtensorModule", "SubnetTAO", **kw):
-        tao[int(_val(k))] = int(_val(v))
-    for k, v in sub.substrate.query_map("SubtensorModule", "SubnetTaoInEmission", **kw):
-        inj[int(_val(k))] = int(_val(v))
-    return {n: (t, inj.get(n, 0)) for n, t in tao.items() if n != 0}
+    for attempt in range(retries + 1):
+        try:
+            tao = _query_map_all(sub, "SubnetTAO", **kw)
+            inj = _query_map_all(sub, "SubnetTaoInEmission", **kw)
+            return {n: (t, inj.get(n, 0)) for n, t in tao.items() if n != 0}
+        except Exception as e:  # noqa: BLE001
+            if attempt == retries:
+                raise
+            wait = 20 * (2 ** attempt)
+            print(f"   ⏳ {type(e).__name__}: {str(e)[:70]} - waiting {wait}s", file=sys.stderr)
+            time.sleep(wait)
 
 
 def read_registered_at(sub):
@@ -169,30 +183,32 @@ def main():
     checkpoints = (state or {}).get("checkpoints", [])
     checkpoints = [c for c in checkpoints if _ts(c) > now - timedelta(days=RETENTION_DAYS)]
 
-    # ---- back-fill from the archive node if the history does not reach 30 days back
-    need_start = now - timedelta(days=max(WINDOWS.values()) + 1)
-    have_from = _ts(checkpoints[0]) if checkpoints else now
-    if have_from > need_start + timedelta(hours=CHECKPOINT_HOURS):
-        print(f"⏪ Back-filling history ({have_from:%Y-%m-%d %H:%M} → {need_start:%Y-%m-%d %H:%M}) from the archive node", file=sys.stderr)
+    # ---- back-fill from the archive node (resumable: fixed block grid, newest -> oldest)
+    step = CHECKPOINT_HOURS * BLOCKS_PER_DAY // 24
+    oldest_block = cur_block - int((max(WINDOWS.values()) + 1) * BLOCKS_PER_DAY)
+    have_blocks = {c["block"] for c in checkpoints}
+    grid = [b for b in range((cur_block // step) * step, oldest_block, -step) if b not in have_blocks and b < cur_block - step // 2]
+    if grid:
+        print(f"⏪ Back-filling {len(grid)} checkpoints from the archive node", file=sys.stderr)
         arch = bt.Subtensor(network="archive")
-        step = CHECKPOINT_HOURS * BLOCKS_PER_DAY // 24
         t0 = time.time()
-        blk = cur_block - int((now - need_start).total_seconds() / BLOCK_SECONDS)
-        first_have = checkpoints[0]["block"] if checkpoints else cur_block
-        filled = []
-        while blk < first_have - step // 2:
+        done = 0
+        for blk in grid:
             if time.time() - t0 > max_backfill:
-                print("⚠️ Back-fill time budget used up; continuing next run", file=sys.stderr)
+                print("⚠️ Back-fill time budget used up; the next run continues", file=sys.stderr)
                 break
-            h = arch.substrate.get_block_hash(blk)
-            maps = read_maps(arch, h)
-            # drop subnets that were (re-)registered after this block: their older data belongs to another subnet
-            maps = {n: v for n, v in maps.items() if registered_at.get(n, 0) <= blk}
+            try:
+                h = arch.substrate.get_block_hash(blk)
+                maps = read_maps(arch, h)
+            except Exception as e:  # noqa: BLE001
+                print(f"⚠️ Back-fill stopped at block {blk}: {type(e).__name__}: {str(e)[:100]}", file=sys.stderr)
+                break
             ts = now - timedelta(seconds=(cur_block - blk) * BLOCK_SECONDS)
-            filled.append(to_checkpoint(blk, ts, maps))
-            blk += step
-        print(f"   {len(filled)} historic checkpoints in {time.time()-t0:.0f}s", file=sys.stderr)
-        checkpoints = sorted(filled + checkpoints, key=lambda c: c["block"])
+            checkpoints.append(to_checkpoint(blk, ts, maps))
+            done += 1
+            time.sleep(3)
+        checkpoints.sort(key=lambda c: c["block"])
+        print(f"   {done} historic checkpoints in {time.time()-t0:.0f}s", file=sys.stderr)
 
     # ---- keep a new checkpoint every CHECKPOINT_HOURS
     if not checkpoints or _ts(checkpoints[-1]) <= now - timedelta(hours=CHECKPOINT_HOURS) + timedelta(minutes=10):
