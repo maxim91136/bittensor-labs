@@ -258,6 +258,9 @@ def process_alpha_pressure(data: Dict) -> List[Dict]:
     subnets = data.get('subnets', [])
 
     for s in subnets:
+        # Subnets without flow data (status 'no_data', pressure null) are not history entries
+        if s.get('status') == 'no_data' or s.get('alpha_pressure_30d') is None:
+            continue
         netuid = s.get('netuid', 0)
         name = s.get('name') or f"SN{netuid}"
         pressure = s.get('alpha_pressure_30d', 0)
@@ -490,6 +493,9 @@ def main():
                 success_count += 1
             else:
                 error_count += 1
+        elif pressure_data.get('subnets') and all(x.get('status') == 'no_data' for x in pressure_data['subnets']):
+            # Known gap: Taostats /v1 has no TAO flow. Skipping is expected, not an error.
+            print("   ℹ️ Alpha pressure skipped: no TAO flow data available (nothing stored)")
         else:
             print("   ⚠️ No pressure entries extracted")
             error_count += 1
