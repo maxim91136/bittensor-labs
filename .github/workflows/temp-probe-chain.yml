@@ -22,3 +22,4 @@ jobs:
           python-version: '3.11'
       - run: pip install -q requests websockets "bittensor>=10.0.0,<11.0.0"
       - run: python .github/scripts/probe_chain_flow.py 2>&1 | tail -120
+# rerun

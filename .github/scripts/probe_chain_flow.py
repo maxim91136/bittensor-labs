@@ -1,28 +1,29 @@
-import json, sys
+import time
 import bittensor as bt
 
 sub = bt.Subtensor(network="finney")
-print("block", sub.get_current_block())
-subs = sub.all_subnets()
-print("subnets", len(subs))
-for s in subs:
-    if s.netuid in (1, 51):
-        print("--- DynamicInfo netuid", s.netuid)
-        for k in sorted(vars(s)):
-            v = getattr(s, k)
-            print(f"  {k}: {str(v)[:90]}")
-# storage items about flow / injection
-try:
-    pal = sub.substrate.get_metadata_pallet("SubtensorModule")
-    st = pal.storage
-    entries = st["entries"] if isinstance(st, dict) else st.value["entries"]
-    names = [e["name"] for e in entries]
-    print("storage names matching:", [n for n in names if any(x in n for x in ("Flow", "TaoIn", "SubnetTAO", "Emission", "Volume"))])
-except Exception as e:
-    print("metadata listing failed:", type(e).__name__, e)
-for name in ("SubnetTaoFlow", "SubnetEmaTaoFlow", "SubnetTaoInEmission", "SubnetTAO", "SubnetTaoProvided"):
+cur = sub.get_current_block()
+print("finney block", cur)
+for net in ("finney", "archive"):
     try:
-        r = sub.substrate.query("SubtensorModule", name, [1])
-        print(name, "[1] ->", r.value if hasattr(r, "value") else r)
-    except Exception as e:
-        print(name, "failed:", type(e).__name__, str(e)[:100])
+        s = bt.Subtensor(network=net)
+        print(net, "endpoint", getattr(s, "chain_endpoint", "?"))
+        for days in (1, 7, 30):
+            blk = cur - 7200 * days
+            t0 = time.time()
+            h = s.substrate.get_block_hash(blk)
+            r = s.substrate.query("SubtensorModule", "SubnetTAO", [1], block_hash=h)
+            e = s.substrate.query("SubtensorModule", "SubnetTaoInEmission", [1], block_hash=h)
+            print(f"  {net} {days}d ago block {blk}: SubnetTAO[1]={r.value}, TaoInEmission[1]={e.value} ({time.time()-t0:.1f}s)")
+    except Exception as ex:
+        print(f"  {net} failed:", type(ex).__name__, str(ex)[:150])
+# how fast is a full subnet sweep at one historical block?
+try:
+    s = bt.Subtensor(network="archive")
+    h = s.substrate.get_block_hash(cur - 7200 * 10)
+    t0 = time.time()
+    res = s.substrate.query_map("SubtensorModule", "SubnetTAO", block_hash=h)
+    n = sum(1 for _ in res)
+    print(f"query_map SubnetTAO at -10d: {n} entries in {time.time()-t0:.1f}s")
+except Exception as ex:
+    print("query_map failed:", type(ex).__name__, str(ex)[:150])
