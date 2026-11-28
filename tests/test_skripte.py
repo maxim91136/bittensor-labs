@@ -36,6 +36,8 @@ ath = lade("fetch_ath_atl")
 kvf = lade("kv_fallback")
 taostats = lade("fetch_taostats")
 wallets = lade("fetch_top_wallets")
+flow = lade("fetch_tao_flow")
+owner = lade("fetch_owner_dump_score")
 
 
 def verlauf(stunden, volumen=100.0, preis=10.0, schritt_std=1):
@@ -432,6 +434,62 @@ class FallbackTests(unittest.TestCase):
                 liste = wallets.fetch_top_wallets(1)
             self.assertEqual(liste[0]["address"], "5ABC")
             self.assertEqual(liste[0]["balance_total"], 2.0)
+
+
+class TaoFlowTests(unittest.TestCase):
+    """Netto-TAO-Flow aus Pool-Reserve und Einspeisung der Chain."""
+
+    @staticmethod
+    def punkt(tage_zurueck, block_ende, tao, einspeisung_rao=0, netuid="1"):
+        ende = datetime(2026, 11, 28, 12, 0, tzinfo=timezone.utc)
+        return {
+            "block": block_ende - int(tage_zurueck * 7200),
+            "ts": (ende - timedelta(days=tage_zurueck)).isoformat(),
+            "subnets": {netuid: [int(tao * 1e9), einspeisung_rao]},
+        }
+
+    def test_zufluss_ohne_einspeisung(self):
+        a = self.punkt(1, 100000, 1000)
+        b = self.punkt(0, 100000, 1500)
+        self.assertEqual(flow.pair_increment(a, b)["1"], 500.0)
+
+    def test_einspeisung_wird_abgezogen(self):
+        # 1000 -> 1100 TAO in einem Tag, davon 100 TAO Einspeisung: Flow = 0
+        pro_block = int(100e9 / 7200)
+        a = self.punkt(1, 100000, 1000, pro_block)
+        b = self.punkt(0, 100000, 1100, pro_block)
+        self.assertAlmostEqual(flow.pair_increment(a, b)["1"], 0.0, places=2)
+
+    def test_neues_subnetz_wird_uebersprungen(self):
+        a = self.punkt(1, 100000, 1000, netuid="2")
+        b = self.punkt(0, 100000, 1500)
+        self.assertEqual(flow.pair_increment(a, b), {})
+
+    def test_fenster_und_abdeckung(self):
+        punkte = [self.punkt(t, 1000000, 1000 + (30 - t) * 10) for t in range(30, -1, -1)]
+        ergebnis, tage = flow.compute_flows(punkte)
+        self.assertAlmostEqual(tage, 30.0, places=1)
+        # +10 TAO pro Tag, keine Einspeisung
+        self.assertAlmostEqual(ergebnis["1"]["net_flow_1d_tao"], 10.0, places=1)
+        self.assertAlmostEqual(ergebnis["1"]["net_flow_7d_tao"], 70.0, places=1)
+        self.assertAlmostEqual(ergebnis["1"]["net_flow_30d_tao"], 300.0, places=1)
+
+    def test_zu_kurze_historie_gibt_null_statt_nullwert(self):
+        punkte = [self.punkt(t, 1000000, 1000 + (3 - t) * 10) for t in range(3, -1, -1)]
+        ergebnis, tage = flow.compute_flows(punkte)
+        self.assertAlmostEqual(ergebnis["1"]["net_flow_1d_tao"], 10.0, places=1)
+        self.assertIsNone(ergebnis["1"]["net_flow_7d_tao"])
+        self.assertIsNone(ergebnis["1"]["net_flow_30d_tao"])
+
+    def test_ohne_zwei_punkte_kein_ergebnis(self):
+        self.assertEqual(flow.compute_flows([self.punkt(0, 1000, 1)]), ({}, 0.0))
+
+    def test_owner_dump_flow_quellenreihenfolge(self):
+        # Chain-Wert zuerst, altes Taostats-Feld (rao) als Ersatz, sonst None
+        self.assertEqual(owner._flow({"net_flow_30d_tao": -12.5}, "net_flow_30d_tao", "999000000000"), -12.5)
+        self.assertEqual(owner._flow({}, "net_flow_30d_tao", "3000000000"), 3.0)
+        self.assertIsNone(owner._flow({}, "net_flow_30d_tao", None))
+        self.assertEqual(owner._flow({"net_flow_30d_tao": 0.0}, "net_flow_30d_tao", "5"), 0.0)
 
 
 if __name__ == "__main__":

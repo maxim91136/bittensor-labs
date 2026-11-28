@@ -36,10 +36,23 @@ export async function onRequest(context) {
 
   try {
     // Fetch both subnet data and owner dump scores in parallel
-    const [topSubnets, ownerDumpRaw] = await Promise.all([
+    const [topSubnets, ownerDumpRaw, flowRaw] = await Promise.all([
       KV.get('top_subnets'),
-      KV.get('owner_dump_scores').catch(() => null)
+      KV.get('owner_dump_scores').catch(() => null),
+      KV.get('tao_flow').catch(() => null)   // net TAO flow computed from the chain (fetch_tao_flow.py)
     ]);
+
+    let flowMap = {};
+    let flowUpdated = null;
+    if (flowRaw) {
+      try {
+        const flowData = JSON.parse(flowRaw);
+        flowMap = flowData.subnets || {};
+        flowUpdated = flowData.last_updated || null;
+      } catch (e) {
+        // Ignore parse errors: subnets then fall back to 'no_data'
+      }
+    }
 
     if (!topSubnets) {
       return new Response(JSON.stringify({
@@ -79,14 +92,22 @@ export async function onRequest(context) {
       const emission30d = emissionDaily * 30;
       const emission7d = emissionDaily * 7;
 
-      // Taostats' new /v1 API no longer serves TAO flow (net_flow_*). Without it we must not
-      // show 0 / "buying" as if it were data, so such subnets are reported as 'no_data'.
-      const hasFlow = raw.net_flow_30_days != null && raw.net_flow_7_days != null;
-
-      // Net flows (convert from rao to TAO)
-      const netFlow30d = parseInt(raw.net_flow_30_days || 0) / 1e9;
-      const netFlow7d = parseInt(raw.net_flow_7_days || 0) / 1e9;
-      const netFlow1d = parseInt(raw.net_flow_1_day || 0) / 1e9;
+      // Net flows in TAO. Source: on-chain pool deltas (KV 'tao_flow'); Taostats' retired
+      // net_flow_* (rao) only as a fallback. Without any source the subnet is 'no_data'
+      // - never 0 / "buying" as if it were data.
+      const tf = flowMap[String(s.netuid)] || {};
+      let netFlow30d = 0, netFlow7d = 0, netFlow1d = 0, hasFlow = false;
+      if (tf.net_flow_30d_tao != null && tf.net_flow_7d_tao != null) {
+        netFlow30d = tf.net_flow_30d_tao;
+        netFlow7d = tf.net_flow_7d_tao;
+        netFlow1d = tf.net_flow_1d_tao ?? 0;
+        hasFlow = true;
+      } else if (raw.net_flow_30_days != null && raw.net_flow_7_days != null) {
+        netFlow30d = parseInt(raw.net_flow_30_days) / 1e9;
+        netFlow7d = parseInt(raw.net_flow_7_days) / 1e9;
+        netFlow1d = parseInt(raw.net_flow_1_day || 0) / 1e9;
+        hasFlow = true;
+      }
 
       // Alpha Pressure = (Net Flow / Emission) × 100
       const pressure30d = emission30d > 0 ? (netFlow30d / emission30d) * 100 : 0;
@@ -195,6 +216,8 @@ export async function onRequest(context) {
     const result = {
       _timestamp: new Date().toISOString(),
       _source: 'alpha-pressure',
+      flow_source: flowUpdated ? 'onchain_pool_delta' : 'none',
+      flow_updated: flowUpdated,
       _description: 'Alpha Pressure = (Net Flow / Emission) × 100. Positive = buying, Negative = selling.',
       total_subnets: limited.length,
       subnets: limited,
