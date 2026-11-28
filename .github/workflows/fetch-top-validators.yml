@@ -29,6 +29,7 @@ jobs:
           # No bittensor needed - using Taostats API only
 
       - name: Fetch validators (Taostats primary, KV cache fallback)
+        id: fetch
         env:
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
           CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
@@ -49,6 +50,7 @@ jobs:
             fi
 
             echo "✅ Using cached validator data (may be stale but accurate)"
+            echo "fallback=1" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Validate top_validators output
@@ -74,3 +76,9 @@ jobs:
         with:
           name: top-validators-json
           path: .github/data/top_validators.json
+
+      - name: Fail run if only stale fallback data was used
+        if: steps.fetch.outputs.fallback == '1'
+        run: |
+          echo "::error::Taostats unavailable - the stale KV cache was kept (its last_updated stays unchanged). Failing on purpose so this run turns red and the problem is visible."
+          exit 1

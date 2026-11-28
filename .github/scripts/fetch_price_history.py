@@ -7,14 +7,15 @@ Stores multiple timeframes: 7d, 30d, 60d, 90d, 365d
 import os
 import sys
 import json
+import time
 import requests
 from datetime import datetime, timezone, timedelta
 
 TAOSTATS_API_KEY = os.getenv("TAOSTATS_API_KEY")
 # OHLC endpoint for daily candles - better for longer timeframes
-TAOSTATS_OHLC_URL = "https://api.taostats.io/api/price/ohlc/v1"
+TAOSTATS_OHLC_URL = "https://api.taostats.io/v1/price/ohlc"
 # History endpoint for detailed data
-TAOSTATS_HISTORY_URL = "https://api.taostats.io/api/price/history/v1"
+TAOSTATS_HISTORY_URL = "https://api.taostats.io/v1/price/history"
 # Fallback when Taostats refuses (e.g. 410 Gone): public market-data mirror of Binance, no key needed
 BINANCE_KLINES_URL = "https://data-api.binance.vision/api/v3/klines"
 
@@ -178,6 +179,7 @@ def main():
     
     for key, days in timeframes.items():
         print(f"📊 Fetching {days}d price history...", file=sys.stderr)
+        time.sleep(5)  # stay below the Taostats rate limit (a burst caused HTTP 429 on the 365d call)
         
         # Use detailed history for short timeframes, OHLC for longer ones
         if days <= 3:

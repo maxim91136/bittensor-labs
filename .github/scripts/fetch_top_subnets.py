@@ -91,166 +91,85 @@ def fetch_top_subnets() -> Dict[str, object]:
         print('❌ bittensor import failed:', e, file=sys.stderr)
         raise
     # Try to fetch Taostats data (preferred source for emission_share if available)
-    def _fetch_taostats(network: str, limit: int = 500) -> Tuple[Dict[int, Dict], str]:
-        """Fetch Taostats subnet records and return a mapping netuid->item.
+    def _fetch_taostats(network: str, limit: int = 200) -> Tuple[Dict[int, Dict], str]:
+        """Fetch Taostats subnet records (new /v1 API) and return a mapping netuid->item.
 
-        This tries a small set of plausible Taostats endpoints and performs a
-        few retries with backoff. If Taostats cannot be reached or returns no
-        usable data we return an empty dict.
+        The old /api/subnet/latest/v1 (retired 2026-11-09) is replaced by
+        /v1/subnets/metrics (emission, ...) joined with /v1/subnets/hyperparameters
+        (tempo, ...) on netuid. To keep the downstream code unchanged each item gets
+        the legacy keys it reads: 'projected_emission' / 'emission_share' (fraction 0..1,
+        computed as emission / sum(emission) over all subnets), 'tempo', 'name'.
+        Returns an empty dict (plus an error text) if Taostats cannot be reached.
         """
+        import time
+
         out: Dict[int, Dict] = {}
-        last_error = ''
-        # Prefer the documented API path per https://docs.taostats.io/reference/get-subnets-1
-        # NOTE: No params needed - defaults to finney, returns all 129 SNs
-        # The limit param was causing 500 errors (bug reported to Taostats by Doug)
-        variants = [
-            "https://api.taostats.io/api/subnet/latest/v1",
-        ]
+        base = 'https://api.taostats.io/v1/subnets'
+        hdrs = {
+            'User-Agent': 'bittensor-labs/1.0 (+https://bittensor-labs.com)',
+            'Accept': 'application/json',
+        }
+        if TAOSTATS_API_KEY:
+            hdrs['Authorization'] = TAOSTATS_API_KEY
+        ctx = ssl.create_default_context()
 
-        # Basic retry/backoff
-        for url in variants:
-            attempt = 0
-            while attempt < 3:
+        def _get_rows(path: str) -> Tuple[List[Dict], str]:
+            # Unknown query params return HTTP 400 on /v1, so only 'limit' is sent.
+            url = f"{base}/{path}?limit={limit}"
+            err = ''
+            for attempt in range(3):
                 try:
-                    ctx = ssl.create_default_context()
-                    hdrs = {
-                        'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                        'Accept': 'application/json',
-                    }
-                    if TAOSTATS_API_KEY:
-                        hdrs['Authorization'] = TAOSTATS_API_KEY
                     req = urllib.request.Request(url, method='GET', headers=hdrs)
-                    with urllib.request.urlopen(req, timeout=3, context=ctx) as resp:
-                        if resp.status and int(resp.status) >= 400:
-                            raise Exception(f"HTTP {resp.status}")
-                        data = resp.read()
-                        try:
-                            j = json.loads(data)
-                        except Exception:
-                            # not JSON — capture snippet & continue
-                            try:
-                                snippet = data[:240].decode('utf-8', errors='replace') if isinstance(data, (bytes, bytearray)) else str(data)
-                            except Exception:
-                                snippet = '<unreadable response>'
-                            last_error = f'Non-JSON response from {url}: {snippet[:240]}'
-                            # Try to parse JSON embedded in HTML pages (Next.js / __NEXT_DATA__ or other SSR payloads)
-                            try:
-                                html = data.decode('utf-8', errors='replace') if isinstance(data, (bytes, bytearray)) else str(data)
-                                # look for <script id="__NEXT_DATA__" type="application/json"> ... </script>
-                                m = re.search(r'<script[^>]*id=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>', html, re.S | re.I)
-                                found = False
-                                if m:
-                                    try:
-                                        nd = json.loads(m.group(1))
-                                        # recursively search for dicts with 'netuid' or 'id'
-                                        def find_items(obj):
-                                            out_items = []
-                                            if isinstance(obj, dict):
-                                                if 'netuid' in obj or 'id' in obj:
-                                                    out_items.append(obj)
-                                                for v in obj.values():
-                                                    out_items.extend(find_items(v))
-                                            elif isinstance(obj, list):
-                                                for v in obj:
-                                                    out_items.extend(find_items(v))
-                                            return out_items
-                                        nd_items = find_items(nd)
-                                        for item in nd_items:
-                                            try:
-                                                netuid = item.get('netuid') if isinstance(item, dict) else None
-                                                if netuid is None and isinstance(item, dict) and 'id' in item:
-                                                    netuid = item.get('id')
-                                                if netuid is None:
-                                                    continue
-                                                out[int(netuid)] = item
-                                                found = True
-                                            except Exception:
-                                                continue
-                                    except Exception:
-                                        pass
-                                if found:
-                                    return out, last_error
-                            except Exception:
-                                pass
-                            # no embedded JSON found — continue to next variant
-                            break
-                        # taostats typically returns an object with a 'data' key
-                        items = j.get('data') if isinstance(j, dict) and 'data' in j else j
-                        if not items:
-                            break
-                        for item in items:
-                            try:
-                                # prefer explicit 'netuid' field, but numeric keys may exist
-                                netuid = item.get('netuid') if isinstance(item, dict) else None
-                                if netuid is None:
-                                    # some APIs use 'id' or numeric-keyed dicts
-                                    if isinstance(item, dict) and 'id' in item:
-                                        netuid = item.get('id')
-                                if netuid is None:
-                                    continue
-                                # Ensure emission or emission_share exists; if not, try documented per-subnet endpoint
-                                if isinstance(item, dict) and ('emission_share' not in item and 'emission' not in item or item.get('emission_share') in (None, 0) and item.get('emission') in (None, 0)):
-                                    # try per-subnet emission endpoint
-                                    for per_endpoint in (
-                                        f"https://api.taostats.io/api/v1/subnets/{int(netuid)}/emission",
-                                        f"https://api.taostats.io/subnets/{int(netuid)}/emission",
-                                        f"https://taostats.io/api/v1/subnets/{int(netuid)}/emission",
-                                    ):
-                                        try:
-                                            hdrs2 = {
-                                                'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                                                'Accept': 'application/json',
-                                            }
-                                            if TAOSTATS_API_KEY:
-                                                hdrs2['Authorization'] = TAOSTATS_API_KEY
-                                            preq = urllib.request.Request(per_endpoint, method='GET', headers=hdrs2)
-                                            with urllib.request.urlopen(preq, timeout=6, context=ssl.create_default_context()) as presp:
-                                                pdata = presp.read()
-                                                try:
-                                                    pj = json.loads(pdata)
-                                                    # documented response may embed emission_share or emission directly
-                                                    if isinstance(pj, dict):
-                                                        if 'emission_share' in pj and pj.get('emission_share') is not None:
-                                                            item['emission_share'] = pj.get('emission_share')
-                                                            break
-                                                        if 'emission' in pj and pj.get('emission') is not None:
-                                                            item['emission'] = pj.get('emission')
-                                                            break
-                                                        # some endpoints wrap data
-                                                        if 'data' in pj and isinstance(pj.get('data'), dict) and 'emission_share' in pj.get('data'):
-                                                            item['emission_share'] = pj.get('data').get('emission_share')
-                                                            break
-                                                        if 'data' in pj and isinstance(pj.get('data'), dict) and 'emission' in pj.get('data'):
-                                                            item['emission'] = pj.get('data').get('emission')
-                                                            break
-                                                except Exception:
-                                                    pass
-                                        except Exception:
-                                            continue
-                                out[int(netuid)] = item
-                            except Exception:
-                                continue
-                        # Successfully parsed something — return it
-                        if len(out) > 0:
-                            return out, last_error
-                except Exception as e:
-                    # wait a bit and retry this variant
-                    backoff = 0.5 * (2 ** attempt)
-                    try:
-                        # record the last error (HTTP status or exception repr)
-                        last_error = getattr(e, 'reason', None) or getattr(e, 'code', None) or str(e)
-                    except Exception:
-                        last_error = str(e)
-                    try:
-                        import time
+                    with urllib.request.urlopen(req, timeout=20, context=ctx) as resp:
+                        j = json.loads(resp.read())
+                    rows = j.get('data') if isinstance(j, dict) else j
+                    if isinstance(rows, list) and rows:
+                        return rows, ''
+                    err = f'No data array in response from {url}'
+                except Exception as e:  # noqa: BLE001
+                    err = f'{url}: {getattr(e, "reason", None) or getattr(e, "code", None) or e}'
+                time.sleep(0.5 * (2 ** attempt))
+            return [], err
 
-                        time.sleep(backoff)
-                    except Exception:
-                        pass
-                    attempt += 1
+        metrics, last_error = _get_rows('metrics')
+        if not metrics:
+            return out, last_error
+        hyper_by_netuid: Dict[int, Dict] = {}
+        ident_by_netuid: Dict[int, Dict] = {}
+        for path, target in (('hyperparameters', hyper_by_netuid), ('identities', ident_by_netuid)):
+            rows, err = _get_rows(path)  # optional enrichment: tempo / name
+            if not rows:
+                print(f'⚠️ Taostats /v1/subnets/{path} unavailable: {err}', file=sys.stderr)
+            for r in rows:
+                try:
+                    target[int(r['netuid'])] = r
+                except Exception:  # noqa: BLE001
                     continue
-                # break out of attempts loop if we reached here without continue
-                break
+
+        def _num(v) -> float:
+            try:
+                return float(v)
+            except Exception:  # noqa: BLE001
+                return 0.0
+
+        total_emission = sum(_num(m.get('emission')) for m in metrics if isinstance(m, dict))
+        for m in metrics:
+            try:
+                netuid = int(m['netuid'])
+            except Exception:  # noqa: BLE001
+                continue
+            item = dict(m)
+            share = (_num(m.get('emission')) / total_emission) if total_emission > 0 else 0.0
+            item['projected_emission'] = share
+            item['emission_share'] = share
+            hp = hyper_by_netuid.get(netuid) or {}
+            if hp.get('tempo') is not None:
+                item['tempo'] = hp.get('tempo')
+            ident = ident_by_netuid.get(netuid) or {}
+            nm = ident.get('subnet_name') or ident.get('name')
+            if nm:
+                item['name'] = nm
+            out[netuid] = item
         return out, last_error
 
     # First, try to read Taostats data from Cloudflare KV if credentials

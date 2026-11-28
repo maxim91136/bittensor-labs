@@ -3,7 +3,11 @@
 All notable changes to this project will be documented in this file.
 
 ## Unreleased
--
+### Fixed
+- **Taostats API migration**: Taostats retired the old `/api/` endpoints on 2026-11-09 (HTTP 410 since then), so price, staking APY, distribution, top validators/wallets/subnets, block time and price history stopped updating. All scripts now use the new `/v1` API (same key). Subnet data comes from `/v1/subnets/metrics` + `/hyperparameters` + `/identities`; the emission share is computed as emission / sum(emission).
+- **Fallback alarm**: the Taostats-based workflows (price, top validators/subnets/wallets) now turn red when only the stale KV cache was used. The cache keeps its original `last_updated`, so freshness checks still see the real age. `fetch_taostats.py` also refuses Taostats data older than 6 h (`MAX_DATA_AGE_HOURS`). `fetch_top_validators.py` exits non-zero when no validators were fetched.
+### Known gap
+- `fetch_owner_dump_score.py`: `net_flow_7d`/`net_flow_30d` are 0 until a replacement for the old `net_flow_*_days` fields is wired in (not part of `/v1/subnets/metrics`).
 
 ## v1.0.0-rc.40.2.0 (2026-08-26)
 ### Fixed

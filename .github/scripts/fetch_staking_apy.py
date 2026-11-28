@@ -12,7 +12,7 @@ import requests
 from datetime import datetime, timezone
 
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
-VALIDATOR_URL = "https://api.taostats.io/api/dtao/validator/latest/v1"
+VALIDATOR_URL = "https://api.taostats.io/v1/validators"  # default order: rank (global weighted stake) ascending
 
 MAX_RETRIES = 4
 RETRY_DELAY = 10  # seconds

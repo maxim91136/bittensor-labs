@@ -46,6 +46,7 @@ jobs:
             fi
 
             echo "✅ Using cached wallet data (may be stale but accurate)"
+            echo "fallback=1" >> "$GITHUB_OUTPUT"
           else
             echo "✅ Fetched fresh wallet data from Taostats"
             cat /tmp/top_wallets.json | jq '.wallets[] | {rank, identity, address_short, balance_total, dominance}'
@@ -75,3 +76,9 @@ jobs:
           else
             echo "⚠️ Failed to write to KV (HTTP $CURL_STATUS)"
           fi
+
+      - name: Fail run if only stale fallback data was used
+        if: steps.fetch.outputs.fallback == '1'
+        run: |
+          echo "::error::Taostats unavailable - the stale KV cache was kept (its last_updated stays unchanged). Failing on purpose so this run turns red and the problem is visible."
+          exit 1

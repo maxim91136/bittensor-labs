@@ -58,6 +58,7 @@ jobs:
             fi
 
             echo "✅ Using cached subnet data (may be stale but accurate)"
+            echo "fallback=1" >> "$GITHUB_OUTPUT"
           fi
 
           # Verify we have data
@@ -98,3 +99,9 @@ jobs:
         with:
           name: top-subnets-json
           path: .github/data/top_subnets.json
+
+      - name: Fail run if only stale fallback data was used
+        if: steps.fetch_subnets.outputs.fallback == '1'
+        run: |
+          echo "::error::Taostats unavailable - the stale KV cache was kept (its last_updated stays unchanged). Failing on purpose so this run turns red and the problem is visible."
+          exit 1

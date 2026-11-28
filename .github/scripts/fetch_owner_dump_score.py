@@ -24,7 +24,7 @@ import time
 
 # API Configuration
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
-TRANSFER_URL = "https://api.taostats.io/api/transfer/v1"
+TRANSFER_URL = "https://api.taostats.io/v1/transfers"
 
 # Cloudflare KV
 CF_ACCOUNT_ID = os.getenv('CF_ACCOUNT_ID')
@@ -112,7 +112,9 @@ def get_all_subnets() -> list:
     for s in top_subnets.get("top_subnets", []):
         netuid = s.get("netuid")
         raw = s.get("taostats_raw", {})
-        owner = raw.get("owner", {}).get("ss58")
+        owner_raw = raw.get("owner")
+        # /v1/subnets/metrics: plain SS58 string (old API: {"ss58": ...})
+        owner = owner_raw.get("ss58") if isinstance(owner_raw, dict) else owner_raw
         emission = s.get("estimated_emission_daily", 0)
 
         if netuid and owner and emission > 0:
@@ -191,7 +193,9 @@ def analyze_owner(subnet: dict) -> dict:
 
     for t in transfers:
         amount = float(t.get("amount", 0)) / 1e9
-        to_addr = t.get("to", {}).get("ss58", "")
+        to_raw = t.get("to", "")
+        # /v1/transfers: plain SS58 string (old API: {"ss58": ...})
+        to_addr = to_raw.get("ss58", "") if isinstance(to_raw, dict) else to_raw
 
         # Parse timestamp
         ts = t.get("timestamp", "")

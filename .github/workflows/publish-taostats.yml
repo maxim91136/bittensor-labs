@@ -30,6 +30,7 @@ jobs:
           pip install requests
 
       - name: Fetch Taostats data (with KV fallback)
+        id: fetch
         env:
           TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
           CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
@@ -51,6 +52,7 @@ jobs:
             fi
 
             echo "✅ Using cached taostats data (may be stale but accurate)"
+            echo "fallback=1" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Push Taostats data to Cloudflare KV
@@ -180,3 +182,8 @@ jobs:
             exit 1
           fi
 
+      - name: Fail run if only stale fallback data was used
+        if: steps.fetch.outputs.fallback == '1'
+        run: |
+          echo "::error::Taostats unavailable - the stale KV cache was kept (its last_updated stays unchanged). Failing on purpose so this run turns red and the problem is visible."
+          exit 1
