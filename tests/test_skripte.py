@@ -37,6 +37,7 @@ kvf = lade("kv_fallback")
 taostats = lade("fetch_taostats")
 wallets = lade("fetch_top_wallets")
 flow = lade("fetch_tao_flow")
+owner = lade("fetch_owner_dump_score")
 
 
 def verlauf(stunden, volumen=100.0, preis=10.0, schritt_std=1):
@@ -482,6 +483,13 @@ class TaoFlowTests(unittest.TestCase):
 
     def test_ohne_zwei_punkte_kein_ergebnis(self):
         self.assertEqual(flow.compute_flows([self.punkt(0, 1000, 1)]), ({}, 0.0))
+
+    def test_owner_dump_flow_quellenreihenfolge(self):
+        # Chain-Wert zuerst, altes Taostats-Feld (rao) als Ersatz, sonst None
+        self.assertEqual(owner._flow({"net_flow_30d_tao": -12.5}, "net_flow_30d_tao", "999000000000"), -12.5)
+        self.assertEqual(owner._flow({}, "net_flow_30d_tao", "3000000000"), 3.0)
+        self.assertIsNone(owner._flow({}, "net_flow_30d_tao", None))
+        self.assertEqual(owner._flow({"net_flow_30d_tao": 0.0}, "net_flow_30d_tao", "5"), 0.0)
 
 
 if __name__ == "__main__":

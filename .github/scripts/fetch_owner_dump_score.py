@@ -101,12 +101,24 @@ def write_to_kv(key: str, value: str) -> bool:
         return False
 
 
+def _flow(chain_flow: dict, key: str, legacy_rao):
+    """Net flow in TAO: on-chain value first, retired Taostats field (rao) as fallback, else None."""
+    if chain_flow.get(key) is not None:
+        return float(chain_flow[key])
+    if legacy_rao is not None:
+        return int(legacy_rao) / 1e9
+    return None
+
+
 def get_all_subnets() -> list:
     """Get all subnets from KV with owner addresses."""
     top_subnets = read_from_kv("top_subnets")
     if not top_subnets:
         print("❌ Could not read top_subnets from KV", file=sys.stderr)
         return []
+
+    # Net TAO flow computed from the chain (fetch_tao_flow.py); {} if not available yet
+    flow_map = (read_from_kv("tao_flow") or {}).get("subnets", {})
 
     subnets = []
     for s in top_subnets.get("top_subnets", []):
@@ -123,9 +135,9 @@ def get_all_subnets() -> list:
                 "name": s.get("subnet_name", f"SN{netuid}"),
                 "owner": owner,
                 "emission_daily": emission,
-                # None when Taostats no longer provides the flow fields (/v1 has no TAO flow)
-                "net_flow_30d": int(raw["net_flow_30_days"]) / 1e9 if raw.get("net_flow_30_days") is not None else None,
-                "net_flow_7d": int(raw["net_flow_7_days"]) / 1e9 if raw.get("net_flow_7_days") is not None else None,
+                # TAO. None when no source has the value (Taostats /v1 has no TAO flow)
+                "net_flow_30d": _flow(flow_map.get(str(netuid), {}), "net_flow_30d_tao", raw.get("net_flow_30_days")),
+                "net_flow_7d": _flow(flow_map.get(str(netuid), {}), "net_flow_7d_tao", raw.get("net_flow_7_days")),
             })
 
     # Sort by emission (highest first = most important)

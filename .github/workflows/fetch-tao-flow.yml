@@ -1,0 +1,49 @@
+name: sdk - TAO Flow
+
+on:
+  schedule:
+    # Hourly: snapshot of the subnet pool reserves. The first runs also back-fill 30 days from the archive node.
+    - cron: '23 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tao-flow
+  cancel-in-progress: false
+
+jobs:
+  fetch-tao-flow:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip packages
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-bittensor-v10-${{ hashFiles('**/requirements*.txt') }}
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install requests websockets "bittensor>=10.0.0,<11.0.0"
+
+      - name: Compute net TAO flow (pool reserves minus chain injection)
+        env:
+          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_METRICS_NAMESPACE_ID: ${{ secrets.CF_METRICS_NAMESPACE_ID }}
+          NETWORK: finney
+          MAX_BACKFILL_SECONDS: '2700'
+        run: python .github/scripts/fetch_tao_flow.py
