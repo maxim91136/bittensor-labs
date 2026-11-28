@@ -474,6 +474,12 @@ class TaoFlowTests(unittest.TestCase):
         self.assertAlmostEqual(ergebnis["1"]["net_flow_7d_tao"], 70.0, places=1)
         self.assertAlmostEqual(ergebnis["1"]["net_flow_30d_tao"], 300.0, places=1)
 
+    def test_tagesfenster_mit_sechsstuendigen_checkpoints(self):
+        # Checkpoints alle 6 h, der nächste zu "vor 24 h" liegt 21 h zurück: 1d muss trotzdem einen Wert haben
+        punkte = [self.punkt(t / 4, 1000000, 1000 + (10 - t / 4) * 10) for t in range(40, -1, -1) if t != 4]
+        ergebnis, _ = flow.compute_flows(punkte)
+        self.assertIsNotNone(ergebnis["1"]["net_flow_1d_tao"])
+
     def test_zu_kurze_historie_gibt_null_statt_nullwert(self):
         punkte = [self.punkt(t, 1000000, 1000 + (3 - t) * 10) for t in range(3, -1, -1)]
         ergebnis, tage = flow.compute_flows(punkte)
