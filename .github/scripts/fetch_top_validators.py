@@ -48,7 +48,7 @@ def put_to_kv(account: str, token: str, namespace: str, key: str, data: bytes) -
         'Content-Type': 'application/json'
     })
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status in (200, 201):
                 print(f"✅ KV PUT OK ({key})")
                 return True
@@ -90,7 +90,7 @@ def fetch_from_taostats(network: str, limit: int = 100) -> Tuple[List[Dict], str
                     hdrs['Authorization'] = TAOSTATS_API_KEY
                 
                 req = urllib.request.Request(url, method='GET', headers=hdrs)
-                with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:
+                with urllib.request.urlopen(req, timeout=15, context=ctx) as resp:  # nosec B310  # feste https-Adresse im Code
                     if resp.status and int(resp.status) >= 400:
                         raise Exception(f"HTTP {resp.status}")
                     

@@ -16,6 +16,9 @@ TIMEOUT = int(os.environ.get("SMOKE_TIMEOUT", 10))
 if not CF_WORKER_URL:
     print("CF_WORKER_URL not set; skipping smoke test (OK)")
     sys.exit(0)
+if not CF_WORKER_URL.startswith("https://"):
+    print("CF_WORKER_URL must start with https://")
+    sys.exit(1)
 
 print(f"Using worker base URL: {CF_WORKER_URL}")
 print(f"Expected version: {EXPECTED_VERSION}")
@@ -25,7 +28,7 @@ print(f"Expected version: {EXPECTED_VERSION}")
 def fetch(url):
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "bittensor-labs-smoke/1.0"})
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:
+        with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:  # nosec B310  # Adresse vorher auf https geprüft
             status = resp.getcode()
             data = resp.read()
             return status, data

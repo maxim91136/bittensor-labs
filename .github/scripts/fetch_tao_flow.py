@@ -89,7 +89,7 @@ def compute_flows(points, now=None):
                 continue
             total = 0.0
             seen = False
-            for a, b, inc in incs:
+            for _a, b, inc in incs:
                 if b["block"] <= start["block"]:
                     continue
                 if key in inc:

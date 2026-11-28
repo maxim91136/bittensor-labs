@@ -33,7 +33,7 @@ def get_from_kv(account: str, token: str, namespace: str, key: str) -> Optional[
         'Accept': 'application/json'
     })
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status == 200:
                 return json.loads(resp.read())
     except Exception as e:
@@ -49,7 +49,7 @@ def put_to_kv(account: str, token: str, namespace: str, key: str, data: bytes) -
         'Content-Type': 'application/json'
     })
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status in (200, 201):
                 print(f"✅ KV PUT OK ({key})")
                 return True
@@ -71,7 +71,7 @@ def put_to_r2(account: str, token: str, bucket: str, key: str, data: bytes) -> b
         'Content-Type': 'application/json'
     })
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status in (200, 201):
                 print(f"✅ R2 PUT OK ({key})")
                 return True

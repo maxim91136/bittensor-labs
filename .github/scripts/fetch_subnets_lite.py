@@ -42,6 +42,8 @@ def rpc_call(method: str, params: list = None) -> dict:
     http_url = RPC_URL.replace('wss://', 'https://').replace(':443', '')
     if not http_url.startswith('http'):
         http_url = f'https://{http_url}'
+    if not http_url.startswith('https://'):
+        raise ValueError('RPC_URL muss https oder wss sein')
 
     payload = {
         'jsonrpc': '2.0',
@@ -56,7 +58,7 @@ def rpc_call(method: str, params: list = None) -> dict:
             data=json.dumps(payload).encode('utf-8'),
             headers={'Content-Type': 'application/json'}
         )
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:  # nosec B310  # Adresse vorher auf https geprüft
             data = json.loads(resp.read().decode('utf-8'))
             if 'error' in data:
                 raise Exception(f"RPC error: {data['error']}")
@@ -299,7 +301,7 @@ def put_to_kv(account: str, token: str, namespace: str, key: str, data: bytes) -
         'Content-Type': 'application/json'
     })
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status in (200, 201):
                 print(f"✅ KV PUT OK ({key})")
                 return True

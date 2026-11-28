@@ -20,7 +20,7 @@ def get_from_kv(account: str, token: str, namespace: str, key: str) -> dict:
             'Authorization': f'Bearer {token}'
         })
 
-        with urllib.request.urlopen(req, timeout=10) as resp:
+        with urllib.request.urlopen(req, timeout=10) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status == 200:
                 data = json.loads(resp.read().decode('utf-8'))
 

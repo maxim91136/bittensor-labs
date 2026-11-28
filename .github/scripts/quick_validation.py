@@ -15,7 +15,7 @@ def get_from_kv(key: str) -> dict:
     """Fetch from deployed API"""
     url = f'https://bittensor-labs.pages.dev/api/{key}'
     req = urllib.request.Request(url, headers={'User-Agent': 'QuickVal/1.0'})
-    with urllib.request.urlopen(req, timeout=15) as resp:
+    with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310  # feste https-Adresse im Code
         return json.loads(resp.read())
 
 # Get current state

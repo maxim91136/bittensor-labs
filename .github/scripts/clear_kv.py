@@ -23,7 +23,7 @@ req = urllib.request.Request(url, method='DELETE', headers={
 })
 
 try:
-    with urllib.request.urlopen(req, timeout=10) as resp:
+    with urllib.request.urlopen(req, timeout=10) as resp:  # nosec B310  # feste https-Adresse im Code
         print(f"✅ Cleared KV key '{KV_KEY}': {resp.status}")
 except urllib.error.HTTPError as e:
     if e.code == 404:

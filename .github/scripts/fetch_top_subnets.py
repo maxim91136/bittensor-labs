@@ -15,7 +15,6 @@ from datetime import datetime, timezone
 import urllib.request
 import urllib.error
 import ssl
-import re
 
 NETWORK = os.getenv('NETWORK', 'finney')
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
@@ -70,7 +69,7 @@ def put_to_kv(account: str, token: str, namespace: str, key: str, data: bytes) -
         'Content-Type': 'application/json'
     })
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status in (200, 201):
                 print(f"✅ KV PUT OK ({key})")
                 return True
@@ -120,7 +119,7 @@ def fetch_top_subnets() -> Dict[str, object]:
             for attempt in range(3):
                 try:
                     req = urllib.request.Request(url, method='GET', headers=hdrs)
-                    with urllib.request.urlopen(req, timeout=20, context=ctx) as resp:
+                    with urllib.request.urlopen(req, timeout=20, context=ctx) as resp:  # nosec B310  # feste https-Adresse im Code
                         j = json.loads(resp.read())
                     rows = j.get('data') if isinstance(j, dict) else j
                     if isinstance(rows, list) and rows:
@@ -188,7 +187,7 @@ def fetch_top_subnets() -> Dict[str, object]:
                     'Authorization': f'Bearer {cf_token}',
                     'Accept': 'application/json'
                 })
-                with urllib.request.urlopen(req, timeout=3) as resp:
+                with urllib.request.urlopen(req, timeout=3) as resp:  # nosec B310  # feste https-Adresse im Code
                     if resp.status == 200:
                         raw = resp.read()
                         try:

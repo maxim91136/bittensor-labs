@@ -137,7 +137,7 @@ else:
 
     try:
         with open(filepath, 'rb') as fh:
-            resp = requests.put(url, data=fh, headers=headers)
+            resp = requests.put(url, data=fh, headers=headers, timeout=120)
 
         if resp.status_code in (200, 201):
             try:

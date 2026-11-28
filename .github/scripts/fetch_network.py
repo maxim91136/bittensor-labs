@@ -121,7 +121,7 @@ def fetch_metrics() -> Dict[str, Any]:
                 'Authorization': f'Bearer {cf_token}'
             })
             try:
-                with urllib.request.urlopen(req, timeout=15) as resp:
+                with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310  # feste https-Adresse im Code
                     if resp.status == 200:
                         # issuance_history is stored as a JSON array of snapshots
                         try:
@@ -824,7 +824,7 @@ def fetch_metrics() -> Dict[str, Any]:
             if cf_account and cf_token and cf_kv_ns:
                 kv_url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/storage/kv/namespaces/{cf_kv_ns}/values/halving_history"
                 req = urllib.request.Request(kv_url, method='GET', headers={'Authorization': f'Bearer {cf_token}'})
-                with urllib.request.urlopen(req, timeout=15) as resp:
+                with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310  # feste https-Adresse im Code
                     if resp.status == 200:
                         halving_hist = json.loads(resp.read())
                         if isinstance(halving_hist, list) and len(halving_hist) > 0:
@@ -898,7 +898,7 @@ def fetch_metrics() -> Dict[str, Any]:
             try:
                 kv_url = f"https://api.cloudflare.com/client/v4/accounts/{cf_account}/storage/kv/namespaces/{cf_kv_ns}/values/halving_history"
                 req = urllib.request.Request(kv_url, method='GET', headers={'Authorization': f'Bearer {cf_token}'})
-                with urllib.request.urlopen(req, timeout=15) as resp:
+                with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310  # feste https-Adresse im Code
                     if resp.status == 200:
                         halving_history = json.loads(resp.read())
                         if not isinstance(halving_history, list):
@@ -972,7 +972,7 @@ def fetch_metrics() -> Dict[str, Any]:
                         'Authorization': f'Bearer {cf_token}',
                         'Content-Type': 'application/json'
                     })
-                    with urllib.request.urlopen(req, timeout=15) as resp:
+                    with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310  # feste https-Adresse im Code
                         if resp.status in (200, 201):
                             print(f"✅ Halving history saved to KV ({len(halving_history)} events)", file=sys.stderr)
                 except Exception as e:

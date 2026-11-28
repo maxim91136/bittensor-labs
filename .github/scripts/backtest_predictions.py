@@ -56,7 +56,7 @@ def get_from_kv(key: str) -> Optional[Any]:
     })
 
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status == 200:
                 return json.loads(resp.read())
     except urllib.error.HTTPError as e:

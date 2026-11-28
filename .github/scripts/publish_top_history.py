@@ -62,7 +62,7 @@ def get_from_kv(key: str) -> Optional[Any]:
     })
     
     try:
-        with urllib.request.urlopen(req, timeout=15) as resp:
+        with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status == 200:
                 return json.loads(resp.read())
     except urllib.error.HTTPError as e:
@@ -90,7 +90,7 @@ def put_to_kv(key: str, data: Any) -> bool:
     })
     
     try:
-        with urllib.request.urlopen(req, timeout=20) as resp:
+        with urllib.request.urlopen(req, timeout=20) as resp:  # nosec B310  # feste https-Adresse im Code
             if resp.status in (200, 201):
                 print(f"✅ KV PUT OK ({key})")
                 return True
@@ -108,13 +108,15 @@ def put_to_kv(key: str, data: Any) -> bool:
 def fetch_api(endpoint: str) -> Optional[Dict]:
     """Fetch data from our API endpoint."""
     url = f"{API_BASE_URL}{endpoint}"
+    if not url.startswith('https://'):
+        raise ValueError('API_BASE_URL muss mit https:// beginnen')
     req = urllib.request.Request(url, method='GET', headers={
         'User-Agent': 'TopHistoryCollector/1.0',
         'Accept': 'application/json'
     })
     
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:  # nosec B310  # Adresse vorher auf https geprüft
             if resp.status == 200:
                 return json.loads(resp.read())
     except Exception as e:

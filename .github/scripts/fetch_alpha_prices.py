@@ -283,7 +283,7 @@ def main():
 
     # Write to local file for debugging (optional)
     if os.getenv('DEBUG'):
-        with open('/tmp/alpha_prices.json', 'w') as f:
+        with open('/tmp/alpha_prices.json', 'w') as f:  # nosec B108  # nur mit DEBUG, Wegwerf-Runner
             f.write(json_data)
         print("📁 Debug output written to /tmp/alpha_prices.json")
 

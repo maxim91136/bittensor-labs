@@ -86,7 +86,7 @@ def main():
     
     # Write merged history to file
     try:
-        with open('/tmp/network_history_merged.json', 'w') as f:
+        with open('/tmp/network_history_merged.json', 'w') as f:  # nosec B108  # fester Pfad, den publish-network.yml liest (Wegwerf-Runner)
             json.dump(merged, f, indent=2)
         print("✅ Merged history written to /tmp/network_history_merged.json", file=sys.stderr)
     except Exception as e:
