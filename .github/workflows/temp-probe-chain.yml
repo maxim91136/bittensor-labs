@@ -8,9 +8,9 @@ permissions:
   contents: read
 
 jobs:
-  probe:
+  dry-run:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 50
     steps:
       - name: Checkout code
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -21,5 +21,5 @@ jobs:
         with:
           python-version: '3.11'
       - run: pip install -q requests websockets "bittensor>=10.0.0,<11.0.0"
-      - run: python .github/scripts/probe_chain_flow.py 2>&1 | tail -120
-# rerun
+      - name: TAO flow (dry run, no Cloudflare credentials)
+        run: python .github/scripts/fetch_tao_flow.py 2>&1 | grep -vE "punycode|trace-deprecation" | tail -40 | cut -c1-300
