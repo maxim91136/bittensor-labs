@@ -134,6 +134,43 @@ def fetch_top_subnets() -> Dict[str, object]:
         metrics, last_error = _get_rows('metrics')
         if not metrics:
             return out, last_error
+        hyper_by_netuid: Dict[int, Dict] = {}
+        ident_by_netuid: Dict[int, Dict] = {}
+        for path, target in (('hyperparameters', hyper_by_netuid), ('identities', ident_by_netuid)):
+            rows, err = _get_rows(path)  # optional enrichment: tempo / name
+            if not rows:
+                print(f'⚠️ Taostats /v1/subnets/{path} unavailable: {err}', file=sys.stderr)
+            for r in rows:
+                try:
+                    target[int(r['netuid'])] = r
+                except Exception:  # noqa: BLE001
+                    continue
+
+        def _num(v) -> float:
+            try:
+                return float(v)
+            except Exception:  # noqa: BLE001
+                return 0.0
+
+        total_emission = sum(_num(m.get('emission')) for m in metrics if isinstance(m, dict))
+        for m in metrics:
+            try:
+                netuid = int(m['netuid'])
+            except Exception:  # noqa: BLE001
+                continue
+            item = dict(m)
+            share = (_num(m.get('emission')) / total_emission) if total_emission > 0 else 0.0
+            item['projected_emission'] = share
+            item['emission_share'] = share
+            hp = hyper_by_netuid.get(netuid) or {}
+            if hp.get('tempo') is not None:
+                item['tempo'] = hp.get('tempo')
+            ident = ident_by_netuid.get(netuid) or {}
+            nm = ident.get('subnet_name') or ident.get('name')
+            if nm:
+                item['name'] = nm
+            out[netuid] = item
+        return out, last_error
 
     # First, try to read Taostats data from Cloudflare KV if credentials
     # are provided in the environment (this helps CI jobs reuse an existing
