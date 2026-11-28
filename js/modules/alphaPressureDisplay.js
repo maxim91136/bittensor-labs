@@ -125,6 +125,14 @@ function renderTable(subnets, filter = 'all', expanded = false, timestamp = null
   const updateEl = document.getElementById('alphaPressureUpdate');
   if (!displayList) return;
 
+  // Rows without flow data (status 'no_data', pressure null) cannot be ranked or formatted.
+  subnets = subnets.filter(s => s.alpha_pressure_30d !== null && s.alpha_pressure_30d !== undefined);
+  if (subnets.length === 0) {
+    displayList.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:20px;">TAO flow data is temporarily unavailable.</td></tr>';
+    if (summaryEl) summaryEl.innerHTML = '';
+    return;
+  }
+
   const favorites = getFavorites();
   const limit = expanded ? 30 : 10;  // 5+5 default, 15+15 expanded
 

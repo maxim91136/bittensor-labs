@@ -79,6 +79,10 @@ export async function onRequest(context) {
       const emission30d = emissionDaily * 30;
       const emission7d = emissionDaily * 7;
 
+      // Taostats' new /v1 API no longer serves TAO flow (net_flow_*). Without it we must not
+      // show 0 / "buying" as if it were data, so such subnets are reported as 'no_data'.
+      const hasFlow = raw.net_flow_30_days != null && raw.net_flow_7_days != null;
+
       // Net flows (convert from rao to TAO)
       const netFlow30d = parseInt(raw.net_flow_30_days || 0) / 1e9;
       const netFlow7d = parseInt(raw.net_flow_7_days || 0) / 1e9;
@@ -110,7 +114,12 @@ export async function onRequest(context) {
 
       // Status based on pressure (simple: positive = buying, negative = selling)
       let status, emoji;
-      if (pressure30d >= 0) {
+      if (!hasFlow) {
+        status = 'no_data';
+        emoji = '⚪';
+        trend = 'unknown';
+        trendEmoji = '';
+      } else if (pressure30d >= 0) {
         status = 'buying';
         emoji = '🟢';
       } else {
@@ -132,13 +141,13 @@ export async function onRequest(context) {
         emission_30d_tao: Math.round(emission30d),
 
         // Flow data
-        net_flow_30d_tao: Math.round(netFlow30d),
-        net_flow_7d_tao: Math.round(netFlow7d),
-        net_flow_1d_tao: Math.round(netFlow1d),
+        net_flow_30d_tao: hasFlow ? Math.round(netFlow30d) : null,
+        net_flow_7d_tao: hasFlow ? Math.round(netFlow7d) : null,
+        net_flow_1d_tao: hasFlow ? Math.round(netFlow1d) : null,
 
         // Alpha Pressure metrics
-        alpha_pressure_30d: Math.round(pressure30d * 10) / 10,
-        alpha_pressure_7d: Math.round(pressure7d * 10) / 10,
+        alpha_pressure_30d: hasFlow ? Math.round(pressure30d * 10) / 10 : null,
+        alpha_pressure_7d: hasFlow ? Math.round(pressure7d * 10) / 10 : null,
 
         // Status
         status,
@@ -163,11 +172,11 @@ export async function onRequest(context) {
 
     // Sort
     if (sortBy === 'pressure') {
-      alphaPressure.sort((a, b) => a.alpha_pressure_30d - b.alpha_pressure_30d);
+      alphaPressure.sort((a, b) => (a.alpha_pressure_30d ?? Infinity) - (b.alpha_pressure_30d ?? Infinity));
     } else if (sortBy === 'emission') {
       alphaPressure.sort((a, b) => b.emission_daily_tao - a.emission_daily_tao);
     } else if (sortBy === 'flow') {
-      alphaPressure.sort((a, b) => a.net_flow_30d_tao - b.net_flow_30d_tao);
+      alphaPressure.sort((a, b) => (a.net_flow_30d_tao ?? Infinity) - (b.net_flow_30d_tao ?? Infinity));
     }
 
     // Apply limit
@@ -179,7 +188,8 @@ export async function onRequest(context) {
       selling: limited.filter(s => s.status === 'selling').length,
       improving: limited.filter(s => s.trend === 'improving').length,
       declining: limited.filter(s => s.trend === 'declining').length,
-      reversing: limited.filter(s => s.trend === 'reversing').length
+      reversing: limited.filter(s => s.trend === 'reversing').length,
+      no_data: limited.filter(s => s.status === 'no_data').length
     };
 
     const result = {

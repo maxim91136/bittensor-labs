@@ -123,8 +123,9 @@ def get_all_subnets() -> list:
                 "name": s.get("subnet_name", f"SN{netuid}"),
                 "owner": owner,
                 "emission_daily": emission,
-                "net_flow_30d": int(raw.get("net_flow_30_days", 0)) / 1e9,
-                "net_flow_7d": int(raw.get("net_flow_7_days", 0)) / 1e9,
+                # None when Taostats no longer provides the flow fields (/v1 has no TAO flow)
+                "net_flow_30d": int(raw["net_flow_30_days"]) / 1e9 if raw.get("net_flow_30_days") is not None else None,
+                "net_flow_7d": int(raw["net_flow_7_days"]) / 1e9 if raw.get("net_flow_7_days") is not None else None,
             })
 
     # Sort by emission (highest first = most important)
@@ -262,8 +263,8 @@ def analyze_owner(subnet: dict) -> dict:
         "dump_status": status,
         "dump_emoji": emoji,
         # Subnet flow data from Taostats
-        "net_flow_30d_tao": round(subnet["net_flow_30d"], 0),
-        "net_flow_7d_tao": round(subnet["net_flow_7d"], 0),
+        "net_flow_30d_tao": round(subnet["net_flow_30d"], 0) if subnet["net_flow_30d"] is not None else None,
+        "net_flow_7d_tao": round(subnet["net_flow_7d"], 0) if subnet["net_flow_7d"] is not None else None,
     }
 
 
