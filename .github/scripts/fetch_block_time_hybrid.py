@@ -15,7 +15,7 @@ NETWORK = os.getenv('NETWORK', 'finney')
 TARGET_BLOCK_TIME = 12.0
 NUM_BLOCKS = 25
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
-BLOCK_URL = "https://api.taostats.io/api/block/v1"
+BLOCK_URL = "https://api.taostats.io/v1/blocks"
 
 
 def fetch_block_time_onchain():

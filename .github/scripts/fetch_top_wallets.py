@@ -13,9 +13,9 @@ import requests
 from datetime import datetime, timezone
 
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
-ACCOUNT_URL = "https://api.taostats.io/api/account/latest/v1"
-IDENTITY_URL = "https://api.taostats.io/api/identity/latest/v1"
-EXCHANGE_URL = "https://api.taostats.io/api/exchange/v1"
+ACCOUNT_URL = "https://api.taostats.io/v1/accounts/leaderboard"
+ACCOUNTS_BASE_URL = "https://api.taostats.io/v1/accounts"  # + /{address}/identity
+EXCHANGE_URL = "https://api.taostats.io/v1/exchange-addresses"
 
 
 def fetch_exchanges():
@@ -38,8 +38,9 @@ def fetch_exchanges():
         
         if data.get("data"):
             for ex in data["data"]:
-                coldkey = ex.get("coldkey", {})
-                ss58 = coldkey.get("ss58", "")
+                coldkey = ex.get("coldkey", "")
+                # /v1: plain SS58 string (old API: {"ss58": ...})
+                ss58 = coldkey.get("ss58", "") if isinstance(coldkey, dict) else coldkey
                 name = ex.get("name", "")
                 if ss58 and name:
                     exchanges[ss58] = name
@@ -69,8 +70,8 @@ def fetch_top_wallets(limit=10):
     }
     
     try:
-        # Fetch top accounts ordered by total balance descending
-        url = f"{ACCOUNT_URL}?limit={limit}&order=balance_total_desc"
+        # The leaderboard is ranked by total balance by default; unknown params return HTTP 400 in /v1
+        url = f"{ACCOUNT_URL}?limit={limit}"
         print(f"📊 Fetching top {limit} wallets...", file=sys.stderr)
         
         resp = requests.get(url, headers=headers, timeout=30)
@@ -87,8 +88,9 @@ def fetch_top_wallets(limit=10):
         # Process accounts
         wallets = []
         for acc in accounts[:limit]:
-            address = acc.get("address", {})
-            ss58 = address.get("ss58", "")
+            address = acc.get("address", "")
+            # /v1: plain SS58 string (old API: {"ss58": ...})
+            ss58 = address.get("ss58", "") if isinstance(address, dict) else address
             
             # Convert from rao to TAO (1 TAO = 1e9 rao)
             balance_total = float(acc.get("balance_total", 0)) / 1e9
@@ -135,14 +137,17 @@ def fetch_identities(addresses, exchanges):
         
         # Try to fetch on-chain identity
         try:
-            url = f"{IDENTITY_URL}?address={addr}"
+            # 404 = no on-chain identity for this coldkey
+            url = f"{ACCOUNTS_BASE_URL}/{addr}/identity"
             resp = requests.get(url, headers=headers, timeout=10)
             if resp.ok:
                 data = resp.json()
-                if data.get("data") and len(data["data"]) > 0:
-                    identity = data["data"][0]
-                    # Try different identity fields
-                    name = identity.get("display") or identity.get("name") or identity.get("legal")
+                rows = data.get("data") if isinstance(data, dict) else None
+                if isinstance(rows, dict):
+                    rows = [rows]
+                if rows:
+                    identity = rows[0]
+                    name = identity.get("name") or identity.get("display") or identity.get("legal")
                     if name:
                         identities[addr] = name
                         print(f"  🔗 {addr[:10]}... = {name} (on-chain)", file=sys.stderr)

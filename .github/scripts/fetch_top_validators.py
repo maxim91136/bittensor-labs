@@ -71,9 +71,9 @@ def fetch_from_taostats(network: str, limit: int = 100) -> Tuple[List[Dict], str
     last_error = ''
     
     # Taostats validator endpoints to try - dTao endpoint has names!
+    # /v1 (since the old /api/ was retired on 2026-11-09). The pre-dTAO snapshot has no replacement.
     endpoints = [
-        f"https://api.taostats.io/api/dtao/validator/latest/v1?limit={limit}",  # dTao endpoint with names
-        f"https://api.taostats.io/api/validator/latest/v1?network={network}&limit={limit}",
+        f"https://api.taostats.io/v1/validators?limit={limit}",
     ]
     
     ctx = ssl.create_default_context()
@@ -277,6 +277,7 @@ def main():
     out_path = os.path.join(os.getcwd(), '.github', 'data', 'top_validators.json')
     write_local(out_path, out)
     print(f'Wrote {out_path}')
+    empty = not out.get('top_validators')
     
     # Debug output
     print(f"DEBUG: top_validators count = {len(out.get('top_validators', []))}")
@@ -299,6 +300,11 @@ def main():
                 print('KV PUT failed; leaving local file only', file=sys.stderr)
     else:
         print('CF credentials missing; skipped KV PUT')
+
+    # Exit non-zero without data so the workflow uses its (alarmed) KV fallback instead of
+    # treating an empty result with a fresh last_updated as success.
+    if empty:
+        sys.exit(1)
 
 
 if __name__ == '__main__':

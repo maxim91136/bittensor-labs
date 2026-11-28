@@ -1,16 +1,19 @@
-name: TEMP probe taostats v1
+name: TEMP dry-run taostats v1
 on:
   push:
     branches: ['fix/taostats-v1-migration']
-    paths: ['.github/workflows/probe-taostats-v1.yml', '.github/scripts/probe_taostats_v1.py']
+    paths: ['.github/workflows/probe-taostats-v1.yml']
 
 permissions:
   contents: read
 
 jobs:
-  probe:
+  dry-run:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 40
+    env:
+      TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
+      # bewusst KEINE Cloudflare-Zugangsdaten: der Lauf schreibt nichts in KV
     steps:
       - name: Checkout code
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -20,8 +23,58 @@ jobs:
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.11'
-      - run: pip install requests
-      - name: Probe
-        env:
-          TAOSTATS_API_KEY: ${{ secrets.TAOSTATS_API_KEY }}
-        run: python .github/scripts/probe_taostats_v1.py
+      - run: pip install requests pytest
+      - name: Unit tests
+        run: python -m pytest -q tests
+      - name: taostats price
+        if: always()
+        run: python .github/scripts/fetch_taostats.py 2>&1 | head -40
+      - name: staking apy
+        if: always()
+        run: sleep 15; python .github/scripts/fetch_staking_apy.py 2>&1 | tail -15
+      - name: top validators
+        if: always()
+        run: |
+          sleep 15; mkdir -p .github/data
+          python .github/scripts/fetch_top_validators.py 2>&1 | tail -8
+          python - <<'PY'
+          import json
+          d = json.load(open('.github/data/top_validators.json'))
+          print('count', len(d['top_validators']), 'total_validators', d.get('total_validators'))
+          for v in d['top_validators'][:3]:
+              print({k: v[k] for k in ('rank', 'name', 'stake_formatted', 'nominators', 'active_subnets', 'take_percent', 'dominance')})
+          PY
+      - name: top wallets
+        if: always()
+        run: sleep 15; python .github/scripts/fetch_top_wallets.py 2>&1 | grep -v '^{' | tail -25
+      - name: distribution (2 pages only)
+        if: always()
+        run: |
+          sleep 15
+          cd .github/scripts
+          python - <<'PY'
+          import fetch_distribution as d
+          b = d.fetch_wallets(max_pages=2, page_size=200)
+          print('wallets', None if b is None else len(b), 'top', None if not b else b[:3], 'total_wallet_count', d.total_wallet_count)
+          PY
+      - name: block time
+        if: always()
+        run: sleep 15; python .github/scripts/fetch_block_time.py 2>&1 | tail -12
+      - name: price history
+        if: always()
+        run: sleep 15; python .github/scripts/fetch_price_history.py 2>&1 | grep -E "✅|❌|⚠️|points|d:" | head -30
+      - name: top subnets (on-chain SDK + taostats)
+        if: always()
+        timeout-minutes: 20
+        run: |
+          pip install -r .github/requirements-bittensor.txt
+          sleep 15; mkdir -p .github/data
+          NETWORK=finney DAILY_EMISSION=3600 TOP_N=150 python .github/scripts/fetch_top_subnets.py 2>&1 | grep -E "DEBUG|✅|❌|⚠️|taostats|Wrote" | head -40
+          python - <<'PY'
+          import json
+          d = json.load(open('.github/data/top_subnets.json'))
+          ts = d['top_subnets']
+          print('subnets', len(ts), 'sources', sorted({str(e.get('ema_source')) for e in ts}))
+          for e in ts[:3]:
+              print({k: e.get(k) for k in ('netuid', 'taostats_name', 'taostats_tempo', 'taostats_emission_share', 'estimated_emission_daily', 'ema_source')})
+          PY

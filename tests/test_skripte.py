@@ -33,6 +33,9 @@ agg = lade("compute_taostats_aggregates")
 fng = lade("fetch_fear_and_greed_index")
 top = lade("publish_top_history")
 ath = lade("fetch_ath_atl")
+kvf = lade("kv_fallback")
+taostats = lade("fetch_taostats")
+wallets = lade("fetch_top_wallets")
 
 
 def verlauf(stunden, volumen=100.0, preis=10.0, schritt_std=1):
@@ -378,6 +381,57 @@ class FngHauptprogrammTests(unittest.TestCase):
         with mock.patch.dict(os.environ, ZUGANG), \
                 mock.patch.object(fng, "fetch_fng", return_value=([], "x")), self.assertRaises(SystemExit):
             fng.main()
+
+
+class FallbackTests(unittest.TestCase):
+    """Der Ersatzweg darf die Frische der Daten nie vortäuschen (Sentinel prüft last_updated)."""
+
+    def test_kv_fallback_laesst_last_updated_unveraendert(self):
+        alt = "2026-11-16T19:14:00Z"
+        antwort = mock.MagicMock()
+        antwort.status = 200
+        antwort.read.return_value = ('{"price": 1.0, "last_updated": "%s"}' % alt).encode()
+        antwort.__enter__.return_value = antwort
+        with mock.patch.object(kvf.urllib.request, "urlopen", return_value=antwort):
+            daten = kvf.get_from_kv("acc", "tok", "ns", "taostats_latest")
+        self.assertEqual(daten["last_updated"], alt)
+        self.assertTrue(daten["_fallback_used"])
+        self.assertEqual(daten["_cached_at"], alt)
+
+    def _antwort_preis(self, last_updated):
+        antwort = mock.MagicMock()
+        antwort.status_code = 200
+        antwort.json.return_value = {"pagination": {}, "data": [{"price": "184.5", "last_updated": last_updated}]}
+        return antwort
+
+    def test_taostats_frische_daten_werden_uebernommen(self):
+        jetzt = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        with mock.patch.object(taostats, "TAOSTATS_API_KEY", "k"), \
+                mock.patch.object(taostats.requests, "get", create=True, return_value=self._antwort_preis(jetzt)):
+            ergebnis = taostats.fetch_taostats()
+        self.assertEqual(ergebnis["price"], 184.5)
+        self.assertEqual(ergebnis["last_updated"], jetzt)
+
+    def test_taostats_veraltete_daten_gelten_als_fehler(self):
+        alt = (datetime.now(timezone.utc) - timedelta(hours=30)).isoformat().replace("+00:00", "Z")
+        with mock.patch.object(taostats, "TAOSTATS_API_KEY", "k"), \
+                mock.patch.object(taostats.requests, "get", create=True, return_value=self._antwort_preis(alt)):
+            self.assertIsNone(taostats.fetch_taostats())
+
+    def test_taostats_url_ist_die_neue_v1(self):
+        self.assertIn("/v1/price", taostats.TAOSTATS_URL)
+        self.assertNotIn("/api/", taostats.TAOSTATS_URL)
+
+    def test_wallets_adresse_als_text_und_objekt(self):
+        zeile = {"rank": 1, "balance_total": "2000000000", "balance_free": "0", "balance_staked": "2000000000"}
+        for adresse in ("5ABC", {"ss58": "5ABC"}):
+            antwort = mock.MagicMock()
+            antwort.json.return_value = {"data": [dict(zeile, address=adresse)]}
+            with mock.patch.object(wallets, "TAOSTATS_API_KEY", "k"), \
+                    mock.patch.object(wallets.requests, "get", create=True, return_value=antwort):
+                liste = wallets.fetch_top_wallets(1)
+            self.assertEqual(liste[0]["address"], "5ABC")
+            self.assertEqual(liste[0]["balance_total"], 2.0)
 
 
 if __name__ == "__main__":

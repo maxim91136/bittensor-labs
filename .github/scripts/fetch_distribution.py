@@ -25,7 +25,7 @@ except ImportError:
     print("⚠️ Bittensor SDK not available, using Taostats-only mode", file=sys.stderr)
 
 TAOSTATS_API_KEY = os.getenv('TAOSTATS_API_KEY')
-ACCOUNT_URL = "https://api.taostats.io/api/account/latest/v1"
+ACCOUNT_URL = "https://api.taostats.io/v1/accounts/leaderboard"
 NETWORK = os.getenv("NETWORK", "finney")
 
 # Brackets matching @RBS_HODL format
@@ -111,7 +111,8 @@ def fetch_wallets(max_pages=100, page_size=200):
     min_wallets_for_graceful = 5000  # If we have this many, don't fail completely
 
     while page <= max_pages:
-        url = f"{ACCOUNT_URL}?limit={page_size}&page={page}&order=balance_total_desc"
+        # /v1 leaderboard is ranked by total balance by default; unknown params return HTTP 400
+        url = f"{ACCOUNT_URL}?limit={page_size}&page={page}"
         print(f"📊 Fetching page {page}/{max_pages}... ({len(all_balances)} wallets so far)", file=sys.stderr)
 
         try:

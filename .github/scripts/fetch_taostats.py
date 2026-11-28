@@ -7,7 +7,7 @@ from datetime import datetime, timezone
 import pathlib
 
 TAOSTATS_API_KEY = os.getenv("TAOSTATS_API_KEY")
-TAOSTATS_URL = os.getenv("TAOSTATS_URL", "https://api.taostats.io/api/price/latest/v1?asset=tao")
+TAOSTATS_URL = os.getenv("TAOSTATS_URL", "https://api.taostats.io/v1/price?asset=tao")
 
 MAX_RETRIES = 3
 RETRY_DELAY = 5  # seconds
@@ -89,6 +89,17 @@ def fetch_taostats():
             "_source": "taostats",
             "_timestamp": datetime.now(timezone.utc).isoformat()
         }
+        # Freshness guard: if Taostats itself serves old data (last_updated stale), do not
+        # republish it as new. Returning None triggers the (alarmed) KV fallback path.
+        max_age_h = _int_env("MAX_DATA_AGE_HOURS", 6)
+        try:
+            lu = datetime.fromisoformat(str(result["last_updated"]).replace("Z", "+00:00"))
+            age_h = (datetime.now(timezone.utc) - lu).total_seconds() / 3600
+        except Exception:
+            age_h = None
+        if age_h is None or age_h > max_age_h:
+            print(f"❌ Taostats data is stale or has no last_updated (age: {age_h} h, max {max_age_h} h)", file=sys.stderr)
+            return None
         return result
     except Exception as e:
         print(f"❌ Taostats fetch failed: {e}", file=sys.stderr)
