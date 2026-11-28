@@ -38,3 +38,4 @@ jobs:
           for e in ts[:3]:
               print({k: e.get(k) for k in ('netuid', 'taostats_name', 'taostats_tempo', 'taostats_emission_share', 'estimated_emission_daily', 'ema_source')})
           PY
+# rerun
