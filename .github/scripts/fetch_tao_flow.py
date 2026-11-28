@@ -31,7 +31,9 @@ BLOCKS_PER_DAY = 7200
 CHECKPOINT_HOURS = 6
 RETENTION_DAYS = 36
 WINDOWS = {"1d": 1, "7d": 7, "30d": 30}
-MIN_COVERAGE = 0.9  # a window needs >= 90 % of its length in the data, otherwise null
+# Checkpoints are CHECKPOINT_HOURS apart, so the start point is up to half a step off; a window
+# counts as covered if the data reaches back at least (window - half a step - 12 min).
+COVERAGE_TOLERANCE_DAYS = (CHECKPOINT_HOURS / 2 + 0.2) / 24
 RAO = 1e9
 
 STATE_KEY = "tao_flow_state"
@@ -80,7 +82,7 @@ def compute_flows(points, now=None):
         # start point = the checkpoint closest to (end - window)
         start = min(pts[:-1], key=lambda p: abs((_ts(p) - target).total_seconds()))
         covered = (end_ts - _ts(start)).total_seconds() / 86400.0
-        ok = covered >= days * MIN_COVERAGE
+        ok = covered >= days - COVERAGE_TOLERANCE_DAYS
         for key in end["subnets"]:
             if not ok:
                 result[key][f"net_flow_{name}_tao"] = None
