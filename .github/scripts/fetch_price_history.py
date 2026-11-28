@@ -7,6 +7,7 @@ Stores multiple timeframes: 7d, 30d, 60d, 90d, 365d
 import os
 import sys
 import json
+import time
 import requests
 from datetime import datetime, timezone, timedelta
 
@@ -178,6 +179,7 @@ def main():
     
     for key, days in timeframes.items():
         print(f"📊 Fetching {days}d price history...", file=sys.stderr)
+        time.sleep(5)  # stay below the Taostats rate limit (a burst caused HTTP 429 on the 365d call)
         
         # Use detailed history for short timeframes, OHLC for longer ones
         if days <= 3:
